@@ -1,0 +1,25 @@
+/*
+ * @NOTE: Prepend a `~` to css file paths that are in your node_modules
+ *        See https://github.com/webpack-contrib/sass-loader#imports
+ */
+.nav-icon {
+  border-left: solid white;
+  border-left-width: 2px;
+}
+
+.nav-icon > div > svg {
+  color: #6c757d;
+}
+
+.nav-icon:hover {
+  color: black;
+}
+
+.selected-nav-icon {
+  border-left: solid black;
+  border-left-width: 2px;
+}
+
+.selected-nav-icon > div > svg {
+  color: black;
+}
