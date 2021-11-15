@@ -11,7 +11,7 @@
   color: #6c757d;
 }
 
-.nav-icon:hover {
+.nav-icon > div > svg:hover {
   color: black;
 }
 
@@ -22,4 +22,8 @@
 
 .selected-nav-icon > div > svg {
   color: black;
+}
+
+.sol-green {
+  color: #14f195;
 }

@@ -8,7 +8,6 @@ import {
 } from 'react-router-dom';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
@@ -16,6 +15,7 @@ import {
   faRunning,
   faCoins,
   faGripHorizontal,
+  faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 
 const Nav = () => {
@@ -56,7 +56,7 @@ const Nav = () => {
           activeClassName="selected-nav-icon"
           to="/airdrop"
         >
-          <div className="p-2" style={{ cursor: 'pointer' }}>
+          <div style={{ cursor: 'pointer' }}>
             <FontAwesomeIcon className="nav-icon" size="3x" icon={faCoins} />
           </div>
         </NavLink>
@@ -71,7 +71,7 @@ const Nav = () => {
           activeClassName="selected-nav-icon"
           to="/accounts"
         >
-          <div className="p-2" style={{ cursor: 'pointer' }}>
+          <div style={{ cursor: 'pointer' }}>
             <FontAwesomeIcon
               className="nav-icon"
               size="3x"
@@ -90,7 +90,12 @@ const Run = () => {
       <h2>Run Deps</h2>
       <div className="row">
         <div className="mt-3 col">
-          <Button>Run Validator</Button>
+          <p>
+            <span className="badge bg-light text-dark">
+              <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
+              Validator Running
+            </span>
+          </p>
         </div>
       </div>
     </div>
@@ -100,6 +105,7 @@ const Run = () => {
 const Airdrop = () => {
   return (
     <div className="row">
+      <h2>Airdrop</h2>
       <p>Manage tokens here</p>
     </div>
   );
@@ -108,6 +114,7 @@ const Airdrop = () => {
 const Accounts = () => {
   return (
     <div className="row">
+      <h2>Inspect Accounts</h2>
       <p>Inspect accounts here</p>
     </div>
   );
