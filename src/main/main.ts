@@ -14,8 +14,110 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import * as web3 from '@solana/web3.js';
+import Sudoer from 'electron-sudo';
+import os from 'os';
+import fs from 'fs';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
+import SolState from '../types/types';
+
+const WORKBENCH_DIR_NAME = '.solana-workbench';
+const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
+const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
+if (!fs.existsSync(WORKBENCH_DIR_PATH)) {
+  fs.mkdirSync(WORKBENCH_DIR_PATH);
+  fs.mkdirSync(KEYPAIR_DIR_PATH);
+}
+
+const connectSOL = async (): Promise<SolState> => {
+  // Connect to cluster
+  let connection: web3.Connection;
+  const ret = {
+    running: false,
+    keyId: '',
+  } as SolState;
+  try {
+    connection = new web3.Connection('http://localhost:8899');
+    await connection.getEpochInfo();
+    // connection = new web3.Connection('https://api.devnet.solana.com');
+  } catch (error) {
+    console.log('COULD NOT CONNECT', error);
+    return ret;
+  }
+  ret.running = true;
+  return ret;
+};
+
+const keypairs = async () => {
+  const keypairFiles = await fs.promises.readdir(KEYPAIR_DIR_PATH);
+  const web3KeyPromises = keypairFiles
+    .map((key) => path.join(KEYPAIR_DIR_PATH, key))
+    .filter(async (keyPath) => {
+      const stat = await fs.promises.stat(keyPath);
+      return stat.isFile();
+    })
+    .map(async (keyPath) => {
+      const data = fs.readFileSync(keyPath);
+      return web3.Keypair.fromSecretKey(data);
+    });
+  const web3Keys = await Promise.all(web3KeyPromises);
+  const publicKeys = web3Keys.map((k) => k.publicKey.toString());
+  return publicKeys;
+};
+
+const addKeypair = async () => {
+  const kp = web3.Keypair.generate();
+  const kpPath = path.join(KEYPAIR_DIR_PATH, `${kp.publicKey}`);
+  fs.writeFileSync(kpPath, kp.secretKey);
+  const allKeypairs = await keypairs();
+  return allKeypairs;
+};
+
+/*
+const airdropTokens = async (): Promise<void> => {
+  const connection = new web3.Connection('http://localhost:8899');
+
+  console.log('GENERATING KEYPAIR');
+  const from = web3.Keypair.generate();
+  console.log('AIRDROPPING');
+  const airdropSignature = await connection.requestAirdrop(
+    from.publicKey,
+    web3.LAMPORTS_PER_SOL
+  );
+  await connection.confirmTransaction(airdropSignature);
+
+  // Generate a new random public key
+  const to = web3.Keypair.generate();
+
+  console.log('CREATING TXN');
+  // Add transfer instruction to transaction
+  const transaction = new web3.Transaction().add(
+    web3.SystemProgram.transfer({
+      fromPubkey: from.publicKey,
+      toPubkey: to.publicKey,
+      lamports: web3.LAMPORTS_PER_SOL / 100,
+    })
+  );
+
+  console.log('SIGNING');
+  // Sign transaction, broadcast, and confirm
+  await web3.sendAndConfirmTransaction(connection, transaction, [from]);
+};
+*/
+
+const validatorController = new AbortController();
+const sudoer = new Sudoer({
+  name: 'solana-validator',
+});
+
+const runValidator = () => {
+  const { signal } = validatorController;
+  sudoer.exec('solana-test-validator.exe', { signal }, (error: any) => {
+    console.log(error);
+  });
+};
 
 export default class AppUpdater {
   constructor() {
@@ -27,10 +129,25 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('ipc-example', async (event, arg) => {
-  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
-  console.log(msgTemplate(arg));
-  event.reply('ipc-example', msgTemplate('pong'));
+ipcMain.on('init', async (event) => {
+  const solState = await connectSOL();
+  event.reply('init', solState);
+});
+
+ipcMain.on('run-validator', async (event) => {
+  runValidator();
+  event.reply('run-validator', {});
+});
+
+ipcMain.on('keypairs', async (event) => {
+  const pairs = await keypairs();
+  event.reply('keypairs', pairs);
+});
+
+ipcMain.on('add-keypair', async (event) => {
+  await addKeypair();
+  const pairs = await keypairs();
+  event.reply('add-keypair', pairs);
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -122,6 +239,7 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+  validatorController.abort();
 });
 
 app

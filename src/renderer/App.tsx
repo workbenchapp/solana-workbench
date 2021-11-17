@@ -16,7 +16,19 @@ import {
   faCoins,
   faGripHorizontal,
   faCircle,
+  faSpinner,
+  faPlus,
 } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState } from 'react';
+// import * as web3 from '@solana/web3.js';
+import { Button } from 'react-bootstrap';
+import SolState from '../types/types';
+
+declare global {
+  interface Window {
+    electron?: any;
+  }
+}
 
 const Nav = () => {
   const renderTooltip = (id: string, title: string) => {
@@ -85,17 +97,75 @@ const Nav = () => {
 };
 
 const Run = () => {
+  const [solStatus, setSolStatus] = useState({} as SolState);
+  const [loading, setLoading] = useState(true);
+
+  const runValidator = () => {
+    window.electron.ipcRenderer.once('run-validator', (arg: any) => {
+      // eslint-disable-next-line no-console
+      console.log(arg);
+    });
+
+    window.electron.ipcRenderer.runValidator();
+  };
+
+  useEffect(() => {
+    window.electron.ipcRenderer.once('init', (arg: SolState) => {
+      // eslint-disable-next-line no-console
+      console.log(arg);
+      setSolStatus(arg);
+      setLoading(false);
+    });
+
+    window.electron.ipcRenderer.solState();
+  }, []);
+
+  let statusDisplay = (
+    <span className="badge bg-light text-dark">
+      <FontAwesomeIcon className="me-1 spinner" icon={faSpinner} />
+    </span>
+  );
+
+  if (!loading) {
+    if (solStatus.running) {
+      statusDisplay = (
+        <span className="badge bg-light text-dark">
+          <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
+          Validator Running
+        </span>
+      );
+    } else {
+      statusDisplay = (
+        <div>
+          <div>
+            <span className="badge bg-light text-dark">
+              <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
+              Validator Not Running
+            </span>
+          </div>
+          <div>
+            <Button onClick={runValidator} className="mt-2" variant="primary">
+              Run
+            </Button>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
     <div>
       <h2>Run Deps</h2>
       <div className="row">
-        <div className="mt-3 col">
-          <p>
-            <span className="badge bg-light text-dark">
-              <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
-              Validator Running
-            </span>
-          </p>
+        <div className="col">
+          <div className="mt-2 col">
+            <div>{statusDisplay}</div>
+          </div>
+        </div>
+        <div className="col">
+          <pre className="mt-2">
+            <code>logs</code>
+          </pre>
         </div>
       </div>
     </div>
@@ -103,10 +173,57 @@ const Run = () => {
 };
 
 const Airdrop = () => {
+  const [keypairs, setKeyPairs] = useState<string[]>([]);
+  // eslint-disable-next-line no-console
+  console.log(keypairs);
+
+  useEffect(() => {
+    window.electron.ipcRenderer.once('keypairs', (pairs: string[]) => {
+      setKeyPairs(pairs);
+    });
+
+    window.electron.ipcRenderer.keypairs();
+  }, []);
+
+  const addKeypair = () => {
+    window.electron.ipcRenderer.on('add-keypair', (pairs: string[]) => {
+      // eslint-disable-next-line no-console
+      console.log('returned from add-keypair', pairs);
+      setKeyPairs(pairs);
+    });
+
+    window.electron.ipcRenderer.addKeypair();
+  };
+
   return (
     <div className="row">
-      <h2>Airdrop</h2>
-      <p>Manage tokens here</p>
+      <h2>Keys</h2>
+      <div className="row">
+        {keypairs.length > 0 ? (
+          keypairs.map((e: string) => {
+            return (
+              <div className="card col-6">
+                <div key={e} className="card-body">
+                  <h5 className="card-title">{e}</h5>
+                  <p className="card-text">SOL: 0</p>
+                  <Button variant="primary">Airdrop</Button>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div>
+            No keypairs. How are you supposed to SOL without any keypairs?
+          </div>
+        )}
+      </div>
+      <div className="row">
+        <div className="col-2">
+          <Button onClick={addKeypair} variant="primary">
+            <FontAwesomeIcon icon={faPlus} /> Keypair
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
@@ -124,12 +241,14 @@ export default function App() {
   return (
     <Router>
       <div className="row">
-        <div className="col-md-auto">
+        <div className="col-1">
           <Nav />
         </div>
-        <div className="col-11">
+        <div className="col">
           <Switch>
-            <Route exact path="/" component={Run} />
+            <Route exact path="/">
+              <Run />
+            </Route>
             <Route path="/airdrop">
               <Airdrop />
             </Route>
