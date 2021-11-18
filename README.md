@@ -9,8 +9,6 @@ of other fun tricks too.
 - Docker
 - Yarn
 - Anchor CLI must be available in PATH to use Anchor stuff
-  - At the moment there's also a hack that I also use copying Serum's `dex/Anchor.toml`
-    to top level of workbench directory. Otherwise Anchor complains about no TOML.
 
 ## Run
 
