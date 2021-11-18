@@ -14,10 +14,10 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import {
   faRunning,
   faCoins,
-  faGripHorizontal,
   faCircle,
   faSpinner,
   faPlus,
+  faAnchor,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
@@ -45,7 +45,7 @@ const Nav = () => {
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('run', 'Run Deps')}
+        overlay={renderTooltip('run', 'Run')}
       >
         <NavLink
           className="nav-link nav-icon"
@@ -76,19 +76,15 @@ const Nav = () => {
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('accounts', 'Inspect Accounts')}
+        overlay={renderTooltip('anchor', 'Anchor IDL')}
       >
         <NavLink
           className="nav-link nav-icon"
           activeClassName="selected-nav-icon"
-          to="/accounts"
+          to="/anchor"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon
-              className="nav-icon"
-              size="3x"
-              icon={faGripHorizontal}
-            />
+            <FontAwesomeIcon className="nav-icon" size="3x" icon={faAnchor} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -103,9 +99,7 @@ const Run = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const runValidator = () => {
-    window.electron.ipcRenderer.once('run-validator', (arg: any) => {
-      // eslint-disable-next-line no-console
-      console.log(arg);
+    window.electron.ipcRenderer.once('run-validator', () => {
       setLoading(true);
       setTimeout(async () => {
         window.electron.ipcRenderer.solState();
@@ -117,8 +111,6 @@ const Run = () => {
 
   useEffect(() => {
     window.electron.ipcRenderer.on('init', (arg: SolState) => {
-      // eslint-disable-next-line no-console
-      console.log(arg);
       setSolStatus(arg);
       setLoading(false);
     });
@@ -200,8 +192,14 @@ const Run = () => {
 
 const Airdrop = () => {
   const [keypairs, setKeyPairs] = useState<string[]>([]);
-  // eslint-disable-next-line no-console
-  console.log(keypairs);
+
+  const addKeypair = () => {
+    window.electron.ipcRenderer.on('add-keypair', (pairs: string[]) => {
+      setKeyPairs(pairs);
+    });
+
+    window.electron.ipcRenderer.addKeypair();
+  };
 
   useEffect(() => {
     window.electron.ipcRenderer.once('keypairs', (pairs: string[]) => {
@@ -211,31 +209,16 @@ const Airdrop = () => {
     window.electron.ipcRenderer.keypairs();
   }, []);
 
-  const addKeypair = () => {
-    window.electron.ipcRenderer.on('add-keypair', (pairs: string[]) => {
-      // eslint-disable-next-line no-console
-      console.log('returned from add-keypair', pairs);
-      setKeyPairs(pairs);
-    });
-
-    window.electron.ipcRenderer.addKeypair();
-  };
-
-  const airdropTokens = (pubKey: string, solAmount: number) => {
-    window.electron.ipcRenderer.on('airdrop', () => {
-      // eslint-disable-next-line no-console
-      console.log('returned from airdrop');
-    });
-
-    window.electron.ipcRenderer.airdropTokens({
-      pubKey,
-      solAmount,
-    });
-  };
-
   return (
     <div className="row">
       <h2>Keys</h2>
+      <div className="row mb-2">
+        <div className="col-2">
+          <Button onClick={addKeypair} variant="primary">
+            <FontAwesomeIcon icon={faPlus} /> Keypair
+          </Button>
+        </div>
+      </div>
       <div className="row">
         {keypairs.length > 0 ? (
           keypairs.map((e: string) => {
@@ -253,7 +236,12 @@ const Airdrop = () => {
                       </div>
                       <div className="col-sm-2">
                         <Button
-                          onClick={() => airdropTokens(e, 1)}
+                          onClick={() =>
+                            window.electron.ipcRenderer.airdropTokens({
+                              pubKey: e,
+                              solAmount: 1,
+                            })
+                          }
                           className="mt-1 btn-sm float-right"
                           variant="primary"
                         >
@@ -272,22 +260,85 @@ const Airdrop = () => {
           </div>
         )}
       </div>
-      <div className="row">
-        <div className="col-2">
-          <Button onClick={addKeypair} variant="primary">
-            <FontAwesomeIcon icon={faPlus} /> Keypair
-          </Button>
-        </div>
-      </div>
     </div>
   );
 };
 
-const Accounts = () => {
+const Anchor = () => {
+  const programIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+  const [idl, setIDL] = useState<any>({});
+
+  const fetchIDL = () => {
+    window.electron.ipcRenderer.once('fetch-anchor-idl', (fetchedIDL: any) => {
+      setIDL(fetchedIDL);
+      console.log(fetchedIDL);
+    });
+
+    window.electron.ipcRenderer.fetchAnchorIDL({
+      programID: programIDRef.current.value,
+    });
+  };
+
   return (
     <div className="row">
-      <h2>Inspect Accounts</h2>
-      <p>Inspect accounts here</p>
+      <h2>Anchor IDL</h2>
+      <div className="row">
+        <div className="col-sm-5">
+          <InputGroup size="sm" className="mb-2 mt-1">
+            <InputGroup.Text>Program ID</InputGroup.Text>
+            <FormControl
+              style={{ fontFamily: 'Consolas, monospace', fontWeight: 500 }}
+              aria-label="Program ID"
+              ref={programIDRef}
+              onKeyUp={fetchIDL}
+            />
+          </InputGroup>
+        </div>
+      </div>
+      <div className="row">
+        {idl.instructions ? (
+          idl.instructions.map((instruction: any) => {
+            return (
+              <div className="card col-5 m-1">
+                <h6 className="card-title p-1">
+                  <code>{instruction.name}</code>
+                </h6>
+                <div className="row">
+                  <div className="col">
+                    <ul className="list-group list-group-flush">
+                      <li className="bg-light list-group-item">Args</li>
+                      {instruction.args.map((arg: any) => {
+                        return (
+                          <li className="list-group-item">
+                            {arg.name}
+                            <span className="ms-2 badge bg-secondary">
+                              {arg.type.toString()}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                  <div className="col">
+                    <ul className="list-group list-group-flush">
+                      <li className="bg-light list-group-item">Accounts</li>
+                      {instruction.accounts.map((account: any) => {
+                        return (
+                          <li className="list-group-item">{account.name}</li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <small className="text-muted">
+            e.g.: <code>GrAkKfEpTKQuVHG2Y97Y2FF4i7y7Q5AHLK94JBy7Y5yv</code>
+          </small>
+        )}
+      </div>
     </div>
   );
 };
@@ -296,10 +347,10 @@ export default function App() {
   return (
     <Router>
       <div className="row">
-        <div className="col-sm-1">
+        <div className="col-auto">
           <Nav />
         </div>
-        <div className="col-sm-11">
+        <div className="col-sm-10">
           <Switch>
             <Route exact path="/">
               <Run />
@@ -307,8 +358,8 @@ export default function App() {
             <Route path="/airdrop">
               <Airdrop />
             </Route>
-            <Route path="/accounts">
-              <Accounts />
+            <Route path="/anchor">
+              <Anchor />
             </Route>
           </Switch>
         </div>

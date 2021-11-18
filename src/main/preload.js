@@ -20,6 +20,9 @@ contextBridge.exposeInMainWorld('electron', {
     validatorLogs(msg) {
       ipcRenderer.send('validator-logs', msg);
     },
+    fetchAnchorIDL(msg) {
+      ipcRenderer.send('fetch-anchor-idl', msg);
+    },
     on(channel, func) {
       const validChannels = [
         'init',
@@ -28,6 +31,7 @@ contextBridge.exposeInMainWorld('electron', {
         'add-keypair',
         'airdrop',
         'validator-logs',
+        'fetch-anchor-idl',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`
@@ -42,6 +46,7 @@ contextBridge.exposeInMainWorld('electron', {
         'add-keypair',
         'airdrop',
         'validator-logs',
+        'fetch-anchor-idl',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`
