@@ -19,9 +19,9 @@ import {
   faSpinner,
   faPlus,
 } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
-import { Button } from 'react-bootstrap';
+import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import SolState from '../types/types';
 
 declare global {
@@ -99,31 +99,52 @@ const Nav = () => {
 const Run = () => {
   const [solStatus, setSolStatus] = useState({} as SolState);
   const [loading, setLoading] = useState(true);
+  const [validatorLogs, setValidatorLogs] = useState('');
+  const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const runValidator = () => {
     window.electron.ipcRenderer.once('run-validator', (arg: any) => {
       // eslint-disable-next-line no-console
       console.log(arg);
+      setLoading(true);
+      setTimeout(async () => {
+        window.electron.ipcRenderer.solState();
+      }, 5000);
     });
 
     window.electron.ipcRenderer.runValidator();
   };
 
   useEffect(() => {
-    window.electron.ipcRenderer.once('init', (arg: SolState) => {
+    window.electron.ipcRenderer.on('init', (arg: SolState) => {
       // eslint-disable-next-line no-console
       console.log(arg);
       setSolStatus(arg);
       setLoading(false);
     });
 
+    window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
+      setValidatorLogs(logs);
+    });
+
+    const logsInterval = setInterval(() => {
+      if (solStatus.running) {
+        window.electron.ipcRenderer.validatorLogs({
+          filter: filterRef.current.value,
+        });
+      }
+    }, 1000);
+
     window.electron.ipcRenderer.solState();
-  }, []);
+
+    return () => clearInterval(logsInterval);
+  }, [solStatus.running]);
 
   let statusDisplay = (
-    <span className="badge bg-light text-dark">
-      <FontAwesomeIcon className="me-1 spinner" icon={faSpinner} />
-    </span>
+    <div>
+      <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+      <span>Starting validator...</span>
+    </div>
   );
 
   if (!loading) {
@@ -154,19 +175,24 @@ const Run = () => {
   }
 
   return (
-    <div>
+    <div className="row">
       <h2>Run Deps</h2>
-      <div className="row">
-        <div className="col">
-          <div className="mt-2 col">
-            <div>{statusDisplay}</div>
-          </div>
+      <div className="col-sm-2">
+        <div className="mt-2 col">
+          <div>{statusDisplay}</div>
         </div>
-        <div className="col">
-          <pre className="mt-2">
-            <code>logs</code>
-          </pre>
-        </div>
+      </div>
+      <div className="col-sm-9">
+        <InputGroup size="sm">
+          <FormControl
+            ref={filterRef}
+            placeholder="Filter logs"
+            aria-label="Amount"
+          />
+        </InputGroup>
+        <pre className="mt-2 pre-scrollable">
+          <code>{validatorLogs}</code>
+        </pre>
       </div>
     </div>
   );
@@ -195,6 +221,18 @@ const Airdrop = () => {
     window.electron.ipcRenderer.addKeypair();
   };
 
+  const airdropTokens = (pubKey: string, solAmount: number) => {
+    window.electron.ipcRenderer.on('airdrop', () => {
+      // eslint-disable-next-line no-console
+      console.log('returned from airdrop');
+    });
+
+    window.electron.ipcRenderer.airdropTokens({
+      pubKey,
+      solAmount,
+    });
+  };
+
   return (
     <div className="row">
       <h2>Keys</h2>
@@ -202,11 +240,28 @@ const Airdrop = () => {
         {keypairs.length > 0 ? (
           keypairs.map((e: string) => {
             return (
-              <div className="card col-6">
+              <div className="card col-5 m-1">
                 <div key={e} className="card-body">
-                  <h5 className="card-title">{e}</h5>
-                  <p className="card-text">SOL: 0</p>
-                  <Button variant="primary">Airdrop</Button>
+                  <div>
+                    <h6 className="card-title">{e}</h6>
+                    <div className="row">
+                      <div className="col-sm-8">
+                        <InputGroup size="sm" className="mt-1">
+                          <InputGroup.Text>Amount</InputGroup.Text>
+                          <FormControl aria-label="Amount" />
+                        </InputGroup>
+                      </div>
+                      <div className="col-sm-2">
+                        <Button
+                          onClick={() => airdropTokens(e, 1)}
+                          className="mt-1 btn-sm float-right"
+                          variant="primary"
+                        >
+                          Airdrop
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -241,10 +296,10 @@ export default function App() {
   return (
     <Router>
       <div className="row">
-        <div className="col-1">
+        <div className="col-sm-1">
           <Nav />
         </div>
-        <div className="col">
+        <div className="col-sm-11">
           <Switch>
             <Route exact path="/">
               <Run />

@@ -15,10 +15,11 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import * as web3 from '@solana/web3.js';
-import Sudoer from 'electron-sudo';
 import os from 'os';
 import fs from 'fs';
+import util from 'util';
 
+import { exec } from 'child_process';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
@@ -39,7 +40,7 @@ const connectSOL = async (): Promise<SolState> => {
     keyId: '',
   } as SolState;
   try {
-    connection = new web3.Connection('http://localhost:8899');
+    connection = new web3.Connection('http://127.0.0.1:8899');
     await connection.getEpochInfo();
     // connection = new web3.Connection('https://api.devnet.solana.com');
   } catch (error) {
@@ -48,6 +49,12 @@ const connectSOL = async (): Promise<SolState> => {
   }
   ret.running = true;
   return ret;
+};
+
+const localKeypair = async (pubKey: string): Promise<web3.Keypair> => {
+  const keyPath = path.join(KEYPAIR_DIR_PATH, pubKey);
+  const data = fs.readFileSync(keyPath);
+  return web3.Keypair.fromSecretKey(data);
 };
 
 const keypairs = async () => {
@@ -75,48 +82,46 @@ const addKeypair = async () => {
   return allKeypairs;
 };
 
-/*
-const airdropTokens = async (): Promise<void> => {
-  const connection = new web3.Connection('http://localhost:8899');
+const airdropTokens = async (pubKey: string, sol: number): Promise<void> => {
+  const connection = new web3.Connection('http://127.0.0.1:8899');
 
-  console.log('GENERATING KEYPAIR');
-  const from = web3.Keypair.generate();
-  console.log('AIRDROPPING');
+  const to = await localKeypair(pubKey);
   const airdropSignature = await connection.requestAirdrop(
-    from.publicKey,
-    web3.LAMPORTS_PER_SOL
+    to.publicKey,
+    web3.LAMPORTS_PER_SOL * sol
   );
   await connection.confirmTransaction(airdropSignature);
-
-  // Generate a new random public key
-  const to = web3.Keypair.generate();
-
-  console.log('CREATING TXN');
-  // Add transfer instruction to transaction
-  const transaction = new web3.Transaction().add(
-    web3.SystemProgram.transfer({
-      fromPubkey: from.publicKey,
-      toPubkey: to.publicKey,
-      lamports: web3.LAMPORTS_PER_SOL / 100,
-    })
-  );
-
-  console.log('SIGNING');
-  // Sign transaction, broadcast, and confirm
-  await web3.sendAndConfirmTransaction(connection, transaction, [from]);
 };
-*/
-
-const validatorController = new AbortController();
-const sudoer = new Sudoer({
-  name: 'solana-validator',
-});
 
 const runValidator = () => {
-  const { signal } = validatorController;
-  sudoer.exec('solana-test-validator.exe', { signal }, (error: any) => {
-    console.log(error);
-  });
+  exec(
+    `docker run \
+      --name solana-test-validator \
+      -d \
+      -p 8899:8899 \
+      -p 8900:8900 \
+       --ulimit nofile=1000000 \
+      solanalabs/solana:v1.8.4`,
+    {},
+    (err: any) => {
+      console.log(err);
+    }
+  );
+};
+
+const validatorLogs = async (filter: string) => {
+  const MAX_TAIL_LINES = 10000;
+  const MAX_DISPLAY_LINES = 30;
+
+  // TODO: doing this out of process might be a better fit
+  const maxBuffer = 104857600; // 100MB
+
+  const { stderr } = await util.promisify(exec)(
+    `docker logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
+    { maxBuffer }
+  );
+  const lines = stderr.split('\n').filter((s) => s.match(filter));
+  return lines.slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1)).join('\n');
 };
 
 export default class AppUpdater {
@@ -139,6 +144,11 @@ ipcMain.on('run-validator', async (event) => {
   event.reply('run-validator', {});
 });
 
+ipcMain.on('validator-logs', async (event, msg) => {
+  const logs = await validatorLogs(msg.filter);
+  event.reply('validator-logs', logs);
+});
+
 ipcMain.on('keypairs', async (event) => {
   const pairs = await keypairs();
   event.reply('keypairs', pairs);
@@ -148,6 +158,11 @@ ipcMain.on('add-keypair', async (event) => {
   await addKeypair();
   const pairs = await keypairs();
   event.reply('add-keypair', pairs);
+});
+
+ipcMain.on('airdrop', async (event, msg) => {
+  await airdropTokens(msg.pubKey, msg.solAmount);
+  event.reply('airdrop success');
 });
 
 if (process.env.NODE_ENV === 'production') {
@@ -239,7 +254,6 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
-  validatorController.abort();
 });
 
 app
