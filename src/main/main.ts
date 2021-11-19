@@ -91,7 +91,7 @@ const addKeypair = async () => {
   // {"0": 1, "1": 2, "2": 3 ...}
   const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
   const fileContents = JSON.stringify(secretKeyUint);
-  fs.writeFileSync(kpPath, fileContents);
+  await fs.promises.writeFile(kpPath, fileContents);
   const allKeypairs = await keypairs();
   return allKeypairs;
 };
