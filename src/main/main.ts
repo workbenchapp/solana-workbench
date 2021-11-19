@@ -29,6 +29,8 @@ const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 if (!fs.existsSync(WORKBENCH_DIR_PATH)) {
   fs.mkdirSync(WORKBENCH_DIR_PATH);
+}
+if (!fs.existsSync(KEYPAIR_DIR_PATH)) {
   fs.mkdirSync(KEYPAIR_DIR_PATH);
 }
 
@@ -51,33 +53,45 @@ const connectSOL = async (): Promise<SolState> => {
   return ret;
 };
 
+const keyPath = (pubKey: string) =>
+  path.join(KEYPAIR_DIR_PATH, `${pubKey}.json`);
+
 const localKeypair = async (pubKey: string): Promise<web3.Keypair> => {
-  const keyPath = path.join(KEYPAIR_DIR_PATH, pubKey);
-  const data = fs.readFileSync(keyPath);
+  const fileContents = await fs.promises.readFile(keyPath(pubKey));
+  const data = Uint8Array.from(JSON.parse(fileContents.toString()));
   return web3.Keypair.fromSecretKey(data);
 };
 
 const keypairs = async () => {
   const keypairFiles = await fs.promises.readdir(KEYPAIR_DIR_PATH);
-  const web3KeyPromises = keypairFiles
-    .map((key) => path.join(KEYPAIR_DIR_PATH, key))
-    .filter(async (keyPath) => {
-      const stat = await fs.promises.stat(keyPath);
-      return stat.isFile();
-    })
-    .map(async (keyPath) => {
-      const data = fs.readFileSync(keyPath);
-      return web3.Keypair.fromSecretKey(data);
-    });
+  const web3KeyPromises = keypairFiles.map(async (keyFile) => {
+    const kPath = path.join(KEYPAIR_DIR_PATH, keyFile);
+    const stat = await fs.promises.stat(kPath);
+    const isFile = stat.isFile();
+    const time = stat.mtime.getTime();
+    const pubKey = keyFile.slice(0, keyFile.indexOf('.'));
+    return {
+      kPath,
+      isFile,
+      time,
+      pubKey,
+    };
+  });
   const web3Keys = await Promise.all(web3KeyPromises);
-  const publicKeys = web3Keys.map((k) => k.publicKey.toString());
+  web3Keys.filter((x) => x.isFile).sort((a, b) => b.time - a.time);
+  const publicKeys = web3Keys.map((k) => k.pubKey);
   return publicKeys;
 };
 
 const addKeypair = async () => {
   const kp = web3.Keypair.generate();
-  const kpPath = path.join(KEYPAIR_DIR_PATH, `${kp.publicKey}`);
-  fs.writeFileSync(kpPath, kp.secretKey);
+  const kpPath = keyPath(kp.publicKey.toString());
+
+  // goofy looking but otherwise stringify encodes Uint8Array like:
+  // {"0": 1, "1": 2, "2": 3 ...}
+  const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
+  const fileContents = JSON.stringify(secretKeyUint);
+  fs.writeFileSync(kpPath, fileContents);
   const allKeypairs = await keypairs();
   return allKeypairs;
 };
