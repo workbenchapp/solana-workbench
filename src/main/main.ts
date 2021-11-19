@@ -123,7 +123,7 @@ const runValidator = () => {
   );
 };
 
-const validatorLogs = async (filter: string) => {
+const validatorTelemetry = async (filter: string) => {
   const MAX_TAIL_LINES = 10000;
   const MAX_DISPLAY_LINES = 30;
 
@@ -134,8 +134,18 @@ const validatorLogs = async (filter: string) => {
     `docker logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
     { maxBuffer }
   );
-  const lines = stderr.split('\n').filter((s) => s.match(filter));
-  return lines.slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1)).join('\n');
+  const lines = stderr.split('\n');
+  const metrics = lines.filter((line) =>
+    line.includes('solana_metrics::metrics')
+  );
+
+  const logs = lines
+    .filter((s) => s.match(filter))
+    .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1))
+    .join('\n');
+  return {
+    logs,
+  };
 };
 
 export default class AppUpdater {
@@ -159,8 +169,8 @@ ipcMain.on('run-validator', async (event) => {
 });
 
 ipcMain.on('validator-logs', async (event, msg) => {
-  const logs = await validatorLogs(msg.filter);
-  event.reply('validator-logs', logs);
+  const telemetry = await validatorTelemetry(msg.filter);
+  event.reply('validator-logs', telemetry.logs);
 });
 
 ipcMain.on('keypairs', async (event) => {
