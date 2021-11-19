@@ -53,7 +53,7 @@ const connectSOL = async (): Promise<SolState> => {
 
 const localKeypair = async (pubKey: string): Promise<web3.Keypair> => {
   const keyPath = path.join(KEYPAIR_DIR_PATH, pubKey);
-  const data = await util.promisify(fs.readFile)(keyPath);
+  const data = fs.readFileSync(keyPath);
   return web3.Keypair.fromSecretKey(data);
 };
 
@@ -61,7 +61,7 @@ const keypairs = async () => {
   const keypairFiles = await fs.promises.readdir(KEYPAIR_DIR_PATH);
   const web3KeyPromises = keypairFiles
     .map((key) => path.join(KEYPAIR_DIR_PATH, key))
-    .reduce(async (prev, keyPath, idx, filtered) => {
+    .filter(async (keyPath) => {
       const stat = await fs.promises.stat(keyPath);
       return stat.isFile();
     })
@@ -166,7 +166,6 @@ ipcMain.on('airdrop', async (event, msg) => {
 });
 
 ipcMain.on('fetch-anchor-idl', async (event, msg) => {
-  console.log('FETCH IDL');
   const { stdout } = await util.promisify(exec)(
     `anchor idl fetch ${msg.programID}`
   );
