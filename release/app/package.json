@@ -5,7 +5,7 @@
   "description": "Make Solana development more enjoyable",
   "main": "./dist/main/main.js",
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
+    "name": "Nathan LeClaire",
     "email": "nathan.leclaire@gmail.com",
     "url": "https://github.com/workbenchapp/solana-workbench-releases"
   },

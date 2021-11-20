@@ -1,6 +1,6 @@
 {
   "name": "solana-workbench",
-  "productName": "SolanaWorkbench",
+  "productName": "Solana Workbench",
   "description": "Solana workbench app for making development on Solana better",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
@@ -30,7 +30,7 @@
     ]
   },
   "build": {
-    "productName": "SolanaWorkbench",
+    "productName": "Solana Workbench",
     "appId": "org.erb.SolanaWorkbench",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
