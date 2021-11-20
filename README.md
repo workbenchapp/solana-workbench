@@ -20,9 +20,10 @@ install native deps:
 $ cd release/app && yarn
 ```
 
-install top level deps:
+install top level deps (from top dir):
 
 ```
+$ yarn
 ```
 
 run:
