@@ -1,13 +1,13 @@
 {
-  "name": "electron-react-boilerplate",
-  "productName": "electron-react-boilerplate",
-  "version": "4.3.1",
-  "description": "Electron application boilerplate based on React, React Router, Webpack, React Hot Loader for rapid application development",
+  "name": "solana-workbench",
+  "productName": "solana-workbench",
+  "version": "0.1.0-alpha",
+  "description": "Make Solana development more enjoyable",
   "main": "./dist/main/main.js",
   "author": {
     "name": "Electron React Boilerplate Maintainers",
-    "email": "electronreactboilerplate@gmail.com",
-    "url": "https://github.com/electron-react-boilerplate"
+    "email": "nathan.leclaire@gmail.com",
+    "url": "https://github.com/workbenchapp/solana-workbench-releases"
   },
   "scripts": {
     "electron-rebuild": "node -r ts-node/register ../../.erb/scripts/electron-rebuild.js",
@@ -16,7 +16,6 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@solana/web3.js": "^1.30.2",
-    "electron-sudo": "^4.0.12"
+    "@solana/web3.js": "^1.30.2"
   }
 }
