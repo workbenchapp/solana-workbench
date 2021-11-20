@@ -12,10 +12,17 @@ of other fun tricks too.
 
 ## Run
 
-install deps:
+install native deps:
+
+(I had to use https://stackoverflow.com/questions/32827756/npm-install-errors-which-one-to-focus-on to get Apple Command Line Tools for XCode to actually work)
 
 ```
-$ yarn
+$ cd release/app && yarn
+```
+
+install top level deps:
+
+```
 ```
 
 run:
