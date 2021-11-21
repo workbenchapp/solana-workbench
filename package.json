@@ -30,7 +30,7 @@
     ]
   },
   "build": {
-    "productName": "SolanaWorkbench",
+    "productName": "Solana Workbench",
     "appId": "org.erb.SolanaWorkbench",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
