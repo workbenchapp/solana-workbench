@@ -24,8 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn || true
-          (cd release/app && yarn)
+          (cd release/app && npm install @solana/web3.js && yarn)
           yarn
 
       - name: Publish releases
