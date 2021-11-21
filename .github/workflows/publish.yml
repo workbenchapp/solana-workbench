@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "==> INSTALLING NODE-GYP"
           npm install -g node-gyp
-          ECHO "==> "FIRST YARN"
+          ECHO "==> FIRST YARN"
           yarn || true
           ECHO "==> INSTALLING NATIVE DEPS"
           (cd release/app && npm install @solana/web3.js)
