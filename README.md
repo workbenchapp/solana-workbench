@@ -16,10 +16,12 @@ of other fun tricks too.
 install native deps:
 
 ```
+$ yarn || true
+... will complain saying to do following, but it's ok ...
 $ (cd release/app && npm install @solana/web3.js)
 ```
 
-install top level deps:
+now install top level deps:
 
 ```
 $ yarn
