@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd release/app && yarn
+          (cd release/app && yarn)
           yarn
 
       - name: Publish releases
