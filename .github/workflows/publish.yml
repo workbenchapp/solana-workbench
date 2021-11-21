@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install ts-node
+          yarn || true
           (cd release/app && yarn)
           yarn
 
