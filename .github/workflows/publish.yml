@@ -24,8 +24,11 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "==> INSTALLING NODE-GYP"
           npm install -g node-gyp
+          ECHO "==> "INSTALLING NATIVE DEPS"
           (cd release/app && npm install @solana/web3.js && yarn)
+          ECHO "==> MAIN YARN"
           DEBUG=electron-rebuild yarn
 
       - name: Publish releases
