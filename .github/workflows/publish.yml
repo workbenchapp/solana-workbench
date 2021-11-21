@@ -22,11 +22,6 @@ jobs:
         with:
           node-version: 16
 
-      - name: Install dependencies
-        run: |
-          npm install
-          npm run-script package
-
       - name: Publish releases
         env:
           # These values are used for auto updates signing

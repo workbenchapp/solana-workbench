@@ -30,7 +30,7 @@
     ]
   },
   "build": {
-    "productName": "Solana Workbench",
+    "productName": "SolanaWorkbench",
     "appId": "org.erb.SolanaWorkbench",
     "asar": true,
     "asarUnpack": "**\\*.{node,dll}",
@@ -44,6 +44,7 @@
       "target": {
         "target": "default",
         "arch": [
+          "arm64",
           "x64"
         ]
       },
