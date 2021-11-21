@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest]
+        os: [macos-11]
 
     steps:
       - name: Checkout git repo
@@ -24,9 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn
-          (cd ./release/app && yarn)
-          yarn
+          npm install
+          npm run-script package
 
       - name: Publish releases
         env:
