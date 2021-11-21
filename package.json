@@ -1,6 +1,6 @@
 {
   "name": "solana-workbench",
-  "productName": "Solana Workbench",
+  "productName": "SolanaWorkbench",
   "description": "Solana workbench app for making development on Solana better",
   "scripts": {
     "build": "concurrently \"npm run build:main\" \"npm run build:renderer\"",
@@ -44,7 +44,8 @@
       "target": {
         "target": "default",
         "arch": [
-          "x64"
+          "x64",
+          "arm64"
         ]
       },
       "type": "distribution",
