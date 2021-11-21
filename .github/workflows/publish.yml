@@ -26,8 +26,10 @@ jobs:
         run: |
           echo "==> INSTALLING NODE-GYP"
           npm install -g node-gyp
+          ECHO "==> "FIRST YARN"
+          yarn || true
           ECHO "==> "INSTALLING NATIVE DEPS"
-          (cd release/app && npm install @solana/web3.js && yarn)
+          (cd release/app && npm install @solana/web3.js)
           ECHO "==> MAIN YARN"
           DEBUG=electron-rebuild yarn
 
