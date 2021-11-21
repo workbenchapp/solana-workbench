@@ -9,18 +9,17 @@ of other fun tricks too.
 - Docker
 - Yarn
 - Anchor CLI must be available in PATH to use Anchor stuff
+- XCode Command Line Tools (if on OSX)
 
 ## Run
 
 install native deps:
 
-(I had to use https://stackoverflow.com/questions/32827756/npm-install-errors-which-one-to-focus-on to get Apple Command Line Tools for XCode to actually work)
-
 ```
-$ cd release/app && yarn
+$ (cd release/app && npm install @solana/web3.js)
 ```
 
-install top level deps (from top dir):
+install top level deps:
 
 ```
 $ yarn
@@ -29,7 +28,7 @@ $ yarn
 run:
 
 ```
-$ npm run-script start
+$ npm run start
 ```
 
 Now you're working with Workbench!
