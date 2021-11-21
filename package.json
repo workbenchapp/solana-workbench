@@ -71,8 +71,7 @@
     "win": {
       "target": [
         "nsis"
-      ],
-      "requestedExecutionLevel": "highestAvailable"
+      ]
     },
     "linux": {
       "target": [

@@ -2,7 +2,7 @@
   "name": "solana-workbench",
   "productName": "solana-workbench",
   "version": "0.1.0-alpha",
-  "description": "Make Solana development more enjoyable",
+  "description": "Your one stop shop for Solana development",
   "main": "./dist/main/main.js",
   "author": {
     "name": "Nathan LeClaire",
