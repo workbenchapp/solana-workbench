@@ -24,6 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          npm install -g node-gyp
           (cd release/app && npm install @solana/web3.js)
           DEBUG=electron-rebuild yarn
 
