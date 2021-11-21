@@ -24,7 +24,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          (cd release/app && npm install @solana/web3.js typescript ts-node tslib @types/node && DEBUG=electron-rebuild yarn)
+          yarn || true
+          (cd release/app && npm install @solana/web3.js && DEBUG=electron-rebuild yarn)
           DEBUG=electron-rebuild yarn
 
       - name: Publish releases
