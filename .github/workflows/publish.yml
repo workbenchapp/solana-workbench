@@ -25,8 +25,7 @@ jobs:
       - name: Install dependencies
         run: |
           yarn || true
-          (cd release/app && npm install @solana/web3.js && DEBUG=electron-rebuild yarn)
-          DEBUG=electron-rebuild yarn
+          (cd release/app && DEBUG=electron-rebuild yarn)
 
       - name: Publish releases
         env:
