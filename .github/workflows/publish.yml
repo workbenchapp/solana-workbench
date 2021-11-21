@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          yarn --prod
+          yarn
 
       - name: Publish releases
         env:
