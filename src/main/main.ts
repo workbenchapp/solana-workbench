@@ -24,6 +24,7 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
 
+const execAsync = util.promisify(exec);
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
@@ -107,20 +108,28 @@ const airdropTokens = async (pubKey: string, sol: number): Promise<void> => {
   await connection.confirmTransaction(airdropSignature);
 };
 
-const runValidator = () => {
-  exec(
-    `docker run \
-      --name solana-test-validator \
-      -d \
-      -p 8899:8899 \
-      -p 8900:8900 \
-       --ulimit nofile=1000000 \
-      solanalabs/solana:v1.8.4`,
-    {},
-    (err: any) => {
-      console.log(err);
-    }
-  );
+const runValidator = async () => {
+  try {
+    await execAsync(`docker inspect solana-test-validator`);
+  } catch (e) {
+    const err = e as Error;
+    console.log('INSPECT ERROR', err);
+
+    // TODO: check for image, pull if not present
+
+    await execAsync(
+      `docker run \
+        --name solana-test-validator \
+        -d \
+        -p 8899:8899 \
+        -p 8900:8900 \
+         --ulimit nofile=1000000 \
+        solanalabs/solana:v1.8.4`
+    );
+
+    return;
+  }
+  await execAsync(`docker start solana-test-validator`);
 };
 
 const validatorLogs = async (filter: string) => {
@@ -130,7 +139,7 @@ const validatorLogs = async (filter: string) => {
   // TODO: doing this out of process might be a better fit
   const maxBuffer = 104857600; // 100MB
 
-  const { stderr } = await util.promisify(exec)(
+  const { stderr } = await execAsync(
     `docker logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
     { maxBuffer }
   );
@@ -148,9 +157,9 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-ipcMain.on('init', async (event) => {
+ipcMain.on('sol-state', async (event) => {
   const solState = await connectSOL();
-  event.reply('init', solState);
+  event.reply('sol-state', solState);
 });
 
 ipcMain.on('run-validator', async (event) => {
@@ -180,9 +189,7 @@ ipcMain.on('airdrop', async (event, msg) => {
 });
 
 ipcMain.on('fetch-anchor-idl', async (event, msg) => {
-  const { stdout } = await util.promisify(exec)(
-    `anchor idl fetch ${msg.programID}`
-  );
+  const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
   event.reply('fetch-anchor-idl', JSON.parse(stdout));
 });
 

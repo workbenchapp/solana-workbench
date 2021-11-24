@@ -19,7 +19,7 @@ import {
   faPlus,
   faAnchor,
 } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import SolState from '../types/types';
@@ -94,48 +94,54 @@ const Nav = () => {
 
 const Run = () => {
   const [solStatus, setSolStatus] = useState({} as SolState);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-  const runValidator = () => {
-    window.electron.ipcRenderer.once('run-validator', () => {
-      setLoading(true);
-      setTimeout(async () => {
-        window.electron.ipcRenderer.solState();
-      }, 5000);
-    });
+  const fetchLogs = useCallback(() => {
+    if (solStatus.running) {
+      window.electron.ipcRenderer.validatorLogs({
+        filter: filterRef.current.value,
+      });
+    }
+  }, [solStatus.running]);
 
+  const runValidator = () => {
+    setLoading(true);
     window.electron.ipcRenderer.runValidator();
   };
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('init', (arg: SolState) => {
+    window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
       setSolStatus(arg);
-      setLoading(false);
+      // eslint-disable-next-line no-console
+      console.log('got sol state', arg);
+      if (arg.running) {
+        setLoading(false);
+        setStartedValidator(false);
+        fetchLogs();
+      }
     });
 
     window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
       setValidatorLogs(logs);
     });
-
-    const logsInterval = setInterval(() => {
-      if (solStatus.running) {
-        window.electron.ipcRenderer.validatorLogs({
-          filter: filterRef.current.value,
-        });
-      }
-    }, 1000);
-
+    const pollStatusInterval = setInterval(
+      () => window.electron.ipcRenderer.solState,
+      1000
+    );
+    const logsInterval = setInterval(fetchLogs, 5000);
     window.electron.ipcRenderer.solState();
-
-    return () => clearInterval(logsInterval);
-  }, [solStatus.running]);
+    return () => {
+      clearInterval(logsInterval);
+      clearInterval(pollStatusInterval);
+    };
+  }, [fetchLogs]);
 
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      <span>Starting validator...</span>
+      <span>Waiting for validator to come up...</span>
     </div>
   );
 
@@ -169,7 +175,7 @@ const Run = () => {
   return (
     <div className="row">
       <h2>Run Deps</h2>
-      <div className="col-sm-2">
+      <div className="col-sm-3">
         <div className="mt-2 col">
           <div>{statusDisplay}</div>
         </div>

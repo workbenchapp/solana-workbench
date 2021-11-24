@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('run-validator', {});
     },
     solState() {
-      ipcRenderer.send('init', 'ping');
+      ipcRenderer.send('sol-state', {});
     },
     keypairs() {
       ipcRenderer.send('keypairs', {});
@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
     },
     on(channel, func) {
       const validChannels = [
-        'init',
+        'sol-state',
         'run-validator',
         'keypairs',
         'add-keypair',
@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld('electron', {
     },
     once(channel, func) {
       const validChannels = [
-        'init',
+        'sol-state',
         'run-validator',
         'keypairs',
         'add-keypair',
