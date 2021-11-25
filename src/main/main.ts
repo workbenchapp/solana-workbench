@@ -18,11 +18,27 @@ import * as web3 from '@solana/web3.js';
 import os from 'os';
 import fs from 'fs';
 import util from 'util';
-
+import crypto from 'crypto';
+import * as Amplitude from '@amplitude/node';
 import { exec } from 'child_process';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
+
+const amplitudeClient = Amplitude.init('f1cde3642f7e0f483afbb7ac15ae8277');
+
+amplitudeClient.logEvent({
+  event_type: 'open-app',
+  device_id: crypto.createHash('sha256').update(os.hostname()).digest('base64'),
+  event_properties: {},
+});
+
+setInterval(() => {
+  amplitudeClient.logEvent({
+    event_type: 'heartbeat',
+    event_properties: {},
+  });
+}, 3600);
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_DIR_NAME = '.solana-workbench';
