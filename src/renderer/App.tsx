@@ -30,6 +30,27 @@ declare global {
   }
 }
 
+const useInterval = (callback: any, delay: number) => {
+  const savedCallback = useRef(() => {});
+
+  // Remember the latest callback.
+  useEffect(() => {
+    savedCallback.current = callback;
+  }, [callback]);
+
+  // Set up the interval.
+  useEffect(() => {
+    const tick = () => {
+      savedCallback.current();
+    };
+    if (delay !== null) {
+      const id = setInterval(tick, delay);
+      return () => clearInterval(id);
+    }
+    return () => {};
+  }, [delay]);
+};
+
 const Nav = () => {
   const renderTooltip = (id: string, title: string) => {
     return (props: any) => {
@@ -99,49 +120,36 @@ const Run = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const fetchLogs = useCallback(() => {
-    if (solStatus.running) {
-      window.electron.ipcRenderer.validatorLogs({
-        filter: filterRef.current.value,
-      });
-    }
-  }, [solStatus.running]);
+    window.electron.ipcRenderer.validatorLogs({
+      filter: filterRef.current.value,
+    });
+  }, []);
 
   const runValidator = () => {
     setLoading(true);
     window.electron.ipcRenderer.runValidator();
   };
 
+  useInterval(window.electron.ipcRenderer.solState, 1000);
+  useInterval(fetchLogs, 5000);
   useEffect(() => {
     window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
       setSolStatus(arg);
-      // eslint-disable-next-line no-console
-      console.log('got sol state', arg);
       if (arg.running) {
         setLoading(false);
-        setStartedValidator(false);
-        fetchLogs();
       }
     });
-
     window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
       setValidatorLogs(logs);
     });
-    const pollStatusInterval = setInterval(
-      () => window.electron.ipcRenderer.solState,
-      1000
-    );
-    const logsInterval = setInterval(fetchLogs, 5000);
     window.electron.ipcRenderer.solState();
-    return () => {
-      clearInterval(logsInterval);
-      clearInterval(pollStatusInterval);
-    };
+    fetchLogs();
   }, [fetchLogs]);
 
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      <span>Waiting for validator to come up...</span>
+      <span>Waiting for validator to become available...</span>
     </div>
   );
 
@@ -150,7 +158,7 @@ const Run = () => {
       statusDisplay = (
         <span className="badge bg-light text-dark">
           <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
-          Validator Running
+          Validator Available
         </span>
       );
     } else {
