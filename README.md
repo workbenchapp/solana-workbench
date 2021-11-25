@@ -13,24 +13,12 @@ of other fun tricks too.
 
 ## Run
 
-install native deps:
+install modules, then native deps, then bring it all together:
 
 ```
-$ yarn || true
-... will complain saying to do following, but it's ok ...
-$ (cd release/app && npm install @solana/web3.js)
-```
-
-now install top level deps:
-
-```
-$ yarn
-```
-
-run:
-
-```
-$ npm run start
-```
+$ npm install && \
+  (cd release/app && npm install @solana/web3.js) && \
+  npm install
+``
 
 Now you're working with Workbench!
