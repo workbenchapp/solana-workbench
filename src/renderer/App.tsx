@@ -115,7 +115,7 @@ const Nav = () => {
 
 const Run = () => {
   const [solStatus, setSolStatus] = useState({} as SolState);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
@@ -149,7 +149,6 @@ const Run = () => {
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      <span>Waiting for validator to become available...</span>
     </div>
   );
 
