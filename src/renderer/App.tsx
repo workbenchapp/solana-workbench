@@ -22,7 +22,14 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
+import amplitude from 'amplitude-js';
 import SolState from '../types/types';
+
+amplitude.getInstance().init('f1cde3642f7e0f483afbb7ac15ae8277');
+amplitude.getInstance().logEvent('open-app', {});
+setInterval(() => {
+  amplitude.getInstance().logEvent('heartbeat', {});
+}, 3600000);
 
 declare global {
   interface Window {
