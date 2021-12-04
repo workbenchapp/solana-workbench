@@ -53,7 +53,7 @@ const logfmtFormat = winston.format.printf((info) => {
     info.message
   }\t${logfmt.stringify(info.metadata)}`;
 });
-const winstonLogger = winston.createLogger({
+const logger = winston.createLogger({
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.metadata(),
@@ -62,11 +62,12 @@ const winstonLogger = winston.createLogger({
   transports: [
     new winston.transports.File({
       filename: path.join(LOG_DIR_PATH, 'latest.log'),
+      handleExceptions: true,
     }),
   ],
 });
 
-winstonLogger.info('Workbench session begin', {
+logger.info('Workbench session begin', {
   version: WORKBENCH_VERSION,
 });
 
@@ -80,10 +81,11 @@ const connectSOL = async (): Promise<SolState> => {
   try {
     connection = new web3.Connection('http://127.0.0.1:8899');
     await connection.getEpochInfo();
-    // connection = new web3.Connection('https://api.devnet.solana.com');
   } catch (error) {
-    winston.error('Cannot connect to validator', { error });
-    return ret;
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'ECONNREFUSED') {
+      return ret;
+    }
   }
   ret.running = true;
   return ret;
@@ -191,42 +193,87 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+const ipcMiddleware = (
+  channel: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  fn: (event: Electron.IpcMainEvent, ...args: any[]) => void
+) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return async (event: Electron.IpcMainEvent, ...args: any[]) => {
+    logger.info('IPC event', {
+      channel,
+    });
+    try {
+      await fn(event, ...args);
+    } catch (e) {
+      const error = e as Error;
+      const { stack } = error;
+      logger.error('IPC error', {
+        channel,
+        name: error.name,
+      });
+      logger.error('Stacktrace:');
+      stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
+    }
+  };
+};
 
-ipcMain.on('sol-state', async (event) => {
-  const solState = await connectSOL();
-  event.reply('sol-state', solState);
-});
+ipcMain.on(
+  'sol-state',
+  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent) => {
+    const solState = await connectSOL();
+    event.reply('sol-state', solState);
+  })
+);
 
-ipcMain.on('run-validator', async (event) => {
-  runValidator();
-  event.reply('run-validator', {});
-});
+ipcMain.on(
+  'run-validator',
+  ipcMiddleware('run-validator', async (event: Electron.IpcMainEvent) => {
+    runValidator();
+    event.reply('run-validator', {});
+  })
+);
 
-ipcMain.on('validator-logs', async (event, msg) => {
-  const logs = await validatorLogs(msg.filter);
-  event.reply('validator-logs', logs);
-});
+ipcMain.on(
+  'validator-logs',
+  ipcMiddleware('validator-logs', async (event, msg) => {
+    const logs = await validatorLogs(msg.filter);
+    event.reply('validator-logs', logs);
+  })
+);
 
-ipcMain.on('keypairs', async (event) => {
-  const pairs = await keypairs();
-  event.reply('keypairs', pairs);
-});
+ipcMain.on(
+  'keypairs',
+  ipcMiddleware('keypairs', async (event) => {
+    const pairs = await keypairs();
+    event.reply('keypairs', pairs);
+  })
+);
 
-ipcMain.on('add-keypair', async (event) => {
-  await addKeypair();
-  const pairs = await keypairs();
-  event.reply('add-keypair', pairs);
-});
+ipcMain.on(
+  'add-keypair',
+  ipcMiddleware('add-keypair', async (event) => {
+    await addKeypair();
+    const pairs = await keypairs();
+    event.reply('add-keypair', pairs);
+  })
+);
 
-ipcMain.on('airdrop', async (event, msg) => {
-  await airdropTokens(msg.pubKey, msg.solAmount);
-  event.reply('airdrop success');
-});
+ipcMain.on(
+  'airdrop',
+  ipcMiddleware('airdrop', async (event, msg) => {
+    await airdropTokens(msg.pubKey, msg.solAmount);
+    event.reply('airdrop success');
+  })
+);
 
-ipcMain.on('fetch-anchor-idl', async (event, msg) => {
-  const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
-  event.reply('fetch-anchor-idl', JSON.parse(stdout));
-});
+ipcMain.on(
+  'fetch-anchor-idl',
+  ipcMiddleware('fetch-anchor-idl', async (event, msg) => {
+    const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
+    event.reply('fetch-anchor-idl', JSON.parse(stdout));
+  })
+);
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');

@@ -142,9 +142,7 @@ const Run = () => {
   useEffect(() => {
     window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
       setSolStatus(arg);
-      if (arg.running) {
-        setLoading(false);
-      }
+      setLoading(false);
     });
     window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
       setValidatorLogs(logs);
