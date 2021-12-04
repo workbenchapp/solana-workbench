@@ -185,9 +185,8 @@ const Run = () => {
 
   return (
     <div className="row">
-      <h2>Run Deps</h2>
       <div className="col-sm-3">
-        <div className="mt-2 col">
+        <div className="col">
           <div>{statusDisplay}</div>
         </div>
       </div>
@@ -228,7 +227,6 @@ const Airdrop = () => {
 
   return (
     <div className="row">
-      <h2>Keys</h2>
       <div className="row mb-2">
         <div className="col-2">
           <Button onClick={addKeypair} variant="primary">
@@ -298,7 +296,6 @@ const Anchor = () => {
 
   return (
     <div className="row">
-      <h2>Anchor IDL</h2>
       <div className="row">
         <div className="col-sm-5">
           <InputGroup size="sm" className="mb-2 mt-1">
@@ -363,11 +360,11 @@ const Anchor = () => {
 export default function App() {
   return (
     <Router>
-      <div className="row">
-        <div className="col-auto">
+      <div className="row flex-nowrap g-0">
+        <div className="col-auto mt-2">
           <Nav />
         </div>
-        <div className="col-sm-10">
+        <div className="col-sm-10 mt-2 ms-4">
           <Switch>
             <Route exact path="/">
               <Run />
