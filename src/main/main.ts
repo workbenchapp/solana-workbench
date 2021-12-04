@@ -19,14 +19,19 @@ import os from 'os';
 import fs from 'fs';
 import util from 'util';
 import { exec } from 'child_process';
+import winston from 'winston';
+import logfmt from 'logfmt';
+
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
 
 const execAsync = util.promisify(exec);
+const WORKBENCH_VERSION = '0.1.2-dev';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
+const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const DOCKER_IMAGE =
   process.arch === 'arm64'
     ? 'nathanleclaire/solana:v1.8.5'
@@ -37,6 +42,33 @@ if (!fs.existsSync(WORKBENCH_DIR_PATH)) {
 if (!fs.existsSync(KEYPAIR_DIR_PATH)) {
   fs.mkdirSync(KEYPAIR_DIR_PATH);
 }
+if (!fs.existsSync(LOG_DIR_PATH)) {
+  fs.mkdirSync(LOG_DIR_PATH);
+}
+
+const logfmtFormat = winston.format.printf((info) => {
+  const { timestamp } = info.metadata;
+  delete info.metadata.timestamp;
+  return `${timestamp} ${info.level.toUpperCase()} ${
+    info.message
+  }\t${logfmt.stringify(info.metadata)}`;
+});
+const winstonLogger = winston.createLogger({
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.metadata(),
+    logfmtFormat
+  ),
+  transports: [
+    new winston.transports.File({
+      filename: path.join(LOG_DIR_PATH, 'latest.log'),
+    }),
+  ],
+});
+
+winstonLogger.info('Workbench session begin', {
+  version: WORKBENCH_VERSION,
+});
 
 const connectSOL = async (): Promise<SolState> => {
   // Connect to cluster
@@ -50,7 +82,7 @@ const connectSOL = async (): Promise<SolState> => {
     await connection.getEpochInfo();
     // connection = new web3.Connection('https://api.devnet.solana.com');
   } catch (error) {
-    console.log('COULD NOT CONNECT', error);
+    winston.error('Cannot connect to validator', { error });
     return ret;
   }
   ret.running = true;
