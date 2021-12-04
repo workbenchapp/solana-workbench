@@ -200,9 +200,7 @@ const ipcMiddleware = (
 ) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async (event: Electron.IpcMainEvent, ...args: any[]) => {
-    logger.info('IPC event', {
-      channel,
-    });
+    logger.info('IPC event', Object.assign({ channel }, ...args));
     try {
       await fn(event, ...args);
     } catch (e) {
