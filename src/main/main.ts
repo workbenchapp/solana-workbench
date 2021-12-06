@@ -88,12 +88,13 @@ const initLogging = async () => {
       }),
     ],
   });
+
+  logger.info('Workbench session begin', {
+    version: WORKBENCH_VERSION,
+    workdir: process.cwd(),
+  });
 };
 initLogging();
-
-logger.info('Workbench session begin', {
-  version: WORKBENCH_VERSION,
-});
 
 const connectSOL = async (): Promise<SolState> => {
   // Connect to cluster
