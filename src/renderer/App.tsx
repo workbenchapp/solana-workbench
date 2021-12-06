@@ -214,7 +214,7 @@ const Run = () => {
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
-          <code>{validatorLogs}</code>
+          <code className={`${!solStatus.running ?"text-muted" : ""}`}>{validatorLogs}</code>
         </pre>
       </div>
     </div>
