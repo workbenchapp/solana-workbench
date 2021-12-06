@@ -21,7 +21,6 @@ import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import logfmt from 'logfmt';
-
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
@@ -36,6 +35,10 @@ const DOCKER_IMAGE =
   process.arch === 'arm64'
     ? 'nathanleclaire/solana:v1.8.5'
     : 'solanalabs/solana:v1.8.5';
+let DOCKER_PATH = 'docker';
+if (process.platform !== 'win32') {
+  DOCKER_PATH = '/usr/local/bin/docker';
+}
 if (!fs.existsSync(WORKBENCH_DIR_PATH)) {
   fs.mkdirSync(WORKBENCH_DIR_PATH);
 }
@@ -147,7 +150,7 @@ const airdropTokens = async (pubKey: string, sol: number): Promise<void> => {
 
 const runValidator = async () => {
   try {
-    await execAsync(`docker inspect solana-test-validator`);
+    await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
     const err = e as Error;
     console.log('INSPECT ERROR', err);
@@ -155,7 +158,7 @@ const runValidator = async () => {
     // TODO: check for image, pull if not present
 
     await execAsync(
-      `docker run \
+      `${DOCKER_PATH} run \
         --name solana-test-validator \
         -d \
         -p 8899:8899 \
@@ -166,7 +169,7 @@ const runValidator = async () => {
 
     return;
   }
-  await execAsync(`docker start solana-test-validator`);
+  await execAsync(`${DOCKER_PATH} start solana-test-validator`);
 };
 
 const validatorLogs = async (filter: string) => {
@@ -176,12 +179,21 @@ const validatorLogs = async (filter: string) => {
   // TODO: doing this out of process might be a better fit
   const maxBuffer = 104857600; // 100MB
 
+  if (filter !== '') {
+    const { stderr } = await execAsync(
+      `${DOCKER_PATH} logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
+      { maxBuffer }
+    );
+    const lines = stderr.split('\n').filter((s) => s.match(filter));
+    return lines
+      .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1))
+      .join('\n');
+  }
   const { stderr } = await execAsync(
-    `docker logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
+    `${DOCKER_PATH} logs --tail ${MAX_DISPLAY_LINES} solana-test-validator`,
     { maxBuffer }
   );
-  const lines = stderr.split('\n').filter((s) => s.match(filter));
-  return lines.slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1)).join('\n');
+  return stderr;
 };
 
 export default class AppUpdater {

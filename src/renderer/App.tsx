@@ -22,6 +22,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
+import _ from 'underscore';
 import SolState from '../types/types';
 
 amplitude.getInstance().init('f1cde3642f7e0f483afbb7ac15ae8277');
@@ -122,6 +123,7 @@ const Nav = () => {
 const Run = () => {
   const [solStatus, setSolStatus] = useState({} as SolState);
   const [loading, setLoading] = useState(true);
+  const [waitingForRun, setWaitingForRun] = useState(false);
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
@@ -131,17 +133,24 @@ const Run = () => {
     });
   }, []);
 
+  const triggerFetchLogs = _.debounce(fetchLogs, 800);
+
   const runValidator = () => {
-    setLoading(true);
+    setWaitingForRun(true);
     window.electron.ipcRenderer.runValidator();
   };
 
-  useInterval(window.electron.ipcRenderer.solState, 1000);
+  useInterval(window.electron.ipcRenderer.solState, 5000);
   useInterval(fetchLogs, 5000);
   useEffect(() => {
     window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
       setSolStatus(arg);
+      // eslint-disable-next-line no-console
+      console.log('sol-state', arg);
       setLoading(false);
+      if (arg.running) {
+        setWaitingForRun(false);
+      }
     });
     window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
       setValidatorLogs(logs);
@@ -153,10 +162,15 @@ const Run = () => {
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+      {waitingForRun && (
+        <small className="text-muted">
+          Starting validator. This can take about a minute...
+        </small>
+      )}
     </div>
   );
 
-  if (!loading) {
+  if (!loading && !waitingForRun) {
     if (solStatus.running) {
       statusDisplay = (
         <span className="badge bg-light text-dark">
@@ -196,6 +210,7 @@ const Run = () => {
             ref={filterRef}
             placeholder="Filter logs"
             aria-label="Amount"
+            onKeyDown={triggerFetchLogs}
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
