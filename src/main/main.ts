@@ -26,7 +26,7 @@ import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
 
 const execAsync = util.promisify(exec);
-const WORKBENCH_VERSION = '0.1.2-dev';
+const WORKBENCH_VERSION = '0.1.2-alpha';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
