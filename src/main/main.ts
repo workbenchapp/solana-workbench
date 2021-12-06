@@ -31,6 +31,8 @@ const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
+const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
+const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
     ? 'nathanleclaire/solana:v1.8.5'
@@ -49,26 +51,45 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
   fs.mkdirSync(LOG_DIR_PATH);
 }
 
-const logfmtFormat = winston.format.printf((info) => {
-  const { timestamp } = info.metadata;
-  delete info.metadata.timestamp;
-  return `${timestamp} ${info.level.toUpperCase()} ${
-    info.message
-  }\t${logfmt.stringify(info.metadata)}`;
+let logger = winston.createLogger({
+  transports: [new winston.transports.Console()],
 });
-const logger = winston.createLogger({
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.metadata(),
-    logfmtFormat
-  ),
-  transports: [
-    new winston.transports.File({
-      filename: path.join(LOG_DIR_PATH, 'latest.log'),
-      handleExceptions: true,
-    }),
-  ],
-});
+const initLogging = async () => {
+  // todo: could do better log rotation,
+  // but this will do for now to avoid infinite growth
+  try {
+    const stat = await fs.promises.stat(LOG_FILE_PATH);
+    if (stat.size > MAX_LOG_FILE_BYTES) {
+      await fs.promises.rm(LOG_FILE_PATH);
+    }
+    // might get exception if file does not exist,
+    // but it's expected.
+    //
+    // eslint-disable-next-line no-empty
+  } catch (error) {}
+
+  const logfmtFormat = winston.format.printf((info) => {
+    const { timestamp } = info.metadata;
+    delete info.metadata.timestamp;
+    return `${timestamp} ${info.level.toUpperCase()} ${
+      info.message
+    }\t${logfmt.stringify(info.metadata)}`;
+  });
+  logger = winston.createLogger({
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.metadata(),
+      logfmtFormat
+    ),
+    transports: [
+      new winston.transports.File({
+        filename: LOG_FILE_PATH,
+        handleExceptions: true,
+      }),
+    ],
+  });
+};
+initLogging();
 
 logger.info('Workbench session begin', {
   version: WORKBENCH_VERSION,
