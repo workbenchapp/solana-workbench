@@ -73,7 +73,7 @@ const initLogging = async () => {
     delete info.metadata.timestamp;
     return `${timestamp} ${info.level.toUpperCase()} ${
       info.message
-    }\t${logfmt.stringify(info.metadata)}`;
+    } \t${logfmt.stringify(info.metadata)}`;
   });
   logger = winston.createLogger({
     format: winston.format.combine(
