@@ -264,7 +264,7 @@ const Airdrop = () => {
                 }`}
                 key={e.pubKey}
               >
-                <div className="row">
+                <div className="row flex-nowrap">
                   <div className="col-4">
                     <pre className="inline-key mb-0">
                       <code>
