@@ -21,6 +21,7 @@ import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import logfmt from 'logfmt';
+import randomart from 'randomart';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
@@ -133,17 +134,19 @@ const keypairs = async () => {
     const isFile = stat.isFile();
     const time = stat.mtime.getTime();
     const pubKey = keyFile.slice(0, keyFile.indexOf('.'));
+    const kp = await localKeypair(pubKey);
+    const art = randomart(kp.publicKey.toBytes());
     return {
       kPath,
       isFile,
       time,
       pubKey,
+      art,
     };
   });
   const web3Keys = await Promise.all(web3KeyPromises);
   web3Keys.filter((x) => x.isFile).sort((a, b) => b.time - a.time);
-  const publicKeys = web3Keys.map((k) => k.pubKey);
-  return publicKeys;
+  return web3Keys;
 };
 
 const addKeypair = async () => {

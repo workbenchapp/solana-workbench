@@ -16,6 +16,18 @@ code {
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
+.btn-check:checked + .btn-primary:focus,
+.btn-check:active + .btn-primary:focus,
+.btn-primary:active:focus,
+.btn-primary.active:focus,
+.show > .btn-primary.dropdown-toggle:focus {
+  box-shadow: none;
+}
+.btn-check:focus + .btn-primary,
+.btn-primary:focus {
+  box-shadow: none;
+}
+
 /* Reset settings from code {} above.
    TODO: Figure out how to make prettier. */
 pre code {
@@ -53,4 +65,12 @@ pre code {
 
 .sol-green {
   color: #14f195;
+}
+
+.inline-key {
+  font-size: 0.25em;
+}
+
+.account-list-item {
+  cursor: pointer;
 }

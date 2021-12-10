@@ -1,3 +1,5 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/jsx-props-no-spreading */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
@@ -5,17 +7,19 @@ import {
   Switch,
   Route,
   NavLink,
+  useLocation,
 } from 'react-router-dom';
 import './App.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Dropdown from 'react-bootstrap/Dropdown';
 import Tooltip from 'react-bootstrap/Tooltip';
 import {
   faRunning,
-  faCoins,
+  faTh,
   faCircle,
   faSpinner,
-  faPlus,
   faAnchor,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -69,7 +73,7 @@ const Nav = () => {
     };
   };
   return (
-    <div>
+    <div className="sticky-top">
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
@@ -89,15 +93,15 @@ const Nav = () => {
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('airdrop', 'Airdrop')}
+        overlay={renderTooltip('accounts', 'Accounts')}
       >
         <NavLink
           className="nav-link nav-icon"
           activeClassName="selected-nav-icon"
-          to="/airdrop"
+          to="/accounts"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon className="nav-icon" size="3x" icon={faCoins} />
+            <FontAwesomeIcon className="nav-icon" size="3x" icon={faTh} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -214,26 +218,33 @@ const Run = () => {
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
-          <code className={`${!solStatus.running ?"text-muted" : ""}`}>{validatorLogs}</code>
+          <code className={`${!solStatus.running ? 'text-muted' : ''}`}>
+            {validatorLogs}
+          </code>
         </pre>
       </div>
     </div>
   );
 };
 
-const Airdrop = () => {
-  const [keypairs, setKeyPairs] = useState<string[]>([]);
+const prettifyPubkey = (pk: string) =>
+  `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`;
 
+const Airdrop = () => {
+  const [keypairs, setKeyPairs] = useState<any[]>([]);
+  const [selected, setSelected] = useState<string>('');
+
+  /*
   const addKeypair = () => {
-    window.electron.ipcRenderer.on('add-keypair', (pairs: string[]) => {
+    window.electron.ipcRenderer.on('add-keypair', (pairs: any[]) => {
       setKeyPairs(pairs);
     });
 
     window.electron.ipcRenderer.addKeypair();
   };
-
+  */
   useEffect(() => {
-    window.electron.ipcRenderer.once('keypairs', (pairs: string[]) => {
+    window.electron.ipcRenderer.once('keypairs', (pairs: any[]) => {
       setKeyPairs(pairs);
     });
 
@@ -242,43 +253,27 @@ const Airdrop = () => {
 
   return (
     <div className="row">
-      <div className="row mb-2">
-        <div className="col-2">
-          <Button onClick={addKeypair} variant="primary">
-            <FontAwesomeIcon icon={faPlus} /> Keypair
-          </Button>
-        </div>
-      </div>
-      <div className="row">
+      <div className="col-2">
         {keypairs.length > 0 ? (
-          keypairs.map((e: string) => {
+          keypairs.map((e: any) => {
             return (
-              <div className="card col-5 m-1">
-                <div key={e} className="card-body">
-                  <div>
-                    <h6 className="card-title">{e}</h6>
-                    <div className="row">
-                      <div className="col-sm-8">
-                        <InputGroup size="sm" className="mt-1">
-                          <InputGroup.Text>Amount</InputGroup.Text>
-                          <FormControl aria-label="Amount" />
-                        </InputGroup>
-                      </div>
-                      <div className="col-sm-2">
-                        <Button
-                          onClick={() =>
-                            window.electron.ipcRenderer.airdropTokens({
-                              pubKey: e,
-                              solAmount: 1,
-                            })
-                          }
-                          className="mt-1 btn-sm float-right"
-                          variant="primary"
-                        >
-                          Airdrop
-                        </Button>
-                      </div>
-                    </div>
+              <div
+                onClick={() => setSelected(e.pubKey)}
+                className={`border-bottom p-2 account-list-item ${
+                  selected === e.pubKey ? 'bg-light' : ''
+                }`}
+                key={e.pubKey}
+              >
+                <div className="row">
+                  <div className="col-4">
+                    <pre className="inline-key mb-0">
+                      <code>
+                        <b>{e.art}</b>
+                      </code>
+                    </pre>
+                  </div>
+                  <div className="col">
+                    <code>{prettifyPubkey(e.pubKey)}</code>
                   </div>
                 </div>
               </div>
@@ -301,7 +296,6 @@ const Anchor = () => {
   const fetchIDL = () => {
     window.electron.ipcRenderer.once('fetch-anchor-idl', (fetchedIDL: any) => {
       setIDL(fetchedIDL);
-      console.log(fetchedIDL);
     });
 
     window.electron.ipcRenderer.fetchAnchorIDL({
@@ -372,27 +366,64 @@ const Anchor = () => {
   );
 };
 
+const Header = () => {
+  const location = useLocation();
+  const routes: Record<string, string> = {
+    '/': 'Validator',
+    '/accounts': 'Accounts',
+    '/anchor': 'Anchor',
+  };
+  return <strong>{routes[location.pathname]}</strong>;
+};
+
 export default function App() {
+  const [net, setNet] = useState('localhost');
+  const netDropdownClick = (e: any) => {
+    e.preventDefault();
+    setNet(e.target.innerText);
+    // eslint-disable-next-line no-console
+    console.log(e);
+  };
+
   return (
     <Router>
-      <div className="row flex-nowrap g-0">
-        <div className="col-auto mt-2">
-          <Nav />
+      <Switch>
+        <div className="row flex-nowrap g-0">
+          <div className="col-auto mt-2">
+            <Nav />
+          </div>
+          <div className="col-sm-10 mt-2 ms-4">
+            <div className="row bg-white sticky-top">
+              <div>
+                <Header />
+                <DropdownButton
+                  size="sm"
+                  id="dropdown-basic-button"
+                  title={net}
+                  onClick={netDropdownClick}
+                  className="float-end"
+                >
+                  <Dropdown.Item href="#">localhost</Dropdown.Item>
+                  <Dropdown.Item href="#">devnet</Dropdown.Item>
+                  <Dropdown.Item href="#">testnet</Dropdown.Item>
+                  <Dropdown.Item href="#">mainnet</Dropdown.Item>
+                </DropdownButton>
+              </div>
+            </div>
+            <div className="row mt-2">
+              <Route exact path="/">
+                <Run />
+              </Route>
+              <Route path="/accounts">
+                <Airdrop />
+              </Route>
+              <Route path="/anchor">
+                <Anchor />
+              </Route>
+            </div>
+          </div>
         </div>
-        <div className="col-sm-10 mt-2 ms-4">
-          <Switch>
-            <Route exact path="/">
-              <Run />
-            </Route>
-            <Route path="/airdrop">
-              <Airdrop />
-            </Route>
-            <Route path="/anchor">
-              <Anchor />
-            </Route>
-          </Switch>
-        </div>
-      </div>
+      </Switch>
     </Router>
   );
 }
