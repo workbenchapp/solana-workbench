@@ -7,6 +7,15 @@ $font-family-code: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
   Liberation Mono, monospace;
 $code-font-size: 85%;
 
+$primary: #0085cc;
+$secondary: #4b5358;
+$success: #3c7c50;
+$danger: #b80c09;
+$warning: #e08e45;
+$info: #7de2d1;
+$light: #eff2ef;
+$dark: #242423;
+
 code {
   padding: 0.2em 0.4em;
   border-radius: 6px;
@@ -16,15 +25,15 @@ code {
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
-.btn-check:checked + .btn-primary:focus,
-.btn-check:active + .btn-primary:focus,
-.btn-primary:active:focus,
-.btn-primary.active:focus,
-.show > .btn-primary.dropdown-toggle:focus {
+.btn-check:checked + .btn-light:focus,
+.btn-check:active + .btn-light:focus,
+.btn-light:active:focus,
+.btn-light.active:focus,
+.show > .btn-light.dropdown-toggle:focus {
   box-shadow: none;
 }
-.btn-check:focus + .btn-primary,
-.btn-primary:focus {
+.btn-check:focus + .btn-light,
+.btn-light:focus {
   box-shadow: none;
 }
 
@@ -33,7 +42,7 @@ code {
 pre code {
   padding: 0px;
   background-color: white;
-  color: rgb(36, 41, 47);
+  color: $dark;
 }
 
 .nav-link {
@@ -47,20 +56,20 @@ pre code {
 }
 
 .nav-icon > div > svg {
-  color: #6c757d;
+  color: $secondary;
 }
 
 .nav-icon > div > svg:hover {
-  color: black;
+  color: $dark;
 }
 
 .selected-nav-icon {
-  border-left: solid black;
+  border-left: solid $dark;
   border-left-width: 2px;
 }
 
 .selected-nav-icon > div > svg {
-  color: black;
+  color: $dark;
 }
 
 .sol-green {
@@ -74,3 +83,10 @@ pre code {
 .account-list-item {
   cursor: pointer;
 }
+
+/*
+color pallette ideas:
+
+14f195,fff8f0,9e2b25,30323d,5c80bc
+0085cc,4b5358,3f7d20,931621,e08e45,7de2d1,eff2ef,242423,ffffff,14f195
+*/

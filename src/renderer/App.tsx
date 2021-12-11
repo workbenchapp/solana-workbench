@@ -192,7 +192,7 @@ const Run = () => {
             </span>
           </div>
           <div>
-            <Button onClick={runValidator} className="mt-2" variant="primary">
+            <Button onClick={runValidator} className="mt-2" variant="success">
               Run
             </Button>
           </div>
@@ -253,7 +253,7 @@ const Airdrop = () => {
 
   return (
     <div className="row">
-      <div className="col-2">
+      <div className="col-3">
         {keypairs.length > 0 ? (
           keypairs.map((e: any) => {
             return (
@@ -402,6 +402,7 @@ export default function App() {
                   title={net}
                   onClick={netDropdownClick}
                   className="float-end"
+                  variant="light"
                 >
                   <Dropdown.Item href="#">localhost</Dropdown.Item>
                   <Dropdown.Item href="#">devnet</Dropdown.Item>
