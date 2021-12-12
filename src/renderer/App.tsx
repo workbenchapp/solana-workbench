@@ -21,6 +21,7 @@ import {
   faCircle,
   faSpinner,
   faAnchor,
+  faKey,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
@@ -253,7 +254,11 @@ const Airdrop = () => {
 
   return (
     <div className="row">
-      <div className="col-3">
+      <div className="col-auto">
+        <FontAwesomeIcon icon={faKey} />
+        <span className="ms-2">
+          <code>todo:rootkey</code>
+        </span>
         {keypairs.length > 0 ? (
           keypairs.map((e: any) => {
             return (
@@ -265,10 +270,10 @@ const Airdrop = () => {
                 key={e.pubKey}
               >
                 <div className="row flex-nowrap">
-                  <div className="col-4">
-                    <pre className="inline-key mb-0">
+                  <div className="col-auto">
+                    <pre className="border inline-key mb-0">
                       <code>
-                        <b>{e.art}</b>
+                        <strong>{e.art}</strong>
                       </code>
                     </pre>
                   </div>
@@ -393,7 +398,7 @@ export default function App() {
             <Nav />
           </div>
           <div className="col-sm-10 mt-2 ms-4">
-            <div className="row bg-white sticky-top">
+            <div className="row bg-white sticky-top mb-2">
               <div>
                 <Header />
                 <DropdownButton
@@ -411,7 +416,7 @@ export default function App() {
                 </DropdownButton>
               </div>
             </div>
-            <div className="row mt-2">
+            <div className="row">
               <Route exact path="/">
                 <Run />
               </Route>
