@@ -7,12 +7,12 @@ $font-family-code: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
   Liberation Mono, monospace;
 $code-font-size: 85%;
 
-$primary: #0085cc;
-$secondary: #4b5358;
-$success: #3c7c50;
-$danger: #b80c09;
-$warning: #e08e45;
-$info: #7de2d1;
+$blue: #0085cc;
+$gray: #4b5358;
+$green: #3c7c50;
+$red: #b80c09;
+$orange: #e08e45;
+$teal: #14f195;
 $light: #eff2ef;
 $dark: #242423;
 
@@ -56,7 +56,7 @@ pre code {
 }
 
 .nav-icon > div > svg {
-  color: $secondary;
+  color: $text-muted;
 }
 
 .nav-icon > div > svg:hover {

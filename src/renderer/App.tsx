@@ -235,15 +235,6 @@ const Airdrop = () => {
   const [keypairs, setKeyPairs] = useState<any[]>([]);
   const [selected, setSelected] = useState<string>('');
 
-  /*
-  const addKeypair = () => {
-    window.electron.ipcRenderer.on('add-keypair', (pairs: any[]) => {
-      setKeyPairs(pairs);
-    });
-
-    window.electron.ipcRenderer.addKeypair();
-  };
-  */
   useEffect(() => {
     window.electron.ipcRenderer.once('keypairs', (pairs: any[]) => {
       setKeyPairs(pairs);
@@ -253,12 +244,14 @@ const Airdrop = () => {
   }, []);
 
   return (
-    <div className="row">
+    <>
       <div className="col-auto">
-        <FontAwesomeIcon icon={faKey} />
-        <span className="ms-2">
-          <code>todo:rootkey</code>
-        </span>
+        <div className="mb-3">
+          <FontAwesomeIcon icon={faKey} />
+          <span className="ms-2">
+            <code>todo:rootkey</code>
+          </span>
+        </div>
         {keypairs.length > 0 ? (
           keypairs.map((e: any) => {
             return (
@@ -285,12 +278,15 @@ const Airdrop = () => {
             );
           })
         ) : (
-          <div>
-            No keypairs. How are you supposed to SOL without any keypairs?
-          </div>
+          <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
         )}
       </div>
-    </div>
+      <div className="col-auto">
+        <InputGroup size="sm">
+          <FormControl placeholder="Account ID" aria-label="Account ID" />
+        </InputGroup>
+      </div>
+    </>
   );
 };
 
@@ -412,7 +408,6 @@ export default function App() {
                   <Dropdown.Item href="#">localhost</Dropdown.Item>
                   <Dropdown.Item href="#">devnet</Dropdown.Item>
                   <Dropdown.Item href="#">testnet</Dropdown.Item>
-                  <Dropdown.Item href="#">mainnet</Dropdown.Item>
                 </DropdownButton>
               </div>
             </div>
