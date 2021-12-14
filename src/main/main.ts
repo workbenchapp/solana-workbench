@@ -14,14 +14,13 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import * as web3 from '@solana/web3.js';
+import * as sol from '@solana/web3.js';
 import os from 'os';
 import fs from 'fs';
 import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import logfmt from 'logfmt';
-import randomart from 'randomart';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
@@ -41,6 +40,7 @@ const DOCKER_IMAGE =
     ? 'nathanleclaire/solana:v1.8.5'
     : 'solanalabs/solana:v1.8.5';
 let DOCKER_PATH = 'docker';
+const AIRDROP_AMOUNT = 100;
 if (process.platform !== 'win32') {
   DOCKER_PATH = '/usr/local/bin/docker';
 }
@@ -99,16 +99,17 @@ const initLogging = async () => {
 };
 initLogging();
 
+let solConn: sol.Connection;
+
 const connectSOL = async (): Promise<SolState> => {
   // Connect to cluster
-  let connection: web3.Connection;
   const ret = {
     running: false,
     keyId: '',
   } as SolState;
   try {
-    connection = new web3.Connection('http://127.0.0.1:8899');
-    await connection.getEpochInfo();
+    solConn = new sol.Connection('http://127.0.0.1:8899');
+    await solConn.getEpochInfo();
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     if (err.code === 'ECONNREFUSED') {
@@ -119,40 +120,37 @@ const connectSOL = async (): Promise<SolState> => {
   return ret;
 };
 
-const keyPath = (pubKey: string) =>
-  path.join(KEYPAIR_DIR_PATH, `${pubKey}.json`);
-
-const localKeypair = async (pubKey: string): Promise<web3.Keypair> => {
-  const fileContents = await fs.promises.readFile(keyPath(pubKey));
+const localKeypair = async (f: string): Promise<sol.Keypair> => {
+  const fileContents = await fs.promises.readFile(f);
   const data = Uint8Array.from(JSON.parse(fileContents.toString()));
-  return web3.Keypair.fromSecretKey(data);
+  return sol.Keypair.fromSecretKey(data);
 };
 
-const keypairs = async () => {
-  const keypairFiles = await fs.promises.readdir(KEYPAIR_DIR_PATH);
-  const web3KeyPromises = keypairFiles.map(async (keyFile) => {
-    const kPath = path.join(KEYPAIR_DIR_PATH, keyFile);
-    const stat = await fs.promises.stat(kPath);
-    const isFile = stat.isFile();
-    const time = stat.mtime.getTime();
-    const pubKey = keyFile.slice(0, keyFile.indexOf('.'));
-    const kp = await localKeypair(pubKey);
-    const art = randomart(kp.publicKey.toBytes());
-    return {
-      kPath,
-      isFile,
-      time,
-      pubKey,
-      art,
-    };
-  });
-  const web3Keys = await Promise.all(web3KeyPromises);
-  web3Keys.filter((x) => x.isFile).sort((a, b) => b.time - a.time);
-  return web3Keys;
+const accounts = async () => {
+  const kp = await localKeypair(KEY_PATH);
+  const acc = new sol.Keypair();
+  const txn = new sol.Transaction();
+  txn.add(
+    sol.SystemProgram.createAccount({
+      fromPubkey: kp.publicKey,
+      newAccountPubkey: acc.publicKey,
+      space: 128,
+      lamports: 0,
+      programId: sol.SystemProgram.programId,
+    })
+  );
+  await sol.sendAndConfirmTransaction(solConn, txn, [kp, acc]);
+  return [kp.publicKey, acc.publicKey];
 };
 
 const addKeypair = async (kpPath: string) => {
-  const kp = web3.Keypair.generate();
+  const kp = sol.Keypair.generate();
+
+  // todo: this conn might not be initialized yet
+  await solConn.requestAirdrop(
+    kp.publicKey,
+    AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
+  );
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
   // {"0": 1, "1": 2, "2": 3 ...}
@@ -162,16 +160,17 @@ const addKeypair = async (kpPath: string) => {
 };
 
 if (!fs.existsSync(KEY_PATH)) {
+  logger.info('Creating root key', { KEY_PATH });
   addKeypair(KEY_PATH);
 }
 
-const airdropTokens = async (pubKey: string, sol: number): Promise<void> => {
-  const connection = new web3.Connection('http://127.0.0.1:8899');
+const airdropTokens = async (pubKey: string, amount: number): Promise<void> => {
+  const connection = new sol.Connection('http://127.0.0.1:8899');
 
   const to = await localKeypair(pubKey);
   const airdropSignature = await connection.requestAirdrop(
     to.publicKey,
-    web3.LAMPORTS_PER_SOL * sol
+    sol.LAMPORTS_PER_SOL * amount
   );
   await connection.confirmTransaction(airdropSignature);
 };
@@ -283,7 +282,7 @@ ipcMain.on(
 ipcMain.on(
   'accounts',
   ipcMiddleware('accounts', async (event) => {
-    const pairs = await keypairs();
+    const pairs = await accounts();
     event.reply('accounts', pairs);
   })
 );
@@ -292,7 +291,7 @@ ipcMain.on(
   'add-keypair',
   ipcMiddleware('add-keypair', async (event) => {
     await addKeypair('fixme');
-    const pairs = await keypairs();
+    const pairs = await accounts();
     event.reply('add-keypair', pairs);
   })
 );
