@@ -232,15 +232,16 @@ const prettifyPubkey = (pk: string) =>
   `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`;
 
 const Airdrop = () => {
-  const [keypairs, setKeyPairs] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [selected, setSelected] = useState<string>('');
+  const [hoveredItem, setHoveredItem] = useState<string>('');
 
   useEffect(() => {
-    window.electron.ipcRenderer.once('keypairs', (pairs: any[]) => {
-      setKeyPairs(pairs);
+    window.electron.ipcRenderer.once('accounts', (accounts: any[]) => {
+      setAccounts(accounts);
     });
 
-    window.electron.ipcRenderer.keypairs();
+    window.electron.ipcRenderer.accounts();
   }, []);
 
   return (
@@ -252,15 +253,17 @@ const Airdrop = () => {
             <code>todo:rootkey</code>
           </span>
         </div>
-        {keypairs.length > 0 ? (
-          keypairs.map((e: any) => {
+        {accounts.length > 0 ? (
+          accounts.map((e: any) => {
             return (
               <div
                 onClick={() => setSelected(e.pubKey)}
                 className={`border-bottom p-2 account-list-item ${
-                  selected === e.pubKey ? 'bg-light' : ''
-                }`}
+                  selected === e.pubKey ? 'account-list-item-selected' : ''
+                } ${hoveredItem === e.pubKey ? 'bg-light' : ''}`}
                 key={e.pubKey}
+                onMouseEnter={() => setHoveredItem(e.pubKey)}
+                onMouseLeave={() => setHoveredItem('')}
               >
                 <div className="row flex-nowrap">
                   <div className="col-auto">

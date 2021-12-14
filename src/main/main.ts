@@ -27,12 +27,14 @@ import { resolveHtmlPath } from './util';
 import SolState from '../types/types';
 
 const execAsync = util.promisify(exec);
-const WORKBENCH_VERSION = '0.1.2-alpha';
+const WORKBENCH_VERSION = '0.1.3-dev';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
+const KEY_FILE_NAME = 'wbkey.json';
+const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -149,18 +151,19 @@ const keypairs = async () => {
   return web3Keys;
 };
 
-const addKeypair = async () => {
+const addKeypair = async (kpPath: string) => {
   const kp = web3.Keypair.generate();
-  const kpPath = keyPath(kp.publicKey.toString());
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
   // {"0": 1, "1": 2, "2": 3 ...}
   const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
   const fileContents = JSON.stringify(secretKeyUint);
   await fs.promises.writeFile(kpPath, fileContents);
-  const allKeypairs = await keypairs();
-  return allKeypairs;
 };
+
+if (!fs.existsSync(KEY_PATH)) {
+  addKeypair(KEY_PATH);
+}
 
 const airdropTokens = async (pubKey: string, sol: number): Promise<void> => {
   const connection = new web3.Connection('http://127.0.0.1:8899');
@@ -278,17 +281,17 @@ ipcMain.on(
 );
 
 ipcMain.on(
-  'keypairs',
-  ipcMiddleware('keypairs', async (event) => {
+  'accounts',
+  ipcMiddleware('accounts', async (event) => {
     const pairs = await keypairs();
-    event.reply('keypairs', pairs);
+    event.reply('accounts', pairs);
   })
 );
 
 ipcMain.on(
   'add-keypair',
   ipcMiddleware('add-keypair', async (event) => {
-    await addKeypair();
+    await addKeypair('fixme');
     const pairs = await keypairs();
     event.reply('add-keypair', pairs);
   })

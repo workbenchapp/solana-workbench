@@ -16,14 +16,14 @@ $teal: #14f195;
 $light: #eff2ef;
 $dark: #242423;
 
+@import '../../node_modules/bootstrap/scss/bootstrap';
+
 code {
   padding: 0.2em 0.4em;
   border-radius: 6px;
-  background-color: rgba(179, 185, 189, 0.2);
+  background-color: $gray-200;
   font-weight: 500;
 }
-
-@import '../../node_modules/bootstrap/scss/bootstrap';
 
 .btn-check:checked + .btn-light:focus,
 .btn-check:active + .btn-light:focus,
@@ -86,6 +86,10 @@ svg {
 
 .account-list-item {
   cursor: pointer;
+}
+
+.account-list-item-selected {
+  background-color: rgba($blue-100, 0.5);
 }
 
 /*

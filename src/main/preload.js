@@ -8,8 +8,8 @@ contextBridge.exposeInMainWorld('electron', {
     solState() {
       ipcRenderer.send('sol-state', {});
     },
-    keypairs() {
-      ipcRenderer.send('keypairs', {});
+    accounts() {
+      ipcRenderer.send('accounts', {});
     },
     addKeypair() {
       ipcRenderer.send('add-keypair', {});
@@ -27,7 +27,7 @@ contextBridge.exposeInMainWorld('electron', {
       const validChannels = [
         'sol-state',
         'run-validator',
-        'keypairs',
+        'accounts',
         'add-keypair',
         'airdrop',
         'validator-logs',
@@ -42,7 +42,7 @@ contextBridge.exposeInMainWorld('electron', {
       const validChannels = [
         'sol-state',
         'run-validator',
-        'keypairs',
+        'accounts',
         'add-keypair',
         'airdrop',
         'validator-logs',
