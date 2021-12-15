@@ -57,6 +57,7 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
+
 const initLogging = async () => {
   // todo: could do better log rotation,
   // but this will do for now to avoid infinite growth
@@ -99,9 +100,9 @@ const initLogging = async () => {
 };
 initLogging();
 
-let solConn: sol.Connection;
-
 const connectSOL = async (): Promise<SolState> => {
+  let solConn: sol.Connection;
+
   // Connect to cluster
   const ret = {
     running: false,
@@ -128,28 +129,39 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
 
 const accounts = async () => {
   const kp = await localKeypair(KEY_PATH);
+
+  // todo: check if default accts exist
+  // before creating
   const acc = new sol.Keypair();
   const txn = new sol.Transaction();
+  const solConn = new sol.Connection('http://127.0.0.1:8899');
   txn.add(
     sol.SystemProgram.createAccount({
       fromPubkey: kp.publicKey,
       newAccountPubkey: acc.publicKey,
       space: 128,
-      lamports: 0,
+      lamports: 100,
       programId: sol.SystemProgram.programId,
     })
   );
-  await sol.sendAndConfirmTransaction(solConn, txn, [kp, acc]);
+  logger.info('creating account', {
+    acc_pubkey: acc.publicKey,
+  });
+  const txnID = await sol.sendAndConfirmTransaction(solConn, txn, [kp, acc]);
+  logger.info('created account', { txnID });
   return [kp.publicKey, acc.publicKey];
 };
 
 const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
+  const solConn = new sol.Connection('http://127.0.0.1:8899');
 
   // todo: this conn might not be initialized yet
-  await solConn.requestAirdrop(
-    kp.publicKey,
-    AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
+  await solConn.confirmTransaction(
+    await solConn.requestAirdrop(
+      kp.publicKey,
+      AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
+    )
   );
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
@@ -157,22 +169,6 @@ const addKeypair = async (kpPath: string) => {
   const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
   const fileContents = JSON.stringify(secretKeyUint);
   await fs.promises.writeFile(kpPath, fileContents);
-};
-
-if (!fs.existsSync(KEY_PATH)) {
-  logger.info('Creating root key', { KEY_PATH });
-  addKeypair(KEY_PATH);
-}
-
-const airdropTokens = async (pubKey: string, amount: number): Promise<void> => {
-  const connection = new sol.Connection('http://127.0.0.1:8899');
-
-  const to = await localKeypair(pubKey);
-  const airdropSignature = await connection.requestAirdrop(
-    to.publicKey,
-    sol.LAMPORTS_PER_SOL * amount
-  );
-  await connection.confirmTransaction(airdropSignature);
 };
 
 const runValidator = async () => {
@@ -212,9 +208,14 @@ const validatorLogs = async (filter: string) => {
       { maxBuffer }
     );
     const lines = stderr.split('\n').filter((s) => s.match(filter));
-    return lines
-      .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 1))
+    const matchingLines = lines
+      .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 0))
       .join('\n');
+    logger.info('Filtered log lookup', {
+      matchLinesLen: matchingLines.length,
+      filterLinesLen: lines.length,
+    });
+    return matchingLines;
   }
   const { stderr } = await execAsync(
     `${DOCKER_PATH} logs --tail ${MAX_DISPLAY_LINES} solana-test-validator`,
@@ -282,6 +283,12 @@ ipcMain.on(
 ipcMain.on(
   'accounts',
   ipcMiddleware('accounts', async (event) => {
+    try {
+      await fs.promises.access(KEY_PATH);
+    } catch {
+      logger.info('Creating root key', { KEY_PATH });
+      await addKeypair(KEY_PATH);
+    }
     const pairs = await accounts();
     event.reply('accounts', pairs);
   })
@@ -298,8 +305,7 @@ ipcMain.on(
 
 ipcMain.on(
   'airdrop',
-  ipcMiddleware('airdrop', async (event, msg) => {
-    await airdropTokens(msg.pubKey, msg.solAmount);
+  ipcMiddleware('airdrop', async (event) => {
     event.reply('airdrop success');
   })
 );
