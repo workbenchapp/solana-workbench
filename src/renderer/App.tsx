@@ -231,14 +231,18 @@ const Run = () => {
 const prettifyPubkey = (pk: string) =>
   `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`;
 
-const Airdrop = () => {
+const Accounts = () => {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
+  const [rootKey, setRootKey] = useState<string>('');
 
   useEffect(() => {
-    window.electron.ipcRenderer.once('accounts', (accounts: any[]) => {
-      setAccounts(accounts);
+    window.electron.ipcRenderer.once('accounts', (data: any) => {
+      // eslint-disable-next-line no-console
+      console.log(data);
+      setRootKey(data.rootKey);
+      setAccounts(data.accounts);
     });
 
     window.electron.ipcRenderer.accounts();
@@ -250,7 +254,7 @@ const Airdrop = () => {
         <div className="mb-3">
           <FontAwesomeIcon icon={faKey} />
           <span className="ms-2">
-            <code>todo:rootkey</code>
+            <code>{prettifyPubkey(rootKey)}</code>
           </span>
         </div>
         {accounts.length > 0 ? (
@@ -419,7 +423,7 @@ export default function App() {
                 <Run />
               </Route>
               <Route path="/accounts">
-                <Airdrop />
+                <Accounts />
               </Route>
               <Route path="/anchor">
                 <Anchor />

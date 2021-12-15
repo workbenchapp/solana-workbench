@@ -20,6 +20,8 @@ import fs from 'fs';
 import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
+import randomart from 'randomart';
+import sqlite from 'sqlite3';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -54,6 +56,7 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
   fs.mkdirSync(LOG_DIR_PATH);
 }
 
+const db = new sqlite.Database(':memory:');
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
@@ -132,24 +135,44 @@ const accounts = async () => {
 
   // todo: check if default accts exist
   // before creating
-  const acc = new sol.Keypair();
+  const N_ACCOUNTS = 5;
   const txn = new sol.Transaction();
   const solConn = new sol.Connection('http://127.0.0.1:8899');
-  txn.add(
-    sol.SystemProgram.createAccount({
-      fromPubkey: kp.publicKey,
-      newAccountPubkey: acc.publicKey,
-      space: 128,
-      lamports: 100,
-      programId: sol.SystemProgram.programId,
-    })
+  const createdAccounts: sol.Keypair[] = [];
+  for (let i = 0; i < N_ACCOUNTS; i += 1) {
+    const acc = new sol.Keypair();
+    txn.add(
+      sol.SystemProgram.createAccount({
+        fromPubkey: kp.publicKey,
+        newAccountPubkey: acc.publicKey,
+        space: 128,
+        lamports: 100,
+        programId: sol.SystemProgram.programId,
+      })
+    );
+    logger.info('adding account', {
+      acc_pubkey: acc.publicKey,
+    });
+
+    createdAccounts.push(acc);
+  }
+
+  const txnID = await sol.sendAndConfirmTransaction(
+    solConn,
+    txn,
+    [kp, createdAccounts].flat()
   );
-  logger.info('creating account', {
-    acc_pubkey: acc.publicKey,
-  });
-  const txnID = await sol.sendAndConfirmTransaction(solConn, txn, [kp, acc]);
-  logger.info('created account', { txnID });
-  return [kp.publicKey, acc.publicKey];
+
+  logger.info('created accounts', { txnID });
+  return {
+    rootKey: kp.publicKey.toString(),
+    accounts: createdAccounts.map((acc) => {
+      return {
+        art: randomart(acc.publicKey.toBytes()),
+        pubKey: acc.publicKey.toString(),
+      };
+    }),
+  };
 };
 
 const addKeypair = async (kpPath: string) => {
@@ -404,6 +427,8 @@ const createWindow = async () => {
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
+  db.close();
+
   if (process.platform !== 'darwin') {
     app.quit();
   }
