@@ -22,12 +22,13 @@ import {
   faSpinner,
   faAnchor,
   faKey,
+  faCopy,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 // import * as web3 from '@solana/web3.js';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
-import _ from 'underscore';
+import { debounce } from 'underscore';
 import SolState from '../types/types';
 
 amplitude.getInstance().init('f1cde3642f7e0f483afbb7ac15ae8277');
@@ -138,7 +139,7 @@ const Run = () => {
     });
   }, []);
 
-  const triggerFetchLogs = _.debounce(fetchLogs, 800);
+  const triggerFetchLogs = debounce(fetchLogs, 800);
 
   const runValidator = () => {
     setWaitingForRun(true);
@@ -236,6 +237,7 @@ const Accounts = () => {
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
+  const [copyTooltipText, setCopyTooltipText] = useState<string>('Copy');
 
   useEffect(() => {
     window.electron.ipcRenderer.once('accounts', (data: any) => {
@@ -248,13 +250,46 @@ const Accounts = () => {
     window.electron.ipcRenderer.accounts();
   }, []);
 
+  const renderCopyTooltip = (id: string) => {
+    return (props: any) => {
+      return (
+        <Tooltip className="tooltip-secondary" id={id} {...props}>
+          <div>{copyTooltipText}</div>
+        </Tooltip>
+      );
+    };
+  };
+
   return (
     <>
       <div className="col-auto">
         <div className="mb-3">
           <FontAwesomeIcon icon={faKey} />
           <span className="ms-2">
-            <code>{prettifyPubkey(rootKey)}</code>
+            <code className="p-1">{prettifyPubkey(rootKey)}</code>
+            <OverlayTrigger
+              placement="top"
+              delay={{ show: 250, hide: 0 }}
+              overlay={renderCopyTooltip('rootKey')}
+            >
+              <span>
+                <FontAwesomeIcon
+                  className="ms-2 text-secondary cursor-pointer"
+                  icon={faCopy}
+                  onClick={(
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    _: React.MouseEvent<SVGSVGElement, MouseEvent> | undefined
+                  ) => {
+                    setCopyTooltipText('Copied!');
+                    navigator.clipboard.writeText(rootKey);
+                  }}
+                  onMouseLeave={(
+                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                    _: React.MouseEvent<SVGSVGElement, MouseEvent> | undefined
+                  ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
+                />
+              </span>
+            </OverlayTrigger>
           </span>
         </div>
         {accounts.length > 0 ? (
@@ -277,8 +312,40 @@ const Accounts = () => {
                       </code>
                     </pre>
                   </div>
-                  <div className="col">
-                    <code>{prettifyPubkey(e.pubKey)}</code>
+                  <div className="col-auto">
+                    <code className="p-2">{prettifyPubkey(e.pubKey)}</code>
+                    <OverlayTrigger
+                      placement="top"
+                      delay={{ show: 250, hide: 0 }}
+                      overlay={renderCopyTooltip('account')}
+                    >
+                      <span className="p-2">
+                        <FontAwesomeIcon
+                          className="ms-2 text-secondary"
+                          icon={faCopy}
+                          onClick={(
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            _:
+                              | React.MouseEvent<SVGSVGElement, MouseEvent>
+                              | undefined
+                          ) => {
+                            setCopyTooltipText('Copied!');
+                            navigator.clipboard.writeText(e.pubKey);
+                          }}
+                          onMouseLeave={(
+                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                            _:
+                              | React.MouseEvent<SVGSVGElement, MouseEvent>
+                              | undefined
+                          ) =>
+                            window.setTimeout(
+                              () => setCopyTooltipText('Copy'),
+                              500
+                            )
+                          }
+                        />
+                      </span>
+                    </OverlayTrigger>
                   </div>
                 </div>
               </div>

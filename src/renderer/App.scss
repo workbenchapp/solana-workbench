@@ -88,10 +88,27 @@ svg {
   cursor: pointer;
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 .account-list-item-selected {
   background-color: rgba($blue-100, 0.5);
 }
 
+.tooltip-secondary > .tooltip-inner {
+  background-color: $gray-600;
+}
+
+.tooltip-secondary.bs-tooltip-top .tooltip-arrow::before,
+.tooltip-secondary.bs-tooltip-auto[data-popper-placement^='top']
+  .tooltip-arrow::before {
+  border-top-color: $gray-600;
+}
+
+.tooltip.show {
+  opacity: 1;
+}
 /*
 color pallette ideas:
 
