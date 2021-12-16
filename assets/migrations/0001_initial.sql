@@ -1,11 +1,9 @@
-CREATE TABLE net (
-    id INTEGER PRIMARY KEY,
-    name TEXT,
-);
+CREATE TABLE net (id INTEGER PRIMARY KEY, name TEXT);
 
-INSERT INTO net (
-    
-)
+INSERT INTO
+    net (name)
+VALUES
+    ("localhost", "devnet", "mainnet", "testnet");
 
 CREATE TABLE account (
     id INTEGER PRIMARY KEY,
@@ -14,10 +12,12 @@ CREATE TABLE account (
     human_name TEXT DEFAULT "",
 );
 
+CREATE INDEX index_name ON account(pubkey);
+
 CREATE TABLE account_group (
     id INTEGER PRIMARY KEY,
     name TEXT DEFAULT "",
-)
+);
 
 CREATE TABLE account_group_assoc (
     id INTEGER PRIMARY KEY,
