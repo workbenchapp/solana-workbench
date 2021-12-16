@@ -21,7 +21,9 @@ import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import randomart from 'randomart';
-import sqlite from 'sqlite3';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import sqlite3 from 'sqlite3';
+import sqlite from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -36,6 +38,7 @@ const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
+const MIGRATION_DIR = "migrations";
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -56,7 +59,7 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
   fs.mkdirSync(LOG_DIR_PATH);
 }
 
-const db = new sqlite.Database(':memory:');
+let db: sqlite3.Database;
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
@@ -102,6 +105,15 @@ const initLogging = async () => {
   });
 };
 initLogging();
+
+const initDB = async () => {
+  const db = sqlite.open({
+    filename: '/tmp/database.db',
+    driver: sqlite3.Database,
+  });
+  await fs.promises.readdir(MIGRATION_DIR)
+};
+initDB();
 
 const connectSOL = async (): Promise<SolState> => {
   let solConn: sol.Connection;
