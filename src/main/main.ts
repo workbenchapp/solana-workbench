@@ -23,7 +23,7 @@ import winston from 'winston';
 import randomart from 'randomart';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import sqlite3 from 'sqlite3';
-import { open } from 'sqlite';
+import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -39,6 +39,7 @@ const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
 const MIGRATION_DIR = 'assets/migrations';
+const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -59,7 +60,7 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
   fs.mkdirSync(LOG_DIR_PATH);
 }
 
-let db: sqlite3.Database;
+let db: Database<sqlite3.Database, sqlite3.Statement>;
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
@@ -107,20 +108,13 @@ const initLogging = async () => {
 initLogging();
 
 const initDB = async () => {
-  const db = await open({
-    filename: 'database.db',
+  db = await open({
+    filename: DB_PATH,
     driver: sqlite3.Database,
   });
-  const files = await fs.promises.readdir(MIGRATION_DIR);
-  files.forEach(async (f) => {
-    console.log(f);
-    const migration = await fs.promises.readFile(path.join(MIGRATION_DIR, f));
-    console.log(migration.toString());
-    try {
-      await db.exec(migration.toString());
-    } catch (e) {
-      logger.error('DB migration fail', { err: e });
-    }
+  await db.migrate({
+    table: 'migration',
+    migrationsPath: MIGRATION_DIR,
   });
 };
 initDB();
@@ -152,8 +146,33 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
+type StoredAccount = {
+  id?: number;
+  pubKey: string;
+  netID: number;
+  humanName?: string;
+};
+
+enum Net {
+  Localhost = 1,
+  Dev,
+  Main,
+  Test,
+}
+
 const accounts = async () => {
   const kp = await localKeypair(KEY_PATH);
+  const existingAccounts = await db.get('SELECT * FROM account');
+  if (existingAccounts) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return existingAccounts.map((acc: StoredAccount) => {
+      const key = new sol.PublicKey(acc.pubKey);
+      return {
+        art: randomart(key.toBytes()),
+        pubKey: acc.pubKey,
+      };
+    });
+  }
 
   // todo: check if default accts exist
   // before creating
@@ -177,6 +196,7 @@ const accounts = async () => {
     });
 
     createdAccounts.push(acc);
+    db.exec('');
   }
 
   const txnID = await sol.sendAndConfirmTransaction(
@@ -186,6 +206,15 @@ const accounts = async () => {
   );
 
   logger.info('created accounts', { txnID });
+
+  const stmt = await db.prepare(
+    'INSERT INTO account (pubKey, netID) VALUES (?, ?)'
+  );
+  createdAccounts.forEach(async (acc) => {
+    await stmt.run([acc.publicKey.toString(), Net.Localhost]);
+  });
+  await stmt.finalize();
+
   return {
     rootKey: kp.publicKey.toString(),
     accounts: createdAccounts.map((acc) => {

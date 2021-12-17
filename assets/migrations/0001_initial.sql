@@ -1,26 +1,26 @@
-CREATE TABLE net (id INTEGER PRIMARY KEY, name TEXT);
+CREATE TABLE net (ID INTEGER PRIMARY KEY, name TEXT);
 
 INSERT INTO
     net (name)
 VALUES
-    ("localhost", "devnet", "mainnet", "testnet");
+    ("localhost"), ("devnet"), ("mainnet"), ("testnet");
 
 CREATE TABLE account (
-    id INTEGER PRIMARY KEY,
-    pubkey TEXT NOT NULL,
-    net_id INTEGER,
-    human_name TEXT DEFAULT "",
+    ID INTEGER PRIMARY KEY,
+    pubKey TEXT NOT NULL,
+    netID INTEGER,
+    humanName TEXT DEFAULT ""
 );
 
-CREATE INDEX index_name ON account(pubkey);
+CREATE INDEX index_name ON account(pubKey);
 
 CREATE TABLE account_group (
-    id INTEGER PRIMARY KEY,
-    name TEXT DEFAULT "",
+    ID INTEGER PRIMARY KEY,
+    name TEXT DEFAULT ""
 );
 
 CREATE TABLE account_group_assoc (
-    id INTEGER PRIMARY KEY,
-    account_id INTEGER,
-    group_id INTEGER,
+    ID INTEGER PRIMARY KEY,
+    accountID INTEGER,
+    groupID INTEGER
 );
