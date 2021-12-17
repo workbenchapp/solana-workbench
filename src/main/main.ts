@@ -209,6 +209,7 @@ const runValidator = async () => {
         -d \
         -p 8899:8899 \
         -p 8900:8900 \
+        --limit-ledger-size 50000000 \
          --ulimit nofile=1000000 \
         ${DOCKER_IMAGE}`
     );
