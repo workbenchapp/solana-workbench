@@ -3,6 +3,10 @@ CREATE TABLE net (
     name TEXT,
 );
 
+INSERT INTO net (
+    
+)
+
 CREATE TABLE account (
     id INTEGER PRIMARY KEY,
     pubkey TEXT NOT NULL,
