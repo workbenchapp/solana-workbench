@@ -23,7 +23,7 @@ import winston from 'winston';
 import randomart from 'randomart';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import sqlite3 from 'sqlite3';
-import sqlite from 'sqlite';
+import { open } from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -38,7 +38,7 @@ const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
-const MIGRATION_DIR = "migrations";
+const MIGRATION_DIR = 'assets/migrations';
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -107,11 +107,21 @@ const initLogging = async () => {
 initLogging();
 
 const initDB = async () => {
-  const db = sqlite.open({
-    filename: '/tmp/database.db',
+  const db = await open({
+    filename: 'database.db',
     driver: sqlite3.Database,
   });
-  await fs.promises.readdir(MIGRATION_DIR)
+  const files = await fs.promises.readdir(MIGRATION_DIR);
+  files.forEach(async (f) => {
+    console.log(f);
+    const migration = await fs.promises.readFile(path.join(MIGRATION_DIR, f));
+    console.log(migration.toString());
+    try {
+      await db.exec(migration.toString());
+    } catch (e) {
+      logger.error('DB migration fail', { err: e });
+    }
+  });
 };
 initDB();
 

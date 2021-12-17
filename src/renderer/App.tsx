@@ -197,7 +197,7 @@ const Run = () => {
             </span>
           </div>
           <div>
-            <Button onClick={runValidator} className="mt-2" variant="success">
+            <Button onClick={runValidator} className="mt-2" variant="dark">
               Run
             </Button>
           </div>
