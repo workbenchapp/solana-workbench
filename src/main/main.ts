@@ -217,10 +217,10 @@ async function accounts(): Promise<AccountsResponse> {
   logger.info('created accounts', { txnID });
 
   const stmt = await db.prepare(
-    'INSERT INTO account (pubKey, netID) VALUES (?, ?)'
+    'INSERT INTO account (pubKey, netID, humanName) VALUES (?, ?, ?)'
   );
-  createdAccounts.forEach(async (acc) => {
-    await stmt.run([acc.publicKey.toString(), Net.Localhost]);
+  createdAccounts.forEach(async (acc, i) => {
+    await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
   });
   await stmt.finalize();
 
