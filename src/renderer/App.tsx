@@ -140,7 +140,7 @@ const Run = () => {
         filter: filterRef.current.value,
       });
     }
-  }, []);
+  }, [solStatus.running]);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
