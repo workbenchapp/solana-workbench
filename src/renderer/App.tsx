@@ -134,9 +134,11 @@ const Run = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const fetchLogs = useCallback(() => {
-    window.electron.ipcRenderer.validatorLogs({
-      filter: filterRef.current.value,
-    });
+    if (solStatus.running) {
+      window.electron.ipcRenderer.validatorLogs({
+        filter: filterRef.current.value,
+      });
+    }
   }, []);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
