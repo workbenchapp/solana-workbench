@@ -160,22 +160,31 @@ enum Net {
   Test,
 }
 
-const accounts = async () => {
+type AccountsResponse = {
+  rootKey: string;
+  accounts: {
+    pubKey: string;
+    art: string;
+  }[];
+};
+
+async function accounts(): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
-  const existingAccounts = await db.get('SELECT * FROM account');
-  if (existingAccounts) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return existingAccounts.map((acc: StoredAccount) => {
-      const key = new sol.PublicKey(acc.pubKey);
-      return {
-        art: randomart(key.toBytes()),
-        pubKey: acc.pubKey,
-      };
-    });
+  const existingAccounts = await db.all('SELECT * FROM account');
+  logger.info('existingAccounts', { existingAccounts });
+  if (existingAccounts?.length > 0) {
+    return {
+      rootKey: kp.publicKey.toString(),
+      accounts: existingAccounts.map((acc: StoredAccount) => {
+        const key = new sol.PublicKey(acc.pubKey);
+        return {
+          art: randomart(key.toBytes()),
+          pubKey: acc.pubKey,
+        };
+      }),
+    };
   }
 
-  // todo: check if default accts exist
-  // before creating
   const N_ACCOUNTS = 5;
   const txn = new sol.Transaction();
   const solConn = new sol.Connection('http://127.0.0.1:8899');
@@ -224,7 +233,7 @@ const accounts = async () => {
       };
     }),
   };
-};
+}
 
 const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
