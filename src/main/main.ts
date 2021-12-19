@@ -165,14 +165,25 @@ type AccountsResponse = {
   accounts: {
     pubKey: string;
     art: string;
+    humanName?: string;
   }[];
 };
 
 async function accounts(): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
+  const solConn = new sol.Connection('http://127.0.0.1:8899');
   const existingAccounts = await db.all('SELECT * FROM account');
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
+    const solAccountInfo = await solConn.getMultipleAccountsInfo(
+      existingAccounts.map((a) => new sol.PublicKey(a.pubKey))
+    );
+    console.log(solAccountInfo);
+    const mergedAccountInfo = solAccountInfo.map(
+      (a: sol.AccountInfo<Buffer> | null, i: number) =>
+        Object.assign(existingAccounts[i], a)
+    );
+    console.log(mergedAccountInfo);
     return {
       rootKey: kp.publicKey.toString(),
       accounts: existingAccounts.map((acc: StoredAccount) => {
@@ -180,6 +191,7 @@ async function accounts(): Promise<AccountsResponse> {
         return {
           art: randomart(key.toBytes()),
           pubKey: acc.pubKey,
+          humanName: acc.humanName,
         };
       }),
     };
@@ -187,7 +199,6 @@ async function accounts(): Promise<AccountsResponse> {
 
   const N_ACCOUNTS = 5;
   const txn = new sol.Transaction();
-  const solConn = new sol.Connection('http://127.0.0.1:8899');
   const createdAccounts: sol.Keypair[] = [];
   for (let i = 0; i < N_ACCOUNTS; i += 1) {
     const acc = new sol.Keypair();
@@ -195,8 +206,8 @@ async function accounts(): Promise<AccountsResponse> {
       sol.SystemProgram.createAccount({
         fromPubkey: kp.publicKey,
         newAccountPubkey: acc.publicKey,
-        space: 128,
-        lamports: 100,
+        space: 0,
+        lamports: 10 * sol.LAMPORTS_PER_SOL,
         programId: sol.SystemProgram.programId,
       })
     );
@@ -226,10 +237,12 @@ async function accounts(): Promise<AccountsResponse> {
 
   return {
     rootKey: kp.publicKey.toString(),
+    // todo: this should be on created accounts from DB
     accounts: createdAccounts.map((acc) => {
       return {
         art: randomart(acc.publicKey.toBytes()),
         pubKey: acc.publicKey.toString(),
+        humanName: '',
       };
     }),
   };
