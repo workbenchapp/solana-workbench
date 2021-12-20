@@ -16,9 +16,8 @@ of other fun tricks too.
 install modules, then native deps, then bring it all together:
 
 ```
-$ npm install && \
-  (cd release/app && npm install @solana/web3.js) && \
-  npm install
+$ npm install &&
+  (cd release/app && npm install)
 ```
 
 Now you're working with Workbench!
