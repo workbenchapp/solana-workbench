@@ -13,11 +13,17 @@ of other fun tricks too.
 
 ## Run
 
-install modules, then native deps, then bring it all together:
+install modules, then native deps:
 
 ```
 $ npm install &&
   (cd release/app && npm install)
+```
+
+to run:
+
+```
+$ npm run start
 ```
 
 Now you're working with Workbench!
