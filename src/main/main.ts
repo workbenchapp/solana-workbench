@@ -207,11 +207,13 @@ const runValidator = async () => {
       `${DOCKER_PATH} run \
         --name solana-test-validator \
         -d \
+        --init \
         -p 8899:8899 \
         -p 8900:8900 \
-        --limit-ledger-size 50000000 \
-         --ulimit nofile=1000000 \
-        ${DOCKER_IMAGE}`
+        --log-driver local \
+        --ulimit nofile=1000000 \
+        ${DOCKER_IMAGE}
+        --limit-ledger-size 50000000`
     );
 
     return;
