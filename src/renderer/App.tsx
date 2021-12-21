@@ -140,7 +140,7 @@ const Run = () => {
         filter: filterRef.current.value,
       });
     }
-  }, []);
+  }, [solStatus.running]);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
@@ -197,7 +197,7 @@ const Run = () => {
             </span>
           </div>
           <div>
-            <Button onClick={runValidator} className="mt-2" variant="success">
+            <Button onClick={runValidator} className="mt-2" variant="dark">
               Run
             </Button>
           </div>
@@ -234,6 +234,40 @@ const Run = () => {
 
 const prettifyPubkey = (pk: string) =>
   `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`;
+
+const Editable = ({
+  value = '',
+  outerHovered = false,
+  outerSelected = false,
+}) => {
+  const [hovered, setHovered] = useState(false);
+  let classes = 'ps-1 pe-1 border rounded';
+  if (outerHovered) {
+    classes = `${classes} bg-white`;
+  } else if (!outerSelected) {
+    classes = `${classes} border-white`;
+  } else {
+    classes = `${classes} account-list-item-selected-border`;
+  }
+  if (hovered) {
+    classes = `${classes} border-dark`;
+  }
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className={classes}
+    >
+      {value}
+    </div>
+  );
+};
+
+Editable.propTypes = {
+  value: PropTypes.string.isRequired,
+  outerHovered: PropTypes.bool.isRequired,
+  outerSelected: PropTypes.bool.isRequired,
+};
 
 const CopyIcon = ({ writeValue = '' }) => {
   const [copyTooltipText, setCopyTooltipText] = useState<string>('Copy');
@@ -312,8 +346,14 @@ const Accounts = () => {
               <div
                 onClick={() => setSelected(e.pubKey)}
                 className={`border-bottom p-2 account-list-item ${
-                  selected === e.pubKey ? 'account-list-item-selected' : ''
-                } ${hoveredItem === e.pubKey ? 'bg-light' : ''}`}
+                  selected === e.pubKey
+                    ? 'account-list-item-selected border-top border-bottom border-primary'
+                    : 'border-top border-bottom'
+                } ${
+                  hoveredItem === e.pubKey && selected !== e.pubKey
+                    ? 'bg-light'
+                    : ''
+                }`}
                 key={e.pubKey}
                 onMouseEnter={() => setHoveredItem(e.pubKey)}
                 onMouseLeave={() => setHoveredItem('')}
@@ -325,6 +365,17 @@ const Accounts = () => {
                         <strong>{e.art}</strong>
                       </code>
                     </pre>
+                  </div>
+                  <div className="col-auto">
+                    <div>
+                      <small>
+                        <Editable
+                          outerSelected={selected === e.pubKey}
+                          outerHovered={hoveredItem === e.pubKey}
+                          value={e.humanName}
+                        />
+                      </small>
+                    </div>
                   </div>
                   <div className="col-auto">
                     <code>{prettifyPubkey(e.pubKey)}</code>

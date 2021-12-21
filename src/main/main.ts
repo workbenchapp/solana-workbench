@@ -21,7 +21,9 @@ import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import randomart from 'randomart';
-import sqlite from 'sqlite3';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import sqlite3 from 'sqlite3';
+import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
@@ -36,6 +38,8 @@ const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
+const MIGRATION_DIR = 'assets/migrations';
+const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -56,7 +60,7 @@ if (!fs.existsSync(LOG_DIR_PATH)) {
   fs.mkdirSync(LOG_DIR_PATH);
 }
 
-const db = new sqlite.Database(':memory:');
+let db: Database<sqlite3.Database, sqlite3.Statement>;
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
@@ -103,6 +107,18 @@ const initLogging = async () => {
 };
 initLogging();
 
+const initDB = async () => {
+  db = await open({
+    filename: DB_PATH,
+    driver: sqlite3.Database,
+  });
+  await db.migrate({
+    table: 'migration',
+    migrationsPath: MIGRATION_DIR,
+  });
+};
+initDB();
+
 const connectSOL = async (): Promise<SolState> => {
   let solConn: sol.Connection;
 
@@ -130,14 +146,59 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-const accounts = async () => {
-  const kp = await localKeypair(KEY_PATH);
+type StoredAccount = {
+  id?: number;
+  pubKey: string;
+  netID: number;
+  humanName?: string;
+};
 
-  // todo: check if default accts exist
-  // before creating
+enum Net {
+  Localhost = 1,
+  Dev,
+  Main,
+  Test,
+}
+
+type AccountsResponse = {
+  rootKey: string;
+  accounts: {
+    pubKey: string;
+    art: string;
+    humanName?: string;
+  }[];
+};
+
+async function accounts(): Promise<AccountsResponse> {
+  const kp = await localKeypair(KEY_PATH);
+  const solConn = new sol.Connection('http://127.0.0.1:8899');
+  const existingAccounts = await db.all('SELECT * FROM account');
+  logger.info('existingAccounts', { existingAccounts });
+  if (existingAccounts?.length > 0) {
+    const solAccountInfo = await solConn.getMultipleAccountsInfo(
+      existingAccounts.map((a) => new sol.PublicKey(a.pubKey))
+    );
+    console.log(solAccountInfo);
+    const mergedAccountInfo = solAccountInfo.map(
+      (a: sol.AccountInfo<Buffer> | null, i: number) =>
+        Object.assign(existingAccounts[i], a)
+    );
+    console.log(mergedAccountInfo);
+    return {
+      rootKey: kp.publicKey.toString(),
+      accounts: existingAccounts.map((acc: StoredAccount) => {
+        const key = new sol.PublicKey(acc.pubKey);
+        return {
+          art: randomart(key.toBytes()),
+          pubKey: acc.pubKey,
+          humanName: acc.humanName,
+        };
+      }),
+    };
+  }
+
   const N_ACCOUNTS = 5;
   const txn = new sol.Transaction();
-  const solConn = new sol.Connection('http://127.0.0.1:8899');
   const createdAccounts: sol.Keypair[] = [];
   for (let i = 0; i < N_ACCOUNTS; i += 1) {
     const acc = new sol.Keypair();
@@ -145,8 +206,8 @@ const accounts = async () => {
       sol.SystemProgram.createAccount({
         fromPubkey: kp.publicKey,
         newAccountPubkey: acc.publicKey,
-        space: 128,
-        lamports: 100,
+        space: 0,
+        lamports: 10 * sol.LAMPORTS_PER_SOL,
         programId: sol.SystemProgram.programId,
       })
     );
@@ -155,6 +216,7 @@ const accounts = async () => {
     });
 
     createdAccounts.push(acc);
+    db.exec('');
   }
 
   const txnID = await sol.sendAndConfirmTransaction(
@@ -164,16 +226,27 @@ const accounts = async () => {
   );
 
   logger.info('created accounts', { txnID });
+
+  const stmt = await db.prepare(
+    'INSERT INTO account (pubKey, netID, humanName) VALUES (?, ?, ?)'
+  );
+  createdAccounts.forEach(async (acc, i) => {
+    await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
+  });
+  await stmt.finalize();
+
   return {
     rootKey: kp.publicKey.toString(),
+    // todo: this should be on created accounts from DB
     accounts: createdAccounts.map((acc) => {
       return {
         art: randomart(acc.publicKey.toBytes()),
         pubKey: acc.publicKey.toString(),
+        humanName: '',
       };
     }),
   };
-};
+}
 
 const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
@@ -213,7 +286,7 @@ const runValidator = async () => {
         --log-driver local \
         --ulimit nofile=1000000 \
         ${DOCKER_IMAGE}
-        --limit-ledger-size 50000000`
+        solana-test-validator --limit-ledger-size 50000000`
     );
 
     return;
