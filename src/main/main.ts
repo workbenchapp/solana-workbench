@@ -146,13 +146,6 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-type StoredAccount = {
-  id?: number;
-  pubKey: string;
-  netID: number;
-  humanName?: string;
-};
-
 enum Net {
   Localhost = 1,
   Dev,
@@ -166,6 +159,11 @@ type AccountsResponse = {
     pubKey: string;
     art: string;
     humanName?: string;
+    data?: Buffer;
+    executable?: boolean;
+    sol?: number;
+    lamports?: number;
+    owner?: sol.PublicKey;
   }[];
 };
 
@@ -175,25 +173,22 @@ async function accounts(): Promise<AccountsResponse> {
   const existingAccounts = await db.all('SELECT * FROM account');
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
-    const solAccountInfo = await solConn.getMultipleAccountsInfo(
-      existingAccounts.map((a) => new sol.PublicKey(a.pubKey))
-    );
+    const pubKeys = existingAccounts.map((a) => new sol.PublicKey(a.pubKey));
+    const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
     console.log(solAccountInfo);
     const mergedAccountInfo = solAccountInfo.map(
-      (a: sol.AccountInfo<Buffer> | null, i: number) =>
-        Object.assign(existingAccounts[i], a)
+      (a: sol.AccountInfo<Buffer> | null, i: number) => {
+        const newAcc = Object.assign(existingAccounts[i], a);
+        const key = new sol.PublicKey(existingAccounts[i].pubKey);
+        newAcc.art = randomart(key.toBytes());
+        newAcc.sol = newAcc.lamports / sol.LAMPORTS_PER_SOL;
+        return newAcc;
+      }
     );
     console.log(mergedAccountInfo);
     return {
       rootKey: kp.publicKey.toString(),
-      accounts: existingAccounts.map((acc: StoredAccount) => {
-        const key = new sol.PublicKey(acc.pubKey);
-        return {
-          art: randomart(key.toBytes()),
-          pubKey: acc.pubKey,
-          humanName: acc.humanName,
-        };
-      }),
+      accounts: mergedAccountInfo,
     };
   }
 
@@ -286,7 +281,7 @@ const runValidator = async () => {
         --log-driver local \
         --ulimit nofile=1000000 \
         ${DOCKER_IMAGE}
-        solana-test-validator --limit-ledger-size 50000000`
+        --limit-ledger-size 50000000`
     );
 
     return;

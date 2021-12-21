@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable react/jsx-props-no-spreading */
@@ -23,13 +24,14 @@ import {
   faAnchor,
   faKey,
   faCopy,
+  faTerminal,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-// import * as web3 from '@solana/web3.js';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
+
 import SolState from '../types/types';
 
 amplitude.getInstance().init('f1cde3642f7e0f483afbb7ac15ae8277');
@@ -330,6 +332,8 @@ const Accounts = () => {
     window.electron.ipcRenderer.accounts();
   }, []);
 
+  const selectedAccount = accounts.find((a) => selected === a.pubKey);
+
   return (
     <>
       <div className="col-auto">
@@ -340,15 +344,23 @@ const Accounts = () => {
             <CopyIcon writeValue={rootKey} />
           </span>
         </div>
+        <div className="row p-1">
+          <InputGroup size="sm">
+            <FormControl
+              placeholder="Add Account by ID"
+              aria-label="Account ID"
+            />
+          </InputGroup>
+        </div>
         {accounts.length > 0 ? (
           accounts.map((e: any) => {
             return (
               <div
                 onClick={() => setSelected(e.pubKey)}
-                className={`border-bottom p-2 account-list-item ${
+                className={`p-2 account-list-item ${
                   selected === e.pubKey
                     ? 'account-list-item-selected border-top border-bottom border-primary'
-                    : 'border-top border-bottom'
+                    : 'border-bottom'
                 } ${
                   hoveredItem === e.pubKey && selected !== e.pubKey
                     ? 'bg-light'
@@ -389,10 +401,70 @@ const Accounts = () => {
           <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
         )}
       </div>
-      <div className="col-auto">
-        <InputGroup size="sm">
-          <FormControl placeholder="Account ID" aria-label="Account ID" />
-        </InputGroup>
+      <div className="col">
+        {selectedAccount && (
+          <>
+            <div className="row">
+              <div className="col-auto">
+                <div>
+                  <h6 className="ms-1">{selectedAccount.humanName}</h6>
+                </div>
+                <div>
+                  <div className="col-auto">
+                    <table className="table table-borderless table-sm">
+                      <tr>
+                        <td>
+                          <small className="text-muted">Pubkey</small>
+                        </td>
+                        <td>
+                          <small>
+                            <code className="code-muted">
+                              {prettifyPubkey(selectedAccount.pubKey)}
+                              <CopyIcon writeValue={selectedAccount.pubKey} />
+                            </code>
+                          </small>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <small className="text-muted">SOL</small>
+                        </td>
+                        <td>
+                          <small>{selectedAccount.sol}</small>
+                        </td>
+                      </tr>
+                      <tr>
+                        <tr>
+                          <small className="text-muted">Executable</small>
+                        </tr>
+                        <td>
+                          {selectedAccount.executable ? (
+                            <div>
+                              <FontAwesomeIcon
+                                className="border-success rounded p-1 executable-icon"
+                                icon={faTerminal}
+                              />
+                              <small className="ms-1 mb-1">Yes</small>
+                            </div>
+                          ) : (
+                            <small className="fst-italic fw-light text-muted">
+                              No
+                            </small>
+                          )}
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div className="col-auto">
+                <pre className="border randomart-md">
+                  <code>{selectedAccount.art}</code>
+                </pre>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </>
   );
@@ -519,7 +591,7 @@ export default function App() {
                 </DropdownButton>
               </div>
             </div>
-            <div className="row">
+            <div className="row flex-nowrap">
               <Route exact path="/">
                 <Run />
               </Route>

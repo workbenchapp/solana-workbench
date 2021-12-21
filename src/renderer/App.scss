@@ -117,6 +117,21 @@ svg {
 .tooltip.show {
   opacity: 1;
 }
+
+.code-muted {
+  background-color: white;
+  color: $black;
+  padding: 0px;
+}
+
+.randomart-md {
+  font-size: 0.4em;
+}
+
+.executable-icon {
+  background-color: $black;
+  color: $green-300;
+}
 /*
 color pallette ideas:
 
