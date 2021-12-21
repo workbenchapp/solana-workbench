@@ -286,7 +286,7 @@ const runValidator = async () => {
         --log-driver local \
         --ulimit nofile=1000000 \
         ${DOCKER_IMAGE}
-        --limit-ledger-size 50000000`
+        solana-test-validator --limit-ledger-size 50000000`
     );
 
     return;
