@@ -175,7 +175,6 @@ async function accounts(): Promise<AccountsResponse> {
   if (existingAccounts?.length > 0) {
     const pubKeys = existingAccounts.map((a) => new sol.PublicKey(a.pubKey));
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
-    console.log(solAccountInfo);
     const mergedAccountInfo = solAccountInfo.map(
       (a: sol.AccountInfo<Buffer> | null, i: number) => {
         const newAcc = Object.assign(existingAccounts[i], a);
@@ -185,7 +184,6 @@ async function accounts(): Promise<AccountsResponse> {
         return newAcc;
       }
     );
-    console.log(mergedAccountInfo);
     return {
       rootKey: kp.publicKey.toString(),
       accounts: mergedAccountInfo,
@@ -243,6 +241,15 @@ async function accounts(): Promise<AccountsResponse> {
   };
 }
 
+async function updateAccountName(pubKey: string, humanName: string) {
+  const res = await db.run(
+    'UPDATE account SET humanName = ? WHERE pubKey = ?',
+    humanName,
+    pubKey
+  );
+  return res;
+}
+
 const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
   const solConn = new sol.Connection('http://127.0.0.1:8899');
@@ -266,11 +273,7 @@ const runValidator = async () => {
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
-    const err = e as Error;
-    console.log('INSPECT ERROR', err);
-
     // TODO: check for image, pull if not present
-
     await execAsync(
       `${DOCKER_PATH} run \
         --name solana-test-validator \
@@ -385,6 +388,16 @@ ipcMain.on(
     }
     const pairs = await accounts();
     event.reply('accounts', pairs);
+  })
+);
+
+ipcMain.on(
+  'update-account-name',
+  ipcMiddleware('update-account-name', async (event, msg) => {
+    event.reply(
+      'update-account-name',
+      await updateAccountName(msg.pubKey, msg.humanName)
+    );
   })
 );
 

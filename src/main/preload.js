@@ -23,6 +23,9 @@ contextBridge.exposeInMainWorld('electron', {
     fetchAnchorIDL(msg) {
       ipcRenderer.send('fetch-anchor-idl', msg);
     },
+    updateAccountName(msg) {
+      ipcRenderer.send('update-account-name', msg);
+    },
     on(channel, func) {
       const validChannels = [
         'sol-state',
@@ -32,6 +35,7 @@ contextBridge.exposeInMainWorld('electron', {
         'airdrop',
         'validator-logs',
         'fetch-anchor-idl',
+        'update-account-name',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`
@@ -47,6 +51,7 @@ contextBridge.exposeInMainWorld('electron', {
         'airdrop',
         'validator-logs',
         'fetch-anchor-idl',
+        'update-account-name',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`

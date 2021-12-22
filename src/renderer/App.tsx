@@ -240,6 +240,7 @@ const Editable = ({
   value = '',
   outerHovered = false,
   outerSelected = false,
+  pubKey = '',
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setSelected = (_s: string) => {},
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -269,9 +270,15 @@ const Editable = ({
   return (
     <OutsideClickHandler
       onOutsideClick={() => {
-        setHovered(false);
-        setEditing(false);
-        editingStopped();
+        if (editing) {
+          setHovered(false);
+          setEditing(false);
+          editingStopped();
+          window.electron.ipcRenderer.updateAccountName({
+            pubKey,
+            humanName: valRef.current.value,
+          });
+        }
       }}
     >
       <div
@@ -292,7 +299,7 @@ const Editable = ({
             outerSelected && !hovered && !outerHovered && 'input-selected'
           }`}
         >
-          <FormControl autoFocus ref={valRef} defaultValue={value} />
+          <FormControl autoFocus={editing} ref={valRef} defaultValue={value} />
         </InputGroup>
       </div>
     </OutsideClickHandler>
@@ -301,6 +308,7 @@ const Editable = ({
 
 Editable.propTypes = {
   value: PropTypes.string.isRequired,
+  pubKey: PropTypes.string.isRequired,
   outerHovered: PropTypes.bool.isRequired,
   outerSelected: PropTypes.bool.isRequired,
   setSelected: PropTypes.func.isRequired,
@@ -424,9 +432,10 @@ const Accounts = () => {
                         <Editable
                           outerSelected={selected === e.pubKey}
                           outerHovered={hoveredItem === e.pubKey}
-                          value={e.humanName}
                           setSelected={setSelected}
                           setHoveredItem={setHoveredItem}
+                          pubKey={e.pubKey}
+                          value={e.humanName}
                           editingStarted={() => setEdited(e.pubKey)}
                           editingStopped={() => setEdited('')}
                         />
@@ -480,9 +489,9 @@ const Accounts = () => {
                     </td>
                   </tr>
                   <tr>
-                    <tr>
+                    <td>
                       <small className="text-muted">Executable</small>
-                    </tr>
+                    </td>
                     <td>
                       {selectedAccount.executable ? (
                         <div>
