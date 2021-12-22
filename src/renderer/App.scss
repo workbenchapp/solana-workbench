@@ -96,7 +96,7 @@ svg {
   background-color: $blue-100;
 }
 
-.account-list-item-selected-border {
+.border-selected {
   border: 1px solid $blue-100 !important;
 }
 
@@ -105,7 +105,7 @@ svg {
 }
 
 .border-soft-dark {
-  background-color: $gray-800;
+  border: 1px solid $gray-600 !important;
 }
 
 .tooltip-secondary.bs-tooltip-top .tooltip-arrow::before,
@@ -133,13 +133,19 @@ svg {
   color: $green-300;
 }
 
-.input-clean > input {
-  border: none;
+.input {
+  &-clean > input {
+    border: none;
+    &:focus {
+      box-shadow: none;
+    }
+  }
+
+  &-selected > input {
+    background-color: $blue-100;
+  }
 }
 
-.input-clean > input:focus {
-  box-shadow: none;
-}
 /*
 color pallette ideas:
 

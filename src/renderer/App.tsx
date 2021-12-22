@@ -244,6 +244,8 @@ const Editable = ({
   setSelected = (_s: string) => {},
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   setHoveredItem = (_s: string) => {},
+  editingStarted = () => {},
+  editingStopped = () => {},
 }) => {
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -256,16 +258,20 @@ const Editable = ({
     classes = `${classes} border-white`;
   }
   if (hovered && !editing) {
-    classes = `${classes} border-dark`;
+    classes = `${classes} border-soft-dark`;
   }
   if (editing) {
     classes = `${classes} border-white`;
+  }
+  if (outerSelected && !outerHovered) {
+    classes = `${classes} border-selected`;
   }
   return (
     <OutsideClickHandler
       onOutsideClick={() => {
         setHovered(false);
         setEditing(false);
+        editingStopped();
       }}
     >
       <div
@@ -276,10 +282,16 @@ const Editable = ({
           setSelected('');
           setEditing(true);
           setHoveredItem('');
+          editingStarted();
         }}
         className={classes}
       >
-        <InputGroup size="sm" className="input-clean">
+        <InputGroup
+          size="sm"
+          className={`input-clean ${
+            outerSelected && !hovered && !outerHovered && 'input-selected'
+          }`}
+        >
           <FormControl autoFocus ref={valRef} defaultValue={value} />
         </InputGroup>
       </div>
@@ -293,6 +305,8 @@ Editable.propTypes = {
   outerSelected: PropTypes.bool.isRequired,
   setSelected: PropTypes.func.isRequired,
   setHoveredItem: PropTypes.func.isRequired,
+  editingStarted: PropTypes.func.isRequired,
+  editingStopped: PropTypes.func.isRequired,
 };
 
 const CopyIcon = ({ writeValue = '' }) => {
@@ -344,6 +358,7 @@ const Accounts = () => {
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
+  const [edited, setEdited] = useState<string>('');
 
   useEffect(() => {
     window.electron.ipcRenderer.once('accounts', (data: any) => {
@@ -382,11 +397,14 @@ const Accounts = () => {
                 className={`p-2 account-list-item ${
                   selected === e.pubKey
                     ? 'account-list-item-selected border-top border-bottom border-primary'
-                    : 'border-bottom'
+                    : 'border-top border-bottom'
                 } ${
-                  hoveredItem === e.pubKey && selected !== e.pubKey
-                    ? 'bg-light'
-                    : ''
+                  hoveredItem === e.pubKey &&
+                  selected !== e.pubKey &&
+                  'bg-light'
+                } ${
+                  edited === e.pubKey &&
+                  'border-top border-bottom border-primary'
                 }`}
                 key={e.pubKey}
                 onMouseEnter={() => setHoveredItem(e.pubKey)}
@@ -409,6 +427,8 @@ const Accounts = () => {
                           value={e.humanName}
                           setSelected={setSelected}
                           setHoveredItem={setHoveredItem}
+                          editingStarted={() => setEdited(e.pubKey)}
+                          editingStopped={() => setEdited('')}
                         />
                       </small>
                     </div>
@@ -433,53 +453,53 @@ const Accounts = () => {
                 <div>
                   <h6 className="ms-1">{selectedAccount.humanName}</h6>
                 </div>
-                <div>
-                  <div className="col-auto">
-                    <table className="table table-borderless table-sm">
-                      <tr>
-                        <td>
-                          <small className="text-muted">Pubkey</small>
-                        </td>
-                        <td>
-                          <small>
-                            <code className="code-muted">
-                              {prettifyPubkey(selectedAccount.pubKey)}
-                              <CopyIcon writeValue={selectedAccount.pubKey} />
-                            </code>
-                          </small>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>
-                          <small className="text-muted">SOL</small>
-                        </td>
-                        <td>
-                          <small>{selectedAccount.sol}</small>
-                        </td>
-                      </tr>
-                      <tr>
-                        <tr>
-                          <small className="text-muted">Executable</small>
-                        </tr>
-                        <td>
-                          {selectedAccount.executable ? (
-                            <div>
-                              <FontAwesomeIcon
-                                className="border-success rounded p-1 executable-icon"
-                                icon={faTerminal}
-                              />
-                              <small className="ms-1 mb-1">Yes</small>
-                            </div>
-                          ) : (
-                            <small className="fst-italic fw-light text-muted">
-                              No
-                            </small>
-                          )}
-                        </td>
-                      </tr>
-                    </table>
-                  </div>
-                </div>
+              </div>
+            </div>
+            <div className="row">
+              <div className="col-auto">
+                <table className="table table-borderless table-sm">
+                  <tr>
+                    <td>
+                      <small className="text-muted">Pubkey</small>
+                    </td>
+                    <td>
+                      <small>
+                        <code className="code-muted">
+                          {prettifyPubkey(selectedAccount.pubKey)}
+                          <CopyIcon writeValue={selectedAccount.pubKey} />
+                        </code>
+                      </small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">SOL</small>
+                    </td>
+                    <td>
+                      <small>{selectedAccount.sol}</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <tr>
+                      <small className="text-muted">Executable</small>
+                    </tr>
+                    <td>
+                      {selectedAccount.executable ? (
+                        <div>
+                          <FontAwesomeIcon
+                            className="border-success rounded p-1 executable-icon"
+                            icon={faTerminal}
+                          />
+                          <small className="ms-1 mb-1">Yes</small>
+                        </div>
+                      ) : (
+                        <small className="fst-italic fw-light text-muted">
+                          No
+                        </small>
+                      )}
+                    </td>
+                  </tr>
+                </table>
               </div>
               <div className="col-auto">
                 <pre className="border randomart-md">
