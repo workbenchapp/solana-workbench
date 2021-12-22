@@ -11,6 +11,7 @@ import {
   useLocation,
 } from 'react-router-dom';
 import './App.scss';
+import OutsideClickHandler from 'react-outside-click-handler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import DropdownButton from 'react-bootstrap/DropdownButton';
@@ -156,8 +157,6 @@ const Run = () => {
   useEffect(() => {
     window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
       setSolStatus(arg);
-      // eslint-disable-next-line no-console
-      console.log('sol-state', arg);
       setLoading(false);
       if (arg.running) {
         setWaitingForRun(false);
@@ -241,27 +240,50 @@ const Editable = ({
   value = '',
   outerHovered = false,
   outerSelected = false,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setSelected = (_s: string) => {},
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  setHoveredItem = (_s: string) => {},
 }) => {
   const [hovered, setHovered] = useState(false);
-  let classes = 'ps-1 pe-1 border rounded';
+  const [editing, setEditing] = useState(false);
+  const valRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+
+  let classes = 'border rounded';
   if (outerHovered) {
     classes = `${classes} bg-white`;
   } else if (!outerSelected) {
     classes = `${classes} border-white`;
-  } else {
-    classes = `${classes} account-list-item-selected-border`;
   }
-  if (hovered) {
+  if (hovered && !editing) {
     classes = `${classes} border-dark`;
   }
+  if (editing) {
+    classes = `${classes} border-white`;
+  }
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className={classes}
+    <OutsideClickHandler
+      onOutsideClick={() => {
+        setHovered(false);
+        setEditing(false);
+      }}
     >
-      {value}
-    </div>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelected('');
+          setEditing(true);
+          setHoveredItem('');
+        }}
+        className={classes}
+      >
+        <InputGroup size="sm" className="input-clean">
+          <FormControl autoFocus ref={valRef} defaultValue={value} />
+        </InputGroup>
+      </div>
+    </OutsideClickHandler>
   );
 };
 
@@ -269,6 +291,8 @@ Editable.propTypes = {
   value: PropTypes.string.isRequired,
   outerHovered: PropTypes.bool.isRequired,
   outerSelected: PropTypes.bool.isRequired,
+  setSelected: PropTypes.func.isRequired,
+  setHoveredItem: PropTypes.func.isRequired,
 };
 
 const CopyIcon = ({ writeValue = '' }) => {
@@ -323,8 +347,6 @@ const Accounts = () => {
 
   useEffect(() => {
     window.electron.ipcRenderer.once('accounts', (data: any) => {
-      // eslint-disable-next-line no-console
-      console.log(data);
       setRootKey(data.rootKey);
       setAccounts(data.accounts);
     });
@@ -385,6 +407,8 @@ const Accounts = () => {
                           outerSelected={selected === e.pubKey}
                           outerHovered={hoveredItem === e.pubKey}
                           value={e.humanName}
+                          setSelected={setSelected}
+                          setHoveredItem={setHoveredItem}
                         />
                       </small>
                     </div>
@@ -562,8 +586,6 @@ export default function App() {
   const netDropdownClick = (e: any) => {
     e.preventDefault();
     setNet(e.target.innerText);
-    // eslint-disable-next-line no-console
-    console.log(e);
   };
 
   return (

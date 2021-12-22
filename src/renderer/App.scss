@@ -132,6 +132,14 @@ svg {
   background-color: $black;
   color: $green-300;
 }
+
+.input-clean > input {
+  border: none;
+}
+
+.input-clean > input:focus {
+  box-shadow: none;
+}
 /*
 color pallette ideas:
 
