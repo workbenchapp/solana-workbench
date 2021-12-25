@@ -92,12 +92,14 @@ svg {
   cursor: pointer;
 }
 
+$lightblue: lighten($blue-100, 7%);
+
 .account-list-item-selected {
-  background-color: $blue-100;
+  background-color: $lightblue;
 }
 
 .border-selected {
-  border: 1px solid $blue-100 !important;
+  border: 1px solid $lightblue !important;
 }
 
 .tooltip-secondary > .tooltip-inner {
@@ -149,7 +151,7 @@ svg {
   }
 
   &-selected > input {
-    background-color: $blue-100;
+    background-color: $lightblue;
   }
 }
 
