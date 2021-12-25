@@ -27,7 +27,7 @@ import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import SolState from '../types/types';
+import { WBAccount, AccountsResponse, Net, SolState } from '../types/types';
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_VERSION = '0.1.3-dev';
@@ -43,8 +43,8 @@ const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
-    ? 'nathanleclaire/solana:v1.8.5'
-    : 'solanalabs/solana:v1.8.5';
+    ? 'nathanleclaire/solana:v1.9.2'
+    : 'solanalabs/solana:v1.9.2';
 let DOCKER_PATH = 'docker';
 const AIRDROP_AMOUNT = 100;
 if (process.platform !== 'win32') {
@@ -146,27 +146,6 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-enum Net {
-  Localhost = 1,
-  Dev,
-  Main,
-  Test,
-}
-
-type AccountsResponse = {
-  rootKey: string;
-  accounts: {
-    pubKey: string;
-    art: string;
-    humanName?: string;
-    data?: Buffer;
-    executable?: boolean;
-    sol?: number;
-    lamports?: number;
-    owner?: sol.PublicKey;
-  }[];
-};
-
 async function accounts(): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
   const solConn = new sol.Connection('http://127.0.0.1:8899');
@@ -175,7 +154,7 @@ async function accounts(): Promise<AccountsResponse> {
   if (existingAccounts?.length > 0) {
     const pubKeys = existingAccounts.map((a) => new sol.PublicKey(a.pubKey));
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
-    const mergedAccountInfo = solAccountInfo.map(
+    const mergedAccountInfo: WBAccount[] = solAccountInfo.map(
       (a: sol.AccountInfo<Buffer> | null, i: number) => {
         const newAcc = Object.assign(existingAccounts[i], a);
         const key = new sol.PublicKey(existingAccounts[i].pubKey);
@@ -283,7 +262,8 @@ const runValidator = async () => {
         -p 8900:8900 \
         --log-driver local \
         --ulimit nofile=1000000 \
-        ${DOCKER_IMAGE}
+        ${DOCKER_IMAGE} \
+        solana-test-validator \
         --limit-ledger-size 50000000`
     );
 

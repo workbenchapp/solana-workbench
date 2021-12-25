@@ -133,17 +133,28 @@ svg {
   color: $green-300;
 }
 
+@mixin no-box-shadow() {
+  border: none;
+  &:focus {
+    box-shadow: none;
+  }
+}
+
 .input {
   &-clean > input {
     border: none;
     &:focus {
-      box-shadow: none;
+      @include no-box-shadow;
     }
   }
 
   &-selected > input {
     background-color: $blue-100;
   }
+}
+
+.no-box-shadow {
+  @include no-box-shadow;
 }
 
 /*
