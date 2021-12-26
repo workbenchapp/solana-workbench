@@ -30,16 +30,17 @@ code {
   @include inline-code;
 }
 
-.btn-check:checked + .btn-light:focus,
-.btn-check:active + .btn-light:focus,
-.btn-light:active:focus,
-.btn-light.active:focus,
-.show > .btn-light.dropdown-toggle:focus {
-  box-shadow: none;
-}
-.btn-check:focus + .btn-light,
-.btn-light:focus {
-  box-shadow: none;
+$lightblue: lighten($blue-100, 7%);
+
+.btn {
+  box-shadow: none !important;
+  &-primary {
+    color: $white;
+  }
+  &-primary-darker {
+    color: $white;
+    background-color: $blue-600;
+  }
 }
 
 /* Reset settings from code {} above.
@@ -96,8 +97,6 @@ svg {
 .cursor-pointer {
   cursor: pointer;
 }
-
-$lightblue: lighten($blue-100, 7%);
 
 .account-list-item-selected {
   background-color: $lightblue;

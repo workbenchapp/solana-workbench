@@ -238,9 +238,10 @@ const Run = () => {
 const NONE_KEY = 'none';
 const RANDOMART_W_CH = 17;
 const RANDOMART_H_CH = 10;
+// const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
 const prettifyPubkey = (pk = '') =>
   pk !== NONE_KEY
-    ? `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`
+    ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
     : '';
 
 const Editable = (props: {
@@ -336,7 +337,7 @@ const Editable = (props: {
             className={classes}
             ref={valRef}
             defaultValue={formValue}
-            placeholder={placeholder}
+            placeholder={editing ? placeholder : ''}
           />
         </InputGroup>
       </div>
@@ -536,7 +537,6 @@ const Accounts = () => {
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
   const [edited, setEdited] = useState<string>('');
-  const [addBtnHovered, setAddBtnHovered] = useState<boolean>(false);
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
   useEffect(() => {
@@ -551,6 +551,9 @@ const Accounts = () => {
   const selectedAccount: WBAccount | undefined = accounts.find(
     (a) => selected === a.pubKey
   );
+
+  const initializingAccount: boolean =
+    accounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
 
   const addAccountIndex = (i = 0) => {
     const accs = [...accounts];
@@ -584,25 +587,22 @@ const Accounts = () => {
           <InlinePK pk={rootKey} />
           <button
             type="button"
-            className={`ms-2 btn btn-white btn-sm border no-box-shadow ${
-              addBtnHovered && 'bg-light'
-            } ${addBtnClicked && 'border-dark'}`}
-            onMouseEnter={() => {
-              setAddBtnHovered(true);
-            }}
-            onMouseLeave={() => {
-              setAddBtnHovered(false);
-            }}
-            onMouseDown={(): void => {
-              addAccountIndex(0);
+            className={`ms-2 btn radius btn-block btn-sm no-box-shadow ${
+              addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
+            }`}
+            onMouseDown={(
+              e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+            ): void => {
+              e.preventDefault();
               setAddBtnClicked(true);
+              if (!initializingAccount) {
+                addAccountIndex(0);
+              }
             }}
-            onMouseUp={(): void => {
-              setAddBtnClicked(false);
-            }}
+            onMouseUp={() => setAddBtnClicked(false)}
           >
-            <FontAwesomeIcon className="text-muted" icon={faPlus} />
-            <span className="ms-1">Add Account</span>
+            <FontAwesomeIcon className="text-white" icon={faPlus} />
+            <span className="ms-1 text-white">Add Account</span>
           </button>
         </div>
         {accounts.length > 0 ? (
@@ -618,7 +618,11 @@ const Accounts = () => {
                 setHoveredItem={setHoveredItem}
                 setEdited={setEdited}
                 setSelected={setSelected}
-                rmAccount={() => rmAccountIndex(i)}
+                rmAccount={() => {
+                  if (!initializingAccount) {
+                    rmAccountIndex(i);
+                  }
+                }}
                 setAccount={(acc) => setAccountIndex(i, acc)}
               />
             );
