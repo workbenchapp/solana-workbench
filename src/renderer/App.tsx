@@ -398,7 +398,7 @@ const CopyIcon = (props: { writeValue: string }) => {
 const InlinePK = (props: { pk: string }) => {
   const { pk } = props;
   return (
-    <span className="ms-2">
+    <span className="align-middle ms-2">
       <code className="p-1">{prettifyPubkey(pk)}</code>
       <CopyIcon writeValue={pk} />
     </span>
@@ -411,7 +411,7 @@ const RandomArt = (props: { art: string }) => {
     art = `${' '.repeat(RANDOMART_W_CH)}\n`.repeat(RANDOMART_H_CH);
   }
   return (
-    <pre className="border inline-key mb-0">
+    <pre className="border inline-key mb-0 align-middle">
       <code>
         <strong>{art}</strong>
       </code>
@@ -446,7 +446,7 @@ const AccountListItem = (props: {
   return (
     <div
       onClick={() => setSelected(account.pubKey)}
-      className={`p-2 account-list-item ${
+      className={`p-1 account-list-item ${
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
           : 'border-top border-bottom'
@@ -496,26 +496,24 @@ const AccountListItem = (props: {
         </div>
         {!initializing && (
           <div className="col-auto">
-            <div>
-              <small>
-                <Editable
-                  outerSelected={selected}
-                  outerHovered={hovered}
-                  setSelected={setSelected}
-                  setHoveredItem={setHoveredItem}
-                  value={account.humanName}
-                  editingStarted={() => setEdited(account.pubKey)}
-                  editingStopped={() => setEdited('')}
-                  handleOutsideClick={(ref) => {
-                    window.electron.ipcRenderer.updateAccountName({
-                      pubKey: account.pubKey,
-                      humanName: ref.current.value,
-                    });
-                  }}
-                  placeholder="Write a description"
-                />
-              </small>
-            </div>
+            <small className="align-middle">
+              <Editable
+                outerSelected={selected}
+                outerHovered={hovered}
+                setSelected={setSelected}
+                setHoveredItem={setHoveredItem}
+                value={account.humanName}
+                editingStarted={() => setEdited(account.pubKey)}
+                editingStopped={() => setEdited('')}
+                handleOutsideClick={(ref) => {
+                  window.electron.ipcRenderer.updateAccountName({
+                    pubKey: account.pubKey,
+                    humanName: ref.current.value,
+                  });
+                }}
+                placeholder="Write a description"
+              />
+            </small>
           </div>
         )}
         {!initializing && (
