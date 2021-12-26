@@ -99,7 +99,12 @@ const Toast = (props: {
           <small className="ms-3 text-muted">{msg}</small>
           <div className="rounded p-1 toaster-close float-end">
             <FontAwesomeIcon
-              onClick={rmToast}
+              onClick={(e: React.MouseEvent<SVGSVGElement>) => {
+                e.preventDefault();
+                if (rmToast) {
+                  rmToast();
+                }
+              }}
               className="text-muted"
               size="lg"
               icon={faTimes}
@@ -351,7 +356,6 @@ const Editable = (props: {
   return (
     <OutsideClickHandler
       onOutsideClick={() => {
-        console.log({ editing });
         if (editing) {
           setHovered(false);
           setEditing(false);
@@ -475,6 +479,7 @@ const AccountListItem = (props: {
   setEdited: (s: string) => void;
   rmAccount: () => void;
   setAccount: (acc: WBAccount) => void;
+  pushToast: (toast: JSX.Element) => void;
 }) => {
   const {
     account,
@@ -487,6 +492,7 @@ const AccountListItem = (props: {
     initializing,
     rmAccount,
     setAccount,
+    pushToast,
   } = props;
   return (
     <div
@@ -523,6 +529,7 @@ const AccountListItem = (props: {
                 } else {
                   account.pubKey = ref.current.value;
                   setAccount(account);
+                  pushToast(<Toast msg="Account imported" />);
                 }
               }}
               autoFocus={edited}
@@ -633,7 +640,6 @@ const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
               e: React.MouseEvent<HTMLButtonElement, MouseEvent>
             ): void => {
               e.preventDefault();
-              pushToast(<Toast msg="test" />);
               setAddBtnClicked(true);
               if (!initializingAccount) {
                 addAccountIndex(0);
@@ -664,6 +670,7 @@ const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
                   }
                 }}
                 setAccount={(acc) => setAccountIndex(i, acc)}
+                pushToast={pushToast}
               />
             );
           })
@@ -837,13 +844,12 @@ export default function App() {
   const pushToast = (toast: JSX.Element) => {
     const newToasts = [...toasts];
     let newToast = toast;
+    const idx = toasts.length;
     newToast = cloneElement(toast, {
+      rmToast: () => rmToast(idx),
+      key: `${idx}`,
       bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
-      rmToast: () => rmToast(toasts.length),
     });
-    if (newToasts.length > 0) {
-      newToast.props.bottom = TOAST_BOTTOM_OFFSET * newToasts.length + 1;
-    }
     newToasts.push(newToast);
     setActiveToasts(newToasts);
   };
