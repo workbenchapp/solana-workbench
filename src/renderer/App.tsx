@@ -254,9 +254,9 @@ const Editable = (props: {
   handleOutsideClick: (ref: any) => void;
   className?: string;
   inputClassName?: string;
-  endElem?: JSX.Element;
   clearAllOnSelect?: boolean;
   autoFocus?: boolean;
+  placeholder?: string;
 }) => {
   const {
     value,
@@ -269,9 +269,9 @@ const Editable = (props: {
     className,
     inputClassName,
     handleOutsideClick,
-    endElem,
     clearAllOnSelect,
     autoFocus,
+    placeholder,
   } = props;
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(autoFocus);
@@ -336,8 +336,8 @@ const Editable = (props: {
             className={classes}
             ref={valRef}
             defaultValue={formValue}
+            placeholder={placeholder}
           />
-          {endElem}
         </InputGroup>
       </div>
     </OutsideClickHandler>
@@ -347,9 +347,9 @@ const Editable = (props: {
 Editable.defaultProps = {
   className: '',
   inputClassName: 'input-clean',
-  endElem: <></>,
   clearAllOnSelect: false,
   autoFocus: false,
+  placeholder: '',
 };
 
 const CopyIcon = (props: { writeValue: string }) => {
@@ -486,9 +486,9 @@ const AccountListItem = (props: {
                   setAccount(account);
                 }
               }}
-              endElem={<CopyIcon writeValue={account.pubKey} />}
               autoFocus={edited}
               clearAllOnSelect={initializing}
+              placeholder="Paste in an account ID"
             />
           ) : (
             <InlinePK pk={account.pubKey} />
@@ -512,6 +512,7 @@ const AccountListItem = (props: {
                       humanName: ref.current.value,
                     });
                   }}
+                  placeholder="Write a description"
                 />
               </small>
             </div>
