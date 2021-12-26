@@ -27,6 +27,7 @@ import {
   faCopy,
   faTerminal,
   faPlus,
+  faTimes,
 } from '@fortawesome/free-solid-svg-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
@@ -474,15 +475,9 @@ const AccountListItem = (props: {
               }`}
               // eslint-disable-next-line @typescript-eslint/no-unused-vars
               handleOutsideClick={(ref) => {
-                console.log('outside click');
-                console.log({ initializing });
-                console.log({ refVal: ref.current.value });
-                console.log({ account });
                 if (initializing && ref.current.value === '') {
-                  console.log('removing');
                   rmAccount();
                 } else {
-                  console.log('setting');
                   account.pubKey = ref.current.value;
                   setAccount(account);
                 }
@@ -587,7 +582,7 @@ const Accounts = () => {
           <InlinePK pk={rootKey} />
           <button
             type="button"
-            className={`ms-2 btn radius btn-block btn-sm no-box-shadow ${
+            className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
               addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
             }`}
             onMouseDown={(
@@ -784,6 +779,30 @@ const Header = () => {
   return <strong>{routes[location.pathname]}</strong>;
 };
 
+const Toaster = (props: { msg: string; variant?: string }) => {
+  const { msg, variant } = props;
+
+  return (
+    <div style={{ minHeight: '270px' }}>
+      <div className="mb-3 pb-3 bg-white rounded w-35 shadow fixed-bottom">
+        <div className={`toaster-header rounded-top-end bg-${variant}`}>
+          &nbsp;
+        </div>
+        <div className="p-1 rounded-bottom-end">
+          <small className="ms-3 text-muted">{msg}</small>
+          <div className="rounded p-1 toaster-close float-end">
+            <FontAwesomeIcon className="text-muted" size="lg" icon={faTimes} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Toaster.defaultProps = {
+  variant: 'success-lighter',
+};
+
 export default function App() {
   const [net, setNet] = useState('localhost');
   const netDropdownClick = (e: any) => {
@@ -797,6 +816,7 @@ export default function App() {
         <div className="row flex-nowrap g-0">
           <div className="col-auto mt-2">
             <Nav />
+            <Toaster msg="acct successfully added." variant="success-lighter" />
           </div>
           <div className="col-sm-10 mt-2 ms-4">
             <div className="row bg-white sticky-top mb-2">

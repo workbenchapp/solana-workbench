@@ -175,6 +175,45 @@ $pubkey-len: 44ch;
   }
 }
 
+.bg {
+  &-primary {
+    color: $white;
+  }
+
+  &-success-lighter {
+    background-color: $green-400;
+  }
+}
+
+.toaster {
+  overflow: hidden !important;
+  &-header {
+    font-size: 8px;
+  }
+
+  &-close {
+    cursor: pointer;
+    &:hover {
+      background-color: $gray-200;
+    }
+  }
+}
+
+.rounded {
+  &-top-end {
+    border-top-right-radius: 0.25rem;
+  }
+  &-bottom-end {
+    border-bottom-right-radius: 0.25rem;
+  }
+}
+
+.w {
+  &-35 {
+    width: 35%;
+  }
+}
+
 .no-box-shadow {
   @include no-box-shadow;
 }
