@@ -92,7 +92,7 @@ const Nav = () => {
           to="/"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="lg" icon={faRunning} />
+            <FontAwesomeIcon size="2x" icon={faRunning} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -107,7 +107,7 @@ const Nav = () => {
           to="/accounts"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon className="nav-icon" size="lg" icon={faTh} />
+            <FontAwesomeIcon className="nav-icon" size="2x" icon={faTh} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -122,7 +122,7 @@ const Nav = () => {
           to="/anchor"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon className="nav-icon" size="lg" icon={faAnchor} />
+            <FontAwesomeIcon className="nav-icon" size="2x" icon={faAnchor} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -233,34 +233,61 @@ const Run = () => {
   );
 };
 
+// dummy var value, could be undefined,
+// but need to refactor for that
+const NONE_KEY = 'none';
+const RANDOMART_W_CH = 17;
+const RANDOMART_H_CH = 10;
 const prettifyPubkey = (pk = '') =>
-  `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`;
+  pk !== NONE_KEY
+    ? `${pk.slice(0, 4)}..${pk.slice(pk.length - 4, pk.length)}`
+    : '';
 
 const Editable = (props: {
-  value: string;
   outerHovered: boolean;
   outerSelected: boolean;
-  pubKey: string;
-  setSelected: (s: string | undefined) => void;
-  setHoveredItem: (s: string | undefined) => void;
+  value: string;
+  setSelected: (s: string) => void;
+  setHoveredItem: (s: string) => void;
   editingStarted: () => void;
   editingStopped: () => void;
+  handleOutsideClick: (ref: any) => void;
+  className?: string;
+  inputClassName?: string;
+  endElem?: JSX.Element;
+  clearAllOnSelect?: boolean;
+  autoFocus?: boolean;
 }) => {
   const {
     value,
     outerHovered,
     outerSelected,
-    pubKey,
     setSelected,
     setHoveredItem,
     editingStarted,
     editingStopped,
+    className,
+    inputClassName,
+    handleOutsideClick,
+    endElem,
+    clearAllOnSelect,
+    autoFocus,
   } = props;
   const [hovered, setHovered] = useState(false);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(autoFocus);
   const valRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+  useEffect(() => {
+    if (autoFocus) {
+      valRef.current.focus();
+    }
+  });
 
-  let classes = 'border rounded';
+  let formValue = value;
+  if (clearAllOnSelect) {
+    formValue = '';
+  }
+
+  let classes = `${className} border rounded`;
   if (outerHovered) {
     classes = `${classes} bg-white`;
   } else if (!outerSelected) {
@@ -275,17 +302,16 @@ const Editable = (props: {
   if (outerSelected && !outerHovered) {
     classes = `${classes} border-selected`;
   }
+
   return (
     <OutsideClickHandler
       onOutsideClick={() => {
+        console.log({ editing });
         if (editing) {
           setHovered(false);
           setEditing(false);
           editingStopped();
-          window.electron.ipcRenderer.updateAccountName({
-            pubKey,
-            humanName: valRef.current.value,
-          });
+          handleOutsideClick(valRef);
         }
       }}
     >
@@ -299,22 +325,35 @@ const Editable = (props: {
           setHoveredItem('');
           editingStarted();
         }}
-        className={classes}
       >
         <InputGroup
           size="sm"
-          className={`input-clean ${
+          className={`${inputClassName} ${
             outerSelected && !hovered && !outerHovered && 'input-selected'
           }`}
         >
-          <FormControl autoFocus={editing} ref={valRef} defaultValue={value} />
+          <FormControl
+            className={classes}
+            ref={valRef}
+            defaultValue={formValue}
+          />
+          {endElem}
         </InputGroup>
       </div>
     </OutsideClickHandler>
   );
 };
 
-const CopyIcon = ({ writeValue = '' }) => {
+Editable.defaultProps = {
+  className: '',
+  inputClassName: 'input-clean',
+  endElem: <></>,
+  clearAllOnSelect: false,
+  autoFocus: false,
+};
+
+const CopyIcon = (props: { writeValue: string }) => {
+  const { writeValue } = props;
   const [copyTooltipText, setCopyTooltipText] = useState<string | undefined>(
     'Copy'
   );
@@ -332,7 +371,7 @@ const CopyIcon = ({ writeValue = '' }) => {
   return (
     <OverlayTrigger
       placement="top"
-      delay={{ show: 250, hide: 0 }}
+      delay={{ show: 500, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
       <span>
@@ -356,14 +395,41 @@ const CopyIcon = ({ writeValue = '' }) => {
   );
 };
 
+const InlinePK = (props: { pk: string }) => {
+  const { pk } = props;
+  return (
+    <span className="ms-2">
+      <code className="p-1">{prettifyPubkey(pk)}</code>
+      <CopyIcon writeValue={pk} />
+    </span>
+  );
+};
+
+const RandomArt = (props: { art: string }) => {
+  let { art } = props;
+  if (art === '') {
+    art = `${' '.repeat(RANDOMART_W_CH)}\n`.repeat(RANDOMART_H_CH);
+  }
+  return (
+    <pre className="border inline-key mb-0">
+      <code>
+        <strong>{art}</strong>
+      </code>
+    </pre>
+  );
+};
+
 const AccountListItem = (props: {
   account: WBAccount;
   hovered: boolean;
   selected: boolean;
   edited: boolean;
-  setHoveredItem: (s: string | undefined) => void;
-  setSelected: (s: string | undefined) => void;
-  setEdited: (s: string | undefined) => void;
+  initializing?: boolean;
+  setHoveredItem: (s: string) => void;
+  setSelected: (s: string) => void;
+  setEdited: (s: string) => void;
+  rmAccount: () => void;
+  setAccount: (acc: WBAccount) => void;
 }) => {
   const {
     account,
@@ -373,6 +439,9 @@ const AccountListItem = (props: {
     setHoveredItem,
     setSelected,
     setEdited,
+    initializing,
+    rmAccount,
+    setAccount,
   } = props;
   return (
     <div
@@ -389,45 +458,87 @@ const AccountListItem = (props: {
       onMouseLeave={() => setHoveredItem('')}
     >
       <div className="row flex-nowrap">
-        <div className="col-auto">
-          <pre className="border inline-key mb-0">
-            <code>
-              <strong>{account.art}</strong>
-            </code>
-          </pre>
+        <div className="col">
+          {account.pubKey === NONE_KEY ? (
+            <Editable
+              outerSelected={selected}
+              outerHovered={hovered}
+              setSelected={setSelected}
+              setHoveredItem={setHoveredItem}
+              value={account.pubKey}
+              editingStarted={() => setEdited(account.pubKey)}
+              editingStopped={() => setEdited('')}
+              inputClassName={`input-clean-code ${
+                initializing && 'input-no-max'
+              }`}
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              handleOutsideClick={(ref) => {
+                console.log('outside click');
+                console.log({ initializing });
+                console.log({ refVal: ref.current.value });
+                console.log({ account });
+                if (initializing && ref.current.value === '') {
+                  console.log('removing');
+                  rmAccount();
+                } else {
+                  console.log('setting');
+                  account.pubKey = ref.current.value;
+                  setAccount(account);
+                }
+              }}
+              endElem={<CopyIcon writeValue={account.pubKey} />}
+              autoFocus={edited}
+              clearAllOnSelect={initializing}
+            />
+          ) : (
+            <InlinePK pk={account.pubKey} />
+          )}
         </div>
-        <div className="col-auto">
-          <div>
-            <small>
-              <Editable
-                outerSelected={selected}
-                outerHovered={hovered}
-                setSelected={setSelected}
-                setHoveredItem={setHoveredItem}
-                pubKey={account.pubKey}
-                value={account.humanName}
-                editingStarted={() => setEdited(account.pubKey)}
-                editingStopped={() => setEdited('')}
-              />
-            </small>
+        {!initializing && (
+          <div className="col-auto">
+            <div>
+              <small>
+                <Editable
+                  outerSelected={selected}
+                  outerHovered={hovered}
+                  setSelected={setSelected}
+                  setHoveredItem={setHoveredItem}
+                  value={account.humanName}
+                  editingStarted={() => setEdited(account.pubKey)}
+                  editingStopped={() => setEdited('')}
+                  handleOutsideClick={(ref) => {
+                    window.electron.ipcRenderer.updateAccountName({
+                      pubKey: account.pubKey,
+                      humanName: ref.current.value,
+                    });
+                  }}
+                />
+              </small>
+            </div>
           </div>
-        </div>
-        <div className="col-auto">
-          <code>{prettifyPubkey(account.pubKey)}</code>
-          <CopyIcon writeValue={account.pubKey} />
-        </div>
+        )}
+        {!initializing && (
+          <div className="col-auto">
+            <RandomArt art={account.art || ''} />
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
+AccountListItem.defaultProps = {
+  initializing: false,
+};
+
 const Accounts = () => {
   const [accounts, setAccounts] = useState<WBAccount[]>([]);
-  const [selected, setSelected] = useState<string | undefined>('');
-  const [hoveredItem, setHoveredItem] = useState<string | undefined>('');
-  const [rootKey, setRootKey] = useState<string | undefined>('');
-  const [edited, setEdited] = useState<string | undefined>('');
+  const [selected, setSelected] = useState<string>('');
+  const [hoveredItem, setHoveredItem] = useState<string>('');
+  const [rootKey, setRootKey] = useState<string>('');
+  const [edited, setEdited] = useState<string>('');
   const [addBtnHovered, setAddBtnHovered] = useState<boolean>(false);
+  const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
   useEffect(() => {
     window.electron.ipcRenderer.once('accounts', (data: AccountsResponse) => {
@@ -442,25 +553,53 @@ const Accounts = () => {
     (a) => selected === a.pubKey
   );
 
+  const addAccountIndex = (i = 0) => {
+    const accs = [...accounts];
+    accs.splice(i, 0, {
+      pubKey: NONE_KEY,
+      humanName: '',
+    });
+    setAccounts(accs);
+    setSelected('');
+    setHoveredItem('');
+    setEdited(NONE_KEY);
+  };
+
+  const rmAccountIndex = (i = 0) => {
+    const accs = [...accounts];
+    accs.splice(i, 1);
+    setAccounts(accs);
+  };
+
+  const setAccountIndex = (i = 0, account: WBAccount) => {
+    const accs = [...accounts];
+    accs[i] = account;
+    setAccounts(accs);
+  };
+
   return (
     <>
       <div className="col-auto">
         <div className="mb-3">
           <FontAwesomeIcon icon={faKey} />
-          <span className="ms-2">
-            <code className="p-1">{prettifyPubkey(rootKey)}</code>
-            <CopyIcon writeValue={rootKey} />
-          </span>
+          <InlinePK pk={rootKey} />
           <button
             type="button"
             className={`ms-2 btn btn-white btn-sm border no-box-shadow ${
               addBtnHovered && 'bg-light'
-            }`}
+            } ${addBtnClicked && 'border-dark'}`}
             onMouseEnter={() => {
               setAddBtnHovered(true);
             }}
             onMouseLeave={() => {
               setAddBtnHovered(false);
+            }}
+            onMouseDown={(): void => {
+              addAccountIndex(0);
+              setAddBtnClicked(true);
+            }}
+            onMouseUp={(): void => {
+              setAddBtnClicked(false);
             }}
           >
             <FontAwesomeIcon className="text-muted" icon={faPlus} />
@@ -468,16 +607,20 @@ const Accounts = () => {
           </button>
         </div>
         {accounts.length > 0 ? (
-          accounts.map((account: WBAccount) => {
+          accounts.map((account: WBAccount, i: number) => {
             return (
               <AccountListItem
+                key={account.pubKey}
                 account={account}
                 hovered={account.pubKey === hoveredItem}
                 selected={account.pubKey === selected}
                 edited={account.pubKey === edited}
+                initializing={account.pubKey === NONE_KEY}
                 setHoveredItem={setHoveredItem}
                 setEdited={setEdited}
                 setSelected={setSelected}
+                rmAccount={() => rmAccountIndex(i)}
+                setAccount={(acc) => setAccountIndex(i, acc)}
               />
             );
           })
@@ -505,10 +648,7 @@ const Accounts = () => {
                       </td>
                       <td>
                         <small>
-                          <code className="code-muted">
-                            {prettifyPubkey(selectedAccount.pubKey)}
-                            <CopyIcon writeValue={selectedAccount.pubKey} />
-                          </code>
+                          <InlinePK pk={selectedAccount.pubKey} />
                         </small>
                       </td>
                     </tr>
@@ -544,9 +684,7 @@ const Accounts = () => {
                 </table>
               </div>
               <div className="col-auto">
-                <pre className="border randomart-md">
-                  <code>{selectedAccount.art}</code>
-                </pre>
+                <RandomArt art={selectedAccount.art || ''} />
               </div>
             </div>
           </>
@@ -672,6 +810,7 @@ export default function App() {
                   <Dropdown.Item href="#">localhost</Dropdown.Item>
                   <Dropdown.Item href="#">devnet</Dropdown.Item>
                   <Dropdown.Item href="#">testnet</Dropdown.Item>
+                  <Dropdown.Item href="#">mainnet-beta</Dropdown.Item>
                 </DropdownButton>
               </div>
             </div>

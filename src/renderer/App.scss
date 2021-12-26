@@ -18,11 +18,16 @@ $dark: #242423;
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
-code {
+@mixin inline-code() {
+  font-family: $font-family-code;
   padding: 0.2em 0.4em;
   border-radius: 6px;
   background-color: $gray-200;
   font-weight: 500;
+}
+
+code {
+  @include inline-code;
 }
 
 .btn-check:checked + .btn-light:focus,
@@ -142,9 +147,12 @@ $lightblue: lighten($blue-100, 7%);
   }
 }
 
+$pubkey-len: 44ch;
+
 .input {
   &-clean > input {
     border: none;
+    max-width: 36ch;
     &:focus {
       @include no-box-shadow;
     }
@@ -153,15 +161,21 @@ $lightblue: lighten($blue-100, 7%);
   &-selected > input {
     background-color: $lightblue;
   }
+
+  &-clean-code > input {
+    border: none;
+    max-width: 12ch;
+    @include inline-code;
+    &:focus {
+      @include no-box-shadow;
+    }
+  }
+
+  &-no-max > input {
+    max-width: $pubkey-len;
+  }
 }
 
 .no-box-shadow {
   @include no-box-shadow;
 }
-
-/*
-color pallette ideas:
-
-14f195,fff8f0,9e2b25,30323d,5c80bc
-0085cc,4b5358,3f7d20,931621,e08e45,7de2d1,eff2ef,242423,ffffff,14f195
-*/

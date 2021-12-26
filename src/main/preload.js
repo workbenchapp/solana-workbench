@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld('electron', {
     updateAccountName(msg) {
       ipcRenderer.send('update-account-name', msg);
     },
+    importAccount(msg) {
+      ipcRenderer.send('import-account', msg);
+    },
     on(channel, func) {
       const validChannels = [
         'sol-state',
@@ -36,6 +39,7 @@ contextBridge.exposeInMainWorld('electron', {
         'validator-logs',
         'fetch-anchor-idl',
         'update-account-name',
+        'import-account',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`
@@ -52,6 +56,7 @@ contextBridge.exposeInMainWorld('electron', {
         'validator-logs',
         'fetch-anchor-idl',
         'update-account-name',
+        'import-account',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`

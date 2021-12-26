@@ -7,10 +7,11 @@ export interface SolState {
 }
 
 export enum Net {
-  Localhost = 1,
-  Dev,
-  Main,
-  Test,
+  Localhost = 'localhost',
+  Dev = 'dev',
+  Main = 'main',
+  Test = 'test',
+  MainnetBeta = 'mainnet-beta',
 }
 
 export type WBAccount = {

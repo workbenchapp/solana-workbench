@@ -229,6 +229,15 @@ async function updateAccountName(pubKey: string, humanName: string) {
   return res;
 }
 
+async function importAccount(pubKey: string, net: string) {
+  const res = await db.run(
+    'INSERT INTO account VALUES (pubKey, net) (?, ?)',
+    pubKey,
+    net
+  );
+  return res;
+}
+
 const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
   const solConn = new sol.Connection('http://127.0.0.1:8899');
@@ -378,6 +387,13 @@ ipcMain.on(
       'update-account-name',
       await updateAccountName(msg.pubKey, msg.humanName)
     );
+  })
+);
+
+ipcMain.on(
+  'import-account',
+  ipcMiddleware('import-account', async (event, msg) => {
+    event.reply('import-account', await importAccount(msg.pubKey, msg.net));
   })
 );
 
