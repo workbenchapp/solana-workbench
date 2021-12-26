@@ -79,8 +79,13 @@ const useInterval = (callback: any, delay: number) => {
   }, [delay]);
 };
 
-const Toast = (props: { msg: string; variant?: string; bottom?: number }) => {
-  const { msg, variant, bottom } = props;
+const Toast = (props: {
+  msg: string;
+  variant?: string;
+  bottom?: number;
+  rmToast?: () => void;
+}) => {
+  const { msg, variant, bottom, rmToast } = props;
   return (
     <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
       <div
@@ -93,7 +98,12 @@ const Toast = (props: { msg: string; variant?: string; bottom?: number }) => {
         <div className="p-1 rounded-bottom-end">
           <small className="ms-3 text-muted">{msg}</small>
           <div className="rounded p-1 toaster-close float-end">
-            <FontAwesomeIcon className="text-muted" size="lg" icon={faTimes} />
+            <FontAwesomeIcon
+              onClick={rmToast}
+              className="text-muted"
+              size="lg"
+              icon={faTimes}
+            />
           </div>
         </div>
       </div>
@@ -104,6 +114,7 @@ const Toast = (props: { msg: string; variant?: string; bottom?: number }) => {
 Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
+  rmToast: () => {},
 };
 
 const Nav = () => {
@@ -817,13 +828,21 @@ export default function App() {
   const [net, setNet] = useState('localhost');
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
 
+  const rmToast = (i = 0) => {
+    const newToasts = [...toasts];
+    newToasts.splice(i, 1);
+    setActiveToasts(newToasts);
+  };
+
   const pushToast = (toast: JSX.Element) => {
     const newToasts = [...toasts];
     let newToast = toast;
+    newToast = cloneElement(toast, {
+      bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
+      rmToast: () => rmToast(toasts.length),
+    });
     if (newToasts.length > 0) {
-      newToast = cloneElement(toast, {
-        bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
-      });
+      newToast.props.bottom = TOAST_BOTTOM_OFFSET * newToasts.length + 1;
     }
     newToasts.push(newToast);
     setActiveToasts(newToasts);
