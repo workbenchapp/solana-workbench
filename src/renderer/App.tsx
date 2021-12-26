@@ -29,18 +29,28 @@ import {
   faPlus,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, cloneElement } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 
 import { WBAccount, SolState, AccountsResponse } from '../types/types';
 
-amplitude.getInstance().init('f1cde3642f7e0f483afbb7ac15ae8277');
+// dummy var value, could be undefined,
+// but need to refactor for that
+const NONE_KEY = 'none';
+const RANDOMART_W_CH = 17;
+const RANDOMART_H_CH = 10;
+const TOAST_HEIGHT = 270;
+const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
+const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
+const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
+
+amplitude.getInstance().init(AMPLITUDE_KEY);
 amplitude.getInstance().logEvent('open-app', {});
 setInterval(() => {
   amplitude.getInstance().logEvent('heartbeat', {});
-}, 3600000);
+}, AMPLITUDE_HEARTBEAT_INTERVAL);
 
 declare global {
   interface Window {
@@ -67,6 +77,33 @@ const useInterval = (callback: any, delay: number) => {
     }
     return () => {};
   }, [delay]);
+};
+
+const Toast = (props: { msg: string; variant?: string; bottom?: number }) => {
+  const { msg, variant, bottom } = props;
+  return (
+    <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
+      <div
+        style={{ bottom: `${bottom}px` }}
+        className="mb-3 pb-3 bg-white rounded w-35 shadow-sm fixed-bottom"
+      >
+        <div className={`toaster-header rounded-top-end bg-${variant}`}>
+          &nbsp;
+        </div>
+        <div className="p-1 rounded-bottom-end">
+          <small className="ms-3 text-muted">{msg}</small>
+          <div className="rounded p-1 toaster-close float-end">
+            <FontAwesomeIcon className="text-muted" size="lg" icon={faTimes} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+Toast.defaultProps = {
+  variant: 'success-lighter',
+  bottom: 0,
 };
 
 const Nav = () => {
@@ -234,11 +271,6 @@ const Run = () => {
   );
 };
 
-// dummy var value, could be undefined,
-// but need to refactor for that
-const NONE_KEY = 'none';
-const RANDOMART_W_CH = 17;
-const RANDOMART_H_CH = 10;
 // const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
 const prettifyPubkey = (pk = '') =>
   pk !== NONE_KEY
@@ -526,7 +558,8 @@ AccountListItem.defaultProps = {
   initializing: false,
 };
 
-const Accounts = () => {
+const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
+  const { pushToast } = props;
   const [accounts, setAccounts] = useState<WBAccount[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
@@ -589,6 +622,7 @@ const Accounts = () => {
               e: React.MouseEvent<HTMLButtonElement, MouseEvent>
             ): void => {
               e.preventDefault();
+              pushToast(<Toast msg="test" />);
               setAddBtnClicked(true);
               if (!initializingAccount) {
                 addAccountIndex(0);
@@ -779,32 +813,22 @@ const Header = () => {
   return <strong>{routes[location.pathname]}</strong>;
 };
 
-const Toaster = (props: { msg: string; variant?: string }) => {
-  const { msg, variant } = props;
-
-  return (
-    <div style={{ minHeight: '270px' }}>
-      <div className="mb-3 pb-3 bg-white rounded w-35 shadow fixed-bottom">
-        <div className={`toaster-header rounded-top-end bg-${variant}`}>
-          &nbsp;
-        </div>
-        <div className="p-1 rounded-bottom-end">
-          <small className="ms-3 text-muted">{msg}</small>
-          <div className="rounded p-1 toaster-close float-end">
-            <FontAwesomeIcon className="text-muted" size="lg" icon={faTimes} />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-Toaster.defaultProps = {
-  variant: 'success-lighter',
-};
-
 export default function App() {
   const [net, setNet] = useState('localhost');
+  const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
+
+  const pushToast = (toast: JSX.Element) => {
+    const newToasts = [...toasts];
+    let newToast = toast;
+    if (newToasts.length > 0) {
+      newToast = cloneElement(toast, {
+        bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
+      });
+    }
+    newToasts.push(newToast);
+    setActiveToasts(newToasts);
+  };
+
   const netDropdownClick = (e: any) => {
     e.preventDefault();
     setNet(e.target.innerText);
@@ -816,7 +840,7 @@ export default function App() {
         <div className="row flex-nowrap g-0">
           <div className="col-auto mt-2">
             <Nav />
-            <Toaster msg="acct successfully added." variant="success-lighter" />
+            {toasts}
           </div>
           <div className="col-sm-10 mt-2 ms-4">
             <div className="row bg-white sticky-top mb-2">
@@ -842,7 +866,7 @@ export default function App() {
                 <Run />
               </Route>
               <Route path="/accounts">
-                <Accounts />
+                <Accounts pushToast={pushToast} />
               </Route>
               <Route path="/anchor">
                 <Anchor />

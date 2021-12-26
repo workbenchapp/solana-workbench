@@ -197,6 +197,11 @@ $pubkey-len: 44ch;
       background-color: $gray-200;
     }
   }
+
+  &-hidden {
+    transition: 1s;
+    left: -300px;
+  }
 }
 
 .rounded {
