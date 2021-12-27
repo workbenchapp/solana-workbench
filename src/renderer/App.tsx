@@ -43,6 +43,7 @@ const RANDOMART_W_CH = 17;
 const RANDOMART_H_CH = 10;
 const TOAST_HEIGHT = 270;
 const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
+const TOAST_HIDE_INTERVAL = 1000;
 const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
@@ -88,17 +89,27 @@ const Toast = (props: {
   hideAfter?: number;
 }) => {
   const { msg, variant, bottom, rmToast, hideAfter } = props;
+  const [left, setLeft] = useState(0);
+  const rmInterval = useRef<number>();
+  const slideInterval = useRef<number>();
   useEffect(() => {
-    if (hideAfter !== -1) {
-      setInterval(() => {
+    if (hideAfter) {
+      rmInterval.current = window.setTimeout(() => {
         if (rmToast) rmToast();
+      }, hideAfter * 2);
+      slideInterval.current = window.setTimeout(() => {
+        setLeft(-300);
       }, hideAfter);
     }
-  }, [hideAfter, rmToast]);
+  }, [hideAfter, rmToast, setLeft]);
   return (
     <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
       <div
-        style={{ bottom: `${bottom}px` }}
+        style={{
+          bottom: `${bottom}px`,
+          transition: `${hideAfter}ms`,
+          left: `${left}px`,
+        }}
         className="mb-3 pb-3 bg-white rounded w-35 shadow-sm fixed-bottom"
       >
         <div className={`toaster-header rounded-top-end bg-${variant}`}>
@@ -110,7 +121,11 @@ const Toast = (props: {
             <FontAwesomeIcon
               onClick={(e: React.MouseEvent<SVGSVGElement>) => {
                 e.preventDefault();
-                if (rmToast) rmToast();
+                if (rmToast) {
+                  window.clearTimeout(rmInterval.current);
+                  window.clearTimeout(slideInterval.current);
+                  rmToast();
+                }
               }}
               className="text-muted"
               size="lg"
@@ -127,7 +142,7 @@ Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
   rmToast: () => {},
-  hideAfter: 2000,
+  hideAfter: TOAST_HIDE_INTERVAL,
 };
 
 const Nav = () => {
