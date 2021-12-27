@@ -43,6 +43,7 @@ const RANDOMART_W_CH = 17;
 const RANDOMART_H_CH = 10;
 const TOAST_HEIGHT = 270;
 const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
+const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 
@@ -84,8 +85,16 @@ const Toast = (props: {
   variant?: string;
   bottom?: number;
   rmToast?: () => void;
+  hideAfter?: number;
 }) => {
-  const { msg, variant, bottom, rmToast } = props;
+  const { msg, variant, bottom, rmToast, hideAfter } = props;
+  useEffect(() => {
+    if (hideAfter !== -1) {
+      setInterval(() => {
+        if (rmToast) rmToast();
+      }, hideAfter);
+    }
+  }, [hideAfter, rmToast]);
   return (
     <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
       <div
@@ -101,9 +110,7 @@ const Toast = (props: {
             <FontAwesomeIcon
               onClick={(e: React.MouseEvent<SVGSVGElement>) => {
                 e.preventDefault();
-                if (rmToast) {
-                  rmToast();
-                }
+                if (rmToast) rmToast();
               }}
               className="text-muted"
               size="lg"
@@ -120,6 +127,7 @@ Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
   rmToast: () => {},
+  hideAfter: 2000,
 };
 
 const Nav = () => {
@@ -287,7 +295,6 @@ const Run = () => {
   );
 };
 
-// const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
 const prettifyPubkey = (pk = '') =>
   pk !== NONE_KEY
     ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
@@ -528,8 +535,15 @@ const AccountListItem = (props: {
                   rmAccount();
                 } else {
                   account.pubKey = ref.current.value;
-                  setAccount(account);
-                  pushToast(<Toast msg="Account imported" />);
+                  if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
+                    setAccount(account);
+                    pushToast(<Toast msg="Account imported" />);
+                  } else {
+                    rmAccount();
+                    pushToast(
+                      <Toast msg="Invalid account ID" variant="warning" />
+                    );
+                  }
                 }
               }}
               autoFocus={edited}
@@ -665,9 +679,7 @@ const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
                 setEdited={setEdited}
                 setSelected={setSelected}
                 rmAccount={() => {
-                  if (!initializingAccount) {
-                    rmAccountIndex(i);
-                  }
+                  rmAccountIndex(i);
                 }}
                 setAccount={(acc) => setAccountIndex(i, acc)}
                 pushToast={pushToast}
