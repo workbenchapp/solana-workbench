@@ -13,6 +13,7 @@ $green: #3c7c50;
 $red: #b80c09;
 $orange: #e08e45;
 $teal: #14f195;
+$solgreen: #14f195;
 $light: #eff2ef;
 $dark: #242423;
 
@@ -183,6 +184,10 @@ $pubkey-len: 44ch;
   &-success-lighter {
     background-color: $green-400;
   }
+
+  &-sol-green {
+    background-color: $solgreen;
+  }
 }
 
 .toaster {
@@ -196,11 +201,6 @@ $pubkey-len: 44ch;
     &:hover {
       background-color: $gray-200;
     }
-  }
-
-  &-hidden {
-    transition: 1s;
-    left: -300px;
   }
 }
 

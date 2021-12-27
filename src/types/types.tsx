@@ -9,7 +9,6 @@ export interface SolState {
 export enum Net {
   Localhost = 'localhost',
   Dev = 'dev',
-  Main = 'main',
   Test = 'test',
   MainnetBeta = 'mainnet-beta',
 }
@@ -28,4 +27,8 @@ export type WBAccount = {
 export type AccountsResponse = {
   rootKey: string;
   accounts: WBAccount[];
+};
+
+export type GetAccountResponse = {
+  account?: WBAccount;
 };

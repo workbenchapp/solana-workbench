@@ -34,7 +34,7 @@ import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 
-import { WBAccount, SolState, AccountsResponse } from '../types/types';
+import { WBAccount, SolState, AccountsResponse, Net } from '../types/types';
 
 // dummy var value, could be undefined,
 // but need to refactor for that
@@ -44,7 +44,7 @@ const RANDOMART_H_CH = 10;
 const TOAST_HEIGHT = 270;
 const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
 const TOAST_HIDE_INTERVAL = 1000;
-const BASE58_PUBKEY_REGEX = /^[5KL][1-9A-HJ-NP-Za-km-z]{50,51}$/;
+const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 
@@ -375,17 +375,17 @@ const Editable = (props: {
     classes = `${classes} border-selected`;
   }
 
+  const completeEdit = () => {
+    if (editing) {
+      setHovered(false);
+      setEditing(false);
+      editingStopped();
+      handleOutsideClick(valRef);
+    }
+  };
+
   return (
-    <OutsideClickHandler
-      onOutsideClick={() => {
-        if (editing) {
-          setHovered(false);
-          setEditing(false);
-          editingStopped();
-          handleOutsideClick(valRef);
-        }
-      }}
-    >
+    <OutsideClickHandler onOutsideClick={completeEdit}>
       <div
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -408,6 +408,10 @@ const Editable = (props: {
             ref={valRef}
             defaultValue={formValue}
             placeholder={editing ? placeholder : ''}
+            onKeyPress={(e: React.KeyboardEvent) => {
+              e.preventDefault();
+              if (e.key === 'Enter') completeEdit();
+            }}
           />
         </InputGroup>
       </div>
@@ -552,7 +556,10 @@ const AccountListItem = (props: {
                   account.pubKey = ref.current.value;
                   if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
                     setAccount(account);
-                    pushToast(<Toast msg="Account imported" />);
+                    // lookupAccount();
+                    pushToast(
+                      <Toast msg="Account imported" variant="sol-green" />
+                    );
                   } else {
                     rmAccount();
                     pushToast(
@@ -906,10 +913,10 @@ export default function App() {
                   className="float-end"
                   variant="light"
                 >
-                  <Dropdown.Item href="#">localhost</Dropdown.Item>
-                  <Dropdown.Item href="#">devnet</Dropdown.Item>
-                  <Dropdown.Item href="#">testnet</Dropdown.Item>
-                  <Dropdown.Item href="#">mainnet-beta</Dropdown.Item>
+                  <Dropdown.Item href="#">{Net.Localhost}</Dropdown.Item>
+                  <Dropdown.Item href="#">{Net.Dev}</Dropdown.Item>
+                  <Dropdown.Item href="#">{Net.Test}</Dropdown.Item>
+                  <Dropdown.Item href="#">{Net.MainnetBeta}</Dropdown.Item>
                 </DropdownButton>
               </div>
             </div>
