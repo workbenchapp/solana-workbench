@@ -24,11 +24,39 @@ export type WBAccount = {
   owner?: sol.PublicKey;
 };
 
+export type SolStateRequest = {
+  net: Net;
+};
+
+export type ValidatorLogsRequest = {
+  filter: string;
+};
+
+export type GetAccountRequest = {
+  net: Net;
+  pk: string;
+};
+
+export type AccountsRequest = {
+  net: Net;
+};
+
+export type UpdateAccountRequest = {
+  pubKey: string;
+  humanName: string;
+};
+
+export type ImportAccountRequest = {
+  net: Net;
+  pubKey: string;
+};
+
 export type AccountsResponse = {
   rootKey: string;
   accounts: WBAccount[];
 };
 
 export type GetAccountResponse = {
-  account?: WBAccount;
+  account?: sol.AccountInfo<Buffer> | null;
+  err?: Error;
 };

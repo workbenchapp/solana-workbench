@@ -8,8 +8,8 @@ contextBridge.exposeInMainWorld('electron', {
     solState() {
       ipcRenderer.send('sol-state', {});
     },
-    accounts() {
-      ipcRenderer.send('accounts', {});
+    accounts(msg) {
+      ipcRenderer.send('accounts', msg);
     },
     addKeypair() {
       ipcRenderer.send('add-keypair', {});
@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('electron', {
     importAccount(msg) {
       ipcRenderer.send('import-account', msg);
     },
+    getAccount(msg) {
+      ipcRenderer.send('get-account', msg);
+    },
     on(channel, func) {
       const validChannels = [
         'sol-state',
@@ -40,6 +43,7 @@ contextBridge.exposeInMainWorld('electron', {
         'fetch-anchor-idl',
         'update-account-name',
         'import-account',
+        'get-account',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`
@@ -57,6 +61,7 @@ contextBridge.exposeInMainWorld('electron', {
         'fetch-anchor-idl',
         'update-account-name',
         'import-account',
+        'get-account',
       ];
       if (validChannels.includes(channel)) {
         // Deliberately strip event as it includes `sender`

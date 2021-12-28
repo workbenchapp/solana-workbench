@@ -27,7 +27,17 @@ import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import { WBAccount, AccountsResponse, Net, SolState } from '../types/types';
+import {
+  WBAccount,
+  AccountsResponse,
+  Net,
+  SolState,
+  GetAccountResponse,
+  ValidatorLogsRequest,
+  AccountsRequest,
+  ImportAccountRequest,
+  GetAccountRequest,
+} from '../types/types';
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_VERSION = '0.1.3-dev';
@@ -119,7 +129,22 @@ const initDB = async () => {
 };
 initDB();
 
-const connectSOL = async (): Promise<SolState> => {
+const netToURL = (net: Net): string => {
+  switch (net) {
+    case Net.Localhost:
+      return 'http://127.0.0.1:8899';
+    case Net.Dev:
+      return 'https://api.devnet.solana.com';
+    case Net.Test:
+      return 'https://api.testnet.solana.com';
+    case Net.MainnetBeta:
+      return 'https://api.mainnet-beta.solana.com';
+    default:
+  }
+  return '';
+};
+
+const connectSOL = async (net: Net): Promise<SolState> => {
   let solConn: sol.Connection;
 
   // Connect to cluster
@@ -128,7 +153,7 @@ const connectSOL = async (): Promise<SolState> => {
     keyId: '',
   } as SolState;
   try {
-    solConn = new sol.Connection('http://127.0.0.1:8899');
+    solConn = new sol.Connection(netToURL(net));
     await solConn.getEpochInfo();
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
@@ -146,9 +171,21 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-async function accounts(): Promise<AccountsResponse> {
+async function getAccount(net: Net, pk: string): Promise<GetAccountResponse> {
+  const solConn = new sol.Connection(netToURL(net));
+  const resp: GetAccountResponse = {};
+  try {
+    resp.account = await solConn.getAccountInfo(new sol.PublicKey(pk));
+  } catch (e) {
+    resp.err = e as Error;
+  }
+  return resp;
+}
+
+async function accounts(net: Net): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
-  const solConn = new sol.Connection('http://127.0.0.1:8899');
+  logger.info(net);
+  const solConn = new sol.Connection(netToURL(net));
   const existingAccounts = await db.all('SELECT * FROM account');
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
@@ -238,9 +275,9 @@ async function importAccount(pubKey: string, net: string) {
   return res;
 }
 
-const addKeypair = async (kpPath: string) => {
+const addKeypair = async (net: Net, kpPath: string) => {
   const kp = sol.Keypair.generate();
-  const solConn = new sol.Connection('http://127.0.0.1:8899');
+  const solConn = new sol.Connection(netToURL(net));
 
   // todo: this conn might not be initialized yet
   await solConn.confirmTransaction(
@@ -344,8 +381,8 @@ const ipcMiddleware = (
 
 ipcMain.on(
   'sol-state',
-  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent) => {
-    const solState = await connectSOL();
+  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent, msg) => {
+    const solState = await connectSOL(msg.net);
     event.reply('sol-state', solState);
   })
 );
@@ -360,65 +397,92 @@ ipcMain.on(
 
 ipcMain.on(
   'validator-logs',
-  ipcMiddleware('validator-logs', async (event, msg) => {
-    const logs = await validatorLogs(msg.filter);
-    event.reply('validator-logs', logs);
-  })
+  ipcMiddleware(
+    'validator-logs',
+    async (event: Electron.IpcMainEvent, msg: ValidatorLogsRequest) => {
+      const logs = await validatorLogs(msg.filter);
+      event.reply('validator-logs', logs);
+    }
+  )
+);
+
+ipcMain.on(
+  'get-account',
+  ipcMiddleware(
+    'get-account',
+    async (event: Electron.IpcMainEvent, msg: GetAccountRequest) => {
+      const account = await getAccount(msg.net, msg.pk);
+      event.reply('get-account', account);
+    }
+  )
 );
 
 ipcMain.on(
   'accounts',
-  ipcMiddleware('accounts', async (event) => {
-    try {
-      await fs.promises.access(KEY_PATH);
-    } catch {
-      logger.info('Creating root key', { KEY_PATH });
-      await addKeypair(KEY_PATH);
+  ipcMiddleware(
+    'accounts',
+    async (event: Electron.IpcMainEvent, msg: AccountsRequest) => {
+      try {
+        await fs.promises.access(KEY_PATH);
+      } catch {
+        logger.info('Creating root key', { KEY_PATH });
+        await addKeypair(msg.net, KEY_PATH);
+      }
+      const pairs = await accounts(msg.net);
+      event.reply('accounts', pairs);
     }
-    const pairs = await accounts();
-    event.reply('accounts', pairs);
-  })
+  )
 );
 
 ipcMain.on(
   'update-account-name',
-  ipcMiddleware('update-account-name', async (event, msg) => {
-    event.reply(
-      'update-account-name',
-      await updateAccountName(msg.pubKey, msg.humanName)
-    );
-  })
+  ipcMiddleware(
+    'update-account-name',
+    async (event: Electron.IpcMainEvent, msg) => {
+      event.reply(
+        'update-account-name',
+        await updateAccountName(msg.pubKey, msg.humanName)
+      );
+    }
+  )
 );
 
 ipcMain.on(
   'import-account',
-  ipcMiddleware('import-account', async (event, msg) => {
-    event.reply('import-account', await importAccount(msg.pubKey, msg.net));
-  })
+  ipcMiddleware(
+    'import-account',
+    async (event: Electron.IpcMainEvent, msg: ImportAccountRequest) => {
+      event.reply('import-account', await importAccount(msg.net, msg.pubKey));
+    }
+  )
 );
 
 ipcMain.on(
   'add-keypair',
-  ipcMiddleware('add-keypair', async (event) => {
-    await addKeypair('fixme');
-    const pairs = await accounts();
+  ipcMiddleware('add-keypair', async (event: Electron.IpcMainEvent, msg) => {
+    // should be able to create more keypairs than just wbkey.json
+    await addKeypair(Net.Localhost, 'fixme');
+    const pairs = await accounts(msg.net);
     event.reply('add-keypair', pairs);
   })
 );
 
 ipcMain.on(
   'airdrop',
-  ipcMiddleware('airdrop', async (event) => {
+  ipcMiddleware('airdrop', async (event: Electron.IpcMainEvent) => {
     event.reply('airdrop success');
   })
 );
 
 ipcMain.on(
   'fetch-anchor-idl',
-  ipcMiddleware('fetch-anchor-idl', async (event, msg) => {
-    const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
-    event.reply('fetch-anchor-idl', JSON.parse(stdout));
-  })
+  ipcMiddleware(
+    'fetch-anchor-idl',
+    async (event: Electron.IpcMainEvent, msg) => {
+      const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
+      event.reply('fetch-anchor-idl', JSON.parse(stdout));
+    }
+  )
 );
 
 if (process.env.NODE_ENV === 'production') {

@@ -34,7 +34,13 @@ import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 
-import { WBAccount, SolState, AccountsResponse, Net } from '../types/types';
+import {
+  WBAccount,
+  SolState,
+  AccountsResponse,
+  Net,
+  GetAccountResponse,
+} from '../types/types';
 
 // dummy var value, could be undefined,
 // but need to refactor for that
@@ -409,8 +415,10 @@ const Editable = (props: {
             defaultValue={formValue}
             placeholder={editing ? placeholder : ''}
             onKeyPress={(e: React.KeyboardEvent) => {
-              e.preventDefault();
-              if (e.key === 'Enter') completeEdit();
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                completeEdit();
+              }
             }}
           />
         </InputGroup>
@@ -495,6 +503,7 @@ const RandomArt = (props: { art: string }) => {
 };
 
 const AccountListItem = (props: {
+  net: Net;
   account: WBAccount;
   hovered: boolean;
   selected: boolean;
@@ -505,9 +514,11 @@ const AccountListItem = (props: {
   setEdited: (s: string) => void;
   rmAccount: () => void;
   setAccount: (acc: WBAccount) => void;
-  pushToast: (toast: JSX.Element) => void;
+  pushToast: (e: JSX.Element) => void;
+  queriedAccount?: GetAccountResponse;
 }) => {
   const {
+    net,
     account,
     hovered,
     edited,
@@ -519,6 +530,7 @@ const AccountListItem = (props: {
     rmAccount,
     setAccount,
     pushToast,
+    queriedAccount,
   } = props;
   return (
     <div
@@ -529,7 +541,7 @@ const AccountListItem = (props: {
           : 'border-top border-bottom'
       } ${hovered && !selected && 'bg-light'} ${
         edited && 'border-top border-bottom border-primary'
-      }`}
+      } ${queriedAccount && 'border-solgreen-shadow'}`}
       key={account.pubKey}
       onMouseEnter={() => setHoveredItem(account.pubKey)}
       onMouseLeave={() => setHoveredItem('')}
@@ -548,7 +560,6 @@ const AccountListItem = (props: {
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
               handleOutsideClick={(ref) => {
                 if (initializing && ref.current.value === '') {
                   rmAccount();
@@ -556,15 +567,16 @@ const AccountListItem = (props: {
                   account.pubKey = ref.current.value;
                   if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
                     setAccount(account);
-                    // lookupAccount();
-                    pushToast(
-                      <Toast msg="Account imported" variant="sol-green" />
-                    );
+                    // setLoading(true)
+                    window.electron.ipcRenderer.getAccount({
+                      net,
+                      pk: account.pubKey,
+                    });
                   } else {
-                    rmAccount();
                     pushToast(
                       <Toast msg="Invalid account ID" variant="warning" />
                     );
+                    rmAccount();
                   }
                 }
               }}
@@ -610,25 +622,50 @@ const AccountListItem = (props: {
 
 AccountListItem.defaultProps = {
   initializing: false,
+  queriedAccount: undefined,
 };
 
-const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
-  const { pushToast } = props;
+const Accounts = (props: {
+  net: Net;
+  pushToast: (toast: JSX.Element) => void;
+}) => {
+  const { net, pushToast } = props;
   const [accounts, setAccounts] = useState<WBAccount[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
   const [edited, setEdited] = useState<string>('');
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
+  const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
+  const listenersSet = useRef<boolean>();
 
   useEffect(() => {
-    window.electron.ipcRenderer.once('accounts', (data: AccountsResponse) => {
-      setRootKey(data.rootKey);
-      setAccounts(data.accounts);
-    });
+    if (!listenersSet.current) {
+      window.electron.ipcRenderer.once('accounts', (data: AccountsResponse) => {
+        setRootKey(data.rootKey);
+        setAccounts(data.accounts);
+      });
 
-    window.electron.ipcRenderer.accounts();
-  }, []);
+      window.electron.ipcRenderer.on(
+        'get-account',
+        (resp: GetAccountResponse) => {
+          setQueriedAccount(resp);
+          if (resp.account) {
+            pushToast(<Toast msg="Account imported" variant="sol-green" />);
+            // insert account
+          } else {
+            // how to get correct ID?
+            // rmAccountIndex(0);
+            pushToast(
+              <Toast msg={`Account not found in ${net}`} variant="warning" />
+            );
+          }
+        }
+      );
+      window.electron.ipcRenderer.accounts({ net });
+      listenersSet.current = true;
+    }
+  }, [net, pushToast]);
 
   const selectedAccount: WBAccount | undefined = accounts.find(
     (a) => selected === a.pubKey
@@ -691,6 +728,7 @@ const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
           accounts.map((account: WBAccount, i: number) => {
             return (
               <AccountListItem
+                net={net}
                 key={account.pubKey}
                 account={account}
                 hovered={account.pubKey === hoveredItem}
@@ -705,6 +743,7 @@ const Accounts = (props: { pushToast: (toast: JSX.Element) => void }) => {
                 }}
                 setAccount={(acc) => setAccountIndex(i, acc)}
                 pushToast={pushToast}
+                queriedAccount={queriedAccount}
               />
             );
           })
@@ -866,7 +905,7 @@ const Header = () => {
 };
 
 export default function App() {
-  const [net, setNet] = useState('localhost');
+  const [net, setNet] = useState(Net.Localhost);
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
 
   const rmToast = (i = 0) => {
@@ -888,9 +927,10 @@ export default function App() {
     setActiveToasts(newToasts);
   };
 
-  const netDropdownClick = (e: any) => {
+  const netDropdownClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    setNet(e.target.innerText);
+    const target = e.target as HTMLElement;
+    setNet(Net[target.innerText as keyof typeof Net]);
   };
 
   return (
@@ -925,7 +965,7 @@ export default function App() {
                 <Run />
               </Route>
               <Route path="/accounts">
-                <Accounts pushToast={pushToast} />
+                <Accounts net={net} pushToast={pushToast} />
               </Route>
               <Route path="/anchor">
                 <Anchor />
