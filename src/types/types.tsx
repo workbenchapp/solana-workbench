@@ -18,7 +18,8 @@ export type WBAccount = {
   humanName?: string;
   art?: string;
   solAmount?: number;
-  solAccount?: sol.AccountInfo<Buffer>;
+  hexDump?: string;
+  solAccount?: sol.AccountInfo<Buffer> | null;
 };
 
 export type SolStateRequest = {

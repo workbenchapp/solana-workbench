@@ -21,7 +21,7 @@ import util from 'util';
 import { exec } from 'child_process';
 import winston from 'winston';
 import randomart from 'randomart';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import hexdump from 'hexdump-nodejs';
 import sqlite3 from 'sqlite3';
 import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
@@ -50,6 +50,7 @@ const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
 const MIGRATION_DIR = 'assets/migrations';
 const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
+const HEXDUMP_BYTES = 128;
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'
@@ -182,8 +183,9 @@ async function getAccount(
     const art = randomart(key.toBytes());
     const solAccount = await solConn.getAccountInfo(key);
     const solAmount = solAccount?.lamports;
+    const hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
     if (solAccount !== null) {
-      resp.account = { pubKey, solAmount, art, solAccount };
+      resp.account = { pubKey, solAmount, art, solAccount, hexDump };
     } else {
       resp.account = { pubKey };
     }
@@ -203,11 +205,18 @@ async function accounts(net: Net): Promise<AccountsResponse> {
     const pubKeys = existingAccounts.map((a) => new sol.PublicKey(a.pubKey));
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
     const mergedAccountInfo: WBAccount[] = solAccountInfo.map(
-      (a: sol.AccountInfo<Buffer> | null, i: number) => {
-        const newAcc = Object.assign(existingAccounts[i], a);
+      (solAccount: sol.AccountInfo<Buffer> | null, i: number) => {
         const key = new sol.PublicKey(existingAccounts[i].pubKey);
-        newAcc.art = randomart(key.toBytes());
-        newAcc.sol = newAcc.lamports / sol.LAMPORTS_PER_SOL;
+        const { humanName } = existingAccounts[i];
+        const art = randomart(key.toBytes());
+        const newAcc: WBAccount = { art, humanName, pubKey: key.toString() };
+        if (solAccount) {
+          newAcc.solAccount = solAccount;
+          newAcc.solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
+          newAcc.hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
+        }
+        console.log(solAccount);
+        console.log(newAcc);
         return newAcc;
       }
     );

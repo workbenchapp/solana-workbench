@@ -497,7 +497,7 @@ const CopyIcon = (props: { writeValue: string }) => {
   return (
     <OverlayTrigger
       placement="top"
-      delay={{ show: 500, hide: 0 }}
+      delay={{ show: 250, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
       <span>
@@ -684,6 +684,12 @@ const Accounts = (props: {
     setAccounts(accs);
   };
 
+  const shiftAccount = () => {
+    const accs = [...accounts];
+    accs.shift();
+    setAccounts(accs);
+  };
+
   useEffect(() => {
     const updateAccount = (account: WBAccount) => {
       const accs = [...accountsRef.current];
@@ -700,10 +706,12 @@ const Accounts = (props: {
     };
 
     const getAccountListener = (resp: GetAccountResponse) => {
-      // todo: more ref trick?
+      // todo: this doesn't actually work, need more ref trick?
       setQueriedAccount(resp);
+
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
+        setSelected(resp.account.pubKey);
         pushToast(<Toast msg="Account imported" variant="sol-green" />);
       } else {
         setAccounts(
@@ -748,8 +756,21 @@ const Accounts = (props: {
       rmAccount(account);
     } else {
       account.pubKey = ref.current.value;
-      if (accounts.some((a) => a.pubKey === account.pubKey)) {
+      console.log({ dupe: account.pubKey, dupeAccts: accounts });
+
+      // todo: excludes first (same) element, not generic to anywhere
+      // in array but it'll do
+      if (
+        // accounts has an entry for the new (attempted) account ID already,
+        // so we sum up the instances of that key, and it'll be 2 if it's
+        // a duplicate of an existing one
+        accounts
+          .map((a): number => (a.pubKey === account.pubKey ? 1 : 0))
+          .reduce((a, b) => a + b, 0) === 2
+      ) {
         pushToast(<Toast msg="Account already imported" variant="warning" />);
+        shiftAccount();
+        return;
       }
       if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
         window.electron.ipcRenderer.getAccount({
@@ -794,7 +815,7 @@ const Accounts = (props: {
             const initializing = account.pubKey === NONE_KEY;
             return (
               <AccountListItem
-                key={account.pubKey}
+                key={`pubKey=${account.pubKey},initializing=${initializing}`}
                 account={account}
                 hovered={account.pubKey === hoveredItem}
                 selected={account.pubKey === selected}
@@ -811,7 +832,10 @@ const Accounts = (props: {
             );
           })
         ) : (
-          <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+          <>
+            <span className="me-2">Generating seed wallets...</span>
+            <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+          </>
         )}
       </div>
       <div className="col">
@@ -825,52 +849,64 @@ const Accounts = (props: {
               </div>
             </div>
             <div className="row">
-              <div className="col-auto">
-                <table className="table table-borderless table-sm">
-                  <tbody>
-                    <tr>
-                      <td>
-                        <small className="text-muted">Pubkey</small>
-                      </td>
-                      <td>
-                        <small>
-                          <InlinePK pk={selectedAccount.pubKey} />
-                        </small>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <small className="text-muted">SOL</small>
-                      </td>
-                      <td>
-                        <small>{selectedAccount.solAmount}</small>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <small className="text-muted">Executable</small>
-                      </td>
-                      <td>
-                        {selectedAccount.solAccount?.executable ? (
-                          <div>
-                            <FontAwesomeIcon
-                              className="border-success rounded p-1 executable-icon"
-                              icon={faTerminal}
-                            />
-                            <small className="ms-1 mb-1">Yes</small>
-                          </div>
-                        ) : (
-                          <small className="fst-italic fw-light text-muted">
-                            No
-                          </small>
-                        )}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              <div className="col-auto">
-                <RandomArt art={selectedAccount.art || ''} />
+              <div className="col">
+                <div className="row">
+                  <div className="col-auto">
+                    <table className="table table-borderless table-sm">
+                      <tbody>
+                        <tr>
+                          <td>
+                            <small className="text-muted">Pubkey</small>
+                          </td>
+                          <td>
+                            <small>
+                              <InlinePK pk={selectedAccount.pubKey} />
+                            </small>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <small className="text-muted">SOL</small>
+                          </td>
+                          <td>
+                            <small>{selectedAccount.solAmount}</small>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <small className="text-muted">Executable</small>
+                          </td>
+                          <td>
+                            {selectedAccount.solAccount?.executable ? (
+                              <div>
+                                <FontAwesomeIcon
+                                  className="border-success rounded p-1 executable-icon"
+                                  icon={faTerminal}
+                                />
+                                <small className="ms-1 mb-1">Yes</small>
+                              </div>
+                            ) : (
+                              <small className="fst-italic fw-light text-muted">
+                                No
+                              </small>
+                            )}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="col-auto">
+                    <RandomArt art={selectedAccount.art || ''} />
+                  </div>
+                </div>
+                <div>
+                  <small className="text-muted">Data</small>
+                </div>
+                <div>
+                  <pre>
+                    <code>{selectedAccount.hexDump}</code>
+                  </pre>
+                </div>
               </div>
             </div>
           </>
