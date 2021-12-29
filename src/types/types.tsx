@@ -15,7 +15,7 @@ export enum Net {
 
 export type WBAccount = {
   pubKey: string;
-  humanName: string;
+  humanName?: string;
   art?: string;
   data?: Buffer;
   executable?: boolean;
@@ -57,6 +57,6 @@ export type AccountsResponse = {
 };
 
 export type GetAccountResponse = {
-  account?: sol.AccountInfo<Buffer> | null;
+  account?: WBAccount | null;
   err?: Error;
 };

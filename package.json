@@ -169,6 +169,7 @@
     "@types/sqlite3": "^3.1.7",
     "@types/terser-webpack-plugin": "^5.0.4",
     "@types/underscore": "^1.11.3",
+    "@types/uuid": "^8.3.3",
     "@types/webpack-env": "^1.16.3",
     "@typescript-eslint/eslint-plugin": "^5.2.0",
     "browserslist-config-erb": "^0.0.3",
@@ -248,6 +249,7 @@
     "regenerator-runtime": "^0.13.9",
     "sqlite": "^4.0.23",
     "underscore": "^1.13.1",
+    "uuid": "^8.3.2",
     "winston": "^3.3.3"
   },
   "devEngines": {

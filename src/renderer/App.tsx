@@ -29,10 +29,17 @@ import {
   faPlus,
   faTimes,
 } from '@fortawesome/free-solid-svg-icons';
-import { useCallback, useEffect, useRef, useState, cloneElement } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  cloneElement,
+} from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   WBAccount,
@@ -48,8 +55,10 @@ const NONE_KEY = 'none';
 const RANDOMART_W_CH = 17;
 const RANDOMART_H_CH = 10;
 const TOAST_HEIGHT = 270;
+const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
 const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
-const TOAST_HIDE_INTERVAL = 1000;
+const TOAST_HIDE_MS = 1200;
+const TOAST_PAUSE_MS = 1000;
 const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
@@ -95,28 +104,42 @@ const Toast = (props: {
   hideAfter?: number;
 }) => {
   const { msg, variant, bottom, rmToast, hideAfter } = props;
-  const [left, setLeft] = useState(0);
+  const [left, setLeft] = useState(-300);
   const rmInterval = useRef<number>();
   const slideInterval = useRef<number>();
+  const setupRun = useRef<boolean>(false);
+
   useEffect(() => {
-    if (hideAfter) {
-      rmInterval.current = window.setTimeout(() => {
-        if (rmToast) rmToast();
-      }, hideAfter * 2);
-      slideInterval.current = window.setTimeout(() => {
-        setLeft(-300);
-      }, hideAfter);
+    if (!setupRun.current) {
+      console.log('setup', { left });
+      window.setTimeout(() => {
+        setLeft(0);
+      }, 100);
+      if (hideAfter) {
+        rmInterval.current = window.setTimeout(() => {
+          if (rmToast) {
+            rmToast();
+          }
+        }, hideAfter * 2 + TOAST_PAUSE_MS);
+        slideInterval.current = window.setTimeout(() => {
+          setLeft(-300);
+        }, hideAfter + TOAST_PAUSE_MS);
+      }
+      setupRun.current = true;
     }
-  }, [hideAfter, rmToast, setLeft]);
+  }, [hideAfter, left, rmToast]);
+  console.log('render', { left });
   return (
     <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
       <div
         style={{
           bottom: `${bottom}px`,
           transition: `${hideAfter}ms`,
+          transitionTimingFunction: 'ease',
           left: `${left}px`,
+          width: `${TOAST_WIDTH}px`,
         }}
-        className="mb-3 pb-3 bg-white rounded w-35 shadow-sm fixed-bottom"
+        className="mb-3 pb-3 bg-white rounded shadow-sm fixed-bottom"
       >
         <div className={`toaster-header rounded-top-end bg-${variant}`}>
           &nbsp;
@@ -148,7 +171,7 @@ Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
   rmToast: () => {},
-  hideAfter: TOAST_HIDE_INTERVAL,
+  hideAfter: TOAST_HIDE_MS,
 };
 
 const Nav = () => {
@@ -503,7 +526,6 @@ const RandomArt = (props: { art: string }) => {
 };
 
 const AccountListItem = (props: {
-  net: Net;
   account: WBAccount;
   hovered: boolean;
   selected: boolean;
@@ -512,13 +534,10 @@ const AccountListItem = (props: {
   setHoveredItem: (s: string) => void;
   setSelected: (s: string) => void;
   setEdited: (s: string) => void;
-  rmAccount: () => void;
-  setAccount: (acc: WBAccount) => void;
-  pushToast: (e: JSX.Element) => void;
+  attemptAccountAdd: (ref: any) => void;
   queriedAccount?: GetAccountResponse;
 }) => {
   const {
-    net,
     account,
     hovered,
     edited,
@@ -527,9 +546,7 @@ const AccountListItem = (props: {
     setSelected,
     setEdited,
     initializing,
-    rmAccount,
-    setAccount,
-    pushToast,
+    attemptAccountAdd,
     queriedAccount,
   } = props;
   return (
@@ -560,26 +577,7 @@ const AccountListItem = (props: {
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
-              handleOutsideClick={(ref) => {
-                if (initializing && ref.current.value === '') {
-                  rmAccount();
-                } else {
-                  account.pubKey = ref.current.value;
-                  if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
-                    setAccount(account);
-                    // setLoading(true)
-                    window.electron.ipcRenderer.getAccount({
-                      net,
-                      pk: account.pubKey,
-                    });
-                  } else {
-                    pushToast(
-                      <Toast msg="Invalid account ID" variant="warning" />
-                    );
-                    rmAccount();
-                  }
-                }
-              }}
+              handleOutsideClick={(ref) => attemptAccountAdd(ref)}
               autoFocus={edited}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
@@ -596,7 +594,7 @@ const AccountListItem = (props: {
                 outerHovered={hovered}
                 setSelected={setSelected}
                 setHoveredItem={setHoveredItem}
-                value={account.humanName}
+                value={account.humanName || ''}
                 editingStarted={() => setEdited(account.pubKey)}
                 editingStopped={() => setEdited('')}
                 handleOutsideClick={(ref) => {
@@ -630,7 +628,12 @@ const Accounts = (props: {
   pushToast: (toast: JSX.Element) => void;
 }) => {
   const { net, pushToast } = props;
-  const [accounts, setAccounts] = useState<WBAccount[]>([]);
+  const [accounts, _setAccounts] = useState<WBAccount[]>([]);
+  const accountsRef = useRef<WBAccount[]>([]);
+  const setAccounts = (accounts: WBAccount[]) => {
+    accountsRef.current = accounts;
+    _setAccounts(accounts);
+  };
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
@@ -639,8 +642,44 @@ const Accounts = (props: {
   const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
   const listenersSet = useRef<boolean>();
 
+  const addAccount = () => {
+    const accs = [...accountsRef.current];
+    if (accs.some((a) => a.pubKey === NONE_KEY)) {
+      return;
+    }
+    console.log('add', { accs });
+    accs.splice(0, 0, {
+      pubKey: NONE_KEY,
+      humanName: '',
+    });
+    setAccounts(accs);
+    console.log('add', { accs });
+    setSelected('');
+    setHoveredItem('');
+    setEdited(NONE_KEY);
+  };
+
+  const rmAccount = (account: WBAccount) => {
+    let accs = [...accountsRef.current];
+    console.log('rm', { accs });
+    accs = accs.filter((a) => a.pubKey !== account.pubKey);
+    console.log('rm', { accs });
+    setAccounts(accs);
+  };
+
   useEffect(() => {
     if (!listenersSet.current) {
+      const updateAccount = (account: WBAccount) => {
+        const accs = [...accountsRef.current];
+        const idx = accs.findIndex((a) => {
+          console.log(a.pubKey, account.pubKey);
+          return a.pubKey === account.pubKey;
+        });
+        accs[idx] = account;
+        console.log(accs);
+        setAccounts(accs);
+      };
+
       window.electron.ipcRenderer.once('accounts', (data: AccountsResponse) => {
         setRootKey(data.rootKey);
         setAccounts(data.accounts);
@@ -651,10 +690,9 @@ const Accounts = (props: {
         (resp: GetAccountResponse) => {
           setQueriedAccount(resp);
           if (resp.account) {
+            updateAccount(resp.account);
             pushToast(<Toast msg="Account imported" variant="sol-green" />);
-            // insert account
           } else {
-            // how to get correct ID?
             // rmAccountIndex(0);
             pushToast(
               <Toast msg={`Account not found in ${net}`} variant="warning" />
@@ -674,28 +712,28 @@ const Accounts = (props: {
   const initializingAccount: boolean =
     accounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
 
-  const addAccountIndex = (i = 0) => {
-    const accs = [...accounts];
-    accs.splice(i, 0, {
-      pubKey: NONE_KEY,
-      humanName: '',
-    });
-    setAccounts(accs);
-    setSelected('');
-    setHoveredItem('');
-    setEdited(NONE_KEY);
-  };
-
-  const rmAccountIndex = (i = 0) => {
-    const accs = [...accounts];
-    accs.splice(i, 1);
-    setAccounts(accs);
-  };
-
-  const setAccountIndex = (i = 0, account: WBAccount) => {
-    const accs = [...accounts];
-    accs[i] = account;
-    setAccounts(accs);
+  const attemptAccountAdd = (
+    ref: any,
+    account: WBAccount,
+    initializing: boolean
+  ) => {
+    if (initializing && ref.current.value === '') {
+      rmAccount(account);
+    } else {
+      account.pubKey = ref.current.value;
+      if (accounts.some((a) => a.pubKey === account.pubKey)) {
+        pushToast(<Toast msg="Account already imported" variant="warning" />);
+      }
+      if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
+        window.electron.ipcRenderer.getAccount({
+          net,
+          pk: account.pubKey,
+        });
+      } else {
+        pushToast(<Toast msg="Invalid account ID" variant="warning" />);
+        rmAccount({ pubKey: NONE_KEY });
+      }
+    }
   };
 
   return (
@@ -715,7 +753,7 @@ const Accounts = (props: {
               e.preventDefault();
               setAddBtnClicked(true);
               if (!initializingAccount) {
-                addAccountIndex(0);
+                addAccount();
               }
             }}
             onMouseUp={() => setAddBtnClicked(false)}
@@ -725,25 +763,23 @@ const Accounts = (props: {
           </button>
         </div>
         {accounts.length > 0 ? (
-          accounts.map((account: WBAccount, i: number) => {
+          accounts.map((account: WBAccount) => {
+            const initializing = account.pubKey === NONE_KEY;
             return (
               <AccountListItem
-                net={net}
                 key={account.pubKey}
                 account={account}
                 hovered={account.pubKey === hoveredItem}
                 selected={account.pubKey === selected}
                 edited={account.pubKey === edited}
-                initializing={account.pubKey === NONE_KEY}
+                initializing={initializing}
                 setHoveredItem={setHoveredItem}
                 setEdited={setEdited}
                 setSelected={setSelected}
-                rmAccount={() => {
-                  rmAccountIndex(i);
-                }}
-                setAccount={(acc) => setAccountIndex(i, acc)}
-                pushToast={pushToast}
                 queriedAccount={queriedAccount}
+                attemptAccountAdd={(ref) =>
+                  attemptAccountAdd(ref, account, initializing)
+                }
               />
             );
           })
@@ -908,20 +944,25 @@ export default function App() {
   const [net, setNet] = useState(Net.Localhost);
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
 
-  const rmToast = (i = 0) => {
+  const rmToast = (key: React.Key | null) => {
     const newToasts = [...toasts];
-    newToasts.splice(i, 1);
+    console.log({ oldToasts: newToasts });
+    newToasts.filter((t) => t.key !== key);
+    console.log({ newToasts });
     setActiveToasts(newToasts);
   };
 
   const pushToast = (toast: JSX.Element) => {
     const newToasts = [...toasts];
     let newToast = toast;
-    const idx = toasts.length;
+
+    // usually bad, but acceptable here due to short lived nature
+    const key = uuidv4();
+
     newToast = cloneElement(toast, {
-      rmToast: () => rmToast(idx),
-      key: `${idx}`,
+      rmToast: () => rmToast(key),
       bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
+      key,
     });
     newToasts.push(newToast);
     setActiveToasts(newToasts);

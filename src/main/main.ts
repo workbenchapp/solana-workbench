@@ -175,7 +175,12 @@ async function getAccount(net: Net, pk: string): Promise<GetAccountResponse> {
   const solConn = new sol.Connection(netToURL(net));
   const resp: GetAccountResponse = {};
   try {
-    resp.account = await solConn.getAccountInfo(new sol.PublicKey(pk));
+    const key = new sol.PublicKey(pk);
+    const art = randomart(key.toBytes());
+    const solAcct = await solConn.getAccountInfo(key);
+    if (solAcct !== null) {
+      resp.account = { pubKey: pk, art, ...solAcct };
+    }
   } catch (e) {
     resp.err = e as Error;
   }
