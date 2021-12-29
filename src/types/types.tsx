@@ -17,11 +17,8 @@ export type WBAccount = {
   pubKey: string;
   humanName?: string;
   art?: string;
-  data?: Buffer;
-  executable?: boolean;
-  sol?: number;
-  lamports?: number;
-  owner?: sol.PublicKey;
+  solAmount?: number;
+  solAccount?: sol.AccountInfo<Buffer>;
 };
 
 export type SolStateRequest = {

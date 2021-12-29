@@ -171,15 +171,21 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-async function getAccount(net: Net, pk: string): Promise<GetAccountResponse> {
+async function getAccount(
+  net: Net,
+  pubKey: string
+): Promise<GetAccountResponse> {
   const solConn = new sol.Connection(netToURL(net));
   const resp: GetAccountResponse = {};
   try {
-    const key = new sol.PublicKey(pk);
+    const key = new sol.PublicKey(pubKey);
     const art = randomart(key.toBytes());
-    const solAcct = await solConn.getAccountInfo(key);
-    if (solAcct !== null) {
-      resp.account = { pubKey: pk, art, ...solAcct };
+    const solAccount = await solConn.getAccountInfo(key);
+    const solAmount = solAccount?.lamports;
+    if (solAccount !== null) {
+      resp.account = { pubKey, solAmount, art, solAccount };
+    } else {
+      resp.account = { pubKey };
     }
   } catch (e) {
     resp.err = e as Error;

@@ -261,18 +261,30 @@ const Run = () => {
   useInterval(window.electron.ipcRenderer.solState, 5000);
   useInterval(fetchLogs, 5000);
   useEffect(() => {
-    window.electron.ipcRenderer.on('sol-state', (arg: SolState) => {
+    const solStateListener = (arg: SolState) => {
       setSolStatus(arg);
       setLoading(false);
       if (arg.running) {
         setWaitingForRun(false);
       }
-    });
-    window.electron.ipcRenderer.on('validator-logs', (logs: string) => {
+    };
+
+    const validatorLogsListener = (logs: string) => {
       setValidatorLogs(logs);
-    });
+    };
+    window.electron.ipcRenderer.on('sol-state', solStateListener);
+    window.electron.ipcRenderer.on('validator-logs', validatorLogsListener);
     window.electron.ipcRenderer.solState();
     fetchLogs();
+
+    return () => {
+      console.log(window.electron.ipcRenderer);
+      window.electron.ipcRenderer.removeListener('sol-state', solStateListener);
+      window.electron.ipcRenderer.removeListener(
+        'validator-logs',
+        validatorLogsListener
+      );
+    };
   }, [fetchLogs]);
 
   let statusDisplay = (
@@ -628,82 +640,94 @@ const Accounts = (props: {
   pushToast: (toast: JSX.Element) => void;
 }) => {
   const { net, pushToast } = props;
-  const [accounts, _setAccounts] = useState<WBAccount[]>([]);
-  const accountsRef = useRef<WBAccount[]>([]);
-  const setAccounts = (accounts: WBAccount[]) => {
-    accountsRef.current = accounts;
-    _setAccounts(accounts);
-  };
+  const [accounts, setAccountsRef] = useState<WBAccount[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
   const [edited, setEdited] = useState<string>('');
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
   const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
-  const listenersSet = useRef<boolean>();
+  const listenersCreated = useRef<boolean>();
+  const accountsRef = useRef<WBAccount[]>([]);
+
+  const setAccounts = (accs: WBAccount[]) => {
+    accountsRef.current = accs;
+    setAccountsRef(accs);
+  };
 
   const addAccount = () => {
-    const accs = [...accountsRef.current];
+    const accs = [...accounts];
     if (accs.some((a) => a.pubKey === NONE_KEY)) {
       return;
     }
-    console.log('add', { accs });
     accs.splice(0, 0, {
       pubKey: NONE_KEY,
       humanName: '',
     });
     setAccounts(accs);
-    console.log('add', { accs });
     setSelected('');
     setHoveredItem('');
     setEdited(NONE_KEY);
   };
 
   const rmAccount = (account: WBAccount) => {
-    let accs = [...accountsRef.current];
-    console.log('rm', { accs });
+    let accs = [...accounts];
     accs = accs.filter((a) => a.pubKey !== account.pubKey);
-    console.log('rm', { accs });
     setAccounts(accs);
   };
 
   useEffect(() => {
-    if (!listenersSet.current) {
-      const updateAccount = (account: WBAccount) => {
-        const accs = [...accountsRef.current];
-        const idx = accs.findIndex((a) => {
-          console.log(a.pubKey, account.pubKey);
-          return a.pubKey === account.pubKey;
-        });
-        accs[idx] = account;
-        console.log(accs);
-        setAccounts(accs);
-      };
-
-      window.electron.ipcRenderer.once('accounts', (data: AccountsResponse) => {
-        setRootKey(data.rootKey);
-        setAccounts(data.accounts);
+    const updateAccount = (account: WBAccount) => {
+      const accs = [...accountsRef.current];
+      const idx = accs.findIndex((a) => {
+        console.log(a.pubKey, account.pubKey);
+        return a.pubKey === account.pubKey;
       });
+      accs[idx] = account;
+      console.log(accs);
+      setAccounts(accs);
+    };
 
-      window.electron.ipcRenderer.on(
-        'get-account',
-        (resp: GetAccountResponse) => {
-          setQueriedAccount(resp);
-          if (resp.account) {
-            updateAccount(resp.account);
-            pushToast(<Toast msg="Account imported" variant="sol-green" />);
-          } else {
-            // rmAccountIndex(0);
-            pushToast(
-              <Toast msg={`Account not found in ${net}`} variant="warning" />
-            );
-          }
-        }
-      );
+    const accountsListener = (data: AccountsResponse) => {
+      setRootKey(data.rootKey);
+      setAccounts(data.accounts);
+    };
+
+    const getAccountListener = (resp: GetAccountResponse) => {
+      setQueriedAccount(resp);
+      console.log('resp', resp);
+
+      if (resp.account?.solAccount) {
+        updateAccount(resp.account);
+        pushToast(<Toast msg="Account imported" variant="sol-green" />);
+      } else {
+        console.log('accts', accountsRef.current);
+        console.log('resp.account', resp.account);
+        setAccounts(
+          accountsRef.current.filter(
+            (a: WBAccount) => a.pubKey !== resp.account?.pubKey
+          )
+        );
+        pushToast(
+          <Toast msg={`Account not found in ${net}`} variant="warning" />
+        );
+      }
+    };
+
+    if (!listenersCreated.current) {
+      window.electron.ipcRenderer.once('accounts', accountsListener);
+      window.electron.ipcRenderer.on('get-account', getAccountListener);
       window.electron.ipcRenderer.accounts({ net });
-      listenersSet.current = true;
+      listenersCreated.current = true;
     }
-  }, [net, pushToast]);
+    return () => {
+      window.electron.ipcRenderer.removeListener('accounts', accountsListener);
+      window.electron.ipcRenderer.removeListener(
+        'get-account',
+        getAccountListener
+      );
+    };
+  }, [accounts, net, pushToast]);
 
   const selectedAccount: WBAccount | undefined = accounts.find(
     (a) => selected === a.pubKey
@@ -731,7 +755,8 @@ const Accounts = (props: {
         });
       } else {
         pushToast(<Toast msg="Invalid account ID" variant="warning" />);
-        rmAccount({ pubKey: NONE_KEY });
+        console.log(accounts);
+        rmAccount({ pubKey: account.pubKey });
       }
     }
   };
@@ -816,7 +841,7 @@ const Accounts = (props: {
                         <small className="text-muted">SOL</small>
                       </td>
                       <td>
-                        <small>{selectedAccount.sol}</small>
+                        <small>{selectedAccount.solAmount}</small>
                       </td>
                     </tr>
                     <tr>
@@ -824,7 +849,7 @@ const Accounts = (props: {
                         <small className="text-muted">Executable</small>
                       </td>
                       <td>
-                        {selectedAccount.executable ? (
+                        {selectedAccount.solAccount?.executable ? (
                           <div>
                             <FontAwesomeIcon
                               className="border-success rounded p-1 executable-icon"

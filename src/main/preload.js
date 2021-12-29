@@ -1,5 +1,18 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+const allValidChannels = [
+  'sol-state',
+  'run-validator',
+  'accounts',
+  'add-keypair',
+  'airdrop',
+  'validator-logs',
+  'fetch-anchor-idl',
+  'update-account-name',
+  'import-account',
+  'get-account',
+];
+
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     runValidator() {
@@ -33,39 +46,20 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.send('get-account', msg);
     },
     on(channel, func) {
-      const validChannels = [
-        'sol-state',
-        'run-validator',
-        'accounts',
-        'add-keypair',
-        'airdrop',
-        'validator-logs',
-        'fetch-anchor-idl',
-        'update-account-name',
-        'import-account',
-        'get-account',
-      ];
-      if (validChannels.includes(channel)) {
-        // Deliberately strip event as it includes `sender`
+      if (allValidChannels.includes(channel)) {
+        // deliberately strip as it includes 'sender'
         ipcRenderer.on(channel, (event, ...args) => func(...args));
       }
     },
     once(channel, func) {
-      const validChannels = [
-        'sol-state',
-        'run-validator',
-        'accounts',
-        'add-keypair',
-        'airdrop',
-        'validator-logs',
-        'fetch-anchor-idl',
-        'update-account-name',
-        'import-account',
-        'get-account',
-      ];
+      const validChannels = ['accounts', 'fetch-anchor-idl'];
       if (validChannels.includes(channel)) {
-        // Deliberately strip event as it includes `sender`
         ipcRenderer.once(channel, (event, ...args) => func(...args));
+      }
+    },
+    removeListener(channel, func) {
+      if (allValidChannels.includes(channel)) {
+        ipcRenderer.removeListener(channel, func);
       }
     },
   },
