@@ -100,35 +100,45 @@ const Toast = (props: {
   msg: string;
   variant?: string;
   bottom?: number;
+
+  // TODO: This is not a good solution
+  // as it can interrupt animations in flight
+  // by forcing a re-render
   rmToast?: () => void;
   hideAfter?: number;
 }) => {
   const { msg, variant, bottom, rmToast, hideAfter } = props;
-  const [left, setLeft] = useState(-300);
+  const [left, setRefLeft] = useState(-300);
+  const leftRef = useRef<number>(0);
+  const beginTimeout = useRef<number>();
   const rmInterval = useRef<number>();
   const slideInterval = useRef<number>();
-  const setupRun = useRef<boolean>(false);
+  const effectSetup = useRef<boolean>(false);
+
+  const setLeft = (l: number) => {
+    leftRef.current = l;
+    setRefLeft(l);
+  };
 
   useEffect(() => {
-    if (!setupRun.current) {
-      console.log('setup', { left });
-      window.setTimeout(() => {
+    if (!effectSetup.current) {
+      beginTimeout.current = window.setTimeout(() => {
         setLeft(0);
       }, 100);
       if (hideAfter) {
         rmInterval.current = window.setTimeout(() => {
-          if (rmToast) {
-            rmToast();
-          }
+          window.clearTimeout(beginTimeout.current);
+          window.clearTimeout(rmInterval.current);
+          window.clearTimeout(slideInterval.current);
+          if (rmToast) rmToast();
         }, hideAfter * 2 + TOAST_PAUSE_MS);
         slideInterval.current = window.setTimeout(() => {
           setLeft(-300);
         }, hideAfter + TOAST_PAUSE_MS);
       }
-      setupRun.current = true;
+      effectSetup.current = true;
     }
-  }, [hideAfter, left, rmToast]);
-  console.log('render', { left });
+  });
   return (
     <div style={{ minHeight: `${TOAST_HEIGHT}px` }}>
       <div
@@ -150,11 +160,10 @@ const Toast = (props: {
             <FontAwesomeIcon
               onClick={(e: React.MouseEvent<SVGSVGElement>) => {
                 e.preventDefault();
-                if (rmToast) {
-                  window.clearTimeout(rmInterval.current);
-                  window.clearTimeout(slideInterval.current);
-                  rmToast();
-                }
+                window.clearTimeout(beginTimeout.current);
+                window.clearTimeout(rmInterval.current);
+                window.clearTimeout(slideInterval.current);
+                if (rmToast) rmToast();
               }}
               className="text-muted"
               size="lg"
@@ -278,7 +287,6 @@ const Run = () => {
     fetchLogs();
 
     return () => {
-      console.log(window.electron.ipcRenderer);
       window.electron.ipcRenderer.removeListener('sol-state', solStateListener);
       window.electron.ipcRenderer.removeListener(
         'validator-logs',
@@ -647,7 +655,7 @@ const Accounts = (props: {
   const [edited, setEdited] = useState<string>('');
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
   const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
-  const listenersCreated = useRef<boolean>();
+  const effectSetup = useRef<boolean>();
   const accountsRef = useRef<WBAccount[]>([]);
 
   const setAccounts = (accs: WBAccount[]) => {
@@ -680,11 +688,9 @@ const Accounts = (props: {
     const updateAccount = (account: WBAccount) => {
       const accs = [...accountsRef.current];
       const idx = accs.findIndex((a) => {
-        console.log(a.pubKey, account.pubKey);
         return a.pubKey === account.pubKey;
       });
       accs[idx] = account;
-      console.log(accs);
       setAccounts(accs);
     };
 
@@ -694,15 +700,12 @@ const Accounts = (props: {
     };
 
     const getAccountListener = (resp: GetAccountResponse) => {
+      // todo: more ref trick?
       setQueriedAccount(resp);
-      console.log('resp', resp);
-
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
         pushToast(<Toast msg="Account imported" variant="sol-green" />);
       } else {
-        console.log('accts', accountsRef.current);
-        console.log('resp.account', resp.account);
         setAccounts(
           accountsRef.current.filter(
             (a: WBAccount) => a.pubKey !== resp.account?.pubKey
@@ -714,11 +717,11 @@ const Accounts = (props: {
       }
     };
 
-    if (!listenersCreated.current) {
+    if (!effectSetup.current) {
       window.electron.ipcRenderer.once('accounts', accountsListener);
       window.electron.ipcRenderer.on('get-account', getAccountListener);
       window.electron.ipcRenderer.accounts({ net });
-      listenersCreated.current = true;
+      effectSetup.current = true;
     }
     return () => {
       window.electron.ipcRenderer.removeListener('accounts', accountsListener);
@@ -755,7 +758,6 @@ const Accounts = (props: {
         });
       } else {
         pushToast(<Toast msg="Invalid account ID" variant="warning" />);
-        console.log(accounts);
         rmAccount({ pubKey: account.pubKey });
       }
     }
@@ -971,9 +973,7 @@ export default function App() {
 
   const rmToast = (key: React.Key | null) => {
     const newToasts = [...toasts];
-    console.log({ oldToasts: newToasts });
     newToasts.filter((t) => t.key !== key);
-    console.log({ newToasts });
     setActiveToasts(newToasts);
   };
 
@@ -981,13 +981,13 @@ export default function App() {
     const newToasts = [...toasts];
     let newToast = toast;
 
-    // usually bad, but acceptable here due to short lived nature
+    // normally bad but we'll allow it
+    // b/c short lived
     const key = uuidv4();
-
     newToast = cloneElement(toast, {
+      key,
       rmToast: () => rmToast(key),
       bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
-      key,
     });
     newToasts.push(newToast);
     setActiveToasts(newToasts);
