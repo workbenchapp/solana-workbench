@@ -880,7 +880,7 @@ const Accounts = (props: {
                             {selectedAccount.solAccount?.executable ? (
                               <div>
                                 <FontAwesomeIcon
-                                  className="border-success rounded p-1 executable-icon"
+                                  className="border-success rounded p-1 exe-icon"
                                   icon={faTerminal}
                                 />
                                 <small className="ms-1 mb-1">Yes</small>
@@ -903,7 +903,7 @@ const Accounts = (props: {
                   <small className="text-muted">Data</small>
                 </div>
                 <div>
-                  <pre>
+                  <pre className="exe-hexdump p-2 rounded">
                     <code>{selectedAccount.hexDump}</code>
                   </pre>
                 </div>

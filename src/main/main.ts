@@ -50,7 +50,7 @@ const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
 const MIGRATION_DIR = 'assets/migrations';
 const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
-const HEXDUMP_BYTES = 128;
+const HEXDUMP_BYTES = 512;
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 const DOCKER_IMAGE =
   process.arch === 'arm64'

@@ -135,9 +135,20 @@ svg {
   font-size: 0.4em;
 }
 
-.executable-icon {
-  background-color: $black;
-  color: $green-300;
+.exe {
+  &-icon {
+    background-color: $black;
+    color: $green-300;
+  }
+
+  &-hexdump,
+  pre {
+    background-color: $black;
+    code {
+      background-color: $black;
+      color: $green-300;
+    }
+  }
 }
 
 @mixin no-box-shadow() {
