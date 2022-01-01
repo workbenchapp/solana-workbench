@@ -18,8 +18,8 @@ contextBridge.exposeInMainWorld('electron', {
     runValidator() {
       ipcRenderer.send('run-validator', {});
     },
-    solState() {
-      ipcRenderer.send('sol-state', {});
+    solState(msg) {
+      ipcRenderer.send('sol-state', msg);
     },
     accounts(msg) {
       ipcRenderer.send('accounts', msg);

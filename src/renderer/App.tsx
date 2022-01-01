@@ -283,7 +283,9 @@ const Run = () => {
     };
     window.electron.ipcRenderer.on('sol-state', solStateListener);
     window.electron.ipcRenderer.on('validator-logs', validatorLogsListener);
-    window.electron.ipcRenderer.solState();
+    window.electron.ipcRenderer.solState({
+      net: Net.Localhost,
+    });
     fetchLogs();
 
     return () => {

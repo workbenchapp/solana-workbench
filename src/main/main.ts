@@ -153,6 +153,10 @@ const connectSOL = async (net: Net): Promise<SolState> => {
     running: false,
     keyId: '',
   } as SolState;
+  if (net !== Net.Localhost) {
+    ret.running = true;
+    return ret;
+  }
   try {
     solConn = new sol.Connection(netToURL(net));
     await solConn.getEpochInfo();
@@ -215,8 +219,6 @@ async function accounts(net: Net): Promise<AccountsResponse> {
           newAcc.solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
           newAcc.hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
         }
-        console.log(solAccount);
-        console.log(newAcc);
         return newAcc;
       }
     );
