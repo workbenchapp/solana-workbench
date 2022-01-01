@@ -6,21 +6,22 @@ VALUES
     ("localhost"), ("devnet"), ("mainnet"), ("testnet");
 
 CREATE TABLE account (
-    ID INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     pubKey TEXT NOT NULL,
-    netID INTEGER,
+    net TEXT NOT NULL,
     humanName TEXT DEFAULT ""
 );
 
 CREATE INDEX index_name ON account(pubKey);
 
 CREATE TABLE account_group (
-    ID INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     name TEXT DEFAULT ""
 );
 
 CREATE TABLE account_group_assoc (
-    ID INTEGER PRIMARY KEY,
+    id INTEGER PRIMARY KEY,
     accountID INTEGER,
     groupID INTEGER
 );

@@ -83,8 +83,19 @@ svg {
   color: $dark;
 }
 
-.sol-green {
-  color: #14f195;
+.sol {
+  &-green {
+    color: $solgreen;
+  }
+
+  &-link {
+    color: darken($solgreen, 12%);
+    text-decoration: none;
+    transition: 700ms;
+    &:hover {
+      color: darken($solgreen, 20%);
+    }
+  }
 }
 
 .inline-key {

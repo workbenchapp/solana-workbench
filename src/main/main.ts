@@ -28,6 +28,7 @@ import logfmt from 'logfmt';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import {
+  netToURL,
   WBAccount,
   AccountsResponse,
   Net,
@@ -130,20 +131,13 @@ const initDB = async () => {
 };
 initDB();
 
-const netToURL = (net: Net): string => {
-  switch (net) {
-    case Net.Localhost:
-      return 'http://127.0.0.1:8899';
-    case Net.Dev:
-      return 'https://api.devnet.solana.com';
-    case Net.Test:
-      return 'https://api.testnet.solana.com';
-    case Net.MainnetBeta:
-      return 'https://api.mainnet-beta.solana.com';
-    default:
-  }
-  return '';
+const logTxns = () => {
+  const solConn = new sol.Connection(netToURL(Net.Localhost));
+  solConn.onLogs('all', (logs, ctx) => {
+    console.log({ logs, ctx });
+  });
 };
+logTxns();
 
 const connectSOL = async (net: Net): Promise<SolState> => {
   let solConn: sol.Connection;
@@ -203,10 +197,15 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
   logger.info(net);
   const solConn = new sol.Connection(netToURL(net));
-  const existingAccounts = await db.all('SELECT * FROM account');
+  const existingAccounts = await db.all(
+    'SELECT * FROM account ORDER BY created_at DESC'
+  );
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
-    const pubKeys = existingAccounts.map((a) => new sol.PublicKey(a.pubKey));
+    const pubKeys = existingAccounts.map((a) => {
+      console.log(a);
+      return new sol.PublicKey(a.pubKey);
+    });
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
     const mergedAccountInfo: WBAccount[] = solAccountInfo.map(
       (solAccount: sol.AccountInfo<Buffer> | null, i: number) => {
@@ -259,7 +258,7 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   logger.info('created accounts', { txnID });
 
   const stmt = await db.prepare(
-    'INSERT INTO account (pubKey, netID, humanName) VALUES (?, ?, ?)'
+    'INSERT INTO account (pubKey, net, humanName) VALUES (?, ?, ?)'
   );
   createdAccounts.forEach(async (acc, i) => {
     await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
@@ -269,11 +268,11 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   return {
     rootKey: kp.publicKey.toString(),
     // todo: this should be on created accounts from DB
-    accounts: createdAccounts.map((acc) => {
+    accounts: createdAccounts.map((acc, i) => {
       return {
         art: randomart(acc.publicKey.toBytes()),
         pubKey: acc.publicKey.toString(),
-        humanName: '',
+        humanName: `Wallet ${i}`,
       };
     }),
   };
@@ -288,11 +287,11 @@ async function updateAccountName(pubKey: string, humanName: string) {
   return res;
 }
 
-async function importAccount(pubKey: string, net: string) {
+async function importAccount(net: string, pubKey: string) {
   const res = await db.run(
-    'INSERT INTO account VALUES (pubKey, net) (?, ?)',
-    pubKey,
-    net
+    'INSERT INTO account (net, pubKey) VALUES (?, ?)',
+    net,
+    pubKey
   );
   return res;
 }
@@ -576,9 +575,9 @@ const createWindow = async () => {
   menuBuilder.buildMenu();
 
   // Open urls in the user's browser
-  mainWindow.webContents.on('new-window', (event, url) => {
-    event.preventDefault();
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
+    return { action: 'deny' };
   });
 
   // Remove this if your app does not use auto updates

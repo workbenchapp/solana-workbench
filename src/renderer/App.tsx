@@ -47,6 +47,7 @@ import {
   AccountsResponse,
   Net,
   GetAccountResponse,
+  netToURL,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -645,6 +646,10 @@ AccountListItem.defaultProps = {
   queriedAccount: undefined,
 };
 
+const explorerURL = (net: Net, address: string) =>
+  `https://explorer.solana.com/address/${address}/ \
+  ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
+
 const Accounts = (props: {
   net: Net;
   pushToast: (toast: JSX.Element) => void;
@@ -714,6 +719,10 @@ const Accounts = (props: {
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
         setSelected(resp.account.pubKey);
+        window.electron.ipcRenderer.importAccount({
+          net,
+          pubKey: resp.account.pubKey,
+        });
         pushToast(<Toast msg="Account imported" variant="sol-green" />);
       } else {
         setAccounts(
@@ -835,8 +844,8 @@ const Accounts = (props: {
           })
         ) : (
           <>
-            <span className="me-2">Generating seed wallets...</span>
             <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+            <small className="me-2">Generating seed wallets...</small>
           </>
         )}
       </div>
@@ -892,6 +901,23 @@ const Accounts = (props: {
                                 No
                               </small>
                             )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <small className="text-muted">Explorer</small>
+                          </td>
+                          <td>
+                            <small>
+                              <a
+                                href={explorerURL(net, selectedAccount.pubKey)}
+                                target="_blank"
+                                className="sol-link"
+                                rel="noreferrer"
+                              >
+                                Link
+                              </a>
+                            </small>
                           </td>
                         </tr>
                       </tbody>
