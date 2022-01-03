@@ -527,8 +527,8 @@ const CopyIcon = (props: { writeValue: string }) => {
 const InlinePK = (props: { pk: string }) => {
   const { pk } = props;
   return (
-    <span className="align-middle ms-2">
-      <code className="p-1">{prettifyPubkey(pk)}</code>
+    <span className="align-middle">
+      <code>{prettifyPubkey(pk)}</code>
       <CopyIcon writeValue={pk} />
     </span>
   );
@@ -863,7 +863,7 @@ const Accounts = (props: {
               <div className="col">
                 <div className="row">
                   <div className="col-auto">
-                    <table className="table table-borderless table-sm">
+                    <table className="table table-borderless table-sm align-middle">
                       <tbody>
                         <tr>
                           <td>
@@ -927,13 +927,15 @@ const Accounts = (props: {
                     <RandomArt art={selectedAccount.art || ''} />
                   </div>
                 </div>
-                <div>
-                  <small className="text-muted">Data</small>
-                </div>
-                <div>
-                  <pre className="exe-hexdump p-2 rounded">
-                    <code>{selectedAccount.hexDump}</code>
-                  </pre>
+                <div className="ms-1">
+                  <div>
+                    <small className="text-muted">Data</small>
+                  </div>
+                  <div>
+                    <pre className="exe-hexdump p-2 rounded">
+                      <code>{selectedAccount.hexDump}</code>
+                    </pre>
+                  </div>
                 </div>
               </div>
             </div>
