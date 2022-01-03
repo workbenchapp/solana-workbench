@@ -7,42 +7,15 @@ $font-family-code: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
   Liberation Mono, monospace;
 $code-font-size: 85%;
 
-$solgreen: #14f195;
 $blue: #1a91d1;
 $gray: #4b5358;
 $green: #3c7c50;
 $red: #b80c09;
 $orange: #e08e45;
-$teal: $solgreen;
+$teal: #14f195;
+$solgreen: #14f195;
 $light: #eff2ef;
 $dark: #242423;
-
-// DARK MODE
-/*
-:root[data-theme='theme-dark'] {
-  $blue: #1a91d1;
-  $gray: #bdc3c7;
-  $green: #9fd1ae;
-  $red: #f86663;
-  $orange: #d17523;
-  $teal: $solgreen;
-  $dark: #030303;
-  $light: #eff2ef;
-  $white: #ffffff;
-  $black: #000000;
-}
-
-:root[data-theme='theme-light'] {
-  $blue: #1a91d1;
-  $gray: #4b5358;
-  $green: #3c7c50;
-  $red: #b80c09;
-  $orange: #e08e45;
-  $teal: $solgreen;
-  $light: #eff2ef;
-  $dark: #242423;
-}
-*/
 
 @import '../../node_modules/bootstrap/scss/bootstrap';
 
@@ -116,11 +89,11 @@ svg {
   }
 
   &-link {
-    color: darken($solgreen, 10%);
+    color: darken($solgreen, 12%);
     text-decoration: none;
+    transition: 700ms;
     &:hover {
-      text-decoration: underline;
-      color: darken($solgreen, 15%);
+      color: darken($solgreen, 20%);
     }
   }
 }
@@ -131,14 +104,14 @@ svg {
 
 .account-list-item {
   cursor: pointer;
-
-  &-selected {
-    background-color: $lightblue;
-  }
 }
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+.account-list-item-selected {
+  background-color: $lightblue;
 }
 
 .border-selected {
@@ -169,14 +142,8 @@ svg {
   padding: 0px;
 }
 
-.randomart {
-  &-md {
-    font-size: 0.4em;
-  }
-
-  &-xl {
-    font-size: 3.6em;
-  }
+.randomart-md {
+  font-size: 0.4em;
 }
 
 .exe {

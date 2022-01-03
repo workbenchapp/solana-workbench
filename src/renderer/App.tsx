@@ -527,8 +527,8 @@ const CopyIcon = (props: { writeValue: string }) => {
 const InlinePK = (props: { pk: string }) => {
   const { pk } = props;
   return (
-    <span>
-      <code>{prettifyPubkey(pk)}</code>
+    <span className="align-middle ms-2">
+      <code className="p-1">{prettifyPubkey(pk)}</code>
       <CopyIcon writeValue={pk} />
     </span>
   );
@@ -540,7 +540,7 @@ const RandomArt = (props: { art: string }) => {
     art = `${' '.repeat(RANDOMART_W_CH)}\n`.repeat(RANDOMART_H_CH);
   }
   return (
-    <pre className="border inline-key mb-0">
+    <pre className="border inline-key mb-0 align-middle">
       <code>
         <strong>{art}</strong>
       </code>
@@ -578,9 +578,9 @@ const AccountListItem = (props: {
       className={`p-1 account-list-item ${
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
-          : 'border-top'
+          : 'border-top border-bottom'
       } ${hovered && !selected && 'bg-light'} ${
-        edited && !selected && 'border-top border-bottom border-primary'
+        edited && 'border-top border-bottom border-primary'
       } ${queriedAccount && 'border-solgreen-shadow'}`}
       key={account.pubKey}
       onMouseEnter={() => setHoveredItem(account.pubKey)}
@@ -863,7 +863,7 @@ const Accounts = (props: {
               <div className="col">
                 <div className="row">
                   <div className="col-auto">
-                    <table className="table table-borderless table-sm align-middle">
+                    <table className="table table-borderless table-sm">
                       <tbody>
                         <tr>
                           <td>
@@ -924,20 +924,16 @@ const Accounts = (props: {
                     </table>
                   </div>
                   <div className="col-auto">
-                    <span className="align-middle randomart-xl">
-                      <RandomArt art={selectedAccount.art || ''} />
-                    </span>
+                    <RandomArt art={selectedAccount.art || ''} />
                   </div>
                 </div>
-                <div className="p-1">
-                  <div>
-                    <small className="text-muted">Data</small>
-                  </div>
-                  <div>
-                    <pre className="exe-hexdump p-2 rounded">
-                      <code>{selectedAccount.hexDump}</code>
-                    </pre>
-                  </div>
+                <div>
+                  <small className="text-muted">Data</small>
+                </div>
+                <div>
+                  <pre className="exe-hexdump p-2 rounded">
+                    <code>{selectedAccount.hexDump}</code>
+                  </pre>
                 </div>
               </div>
             </div>
