@@ -203,7 +203,6 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
     const pubKeys = existingAccounts.map((a) => {
-      console.log(a);
       return new sol.PublicKey(a.pubKey);
     });
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
