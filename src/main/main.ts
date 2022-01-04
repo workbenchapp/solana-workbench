@@ -139,6 +139,17 @@ const logTxns = () => {
 };
 logTxns();
 
+const logProgramChanges = () => {
+  const solConn = new sol.Connection(netToURL(Net.Localhost));
+  solConn.onProgramAccountChange(
+    sol.SystemProgram.programId,
+    (keyedAcctInfo: sol.KeyedAccountInfo, ctx: sol.Context) => {
+      console.log({ keyedAcctInfo, ctx });
+    }
+  );
+};
+logProgramChanges();
+
 const connectSOL = async (net: Net): Promise<SolState> => {
   let solConn: sol.Connection;
 
