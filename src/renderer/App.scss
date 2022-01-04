@@ -25,6 +25,7 @@ $dark: #242423;
   border-radius: 6px;
   background-color: $gray-200;
   font-weight: 500;
+  color: $body-color;
 }
 
 code {
@@ -70,6 +71,10 @@ pre code {
   color: $dark;
 }
 
+.svg-inline--fa {
+  color: $dark;
+}
+
 .selected-nav-icon {
   border-left: solid $dark;
   border-left-width: 2px;
@@ -83,23 +88,29 @@ svg {
   color: $dark;
 }
 
+a {
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .sol {
   &-green {
     color: $solgreen;
   }
 
   &-link {
-    color: darken($solgreen, 12%);
-    text-decoration: none;
+    color: $teal-600;
     transition: 700ms;
     &:hover {
-      color: darken($solgreen, 20%);
+      color: $teal-800;
     }
   }
 }
 
 .inline-key {
-  font-size: 0.16em;
+  font-size: 0.12em;
 }
 
 .account-list-item {
@@ -114,16 +125,18 @@ svg {
   background-color: $lightblue;
 }
 
-.border-selected {
-  border: 1px solid $lightblue !important;
+.border {
+  &-selected {
+    border: 1px solid $lightblue !important;
+  }
+
+  &-soft-dark {
+    border: 1px solid $gray-600 !important;
+  }
 }
 
 .tooltip-secondary > .tooltip-inner {
   background-color: $gray-600;
-}
-
-.border-soft-dark {
-  border: 1px solid $gray-600 !important;
 }
 
 .tooltip-secondary.bs-tooltip-top .tooltip-arrow::before,
@@ -138,27 +151,24 @@ svg {
 
 .code-muted {
   background-color: white;
-  color: $black;
+  color: $gray-800;
   padding: 0px;
 }
 
-.randomart-md {
-  font-size: 0.4em;
+.randomart {
+  &-md {
+    font-size: 0.2em;
+  }
+
+  &-lg {
+    font-size: 1vh;
+  }
 }
 
 .exe {
   &-icon {
-    background-color: $black;
-    color: $green-300;
-  }
-
-  &-hexdump,
-  pre {
-    background-color: $black;
-    code {
-      background-color: $black;
-      color: $green-300;
-    }
+    background-color: $body-color;
+    color: $gray-100;
   }
 }
 
@@ -175,6 +185,7 @@ $pubkey-len: 44ch;
   &-clean > input {
     border: none;
     max-width: 36ch;
+    padding: 0rem 0.5rem !important;
     &:focus {
       @include no-box-shadow;
     }

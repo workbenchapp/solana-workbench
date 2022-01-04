@@ -490,7 +490,7 @@ const CopyIcon = (props: { writeValue: string }) => {
   const renderCopyTooltip = (id: string) => {
     return (ttProps: any) => {
       return (
-        <Tooltip className="tooltip-secondary" id={id} {...ttProps}>
+        <Tooltip id={id} {...ttProps}>
           <div>{copyTooltipText}</div>
         </Tooltip>
       );
@@ -505,7 +505,7 @@ const CopyIcon = (props: { writeValue: string }) => {
     >
       <span>
         <FontAwesomeIcon
-          className="ms-2 text-secondary cursor-pointer"
+          className="ms-1 cursor-pointer"
           icon={faCopy}
           onClick={(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -527,25 +527,28 @@ const CopyIcon = (props: { writeValue: string }) => {
 const InlinePK = (props: { pk: string }) => {
   const { pk } = props;
   return (
-    <span className="align-middle">
+    <span>
       <code>{prettifyPubkey(pk)}</code>
       <CopyIcon writeValue={pk} />
     </span>
   );
 };
 
-const RandomArt = (props: { art: string }) => {
+const RandomArt = (props: { art: string; className?: string }) => {
   let { art } = props;
+  const { className } = props;
   if (art === '') {
     art = `${' '.repeat(RANDOMART_W_CH)}\n`.repeat(RANDOMART_H_CH);
   }
   return (
-    <pre className="border inline-key mb-0 align-middle">
-      <code>
-        <strong>{art}</strong>
-      </code>
+    <pre className={`border text-secondary inline-key mb-0 ${className}`}>
+      <code>{art}</code>
     </pre>
   );
+};
+
+RandomArt.defaultProps = {
+  className: '',
 };
 
 const AccountListItem = (props: {
@@ -606,12 +609,14 @@ const AccountListItem = (props: {
               placeholder="Paste in an account ID"
             />
           ) : (
-            <InlinePK pk={account.pubKey} />
+            <span>
+              <InlinePK pk={account.pubKey} />
+            </span>
           )}
         </div>
         {!initializing && (
           <div className="col-auto">
-            <small className="align-middle">
+            <small>
               <Editable
                 outerSelected={selected}
                 outerHovered={hovered}
@@ -800,7 +805,9 @@ const Accounts = (props: {
       <div className="col-auto">
         <div className="mb-3">
           <FontAwesomeIcon icon={faKey} />
-          <InlinePK pk={rootKey} />
+          <span className="ms-1">
+            <InlinePK pk={rootKey} />
+          </span>
           <button
             type="button"
             className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
@@ -863,7 +870,7 @@ const Accounts = (props: {
               <div className="col">
                 <div className="row">
                   <div className="col-auto">
-                    <table className="table table-borderless table-sm align-middle">
+                    <table className="table table-borderless table-sm mb-0">
                       <tbody>
                         <tr>
                           <td>
@@ -924,7 +931,10 @@ const Accounts = (props: {
                     </table>
                   </div>
                   <div className="col-auto">
-                    <RandomArt art={selectedAccount.art || ''} />
+                    <RandomArt
+                      className="randomart-lg text-secondary"
+                      art={selectedAccount.art || ''}
+                    />
                   </div>
                 </div>
                 <div className="ms-1">
@@ -1074,7 +1084,7 @@ export default function App() {
             {toasts}
           </div>
           <div className="col-sm-10 mt-2 ms-4">
-            <div className="row bg-white sticky-top mb-2">
+            <div className="row bg-white mb-2">
               <div>
                 <Header />
                 <DropdownButton
