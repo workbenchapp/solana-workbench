@@ -195,7 +195,7 @@ const Nav = () => {
     };
   };
   return (
-    <div className="sticky-top">
+    <div className="sticky-top sticky-nav">
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
@@ -803,58 +803,60 @@ const Accounts = (props: {
   return (
     <>
       <div className="col-auto">
-        <div className="mb-3">
-          <FontAwesomeIcon icon={faKey} />
-          <span className="ms-1">
-            <InlinePK pk={rootKey} />
-          </span>
-          <button
-            type="button"
-            className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
-              addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
-            }`}
-            onMouseDown={(
-              e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-            ): void => {
-              e.preventDefault();
-              setAddBtnClicked(true);
-              if (!initializingAccount) {
-                addAccount();
-              }
-            }}
-            onMouseUp={() => setAddBtnClicked(false)}
-          >
-            <FontAwesomeIcon className="text-white" icon={faPlus} />
-            <span className="ms-1 text-white">Add Account</span>
-          </button>
-        </div>
-        {accounts.length > 0 ? (
-          accounts.map((account: WBAccount) => {
-            const initializing = account.pubKey === NONE_KEY;
-            return (
-              <AccountListItem
-                key={`pubKey=${account.pubKey},initializing=${initializing}`}
-                account={account}
-                hovered={account.pubKey === hoveredItem}
-                selected={account.pubKey === selected}
-                edited={account.pubKey === edited}
-                initializing={initializing}
-                setHoveredItem={setHoveredItem}
-                setEdited={setEdited}
-                setSelected={setSelected}
-                queriedAccount={queriedAccount}
-                attemptAccountAdd={(ref) =>
-                  attemptAccountAdd(ref, account, initializing)
+        <div className="sticky-top sticky-account-list">
+          <div className="mb-3">
+            <FontAwesomeIcon icon={faKey} />
+            <span className="ms-1">
+              <InlinePK pk={rootKey} />
+            </span>
+            <button
+              type="button"
+              className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
+                addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
+              }`}
+              onMouseDown={(
+                e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+              ): void => {
+                e.preventDefault();
+                setAddBtnClicked(true);
+                if (!initializingAccount) {
+                  addAccount();
                 }
-              />
-            );
-          })
-        ) : (
-          <>
-            <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-            <small className="me-2">Generating seed wallets...</small>
-          </>
-        )}
+              }}
+              onMouseUp={() => setAddBtnClicked(false)}
+            >
+              <FontAwesomeIcon className="text-white" icon={faPlus} />
+              <span className="ms-1 text-white">Add Account</span>
+            </button>
+          </div>
+          {accounts.length > 0 ? (
+            accounts.map((account: WBAccount) => {
+              const initializing = account.pubKey === NONE_KEY;
+              return (
+                <AccountListItem
+                  key={`pubKey=${account.pubKey},initializing=${initializing}`}
+                  account={account}
+                  hovered={account.pubKey === hoveredItem}
+                  selected={account.pubKey === selected}
+                  edited={account.pubKey === edited}
+                  initializing={initializing}
+                  setHoveredItem={setHoveredItem}
+                  setEdited={setEdited}
+                  setSelected={setSelected}
+                  queriedAccount={queriedAccount}
+                  attemptAccountAdd={(ref) =>
+                    attemptAccountAdd(ref, account, initializing)
+                  }
+                />
+              );
+            })
+          ) : (
+            <>
+              <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+              <small className="me-2">Generating seed wallets...</small>
+            </>
+          )}
+        </div>
       </div>
       <div className="col">
         {selectedAccount && (
@@ -1079,12 +1081,12 @@ export default function App() {
     <Router>
       <Switch>
         <div className="row flex-nowrap g-0">
-          <div className="col-auto mt-2">
+          <div className="col-auto bg-white">
             <Nav />
             {toasts}
           </div>
-          <div className="col-sm-10 mt-2 ms-4">
-            <div className="row bg-white mb-2">
+          <div className="col-10 bg-white ms-4">
+            <div className="row sticky-top sticky-nav bg-white">
               <div>
                 <Header />
                 <DropdownButton

@@ -2,6 +2,8 @@
  * @NOTE: Prepend a `~` to css file paths that are in your node_modules
  *        See https://github.com/webpack-contrib/sass-loader#imports
  */
+@use 'sass:map';
+
 $code-color: rgb(36, 41, 47);
 $font-family-code: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
   Liberation Mono, monospace;
@@ -113,16 +115,17 @@ a {
   font-size: 0.12em;
 }
 
-.account-list-item {
-  cursor: pointer;
-}
-
 .cursor-pointer {
   cursor: pointer;
 }
 
-.account-list-item-selected {
-  background-color: $lightblue;
+.account {
+  &-list-item {
+    cursor: pointer;
+    &-selected {
+      background-color: $lightblue;
+    }
+  }
 }
 
 .border {
@@ -254,4 +257,17 @@ $pubkey-len: 44ch;
 
 .no-box-shadow {
   @include no-box-shadow;
+}
+
+$top-nav-height: 47px; // hack -- def better way to compute somehow
+
+.sticky {
+  &-nav {
+    padding-top: map.get($spacers, 2);
+    padding-bottom: map.get($spacers, 2);
+  }
+
+  &-account-list {
+    top: $top-nav-height;
+  }
 }
