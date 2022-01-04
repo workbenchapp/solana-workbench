@@ -1071,36 +1071,44 @@ export default function App() {
     setActiveToasts(newToasts);
   };
 
-  const netDropdownClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const target = e.target as HTMLElement;
-    setNet(Net[target.innerText as keyof typeof Net]);
+  const netDropdownSelect = (eventKey: string | null) => {
+    console.log(eventKey);
+    if (eventKey) setNet(eventKey as Net);
   };
 
   return (
     <Router>
       <Switch>
         <div className="row flex-nowrap g-0">
-          <div className="col-auto bg-white">
+          <div className="col-auto">
             <Nav />
             {toasts}
           </div>
           <div className="col-10 bg-white ms-4">
-            <div className="row sticky-top sticky-nav bg-white">
+            <div className="row sticky-top sticky-nav bg-white-translucent">
               <div>
                 <Header />
                 <DropdownButton
                   size="sm"
                   id="dropdown-basic-button"
                   title={net}
-                  onClick={netDropdownClick}
+                  onSelect={netDropdownSelect}
                   className="float-end"
                   variant="light"
+                  align="end"
                 >
-                  <Dropdown.Item href="#">{Net.Localhost}</Dropdown.Item>
-                  <Dropdown.Item href="#">{Net.Dev}</Dropdown.Item>
-                  <Dropdown.Item href="#">{Net.Test}</Dropdown.Item>
-                  <Dropdown.Item href="#">{Net.MainnetBeta}</Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.Localhost} href="#">
+                    {Net.Localhost}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.Dev} href="#">
+                    {Net.Dev}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.Test} href="#">
+                    {Net.Test}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
+                    {Net.MainnetBeta}
+                  </Dropdown.Item>
                 </DropdownButton>
               </div>
             </div>

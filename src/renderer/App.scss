@@ -224,6 +224,11 @@ $pubkey-len: 44ch;
   &-sol-green {
     background-color: $solgreen;
   }
+
+  &-white-translucent {
+    background-color: rgba(var(--bs-white-rgb), 0.9) !important;
+    backdrop-filter: blur(4px);
+  }
 }
 
 .toaster {
@@ -270,4 +275,8 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
   &-account-list {
     top: $top-nav-height;
   }
+}
+
+.dropdown-item {
+  text-decoration: none !important;
 }
