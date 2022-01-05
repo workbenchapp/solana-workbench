@@ -60,7 +60,7 @@ const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
 const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
 const TOAST_HIDE_MS = 1200;
 const TOAST_PAUSE_MS = 1000;
-const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{44}$/;
+const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 
