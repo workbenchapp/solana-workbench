@@ -741,7 +741,7 @@ const Accounts = (props: {
         setSelected(resp.account.pubKey);
         console.log('importAccount', { net: netRef.current });
         window.electron.ipcRenderer.importAccount({
-          net,
+          net: netRef.current,
           pubKey: resp.account.pubKey,
         });
         pushToast(<Toast msg="Account imported" variant="sol-green" />);

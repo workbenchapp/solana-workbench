@@ -191,7 +191,9 @@ async function getAccount(
     const key = new sol.PublicKey(pubKey);
     const art = randomart(key.toBytes());
     const solAccount = await solConn.getAccountInfo(key);
-    const solAmount = solAccount?.lamports;
+    let solAmount = 0;
+    if (solAccount?.lamports)
+      solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
     const hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
     if (solAccount !== null) {
       resp.account = { pubKey, solAmount, art, solAccount, hexDump };
@@ -413,10 +415,13 @@ const ipcMiddleware = (
   };
 };
 
-ipcMain.on('sol-state', async (event: Electron.IpcMainEvent, msg) => {
-  const solState = await connectSOL(msg.net);
-  event.reply('sol-state', solState);
-});
+ipcMain.on(
+  'sol-state',
+  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent, msg) => {
+    const solState = await connectSOL(msg.net);
+    event.reply('sol-state', solState);
+  })
+);
 
 ipcMain.on(
   'run-validator',
