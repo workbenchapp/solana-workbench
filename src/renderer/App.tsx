@@ -65,9 +65,15 @@ const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
-amplitude.getInstance().logEvent('open-app', {});
+
+const analytics = (event: string, metadata: any) => {
+  if (process.env.NODE_ENV !== 'development' /* and user has not opted out */) {
+    amplitude.getInstance().logEvent(event, metadata);
+  }
+};
+analytics('open-app', {});
 setInterval(() => {
-  amplitude.getInstance().logEvent('heartbeat', {});
+  analytics('heartbeat', {});
 }, AMPLITUDE_HEARTBEAT_INTERVAL);
 
 declare global {
