@@ -45,6 +45,9 @@ contextBridge.exposeInMainWorld('electron', {
     getAccount(msg) {
       ipcRenderer.send('get-account', msg);
     },
+    onProgramLog(msg) {
+      ipcRenderer.send('get-account', msg);
+    },
     on(channel, func) {
       if (allValidChannels.includes(channel)) {
         // deliberately strip as it includes 'sender'

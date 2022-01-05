@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import * as sol from '@solana/web3.js';
 
 export interface SolState {
@@ -8,12 +9,13 @@ export interface SolState {
 
 export enum Net {
   Localhost = 'localhost',
-  Dev = 'dev',
-  Test = 'test',
+  Dev = 'devnet',
+  Test = 'testnet',
   MainnetBeta = 'mainnet-beta',
 }
 
 export const netToURL = (net: Net): string => {
+  console.log('netToURL', { net });
   switch (net) {
     case Net.Localhost:
       return 'http://127.0.0.1:8899';

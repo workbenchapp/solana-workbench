@@ -552,6 +552,7 @@ RandomArt.defaultProps = {
 };
 
 const AccountListItem = (props: {
+  net: Net;
   account: WBAccount;
   hovered: boolean;
   selected: boolean;
@@ -564,6 +565,7 @@ const AccountListItem = (props: {
   queriedAccount?: GetAccountResponse;
 }) => {
   const {
+    net,
     account,
     hovered,
     edited,
@@ -627,6 +629,7 @@ const AccountListItem = (props: {
                 editingStopped={() => setEdited('')}
                 handleOutsideClick={(ref) => {
                   window.electron.ipcRenderer.updateAccountName({
+                    net,
                     pubKey: account.pubKey,
                     humanName: ref.current.value,
                   });
@@ -651,9 +654,18 @@ AccountListItem.defaultProps = {
   queriedAccount: undefined,
 };
 
-const explorerURL = (net: Net, address: string) =>
-  `https://explorer.solana.com/address/${address}/ \
+const explorerURL = (net: Net, address: string) => {
+  switch (net) {
+    case Net.Test:
+    case Net.Dev:
+      return `https://explorer.solana.com/address/${address}?cluster=${net}`;
+    case Net.Localhost:
+      return `https://explorer.solana.com/address/${address}/ \
   ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
+    default:
+      return `https://explorer.solana.com/address/${address}`;
+  }
+};
 
 const Accounts = (props: {
   net: Net;
@@ -667,8 +679,10 @@ const Accounts = (props: {
   const [edited, setEdited] = useState<string>('');
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
   const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
+
   const effectSetup = useRef<boolean>();
   const accountsRef = useRef<WBAccount[]>([]);
+  const netRef = useRef<Net>(Net.Localhost);
 
   const setAccounts = (accs: WBAccount[]) => {
     accountsRef.current = accs;
@@ -713,6 +727,7 @@ const Accounts = (props: {
     };
 
     const accountsListener = (data: AccountsResponse) => {
+      console.log(data);
       setRootKey(data.rootKey);
       setAccounts(data.accounts);
     };
@@ -724,6 +739,7 @@ const Accounts = (props: {
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
         setSelected(resp.account.pubKey);
+        console.log('importAccount', { net: netRef.current });
         window.electron.ipcRenderer.importAccount({
           net,
           pubKey: resp.account.pubKey,
@@ -740,13 +756,19 @@ const Accounts = (props: {
         );
       }
     };
+    console.log({ ref: netRef.current, net });
+
+    if (netRef.current !== net || !effectSetup.current) {
+      netRef.current = net;
+      window.electron.ipcRenderer.accounts({ net });
+    }
 
     if (!effectSetup.current) {
-      window.electron.ipcRenderer.once('accounts', accountsListener);
+      window.electron.ipcRenderer.on('accounts', accountsListener);
       window.electron.ipcRenderer.on('get-account', getAccountListener);
-      window.electron.ipcRenderer.accounts({ net });
       effectSetup.current = true;
     }
+
     return () => {
       window.electron.ipcRenderer.removeListener('accounts', accountsListener);
       window.electron.ipcRenderer.removeListener(
@@ -772,7 +794,6 @@ const Accounts = (props: {
       rmAccount(account);
     } else {
       account.pubKey = ref.current.value;
-      console.log({ dupe: account.pubKey, dupeAccts: accounts });
 
       // todo: excludes first (same) element, not generic to anywhere
       // in array but it'll do
@@ -829,11 +850,12 @@ const Accounts = (props: {
               <span className="ms-1 text-white">Add Account</span>
             </button>
           </div>
-          {accounts.length > 0 ? (
+          {accounts.length > 0 || net !== Net.Localhost ? (
             accounts.map((account: WBAccount) => {
               const initializing = account.pubKey === NONE_KEY;
               return (
                 <AccountListItem
+                  net={net}
                   key={`pubKey=${account.pubKey},initializing=${initializing}`}
                   account={account}
                   hovered={account.pubKey === hoveredItem}
@@ -1072,7 +1094,6 @@ export default function App() {
   };
 
   const netDropdownSelect = (eventKey: string | null) => {
-    console.log(eventKey);
     if (eventKey) setNet(eventKey as Net);
   };
 

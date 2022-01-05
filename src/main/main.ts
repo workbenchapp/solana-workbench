@@ -206,15 +206,15 @@ async function getAccount(
 
 async function accounts(net: Net): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
-  logger.info(net);
+  logger.info('accounts', { net });
   const solConn = new sol.Connection(netToURL(net));
   const existingAccounts = await db.all(
-    'SELECT * FROM account ORDER BY created_at DESC'
+    'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC',
+    net
   );
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
     const pubKeys = existingAccounts.map((a) => {
-      console.log(a);
       return new sol.PublicKey(a.pubKey);
     });
     const solAccountInfo = await solConn.getMultipleAccountsInfo(pubKeys);
@@ -237,44 +237,45 @@ async function accounts(net: Net): Promise<AccountsResponse> {
       accounts: mergedAccountInfo,
     };
   }
-
-  const N_ACCOUNTS = 5;
-  const txn = new sol.Transaction();
   const createdAccounts: sol.Keypair[] = [];
-  for (let i = 0; i < N_ACCOUNTS; i += 1) {
-    const acc = new sol.Keypair();
-    txn.add(
-      sol.SystemProgram.createAccount({
-        fromPubkey: kp.publicKey,
-        newAccountPubkey: acc.publicKey,
-        space: 0,
-        lamports: 10 * sol.LAMPORTS_PER_SOL,
-        programId: sol.SystemProgram.programId,
-      })
+  if (net === Net.Localhost) {
+    const N_ACCOUNTS = 5;
+    const txn = new sol.Transaction();
+    for (let i = 0; i < N_ACCOUNTS; i += 1) {
+      const acc = new sol.Keypair();
+      txn.add(
+        sol.SystemProgram.createAccount({
+          fromPubkey: kp.publicKey,
+          newAccountPubkey: acc.publicKey,
+          space: 0,
+          lamports: 10 * sol.LAMPORTS_PER_SOL,
+          programId: sol.SystemProgram.programId,
+        })
+      );
+      logger.info('adding account', {
+        acc_pubkey: acc.publicKey,
+      });
+
+      createdAccounts.push(acc);
+      db.exec('');
+    }
+
+    const txnID = await sol.sendAndConfirmTransaction(
+      solConn,
+      txn,
+      [kp, createdAccounts].flat()
     );
-    logger.info('adding account', {
-      acc_pubkey: acc.publicKey,
+
+    logger.info('created accounts', { txnID });
+
+    const stmt = await db.prepare(
+      'INSERT INTO account (pubKey, net, humanName) VALUES (?, ?, ?)'
+    );
+    createdAccounts.forEach(async (acc, i) => {
+      await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
     });
-
-    createdAccounts.push(acc);
-    db.exec('');
+    await stmt.finalize();
   }
-
-  const txnID = await sol.sendAndConfirmTransaction(
-    solConn,
-    txn,
-    [kp, createdAccounts].flat()
-  );
-
-  logger.info('created accounts', { txnID });
-
-  const stmt = await db.prepare(
-    'INSERT INTO account (pubKey, net, humanName) VALUES (?, ?, ?)'
-  );
-  createdAccounts.forEach(async (acc, i) => {
-    await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
-  });
-  await stmt.finalize();
 
   return {
     rootKey: kp.publicKey.toString(),
@@ -289,11 +290,12 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   };
 }
 
-async function updateAccountName(pubKey: string, humanName: string) {
+async function updateAccountName(net: Net, pubKey: string, humanName: string) {
   const res = await db.run(
-    'UPDATE account SET humanName = ? WHERE pubKey = ?',
+    'UPDATE account SET humanName = ? WHERE pubKey = ? AND net = ?',
     humanName,
-    pubKey
+    pubKey,
+    net
   );
   return res;
 }
@@ -411,13 +413,10 @@ const ipcMiddleware = (
   };
 };
 
-ipcMain.on(
-  'sol-state',
-  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent, msg) => {
-    const solState = await connectSOL(msg.net);
-    event.reply('sol-state', solState);
-  })
-);
+ipcMain.on('sol-state', async (event: Electron.IpcMainEvent, msg) => {
+  const solState = await connectSOL(msg.net);
+  event.reply('sol-state', solState);
+});
 
 ipcMain.on(
   'run-validator',
@@ -473,7 +472,7 @@ ipcMain.on(
     async (event: Electron.IpcMainEvent, msg) => {
       event.reply(
         'update-account-name',
-        await updateAccountName(msg.pubKey, msg.humanName)
+        await updateAccountName(msg.net, msg.pubKey, msg.humanName)
       );
     }
   )
