@@ -18,7 +18,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Tooltip from 'react-bootstrap/Tooltip';
 import {
-  faRunning,
+  faBook,
   faTh,
   faCircle,
   faSpinner,
@@ -71,7 +71,7 @@ const analytics = (event: string, metadata: any) => {
     amplitude.getInstance().logEvent(event, metadata);
   }
 };
-analytics('open-app', {});
+analytics('openApp', {});
 setInterval(() => {
   analytics('heartbeat', {});
 }, AMPLITUDE_HEARTBEAT_INTERVAL);
@@ -205,7 +205,7 @@ const Nav = () => {
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('run', 'Run')}
+        overlay={renderTooltip('accounts', 'Accounts')}
       >
         <NavLink
           className="nav-link nav-icon"
@@ -214,29 +214,30 @@ const Nav = () => {
           to="/"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="2x" icon={faRunning} />
+            <FontAwesomeIcon size="2x" icon={faTh} />
           </div>
         </NavLink>
       </OverlayTrigger>
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('accounts', 'Accounts')}
+        overlay={renderTooltip('logs', 'Validator Logs')}
       >
         <NavLink
           className="nav-link nav-icon"
           activeClassName="selected-nav-icon"
-          to="/accounts"
+          exact
+          to="/validator"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon className="nav-icon" size="2x" icon={faTh} />
+            <FontAwesomeIcon size="2x" icon={faBook} />
           </div>
         </NavLink>
       </OverlayTrigger>
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('anchor', 'Anchor IDL')}
+        overlay={renderTooltip('anchor', 'Anchor')}
       >
         <NavLink
           className="nav-link nav-icon"
@@ -244,7 +245,7 @@ const Nav = () => {
           to="/anchor"
         >
           <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon className="nav-icon" size="2x" icon={faAnchor} />
+            <FontAwesomeIcon size="2x" icon={faAnchor} />
           </div>
         </NavLink>
       </OverlayTrigger>
@@ -585,7 +586,10 @@ const AccountListItem = (props: {
   } = props;
   return (
     <div
-      onClick={() => setSelected(account.pubKey)}
+      onClick={() => {
+        analytics('selectAccount', { net });
+        setSelected(account.pubKey);
+      }}
       className={`p-1 account-list-item ${
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
@@ -634,6 +638,7 @@ const AccountListItem = (props: {
                 editingStarted={() => setEdited(account.pubKey)}
                 editingStopped={() => setEdited('')}
                 handleOutsideClick={(ref) => {
+                  analytics('updateAccountName', {});
                   window.electron.ipcRenderer.updateAccountName({
                     net,
                     pubKey: account.pubKey,
@@ -745,7 +750,7 @@ const Accounts = (props: {
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
         setSelected(resp.account.pubKey);
-        console.log('importAccount', { net: netRef.current });
+        analytics('accountAddSuccess', { net: netRef.current });
         window.electron.ipcRenderer.importAccount({
           net: netRef.current,
           pubKey: resp.account.pubKey,
@@ -796,6 +801,11 @@ const Accounts = (props: {
     account: WBAccount,
     initializing: boolean
   ) => {
+    analytics('accountAddAttempt', {
+      nAccounts: accounts.length,
+      net: netRef.current,
+    });
+
     if (initializing && ref.current.value === '') {
       rmAccount(account);
     } else {
@@ -947,6 +957,9 @@ const Accounts = (props: {
                           <td>
                             <small>
                               <a
+                                onClick={() =>
+                                  analytics('clickExplorerLink', { net })
+                                }
                                 href={explorerURL(net, selectedAccount.pubKey)}
                                 target="_blank"
                                 className="sol-link"
@@ -1066,8 +1079,8 @@ const Anchor = () => {
 const Header = () => {
   const location = useLocation();
   const routes: Record<string, string> = {
-    '/': 'Validator',
-    '/accounts': 'Accounts',
+    '/': 'Accounts',
+    '/validator': 'Validator Logs',
     '/anchor': 'Anchor',
   };
   return <strong>{routes[location.pathname]}</strong>;
@@ -1100,6 +1113,7 @@ export default function App() {
   };
 
   const netDropdownSelect = (eventKey: string | null) => {
+    analytics('selectNet', { prevNet: net, newNet: eventKey });
     if (eventKey) setNet(eventKey as Net);
   };
 
@@ -1141,10 +1155,10 @@ export default function App() {
             </div>
             <div className="row flex-nowrap">
               <Route exact path="/">
-                <Run />
-              </Route>
-              <Route path="/accounts">
                 <Accounts net={net} pushToast={pushToast} />
+              </Route>
+              <Route path="/validator">
+                <Run />
               </Route>
               <Route path="/anchor">
                 <Anchor />
