@@ -15,7 +15,6 @@ export enum Net {
 }
 
 export const netToURL = (net: Net): string => {
-  console.log('netToURL', { net });
   switch (net) {
     case Net.Localhost:
       return 'http://127.0.0.1:8899';
@@ -74,4 +73,20 @@ export type AccountsResponse = {
 export type GetAccountResponse = {
   account?: WBAccount | null;
   err?: Error;
+};
+
+export type SubscribeProgramChangesRequest = {
+  net: Net;
+};
+
+export type UnsubscribeProgramChangesRequest = {
+  net: Net;
+  subscriptionID: number;
+};
+
+export type ProgramAccountChange = {
+  pubKey: string;
+  info: sol.KeyedAccountInfo;
+  ctx: sol.Context;
+  count: number;
 };

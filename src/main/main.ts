@@ -38,6 +38,8 @@ import {
   AccountsRequest,
   ImportAccountRequest,
   GetAccountRequest,
+  SubscribeProgramChangesRequest,
+  UnsubscribeProgramChangesRequest,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -130,25 +132,6 @@ const initDB = async () => {
   });
 };
 initDB();
-
-const logTxns = () => {
-  const solConn = new sol.Connection(netToURL(Net.Localhost));
-  solConn.onLogs('all', (logs, ctx) => {
-    console.log({ logs, ctx });
-  });
-};
-logTxns();
-
-const logProgramChanges = () => {
-  const solConn = new sol.Connection(netToURL(Net.Localhost));
-  solConn.onProgramAccountChange(
-    sol.SystemProgram.programId,
-    (keyedAcctInfo: sol.KeyedAccountInfo, ctx: sol.Context) => {
-      console.log({ keyedAcctInfo, ctx });
-    }
-  );
-};
-logProgramChanges();
 
 const connectSOL = async (net: Net): Promise<SolState> => {
   let solConn: sol.Connection;
@@ -494,29 +477,41 @@ ipcMain.on(
 );
 
 ipcMain.on(
-  'add-keypair',
-  ipcMiddleware('add-keypair', async (event: Electron.IpcMainEvent, msg) => {
-    // should be able to create more keypairs than just wbkey.json
-    await addKeypair(Net.Localhost, 'fixme');
-    const pairs = await accounts(msg.net);
-    event.reply('add-keypair', pairs);
-  })
-);
-
-ipcMain.on(
-  'airdrop',
-  ipcMiddleware('airdrop', async (event: Electron.IpcMainEvent) => {
-    event.reply('airdrop success');
-  })
-);
-
-ipcMain.on(
   'fetch-anchor-idl',
   ipcMiddleware(
     'fetch-anchor-idl',
     async (event: Electron.IpcMainEvent, msg) => {
       const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
       event.reply('fetch-anchor-idl', JSON.parse(stdout));
+    }
+  )
+);
+
+ipcMain.on(
+  'subscribe-program-changes',
+  ipcMiddleware(
+    'subscribe-program-changes',
+    (event: Electron.IpcMainEvent, msg: SubscribeProgramChangesRequest) => {
+      const solConn = new sol.Connection(netToURL(msg.net));
+      solConn.onProgramAccountChange(
+        sol.SystemProgram.programId,
+        (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
+          const pubKey = info.accountId.toString();
+          event.reply('program-changes', { pubKey, info, ctx });
+        }
+      );
+    }
+  )
+);
+
+ipcMain.on(
+  'unsubscribe-program-changes',
+  ipcMiddleware(
+    'unsubscribe-program-changes',
+    (event: Electron.IpcMainEvent, msg: UnsubscribeProgramChangesRequest) => {
+      const solConn = new sol.Connection(netToURL(msg.net));
+      solConn.removeProgramAccountChangeListener(msg.subscriptionID);
+      event.reply('unsubscribe-program-changes', true);
     }
   )
 );
@@ -570,7 +565,6 @@ const createWindow = async () => {
   });
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
-
   mainWindow.on('ready-to-show', () => {
     if (!mainWindow) {
       throw new Error('"mainWindow" is not defined');

@@ -4,13 +4,14 @@ const allValidChannels = [
   'sol-state',
   'run-validator',
   'accounts',
-  'add-keypair',
-  'airdrop',
   'validator-logs',
   'fetch-anchor-idl',
   'update-account-name',
   'import-account',
   'get-account',
+  'program-changes',
+  'subscribe-program-changes',
+  'unsubscribe-program-changes',
 ];
 
 contextBridge.exposeInMainWorld('electron', {
@@ -47,6 +48,12 @@ contextBridge.exposeInMainWorld('electron', {
     },
     onProgramLog(msg) {
       ipcRenderer.send('get-account', msg);
+    },
+    subscribeProgramChanges(msg) {
+      ipcRenderer.send('subscribe-program-changes', msg);
+    },
+    unsubscribeProgramChanges(msg) {
+      ipcRenderer.send('unsubscribe-program-changes', msg);
     },
     on(channel, func) {
       if (allValidChannels.includes(channel)) {

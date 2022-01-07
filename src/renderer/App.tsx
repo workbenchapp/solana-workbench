@@ -28,6 +28,7 @@ import {
   faTerminal,
   faPlus,
   faTimes,
+  faCaretLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -48,6 +49,7 @@ import {
   Net,
   GetAccountResponse,
   netToURL,
+  ProgramAccountChange,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -531,14 +533,18 @@ const CopyIcon = (props: { writeValue: string }) => {
   );
 };
 
-const InlinePK = (props: { pk: string }) => {
-  const { pk } = props;
+const InlinePK = (props: { pk: string; className?: string }) => {
+  const { pk, className } = props;
   return (
-    <span>
+    <span className={className}>
       <code>{prettifyPubkey(pk)}</code>
       <CopyIcon writeValue={pk} />
     </span>
   );
+};
+
+InlinePK.defaultProps = {
+  className: '',
 };
 
 const RandomArt = (props: { art: string; className?: string }) => {
@@ -564,11 +570,11 @@ const AccountListItem = (props: {
   hovered: boolean;
   selected: boolean;
   edited: boolean;
-  initializing?: boolean;
+  initializing: boolean;
   setHoveredItem: (s: string) => void;
   setSelected: (s: string) => void;
   setEdited: (s: string) => void;
-  attemptAccountAdd: (ref: any) => void;
+  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
   queriedAccount?: GetAccountResponse;
 }) => {
   const {
@@ -615,7 +621,9 @@ const AccountListItem = (props: {
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
-              handleOutsideClick={(ref) => attemptAccountAdd(ref)}
+              handleOutsideClick={(ref) =>
+                attemptAccountAdd(ref.current.value, initializing)
+              }
               autoFocus={edited}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
@@ -661,7 +669,6 @@ const AccountListItem = (props: {
 };
 
 AccountListItem.defaultProps = {
-  initializing: false,
   queriedAccount: undefined,
 };
 
@@ -678,6 +685,239 @@ const explorerURL = (net: Net, address: string) => {
   }
 };
 
+const ProgramChangeView = (props: {
+  net: Net;
+  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
+}) => {
+  const { net, attemptAccountAdd } = props;
+  const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
+  const changesRef = useRef<ProgramAccountChange[]>([]);
+  const setChanges = (c: ProgramAccountChange[]) => {
+    changesRef.current = c;
+    setChangesRef(c);
+  };
+  const effectSetup = useRef(false);
+  const subscriptionID = useRef(0);
+
+  useEffect(() => {
+    const changeListener = (data: ProgramAccountChange) => {
+      const newChanges = [...changesRef.current];
+      const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
+      if (idx === -1) {
+        data.count = 1;
+        newChanges.unshift(data);
+      } else {
+        newChanges[idx].count += 1;
+      }
+      setChanges(newChanges);
+    };
+    const changeSubscribeListener = (id: number) => {
+      subscriptionID.current = id;
+    };
+
+    if (!effectSetup.current) {
+      console.log('subscribe');
+      window.electron.ipcRenderer.on('program-changes', changeListener);
+      window.electron.ipcRenderer.on(
+        'program-changes-subscribe',
+        changeSubscribeListener
+      );
+      window.electron.ipcRenderer.subscribeProgramChanges({ net });
+      effectSetup.current = true;
+    }
+
+    return () => {
+      window.electron.ipcRenderer.removeListener(
+        'program-changes',
+        changeListener
+      );
+      window.electron.ipcRenderer.removeListener(
+        'program-changes-subscribe',
+        changeSubscribeListener
+      );
+      window.electron.ipcRenderer.unsubscribeProgramChanges(
+        subscriptionID.current
+      );
+    };
+  }, [changes, net]);
+
+  return (
+    <div>
+      <h6>Live Program Account Changes</h6>
+      <ul className="list-group">
+        {changes.map((change: ProgramAccountChange) => {
+          return (
+            <li
+              className="list-group-item d-flex justify-content-left align-items-center"
+              key={change.pubKey}
+            >
+              <FontAwesomeIcon
+                onClick={() => attemptAccountAdd(change.pubKey, false)}
+                className="cursor-pointer"
+                icon={faCaretLeft}
+                size="2x"
+              />
+              <InlinePK className="ms-2" pk={change.pubKey} />
+              <span className="ms-2 badge bg-secondary rounded-pill">
+                {change.count}
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+};
+
+const AccountView = (props: { net: Net; account: WBAccount }) => {
+  const { net, account } = props;
+  return (
+    <>
+      <div className="row">
+        <div className="col-auto">
+          <div>
+            <h6 className="ms-1">{account.humanName}</h6>
+          </div>
+        </div>
+      </div>
+      <div className="row">
+        <div className="col">
+          <div className="row">
+            <div className="col-auto">
+              <table className="table table-borderless table-sm mb-0">
+                <tbody>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Pubkey</small>
+                    </td>
+                    <td>
+                      <small>
+                        <InlinePK pk={account.pubKey} />
+                      </small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">SOL</small>
+                    </td>
+                    <td>
+                      <small>{account.solAmount}</small>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Executable</small>
+                    </td>
+                    <td>
+                      {account.solAccount?.executable ? (
+                        <div>
+                          <FontAwesomeIcon
+                            className="border-success rounded p-1 exe-icon"
+                            icon={faTerminal}
+                          />
+                          <small className="ms-1 mb-1">Yes</small>
+                        </div>
+                      ) : (
+                        <small className="fst-italic fw-light text-muted">
+                          No
+                        </small>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Explorer</small>
+                    </td>
+                    <td>
+                      <small>
+                        <a
+                          onClick={() =>
+                            analytics('clickExplorerLink', { net })
+                          }
+                          href={explorerURL(net, account.pubKey)}
+                          target="_blank"
+                          className="sol-link"
+                          rel="noreferrer"
+                        >
+                          Link
+                        </a>
+                      </small>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="col-auto">
+              <RandomArt
+                className="randomart-lg text-secondary"
+                art={account.art || ''}
+              />
+            </div>
+          </div>
+          <div className="ms-1">
+            <div>
+              <small className="text-muted">Data</small>
+            </div>
+            <div>
+              <pre className="exe-hexdump p-2 rounded">
+                <code>{account.hexDump}</code>
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+const AccountListView = (props: {
+  net: Net;
+  accounts: WBAccount[];
+  hoveredItem: string;
+  selected: string;
+  edited: string;
+  setEdited: (s: string) => void;
+  setSelected: (s: string) => void;
+  setHoveredItem: (s: string) => void;
+  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
+}) => {
+  const {
+    net,
+    accounts,
+    hoveredItem,
+    selected,
+    edited,
+    setEdited,
+    setSelected,
+    setHoveredItem,
+    attemptAccountAdd,
+  } = props;
+  return (
+    <>
+      {accounts.map((account: WBAccount) => {
+        const initializing = account.pubKey === NONE_KEY;
+        return (
+          <AccountListItem
+            net={net}
+            key={`pubKey=${account.pubKey},initializing=${initializing}`}
+            account={account}
+            hovered={account.pubKey === hoveredItem}
+            selected={account.pubKey === selected}
+            edited={account.pubKey === edited}
+            initializing={initializing}
+            setHoveredItem={setHoveredItem}
+            setEdited={setEdited}
+            setSelected={setSelected}
+            attemptAccountAdd={(pubKey: string) =>
+              attemptAccountAdd(pubKey, initializing)
+            }
+          />
+        );
+      })}
+    </>
+  );
+};
+
 const Accounts = (props: {
   net: Net;
   pushToast: (toast: JSX.Element) => void;
@@ -689,7 +929,6 @@ const Accounts = (props: {
   const [rootKey, setRootKey] = useState<string>('');
   const [edited, setEdited] = useState<string>('');
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
-  const [queriedAccount, setQueriedAccount] = useState<GetAccountResponse>();
 
   const effectSetup = useRef<boolean>();
   const accountsRef = useRef<WBAccount[]>([]);
@@ -738,15 +977,11 @@ const Accounts = (props: {
     };
 
     const accountsListener = (data: AccountsResponse) => {
-      console.log(data);
       setRootKey(data.rootKey);
       setAccounts(data.accounts);
     };
 
     const getAccountListener = (resp: GetAccountResponse) => {
-      // todo: this doesn't actually work, need more ref trick?
-      setQueriedAccount(resp);
-
       if (resp.account?.solAccount) {
         updateAccount(resp.account);
         setSelected(resp.account.pubKey);
@@ -767,7 +1002,6 @@ const Accounts = (props: {
         );
       }
     };
-    console.log({ ref: netRef.current, net });
 
     if (netRef.current !== net || !effectSetup.current) {
       netRef.current = net;
@@ -796,21 +1030,15 @@ const Accounts = (props: {
   const initializingAccount: boolean =
     accounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
 
-  const attemptAccountAdd = (
-    ref: any,
-    account: WBAccount,
-    initializing: boolean
-  ) => {
+  const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
     analytics('accountAddAttempt', {
       nAccounts: accounts.length,
       net: netRef.current,
     });
 
-    if (initializing && ref.current.value === '') {
-      rmAccount(account);
+    if (initializing && pubKey === '') {
+      rmAccount({ pubKey });
     } else {
-      account.pubKey = ref.current.value;
-
       // todo: excludes first (same) element, not generic to anywhere
       // in array but it'll do
       if (
@@ -818,25 +1046,38 @@ const Accounts = (props: {
         // so we sum up the instances of that key, and it'll be 2 if it's
         // a duplicate of an existing one
         accounts
-          .map((a): number => (a.pubKey === account.pubKey ? 1 : 0))
+          .map((a): number => (a.pubKey === pubKey ? 1 : 0))
           .reduce((a, b) => a + b, 0) === 2
       ) {
         pushToast(<Toast msg="Account already imported" variant="warning" />);
         shiftAccount();
         return;
       }
-      if (account.pubKey.match(BASE58_PUBKEY_REGEX)) {
+      if (pubKey.match(BASE58_PUBKEY_REGEX)) {
         window.electron.ipcRenderer.getAccount({
           net,
-          pk: account.pubKey,
+          pk: pubKey,
         });
       } else {
         pushToast(<Toast msg="Invalid account ID" variant="warning" />);
-        rmAccount({ pubKey: account.pubKey });
+        rmAccount({ pubKey });
       }
     }
   };
 
+  let initView = (
+    <>
+      <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+      <small className="me-2">Generating seed wallets...</small>
+    </>
+  );
+  if (net !== Net.Localhost) {
+    initView = (
+      <small className="me-2">
+        No accounts found. Add some with &quot;Add Account&quot;.
+      </small>
+    );
+  }
   return (
     <>
       <div className="col-auto">
@@ -867,132 +1108,27 @@ const Accounts = (props: {
             </button>
           </div>
           {accounts.length > 0 || net !== Net.Localhost ? (
-            accounts.map((account: WBAccount) => {
-              const initializing = account.pubKey === NONE_KEY;
-              return (
-                <AccountListItem
-                  net={net}
-                  key={`pubKey=${account.pubKey},initializing=${initializing}`}
-                  account={account}
-                  hovered={account.pubKey === hoveredItem}
-                  selected={account.pubKey === selected}
-                  edited={account.pubKey === edited}
-                  initializing={initializing}
-                  setHoveredItem={setHoveredItem}
-                  setEdited={setEdited}
-                  setSelected={setSelected}
-                  queriedAccount={queriedAccount}
-                  attemptAccountAdd={(ref) =>
-                    attemptAccountAdd(ref, account, initializing)
-                  }
-                />
-              );
-            })
+            <AccountListView
+              net={net}
+              accounts={accounts}
+              hoveredItem={hoveredItem}
+              selected={selected}
+              edited={edited}
+              setEdited={setEdited}
+              setSelected={setSelected}
+              setHoveredItem={setHoveredItem}
+              attemptAccountAdd={attemptAccountAdd}
+            />
           ) : (
-            <>
-              <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-              <small className="me-2">Generating seed wallets...</small>
-            </>
+            initView
           )}
         </div>
       </div>
       <div className="col">
-        {selectedAccount && (
-          <>
-            <div className="row">
-              <div className="col-auto">
-                <div>
-                  <h6 className="ms-1">{selectedAccount.humanName}</h6>
-                </div>
-              </div>
-            </div>
-            <div className="row">
-              <div className="col">
-                <div className="row">
-                  <div className="col-auto">
-                    <table className="table table-borderless table-sm mb-0">
-                      <tbody>
-                        <tr>
-                          <td>
-                            <small className="text-muted">Pubkey</small>
-                          </td>
-                          <td>
-                            <small>
-                              <InlinePK pk={selectedAccount.pubKey} />
-                            </small>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <small className="text-muted">SOL</small>
-                          </td>
-                          <td>
-                            <small>{selectedAccount.solAmount}</small>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <small className="text-muted">Executable</small>
-                          </td>
-                          <td>
-                            {selectedAccount.solAccount?.executable ? (
-                              <div>
-                                <FontAwesomeIcon
-                                  className="border-success rounded p-1 exe-icon"
-                                  icon={faTerminal}
-                                />
-                                <small className="ms-1 mb-1">Yes</small>
-                              </div>
-                            ) : (
-                              <small className="fst-italic fw-light text-muted">
-                                No
-                              </small>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td>
-                            <small className="text-muted">Explorer</small>
-                          </td>
-                          <td>
-                            <small>
-                              <a
-                                onClick={() =>
-                                  analytics('clickExplorerLink', { net })
-                                }
-                                href={explorerURL(net, selectedAccount.pubKey)}
-                                target="_blank"
-                                className="sol-link"
-                                rel="noreferrer"
-                              >
-                                Link
-                              </a>
-                            </small>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                  <div className="col-auto">
-                    <RandomArt
-                      className="randomart-lg text-secondary"
-                      art={selectedAccount.art || ''}
-                    />
-                  </div>
-                </div>
-                <div className="ms-1">
-                  <div>
-                    <small className="text-muted">Data</small>
-                  </div>
-                  <div>
-                    <pre className="exe-hexdump p-2 rounded">
-                      <code>{selectedAccount.hexDump}</code>
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
+        {selectedAccount ? (
+          <AccountView net={net} account={selectedAccount} />
+        ) : (
+          <ProgramChangeView net={net} attemptAccountAdd={attemptAccountAdd} />
         )}
       </div>
     </>
