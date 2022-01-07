@@ -40,6 +40,7 @@ import {
   GetAccountRequest,
   SubscribeProgramChangesRequest,
   UnsubscribeProgramChangesRequest,
+  ChangeSubscriptionMap,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -487,19 +488,29 @@ ipcMain.on(
   )
 );
 
+const changeSubscriptions: ChangeSubscriptionMap = {};
 ipcMain.on(
   'subscribe-program-changes',
   ipcMiddleware(
     'subscribe-program-changes',
     (event: Electron.IpcMainEvent, msg: SubscribeProgramChangesRequest) => {
-      const solConn = new sol.Connection(netToURL(msg.net));
-      solConn.onProgramAccountChange(
-        sol.SystemProgram.programId,
-        (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
-          const pubKey = info.accountId.toString();
-          event.reply('program-changes', { pubKey, info, ctx });
-        }
-      );
+      const { net } = msg;
+      if (!(net in changeSubscriptions)) {
+        const solConn = new sol.Connection(netToURL(net));
+        const subscriptionID = solConn.onProgramAccountChange(
+          sol.SystemProgram.programId,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
+            const pubKey = info.accountId.toString();
+            event.reply('program-changes', { pubKey, info, ctx });
+          }
+        );
+        event.reply('subscribe-program-changes', {
+          net,
+          subscriptionID,
+        });
+        changeSubscriptions[net] = subscriptionID;
+      }
     }
   )
 );

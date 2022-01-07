@@ -50,6 +50,7 @@ import {
   GetAccountResponse,
   netToURL,
   ProgramAccountChange,
+  ChangeViewAccountMap,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -65,6 +66,7 @@ const TOAST_PAUSE_MS = 1000;
 const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
+const MAX_PROGRAM_CHANGES = 10;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -621,9 +623,13 @@ const AccountListItem = (props: {
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
-              handleOutsideClick={(ref) =>
-                attemptAccountAdd(ref.current.value, initializing)
-              }
+              handleOutsideClick={(ref) => {
+                let pubKey = ref.current.value;
+                if (pubKey === '') {
+                  pubKey = NONE_KEY;
+                }
+                attemptAccountAdd(pubKey, initializing);
+              }}
               autoFocus={edited}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
@@ -687,9 +693,10 @@ const explorerURL = (net: Net, address: string) => {
 
 const ProgramChangeView = (props: {
   net: Net;
+  accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
 }) => {
-  const { net, attemptAccountAdd } = props;
+  const { net, accounts, attemptAccountAdd } = props;
   const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
   const changesRef = useRef<ProgramAccountChange[]>([]);
   const setChanges = (c: ProgramAccountChange[]) => {
@@ -698,6 +705,11 @@ const ProgramChangeView = (props: {
   };
   const effectSetup = useRef(false);
   const subscriptionID = useRef(0);
+
+  const importedAccounts: ChangeViewAccountMap = {};
+  accounts.forEach((a) => {
+    importedAccounts[a.pubKey] = true;
+  });
 
   useEffect(() => {
     const changeListener = (data: ProgramAccountChange) => {
@@ -709,17 +721,29 @@ const ProgramChangeView = (props: {
       } else {
         newChanges[idx].count += 1;
       }
+
+      // Keep length of array finite
+      if (newChanges.length > MAX_PROGRAM_CHANGES) {
+        newChanges.pop();
+      }
       setChanges(newChanges);
     };
-    const changeSubscribeListener = (id: number) => {
-      subscriptionID.current = id;
+    const changeSubscribeListener = (msg: any) => {
+      subscriptionID.current = msg.subscriptionID;
+    };
+    const unsubscribe = () => {
+      if (subscriptionID.current !== 0) {
+        window.electron.ipcRenderer.unsubscribeProgramChanges(
+          subscriptionID.current
+        );
+      }
     };
 
     if (!effectSetup.current) {
-      console.log('subscribe');
+      window.addEventListener('beforeunload', unsubscribe);
       window.electron.ipcRenderer.on('program-changes', changeListener);
       window.electron.ipcRenderer.on(
-        'program-changes-subscribe',
+        'subscribe-program-changes',
         changeSubscribeListener
       );
       window.electron.ipcRenderer.subscribeProgramChanges({ net });
@@ -732,12 +756,11 @@ const ProgramChangeView = (props: {
         changeListener
       );
       window.electron.ipcRenderer.removeListener(
-        'program-changes-subscribe',
+        'subscribe-program-changes',
         changeSubscribeListener
       );
-      window.electron.ipcRenderer.unsubscribeProgramChanges(
-        subscriptionID.current
-      );
+      window.removeEventListener('beforeunload', unsubscribe);
+      unsubscribe();
     };
   }, [changes, net]);
 
@@ -746,20 +769,26 @@ const ProgramChangeView = (props: {
       <h6>Live Program Account Changes</h6>
       <ul className="list-group">
         {changes.map((change: ProgramAccountChange) => {
+          const { count, pubKey } = change;
+          const imported = pubKey in importedAccounts;
           return (
             <li
-              className="list-group-item d-flex justify-content-left align-items-center"
-              key={change.pubKey}
+              className={`list-group-item d-flex justify-content-left align-items-center ${
+                pubKey in importedAccounts && 'opacity-25'
+              }`}
+              key={pubKey}
             >
               <FontAwesomeIcon
-                onClick={() => attemptAccountAdd(change.pubKey, false)}
-                className="cursor-pointer"
+                onClick={() => {
+                  if (!imported) attemptAccountAdd(pubKey, false);
+                }}
+                className={`${!imported && 'cursor-pointer'}`}
                 icon={faCaretLeft}
                 size="2x"
               />
-              <InlinePK className="ms-2" pk={change.pubKey} />
+              <InlinePK className="ms-2" pk={pubKey} />
               <span className="ms-2 badge bg-secondary rounded-pill">
-                {change.count}
+                {count}
               </span>
             </li>
           );
@@ -1036,7 +1065,7 @@ const Accounts = (props: {
       net: netRef.current,
     });
 
-    if (initializing && pubKey === '') {
+    if (initializing && pubKey === NONE_KEY) {
       rmAccount({ pubKey });
     } else {
       // todo: excludes first (same) element, not generic to anywhere
@@ -1128,7 +1157,11 @@ const Accounts = (props: {
         {selectedAccount ? (
           <AccountView net={net} account={selectedAccount} />
         ) : (
-          <ProgramChangeView net={net} attemptAccountAdd={attemptAccountAdd} />
+          <ProgramChangeView
+            net={net}
+            accounts={accounts}
+            attemptAccountAdd={attemptAccountAdd}
+          />
         )}
       </div>
     </>

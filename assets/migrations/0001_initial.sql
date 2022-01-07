@@ -10,7 +10,8 @@ CREATE TABLE account (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     pubKey TEXT NOT NULL,
     net TEXT NOT NULL,
-    humanName TEXT DEFAULT ""
+    humanName TEXT DEFAULT "",
+    UNIQUE(net,pubKey)
 );
 
 CREATE INDEX index_name ON account(pubKey);

@@ -90,3 +90,11 @@ export type ProgramAccountChange = {
   ctx: sol.Context;
   count: number;
 };
+
+export interface ChangeSubscriptionMap {
+  [net: string]: number;
+}
+
+export interface ChangeViewAccountMap {
+  [pubKey: string]: boolean;
+}
