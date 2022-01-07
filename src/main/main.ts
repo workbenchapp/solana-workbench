@@ -195,7 +195,7 @@ async function accounts(net: Net): Promise<AccountsResponse> {
   logger.info('accounts', { net });
   const solConn = new sol.Connection(netToURL(net));
   const existingAccounts = await db.all(
-    'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC',
+    'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC, humanName ASC',
     net
   );
   logger.info('existingAccounts', { existingAccounts });
