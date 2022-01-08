@@ -56,7 +56,11 @@ pre code {
 }
 
 .nav-link {
-  padding: 0.37rem 0.61rem;
+  &-tab {
+    padding: 0rem 0.37rem;
+    color: $body-color;
+    font-weight: 600;
+  }
 }
 
 .nav-icon {
@@ -115,8 +119,14 @@ a {
   font-size: 0.12em;
 }
 
-.cursor-pointer {
-  cursor: pointer;
+.cursor {
+  &-pointer {
+    cursor: pointer;
+  }
+
+  &-not-allowed {
+    cursor: not-allowed;
+  }
 }
 
 .account {

@@ -711,22 +711,26 @@ const ProgramChangeView = (props: {
     importedAccounts[a.pubKey] = true;
   });
 
+  // console.log({ net });
+
   useEffect(() => {
     const changeListener = (data: ProgramAccountChange) => {
-      const newChanges = [...changesRef.current];
-      const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
-      if (idx === -1) {
-        data.count = 1;
-        newChanges.unshift(data);
-      } else {
-        newChanges[idx].count += 1;
-      }
+      // console.log(data.net, net);
+      if (data.net === net) {
+        const newChanges = [...changesRef.current];
+        const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
+        if (idx === -1) {
+          data.count = 1;
+          newChanges.unshift(data);
+        } else {
+          newChanges[idx].count += 1;
+        }
 
-      // Keep length of array finite
-      if (newChanges.length > MAX_PROGRAM_CHANGES) {
-        newChanges.pop();
+        // Keep length of array finite
+        if (newChanges.length <= MAX_PROGRAM_CHANGES) {
+          setChanges(newChanges);
+        }
       }
-      setChanges(newChanges);
     };
     const changeSubscribeListener = (msg: any) => {
       subscriptionID.current = msg.subscriptionID;
@@ -746,9 +750,9 @@ const ProgramChangeView = (props: {
         'subscribe-program-changes',
         changeSubscribeListener
       );
-      window.electron.ipcRenderer.subscribeProgramChanges({ net });
       effectSetup.current = true;
     }
+    window.electron.ipcRenderer.subscribeProgramChanges({ net });
 
     return () => {
       window.electron.ipcRenderer.removeListener(
@@ -766,7 +770,6 @@ const ProgramChangeView = (props: {
 
   return (
     <div>
-      <h6>Live Program Account Changes</h6>
       <ul className="list-group">
         {changes.map((change: ProgramAccountChange) => {
           const { count, pubKey } = change;
@@ -805,7 +808,9 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
       <div className="row">
         <div className="col-auto">
           <div>
-            <h6 className="ms-1">{account.humanName}</h6>
+            <h6 className="ms-1">
+              {account.humanName !== '' ? account.humanName : <div>&nbsp;</div>}
+            </h6>
           </div>
         </div>
       </div>
@@ -1107,6 +1112,7 @@ const Accounts = (props: {
       </small>
     );
   }
+
   return (
     <>
       <div className="col-auto">
@@ -1154,15 +1160,43 @@ const Accounts = (props: {
         </div>
       </div>
       <div className="col">
-        {selectedAccount ? (
-          <AccountView net={net} account={selectedAccount} />
-        ) : (
-          <ProgramChangeView
-            net={net}
-            accounts={accounts}
-            attemptAccountAdd={attemptAccountAdd}
-          />
-        )}
+        <div>
+          <ul className="nav">
+            <li
+              className={`${
+                selectedAccount ? '' : 'border-bottom active'
+              } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
+            >
+              <small
+                onClick={() => {
+                  setSelected('');
+                }}
+              >
+                Live
+              </small>
+            </li>
+            <li
+              className={`${
+                selectedAccount
+                  ? 'border-bottom active'
+                  : 'opacity-25 cursor-not-allowed'
+              } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
+            >
+              <small>Account</small>
+            </li>
+          </ul>
+        </div>
+        <div className="m-2">
+          {selectedAccount ? (
+            <AccountView net={net} account={selectedAccount} />
+          ) : (
+            <ProgramChangeView
+              net={net}
+              accounts={accounts}
+              attemptAccountAdd={attemptAccountAdd}
+            />
+          )}
+        </div>
       </div>
     </>
   );

@@ -86,6 +86,7 @@ export type UnsubscribeProgramChangesRequest = {
 
 export type ProgramAccountChange = {
   pubKey: string;
+  net: Net;
   info: sol.KeyedAccountInfo;
   ctx: sol.Context;
   count: number;

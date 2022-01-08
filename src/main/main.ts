@@ -502,7 +502,7 @@ ipcMain.on(
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
             const pubKey = info.accountId.toString();
-            event.reply('program-changes', { pubKey, info, ctx });
+            event.reply('program-changes', { net, pubKey, info, ctx });
           }
         );
         event.reply('subscribe-program-changes', {
