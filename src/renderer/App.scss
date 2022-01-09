@@ -60,16 +60,23 @@ pre code {
     padding: 0rem 0.37rem;
     color: $body-color;
     font-weight: 600;
+    :hover {
+      text-decoration: underline;
+    }
+  }
+
+  &-icon {
+    border-left: solid white;
+    border-left-width: 2px;
+    text-align: center;
   }
 }
 
 .nav-icon {
-  border-left: solid white;
-  border-left-width: 2px;
-  text-align: center;
+  border: 2px white solid;
 }
 
-.nav-icon > div > svg {
+.nav .nav-icon > div > svg {
   color: $text-muted;
 }
 
@@ -126,6 +133,13 @@ a {
 
   &-not-allowed {
     cursor: not-allowed;
+  }
+}
+
+.icon {
+  &:hover {
+    cursor: pointer;
+    background-color: $light;
   }
 }
 

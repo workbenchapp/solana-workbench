@@ -499,16 +499,11 @@ ipcMain.on(
         const solConn = new sol.Connection(netToURL(net));
         const subscriptionID = solConn.onProgramAccountChange(
           sol.SystemProgram.programId,
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
             const pubKey = info.accountId.toString();
             event.reply('program-changes', { net, pubKey, info, ctx });
           }
         );
-        event.reply('subscribe-program-changes', {
-          net,
-          subscriptionID,
-        });
         changeSubscriptions[net] = subscriptionID;
       }
     }
@@ -521,7 +516,7 @@ ipcMain.on(
     'unsubscribe-program-changes',
     (event: Electron.IpcMainEvent, msg: UnsubscribeProgramChangesRequest) => {
       const solConn = new sol.Connection(netToURL(msg.net));
-      solConn.removeProgramAccountChangeListener(msg.subscriptionID);
+      solConn.removeProgramAccountChangeListener(changeSubscriptions[msg.net]);
       event.reply('unsubscribe-program-changes', true);
     }
   )

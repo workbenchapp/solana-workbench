@@ -28,7 +28,7 @@ import {
   faTerminal,
   faPlus,
   faTimes,
-  faCaretLeft,
+  faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -510,7 +510,7 @@ const CopyIcon = (props: { writeValue: string }) => {
 
   return (
     <OverlayTrigger
-      placement="top"
+      placement="bottom"
       delay={{ show: 250, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
@@ -703,56 +703,49 @@ const ProgramChangeView = (props: {
     changesRef.current = c;
     setChangesRef(c);
   };
-  const effectSetup = useRef(false);
-  const subscriptionID = useRef(0);
+  const netRef = useRef<Net | undefined>();
 
   const importedAccounts: ChangeViewAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
-  // console.log({ net });
-
   useEffect(() => {
+    const unsubscribe = async () => {
+      window.electron.ipcRenderer.unsubscribeProgramChanges({
+        net: netRef.current,
+      });
+    };
+    const unsubscribeListener = () => {
+      setChanges([]);
+    };
     const changeListener = (data: ProgramAccountChange) => {
-      // console.log(data.net, net);
-      if (data.net === net) {
-        const newChanges = [...changesRef.current];
-        const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
-        if (idx === -1) {
-          data.count = 1;
-          newChanges.unshift(data);
-        } else {
-          newChanges[idx].count += 1;
-        }
-
-        // Keep length of array finite
-        if (newChanges.length <= MAX_PROGRAM_CHANGES) {
-          setChanges(newChanges);
-        }
+      const newChanges = [...changesRef.current];
+      const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
+      if (idx === -1) {
+        data.count = 1;
+        newChanges.unshift(data);
+      } else {
+        newChanges[idx].count += 1;
       }
-    };
-    const changeSubscribeListener = (msg: any) => {
-      subscriptionID.current = msg.subscriptionID;
-    };
-    const unsubscribe = () => {
-      if (subscriptionID.current !== 0) {
-        window.electron.ipcRenderer.unsubscribeProgramChanges(
-          subscriptionID.current
-        );
+
+      // Keep length of array finite
+      if (newChanges.length <= MAX_PROGRAM_CHANGES) {
+        setChanges(newChanges);
       }
     };
 
-    if (!effectSetup.current) {
+    if (netRef.current !== net) {
+      if (netRef.current) unsubscribe();
       window.addEventListener('beforeunload', unsubscribe);
       window.electron.ipcRenderer.on('program-changes', changeListener);
       window.electron.ipcRenderer.on(
-        'subscribe-program-changes',
-        changeSubscribeListener
+        'unsubscribe-program-changes',
+        unsubscribeListener
       );
-      effectSetup.current = true;
+      window.electron.ipcRenderer.subscribeProgramChanges({ net });
+      netRef.current = net;
     }
-    window.electron.ipcRenderer.subscribeProgramChanges({ net });
 
     return () => {
       window.electron.ipcRenderer.removeListener(
@@ -760,13 +753,11 @@ const ProgramChangeView = (props: {
         changeListener
       );
       window.electron.ipcRenderer.removeListener(
-        'subscribe-program-changes',
-        changeSubscribeListener
+        'unsubscribe-program-changes',
+        unsubscribeListener
       );
-      window.removeEventListener('beforeunload', unsubscribe);
-      unsubscribe();
     };
-  }, [changes, net]);
+  }, [net]);
 
   return (
     <div>
@@ -781,14 +772,20 @@ const ProgramChangeView = (props: {
               }`}
               key={pubKey}
             >
-              <FontAwesomeIcon
-                onClick={() => {
-                  if (!imported) attemptAccountAdd(pubKey, false);
-                }}
-                className={`${!imported && 'cursor-pointer'}`}
-                icon={faCaretLeft}
-                size="2x"
-              />
+              <div
+                className={`${
+                  !imported && 'cursor-pointer'
+                } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+              >
+                <FontAwesomeIcon
+                  onClick={() => {
+                    if (!imported) attemptAccountAdd(pubKey, false);
+                  }}
+                  className="text-secondary"
+                  icon={faArrowLeft}
+                  size="1x"
+                />
+              </div>
               <InlinePK className="ms-2" pk={pubKey} />
               <span className="ms-2 badge bg-secondary rounded-pill">
                 {count}
@@ -1164,6 +1161,15 @@ const Accounts = (props: {
           <ul className="nav">
             <li
               className={`${
+                selectedAccount
+                  ? 'border-bottom active'
+                  : 'opacity-25 cursor-not-allowed'
+              } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
+            >
+              <small>Account</small>
+            </li>
+            <li
+              className={`${
                 selectedAccount ? '' : 'border-bottom active'
               } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
             >
@@ -1174,15 +1180,6 @@ const Accounts = (props: {
               >
                 Live
               </small>
-            </li>
-            <li
-              className={`${
-                selectedAccount
-                  ? 'border-bottom active'
-                  : 'opacity-25 cursor-not-allowed'
-              } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
-            >
-              <small>Account</small>
             </li>
           </ul>
         </div>
