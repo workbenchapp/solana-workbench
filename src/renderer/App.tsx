@@ -979,25 +979,17 @@ const Accounts = (props: {
     setAccountsRef(accs);
   };
 
-  const addAccount = () => {
+  const addAccount = (pubKey: string = NONE_KEY) => {
     const accs = [...accounts];
-    if (accs.some((a) => a.pubKey === NONE_KEY)) {
-      return;
-    }
     accs.splice(0, 0, {
-      pubKey: NONE_KEY,
+      pubKey,
       humanName: '',
     });
+    console.log({ accs });
     setAccounts(accs);
     setSelected('');
     setHoveredItem('');
     setEdited(NONE_KEY);
-  };
-
-  const rmAccount = (account: WBAccount) => {
-    let accs = [...accounts];
-    accs = accs.filter((a) => a.pubKey !== account.pubKey);
-    setAccounts(accs);
   };
 
   const shiftAccount = () => {
@@ -1023,9 +1015,13 @@ const Accounts = (props: {
 
     const getAccountListener = (resp: GetAccountResponse) => {
       if (resp.account?.solAccount) {
+        if (!edited) {
+          addAccount(resp.account.pubKey);
+        }
         updateAccount(resp.account);
         setSelected(resp.account.pubKey);
         analytics('accountAddSuccess', { net: netRef.current });
+        console.log('importing account');
         window.electron.ipcRenderer.importAccount({
           net: netRef.current,
           pubKey: resp.account.pubKey,
@@ -1076,8 +1072,9 @@ const Accounts = (props: {
       net: netRef.current,
     });
 
+    console.log({ initializing, pubKey, NONE_KEY });
     if (initializing && pubKey === NONE_KEY) {
-      rmAccount({ pubKey });
+      shiftAccount();
     } else {
       // todo: excludes first (same) element, not generic to anywhere
       // in array but it'll do
@@ -1100,7 +1097,7 @@ const Accounts = (props: {
         });
       } else {
         pushToast(<Toast msg="Invalid account ID" variant="warning" />);
-        rmAccount({ pubKey });
+        shiftAccount();
       }
     }
   };
