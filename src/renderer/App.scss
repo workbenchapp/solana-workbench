@@ -253,6 +253,10 @@ $pubkey-len: 44ch;
     background-color: rgba(var(--bs-white-rgb), 0.9) !important;
     backdrop-filter: blur(4px);
   }
+
+  &-xlight {
+    background-color: $gray-100;
+  }
 }
 
 .toaster {
@@ -301,6 +305,12 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
   }
 }
 
-.dropdown-item {
-  text-decoration: none !important;
+.dropdown {
+  &-item {
+    text-decoration: none !important;
+  }
+
+  &-menu {
+    padding: 0px !important;
+  }
 }

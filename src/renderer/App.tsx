@@ -29,6 +29,7 @@ import {
   faPlus,
   faTimes,
   faArrowLeft,
+  faEllipsisH,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -592,6 +593,59 @@ const AccountListItem = (props: {
     attemptAccountAdd,
     queriedAccount,
   } = props;
+
+  const [showEllipsisDropdown, setShowEllipsisDropdown] = useState(false);
+
+  type EllipsisToggleProps = {
+    children?: React.ReactNode;
+    onClick?: (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => void;
+  };
+
+  const EllipsisToggle = React.forwardRef<HTMLDivElement>(
+    // eslint-disable-next-line react/prop-types
+    (toggleProps: EllipsisToggleProps, ref) => {
+      const { onClick, children } = toggleProps;
+      return (
+        <div
+          ref={ref}
+          onClick={(e) => {
+            e.preventDefault();
+            setShowEllipsisDropdown(true);
+            if (onClick) onClick(e);
+          }}
+        >
+          {children}
+          <OutsideClickHandler
+            onOutsideClick={() => setShowEllipsisDropdown(false)}
+          >
+            <div className="ps-2 pe-2 icon rounded">
+              <FontAwesomeIcon size="sm" icon={faEllipsisH} />
+            </div>
+          </OutsideClickHandler>
+        </div>
+      );
+    }
+  );
+
+  type EllipsisMenuProps = {
+    children?: React.ReactNode;
+    style?: React.CSSProperties;
+    className?: string;
+    labeledBy?: string;
+  };
+
+  const EllipsisMenu = React.forwardRef<HTMLDivElement>(
+    // eslint-disable-next-line react/prop-types
+    (toggleProps: EllipsisMenuProps, ref) => {
+      const { children, style, className } = toggleProps;
+      return (
+        <div style={style} className={className} ref={ref}>
+          {children}
+        </div>
+      );
+    }
+  );
+
   return (
     <div
       onClick={() => {
@@ -602,7 +656,7 @@ const AccountListItem = (props: {
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
           : 'border-top border-bottom'
-      } ${hovered && !selected && 'bg-light'} ${
+      } ${hovered && !selected && 'bg-xlight'} ${
         edited && 'border-top border-bottom border-primary'
       } ${queriedAccount && 'border-solgreen-shadow'}`}
       key={account.pubKey}
@@ -642,28 +696,40 @@ const AccountListItem = (props: {
           )}
         </div>
         {!initializing && (
-          <div className="col-auto">
-            <small>
-              <Editable
-                outerSelected={selected}
-                outerHovered={hovered}
-                setSelected={setSelected}
-                setHoveredItem={setHoveredItem}
-                value={account.humanName || ''}
-                editingStarted={() => setEdited(account.pubKey)}
-                editingStopped={() => setEdited('')}
-                handleOutsideClick={(ref) => {
-                  analytics('updateAccountName', {});
-                  window.electron.ipcRenderer.updateAccountName({
-                    net,
-                    pubKey: account.pubKey,
-                    humanName: ref.current.value,
-                  });
-                }}
-                placeholder="Write a description"
-              />
-            </small>
-          </div>
+          <>
+            <div className="col-auto">
+              <small>
+                <Editable
+                  outerSelected={selected}
+                  outerHovered={hovered}
+                  setSelected={setSelected}
+                  setHoveredItem={setHoveredItem}
+                  value={account.humanName || ''}
+                  editingStarted={() => setEdited(account.pubKey)}
+                  editingStopped={() => setEdited('')}
+                  handleOutsideClick={(ref) => {
+                    analytics('updateAccountName', {});
+                    window.electron.ipcRenderer.updateAccountName({
+                      net,
+                      pubKey: account.pubKey,
+                      humanName: ref.current.value,
+                    });
+                  }}
+                  placeholder="Write a description"
+                />
+              </small>
+            </div>
+            <div className="col-auto">
+              <Dropdown flip={false} show={showEllipsisDropdown}>
+                <Dropdown.Toggle as={EllipsisToggle} />
+                <Dropdown.Menu as={EllipsisMenu}>
+                  <Dropdown.Item>
+                    <small className="text-danger">Delete</small>
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -784,7 +850,6 @@ const ProgramChangeView = (props: {
                     onClick={() => {
                       if (!imported) attemptAccountAdd(pubKey, false);
                     }}
-                    className="text-secondary"
                     icon={faArrowLeft}
                     size="1x"
                   />
