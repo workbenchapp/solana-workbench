@@ -636,6 +636,7 @@ const AccountListItem = (props: {
             />
           ) : (
             <span>
+              <RandomArt className="float-start me-1" art={account.art || ''} />
               <InlinePK pk={account.pubKey} />
             </span>
           )}
@@ -662,11 +663,6 @@ const AccountListItem = (props: {
                 placeholder="Write a description"
               />
             </small>
-          </div>
-        )}
-        {!initializing && (
-          <div className="col-auto">
-            <RandomArt art={account.art || ''} />
           </div>
         )}
       </div>
@@ -711,28 +707,34 @@ const ProgramChangeView = (props: {
   });
 
   useEffect(() => {
-    const unsubscribe = async () => {
+    const changeListener = (data: ProgramAccountChange) => {
+      if (data.net === net) {
+        const newChanges = [...changesRef.current];
+        const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
+        if (idx === -1) {
+          data.count = 1;
+          newChanges.unshift(data);
+        } else {
+          newChanges[idx].count += 1;
+        }
+
+        // Keep length of array finite
+        if (newChanges.length <= MAX_PROGRAM_CHANGES) {
+          setChanges(newChanges);
+        }
+      }
+    };
+
+    const unsubscribe = () => {
       window.electron.ipcRenderer.unsubscribeProgramChanges({
         net: netRef.current,
       });
+
+      window.electron.ipcRenderer.removeAllListeners('program-changes');
     };
+
     const unsubscribeListener = () => {
       setChanges([]);
-    };
-    const changeListener = (data: ProgramAccountChange) => {
-      const newChanges = [...changesRef.current];
-      const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
-      if (idx === -1) {
-        data.count = 1;
-        newChanges.unshift(data);
-      } else {
-        newChanges[idx].count += 1;
-      }
-
-      // Keep length of array finite
-      if (newChanges.length <= MAX_PROGRAM_CHANGES) {
-        setChanges(newChanges);
-      }
     };
 
     if (netRef.current !== net) {
@@ -762,37 +764,44 @@ const ProgramChangeView = (props: {
   return (
     <div>
       <ul className="list-group">
-        {changes.map((change: ProgramAccountChange) => {
-          const { count, pubKey } = change;
-          const imported = pubKey in importedAccounts;
-          return (
-            <li
-              className={`list-group-item d-flex justify-content-left align-items-center ${
-                pubKey in importedAccounts && 'opacity-25'
-              }`}
-              key={pubKey}
-            >
-              <div
-                className={`${
-                  !imported && 'cursor-pointer'
-                } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+        {changes.length > 0 ? (
+          changes.map((change: ProgramAccountChange) => {
+            const { count, pubKey } = change;
+            const imported = pubKey in importedAccounts;
+            return (
+              <li
+                className={`list-group-item d-flex justify-content-left align-items-center ${
+                  pubKey in importedAccounts && 'opacity-25'
+                }`}
+                key={pubKey}
               >
-                <FontAwesomeIcon
-                  onClick={() => {
-                    if (!imported) attemptAccountAdd(pubKey, false);
-                  }}
-                  className="text-secondary"
-                  icon={faArrowLeft}
-                  size="1x"
-                />
-              </div>
-              <InlinePK className="ms-2" pk={pubKey} />
-              <span className="ms-2 badge bg-secondary rounded-pill">
-                {count}
-              </span>
-            </li>
-          );
-        })}
+                <div
+                  className={`${
+                    !imported && 'cursor-pointer'
+                  } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+                >
+                  <FontAwesomeIcon
+                    onClick={() => {
+                      if (!imported) attemptAccountAdd(pubKey, false);
+                    }}
+                    className="text-secondary"
+                    icon={faArrowLeft}
+                    size="1x"
+                  />
+                </div>
+                <InlinePK className="ms-2" pk={pubKey} />
+                <span className="ms-2 badge bg-secondary rounded-pill">
+                  {count}
+                </span>
+              </li>
+            );
+          })
+        ) : (
+          <div>
+            <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+            <small className="me-2">Subscribing to program changes...</small>
+          </div>
+        )}
       </ul>
     </div>
   );

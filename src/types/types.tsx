@@ -93,7 +93,10 @@ export type ProgramAccountChange = {
 };
 
 export interface ChangeSubscriptionMap {
-  [net: string]: number;
+  [net: string]: {
+    subscriptionID: number;
+    solConn: sol.Connection;
+  };
 }
 
 export interface ChangeViewAccountMap {
