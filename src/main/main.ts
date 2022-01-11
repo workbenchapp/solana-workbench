@@ -165,6 +165,15 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
+async function deleteAccount(
+  _event: Electron.IpcMainEvent,
+  msg: ImportAccountRequest
+): Promise<number> {
+  const { pubKey } = msg;
+  const res = await db.run('DELETE FROM account WHERE pubKey = ?', pubKey);
+  return res.changes || 0;
+}
+
 async function getAccount(
   net: Net,
   pubKey: string
@@ -476,6 +485,8 @@ ipcMain.on(
     }
   )
 );
+
+ipcMain.on('delete-account', ipcMiddleware('delete-account', deleteAccount));
 
 ipcMain.on(
   'fetch-anchor-idl',

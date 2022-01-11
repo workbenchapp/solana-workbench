@@ -521,8 +521,9 @@ const CopyIcon = (props: { writeValue: string }) => {
           icon={faCopy}
           onClick={(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            _: React.MouseEvent<SVGSVGElement, MouseEvent> | undefined
+            e: React.MouseEvent<SVGSVGElement, MouseEvent>
           ) => {
+            e.stopPropagation();
             setCopyTooltipText('Copied!');
             navigator.clipboard.writeText(writeValue);
           }}
@@ -577,6 +578,7 @@ const AccountListItem = (props: {
   setHoveredItem: (s: string) => void;
   setSelected: (s: string) => void;
   setEdited: (s: string) => void;
+  rmAccount: (s: string) => void;
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
   queriedAccount?: GetAccountResponse;
 }) => {
@@ -589,12 +591,11 @@ const AccountListItem = (props: {
     setHoveredItem,
     setSelected,
     setEdited,
+    rmAccount,
     initializing,
     attemptAccountAdd,
     queriedAccount,
   } = props;
-
-  const [showEllipsisDropdown, setShowEllipsisDropdown] = useState(false);
 
   type EllipsisToggleProps = {
     children?: React.ReactNode;
@@ -608,20 +609,16 @@ const AccountListItem = (props: {
       return (
         <div
           ref={ref}
-          onClick={(e) => {
+          onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
             e.preventDefault();
-            setShowEllipsisDropdown(true);
+            e.stopPropagation();
             if (onClick) onClick(e);
           }}
         >
+          <div className="ps-2 pe-2 icon rounded">
+            <FontAwesomeIcon size="sm" icon={faEllipsisH} />
+          </div>
           {children}
-          <OutsideClickHandler
-            onOutsideClick={() => setShowEllipsisDropdown(false)}
-          >
-            <div className="ps-2 pe-2 icon rounded">
-              <FontAwesomeIcon size="sm" icon={faEllipsisH} />
-            </div>
-          </OutsideClickHandler>
         </div>
       );
     }
@@ -720,10 +717,19 @@ const AccountListItem = (props: {
               </small>
             </div>
             <div className="col-auto">
-              <Dropdown flip={false} show={showEllipsisDropdown}>
+              <Dropdown>
                 <Dropdown.Toggle as={EllipsisToggle} />
                 <Dropdown.Menu as={EllipsisMenu}>
-                  <Dropdown.Item>
+                  <Dropdown.Item
+                    onClick={(e: React.MouseEvent) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      window.electron.ipcRenderer.deleteAccount({
+                        pubKey: account.pubKey,
+                      });
+                      rmAccount(account.pubKey);
+                    }}
+                  >
                     <small className="text-danger">Delete</small>
                   </Dropdown.Item>
                 </Dropdown.Menu>
@@ -984,6 +990,7 @@ const AccountListView = (props: {
   setEdited: (s: string) => void;
   setSelected: (s: string) => void;
   setHoveredItem: (s: string) => void;
+  rmAccount: (s: string) => void;
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
 }) => {
   const {
@@ -996,6 +1003,7 @@ const AccountListView = (props: {
     setSelected,
     setHoveredItem,
     attemptAccountAdd,
+    rmAccount,
   } = props;
   return (
     <>
@@ -1013,6 +1021,7 @@ const AccountListView = (props: {
             setHoveredItem={setHoveredItem}
             setEdited={setEdited}
             setSelected={setSelected}
+            rmAccount={rmAccount}
             attemptAccountAdd={(pubKey: string) =>
               attemptAccountAdd(pubKey, initializing)
             }
@@ -1061,6 +1070,11 @@ const Accounts = (props: {
     const accs = [...accounts];
     accs.shift();
     setAccounts(accs);
+  };
+
+  const rmAccount = (pubKey: string) => {
+    const accs = [...accounts];
+    setAccounts(accs.filter((a) => a.pubKey !== pubKey));
   };
 
   useEffect(() => {
@@ -1221,6 +1235,7 @@ const Accounts = (props: {
               setSelected={setSelected}
               setHoveredItem={setHoveredItem}
               attemptAccountAdd={attemptAccountAdd}
+              rmAccount={rmAccount}
             />
           ) : (
             initView

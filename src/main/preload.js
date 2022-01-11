@@ -9,6 +9,7 @@ const allValidChannels = [
   'update-account-name',
   'import-account',
   'get-account',
+  'delete-account',
   'program-changes',
   'subscribe-program-changes',
   'unsubscribe-program-changes',
@@ -45,6 +46,9 @@ contextBridge.exposeInMainWorld('electron', {
     },
     getAccount(msg) {
       ipcRenderer.send('get-account', msg);
+    },
+    deleteAccount(msg) {
+      ipcRenderer.send('delete-account', msg);
     },
     onProgramLog(msg) {
       ipcRenderer.send('get-account', msg);
