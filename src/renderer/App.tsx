@@ -759,6 +759,47 @@ const explorerURL = (net: Net, address: string) => {
   }
 };
 
+const ProgramChange = (props: {
+  pubKey: string;
+  count: number;
+  attemptAccountAdd: (pk: string, b: boolean) => void;
+  importedAccounts: ChangeViewAccountMap;
+}) => {
+  const { count, pubKey, attemptAccountAdd, importedAccounts } = props;
+  const imported = pubKey in importedAccounts;
+  const [importing, setImporting] = useState(false);
+  return (
+    <li
+      className={`list-group-item d-flex justify-content-left align-items-center ${
+        pubKey in importedAccounts && 'opacity-25'
+      }`}
+      key={pubKey}
+    >
+      <div
+        className={`${
+          !imported && 'cursor-pointer'
+        } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+      >
+        <FontAwesomeIcon
+          onClick={() => {
+            if (!imported) {
+              setImporting(true);
+              attemptAccountAdd(pubKey, false);
+            }
+          }}
+          icon={faArrowLeft}
+          size="1x"
+        />
+      </div>
+      <InlinePK className="ms-2" pk={pubKey} />
+      <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
+      {importing && (
+        <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
+      )}
+    </li>
+  );
+};
+
 const ProgramChangeView = (props: {
   net: Net;
   accounts: WBAccount[];
@@ -838,33 +879,12 @@ const ProgramChangeView = (props: {
       <ul className="list-group">
         {changes.length > 0 ? (
           changes.map((change: ProgramAccountChange) => {
-            const { count, pubKey } = change;
-            const imported = pubKey in importedAccounts;
             return (
-              <li
-                className={`list-group-item d-flex justify-content-left align-items-center ${
-                  pubKey in importedAccounts && 'opacity-25'
-                }`}
-                key={pubKey}
-              >
-                <div
-                  className={`${
-                    !imported && 'cursor-pointer'
-                  } pt-1 pb-1 ps-2 pe-2 icon rounded`}
-                >
-                  <FontAwesomeIcon
-                    onClick={() => {
-                      if (!imported) attemptAccountAdd(pubKey, false);
-                    }}
-                    icon={faArrowLeft}
-                    size="1x"
-                  />
-                </div>
-                <InlinePK className="ms-2" pk={pubKey} />
-                <span className="ms-2 badge bg-secondary rounded-pill">
-                  {count}
-                </span>
-              </li>
+              <ProgramChange
+                attemptAccountAdd={attemptAccountAdd}
+                importedAccounts={importedAccounts}
+                {...change}
+              />
             );
           })
         ) : (
@@ -1078,12 +1098,14 @@ const Accounts = (props: {
   };
 
   useEffect(() => {
-    const updateAccount = (account: WBAccount) => {
+    const unshiftAccount = (account: WBAccount) => {
       const accs = [...accountsRef.current];
-      const idx = accs.findIndex((a) => {
-        return a.pubKey === account.pubKey;
-      });
-      accs[idx] = account;
+      if (accs[0].pubKey === NONE_KEY) {
+        accs[0] = account;
+      } else {
+        accs.unshift(account);
+      }
+      console.log({ accs });
       setAccounts(accs);
     };
 
@@ -1094,24 +1116,16 @@ const Accounts = (props: {
 
     const getAccountListener = (resp: GetAccountResponse) => {
       if (resp.account?.solAccount) {
-        if (!edited) {
-          addAccount(resp.account.pubKey);
-        }
-        updateAccount(resp.account);
+        unshiftAccount(resp.account);
         setSelected(resp.account.pubKey);
         analytics('accountAddSuccess', { net: netRef.current });
-        console.log('importing account');
         window.electron.ipcRenderer.importAccount({
           net: netRef.current,
           pubKey: resp.account.pubKey,
         });
         pushToast(<Toast msg="Account imported" variant="sol-green" />);
       } else {
-        setAccounts(
-          accountsRef.current.filter(
-            (a: WBAccount) => a.pubKey !== resp.account?.pubKey
-          )
-        );
+        if (resp.account?.pubKey) rmAccount(resp.account?.pubKey);
         pushToast(
           <Toast msg={`Account not found in ${net}`} variant="warning" />
         );
