@@ -30,6 +30,8 @@ import {
   faTimes,
   faArrowLeft,
   faEllipsisH,
+  faPause,
+  faPlay,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -68,9 +70,7 @@ const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 100;
-const CHANGE_RANK_COUNT_WEIGHT = 10;
-const CHANGE_RANK_SOL_AMOUNT_WEIGHT = 1;
+const MAX_PROGRAM_CHANGES = 5000;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -518,9 +518,9 @@ const CopyIcon = (props: { writeValue: string }) => {
       delay={{ show: 250, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
-      <span>
+      <span className="ms-2 p-1 icon rounded">
         <FontAwesomeIcon
-          className="ms-1 cursor-pointer"
+          className="cursor-pointer"
           icon={faCopy}
           onClick={(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -754,19 +754,15 @@ AccountListItem.defaultProps = {
 // like how often the address has been seen, the SOL
 // amount and so on
 //
-// lower is better
+// lower is better so we get negative number for sort
 const rankChange = (
   count: number,
   maxSolIndv: number,
   maxCount: number,
   maxSol: number
 ): number => {
-  const score =
-    CHANGE_RANK_SOL_AMOUNT_WEIGHT * (1 / (maxSolIndv / maxSol)) +
-    CHANGE_RANK_COUNT_WEIGHT * (1 / (count / maxCount));
   // >maxSOL = higher rank, <count = higher rank
-  console.log('rankChange', count, maxSolIndv, maxCount, maxSol, score);
-  return score;
+  return 1 / (maxSolIndv / maxSol) + 1 / (count / maxCount);
 };
 
 console.log('rankChange', 'highest', rankChange(1, 100, 1, 5));
@@ -823,10 +819,8 @@ const ProgramChange = (props: {
       </div>
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
-      <div className="ms-2">
-        <small>{solAmount.toFixed(2)}</small>
-        <small className="ms-2 text-secondary">SOL</small>
-      </div>
+      <small className="ms-2">{solAmount.toFixed(2)}</small>
+      <small className="ms-2 text-secondary">SOL</small>
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
       )}
@@ -847,6 +841,8 @@ const ProgramChangeView = (props: {
     setChangesRef(c);
   };
   const netRef = useRef<Net | undefined>();
+  const [paused, setPaused] = useState(false);
+  const pausedRef = useRef(false);
 
   const importedAccounts: ChangeViewAccountMap = {};
   accounts.forEach((a) => {
@@ -855,7 +851,7 @@ const ProgramChangeView = (props: {
 
   useEffect(() => {
     const changeListener = (data: ProgramAccountChange) => {
-      if (data.net === net) {
+      if (data.net === net && !pausedRef.current) {
         const newChanges = [...changesRef.current];
         const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
         if (idx === -1) {
@@ -874,6 +870,7 @@ const ProgramChangeView = (props: {
     };
 
     const unsubscribe = () => {
+      console.log('unsubscribe');
       window.electron.ipcRenderer.unsubscribeProgramChanges({
         net: netRef.current,
       });
@@ -908,8 +905,9 @@ const ProgramChangeView = (props: {
       );
     };
   }, [net]);
-
   const sortedChanges = [...changes];
+  /*
+  
   const maxCount = Math.max(...sortedChanges.map((c) => c.count));
   const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
   sortedChanges.sort((a, b) => {
@@ -918,13 +916,26 @@ const ProgramChangeView = (props: {
       rankChange(b.count, b.maxSol, maxCount, maxSol)
     );
   });
-
+*/
   return (
     <div>
-      <div className="mb-2">
-        <small className="fs-8">
-          Sort order: SOL amount + inverse frequency of changes
-        </small>
+      <div
+        onClick={() => {
+          if (!pausedRef.current) {
+            pausedRef.current = true;
+            setPaused(true);
+          } else {
+            pausedRef.current = false;
+            setPaused(false);
+          }
+        }}
+        className="d-inline-block ps-2 pe-2 icon rounded mb-2"
+      >
+        {paused ? (
+          <FontAwesomeIcon icon={faPlay} />
+        ) : (
+          <FontAwesomeIcon icon={faPause} />
+        )}
       </div>
       <ul className="list-group">
         {changes.length > 0 ? (
@@ -985,7 +996,7 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
                       <small className="text-muted">SOL</small>
                     </td>
                     <td>
-                      <small>{account.solAmount}</small>
+                      <small>{account.solAmount?.toFixed(2)}</small>
                     </td>
                   </tr>
                   <tr>
