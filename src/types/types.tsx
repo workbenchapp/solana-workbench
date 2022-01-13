@@ -89,7 +89,9 @@ export type ProgramAccountChange = {
   net: Net;
   info: sol.KeyedAccountInfo;
   ctx: sol.Context;
-  count: number;
+  solAmount: number; // solAmount is the lamports from info in SOL
+  count: number; // count tracks how often this account has been seen
+  maxSol: number; // maxSOL represents the max SOL seen during subscription
 };
 
 export interface ChangeSubscriptionMap {

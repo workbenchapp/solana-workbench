@@ -314,3 +314,9 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
     padding: 0px !important;
   }
 }
+
+.fs {
+  &-8 {
+    font-size: 0.75rem !important;
+  }
+}

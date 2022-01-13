@@ -500,25 +500,33 @@ ipcMain.on(
 );
 
 const changeSubscriptions: ChangeSubscriptionMap = {};
+const subscribeProgramChanges = (
+  event: Electron.IpcMainEvent,
+  msg: SubscribeProgramChangesRequest
+) => {
+  const { net } = msg;
+  if (!(net in changeSubscriptions)) {
+    const solConn = new sol.Connection(netToURL(net));
+    const subscriptionID = solConn.onProgramAccountChange(
+      sol.SystemProgram.programId,
+      (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
+        const pubKey = info.accountId.toString();
+        const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
+        event.reply('program-changes', {
+          net,
+          pubKey,
+          info,
+          ctx,
+          solAmount,
+        });
+      }
+    );
+    changeSubscriptions[net] = { subscriptionID, solConn };
+  }
+};
 ipcMain.on(
   'subscribe-program-changes',
-  ipcMiddleware(
-    'subscribe-program-changes',
-    (event: Electron.IpcMainEvent, msg: SubscribeProgramChangesRequest) => {
-      const { net } = msg;
-      if (!(net in changeSubscriptions)) {
-        const solConn = new sol.Connection(netToURL(net));
-        const subscriptionID = solConn.onProgramAccountChange(
-          sol.SystemProgram.programId,
-          (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
-            const pubKey = info.accountId.toString();
-            event.reply('program-changes', { net, pubKey, info, ctx });
-          }
-        );
-        changeSubscriptions[net] = { subscriptionID, solConn };
-      }
-    }
-  )
+  ipcMiddleware('subscribe-program-changes', subscribeProgramChanges)
 );
 
 ipcMain.on(

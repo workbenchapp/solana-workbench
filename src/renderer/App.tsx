@@ -67,7 +67,10 @@ const TOAST_PAUSE_MS = 1000;
 const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
-const MAX_PROGRAM_CHANGES = 10;
+const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
+const MAX_PROGRAM_CHANGES = 100;
+const CHANGE_RANK_COUNT_WEIGHT = 10;
+const CHANGE_RANK_SOL_AMOUNT_WEIGHT = 1;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -746,6 +749,31 @@ AccountListItem.defaultProps = {
   queriedAccount: undefined,
 };
 
+// We want changes of interest to be "bubbled up",
+// therefore we rank them according to some properties
+// like how often the address has been seen, the SOL
+// amount and so on
+//
+// lower is better
+const rankChange = (
+  count: number,
+  maxSolIndv: number,
+  maxCount: number,
+  maxSol: number
+): number => {
+  const score =
+    CHANGE_RANK_SOL_AMOUNT_WEIGHT * (1 / (maxSolIndv / maxSol)) +
+    CHANGE_RANK_COUNT_WEIGHT * (1 / (count / maxCount));
+  // >maxSOL = higher rank, <count = higher rank
+  console.log('rankChange', count, maxSolIndv, maxCount, maxSol, score);
+  return score;
+};
+
+console.log('rankChange', 'highest', rankChange(1, 100, 1, 5));
+console.log('rankChange', 'middle', rankChange(250, 100, 250, 100));
+console.log('rankChange', 'middle', rankChange(1, 0.5, 1, 0.5));
+console.log('rankChange', 'lowest', rankChange(250, 1, 250, 3));
+
 const explorerURL = (net: Net, address: string) => {
   switch (net) {
     case Net.Test:
@@ -762,10 +790,12 @@ const explorerURL = (net: Net, address: string) => {
 const ProgramChange = (props: {
   pubKey: string;
   count: number;
+  solAmount: number;
   attemptAccountAdd: (pk: string, b: boolean) => void;
   importedAccounts: ChangeViewAccountMap;
 }) => {
-  const { count, pubKey, attemptAccountAdd, importedAccounts } = props;
+  const { count, pubKey, attemptAccountAdd, importedAccounts, solAmount } =
+    props;
   const imported = pubKey in importedAccounts;
   const [importing, setImporting] = useState(false);
   return (
@@ -793,6 +823,10 @@ const ProgramChange = (props: {
       </div>
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
+      <div className="ms-2">
+        <small>{solAmount.toFixed(2)}</small>
+        <small className="ms-2 text-secondary">SOL</small>
+      </div>
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
       )}
@@ -826,6 +860,7 @@ const ProgramChangeView = (props: {
         const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
         if (idx === -1) {
           data.count = 1;
+          data.maxSol = data.solAmount;
           newChanges.unshift(data);
         } else {
           newChanges[idx].count += 1;
@@ -874,19 +909,37 @@ const ProgramChangeView = (props: {
     };
   }, [net]);
 
+  const sortedChanges = [...changes];
+  const maxCount = Math.max(...sortedChanges.map((c) => c.count));
+  const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
+  sortedChanges.sort((a, b) => {
+    return (
+      rankChange(a.count, a.maxSol, maxCount, maxSol) -
+      rankChange(b.count, b.maxSol, maxCount, maxSol)
+    );
+  });
+
   return (
     <div>
+      <div className="mb-2">
+        <small className="fs-8">
+          Sort order: SOL amount + inverse frequency of changes
+        </small>
+      </div>
       <ul className="list-group">
         {changes.length > 0 ? (
-          changes.map((change: ProgramAccountChange) => {
-            return (
-              <ProgramChange
-                attemptAccountAdd={attemptAccountAdd}
-                importedAccounts={importedAccounts}
-                {...change}
-              />
-            );
-          })
+          sortedChanges
+            .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
+            .map((change: ProgramAccountChange) => {
+              return (
+                <ProgramChange
+                  key={change.pubKey}
+                  attemptAccountAdd={attemptAccountAdd}
+                  importedAccounts={importedAccounts}
+                  {...change}
+                />
+              );
+            })
         ) : (
           <div>
             <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
