@@ -832,24 +832,42 @@ const ProgramChangeView = (props: {
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
 }) => {
   const { net, accounts, attemptAccountAdd } = props;
-  const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
-  const changesRef = useRef<ProgramAccountChange[]>([]);
-  const setChanges = (c: ProgramAccountChange[]) => {
-    changesRef.current = c;
-    setChangesRef(c);
-  };
-  const netRef = useRef<Net | undefined>();
-  const pausedRef = useRef(false);
+  const [changes, setChanges] = useState<ProgramAccountChange[]>([]);
+  const [prevNet, setPrevNet] = useState<Net | undefined>(undefined);
+  const [paused, setPaused] = useState(false);
 
   const importedAccounts: ChangeViewAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
-  useEffect(() => {
-    const changeListener = (data: ProgramAccountChange) => {
-      if (data.net === net && !pausedRef.current) {
-        const newChanges = [...changesRef.current];
+  const unsubscribeListener = () => {
+    setChanges([]);
+  };
+
+  const unsubscribe = () => {
+    console.log('unsubscribe');
+    window.electron.ipcRenderer.unsubscribeProgramChanges({
+      net,
+    });
+  };
+
+  if (prevNet !== net) {
+    console.log('net changed', prevNet, net);
+    window.addEventListener('beforeunload', unsubscribe);
+    window.electron.ipcRenderer.once(
+      'unsubscribe-program-changes',
+      unsubscribeListener
+    );
+    window.electron.ipcRenderer.subscribeProgramChanges({ net });
+    setPrevNet(net);
+  }
+
+  const changeListener = useCallback(
+    (data: ProgramAccountChange) => {
+      if (data.net === net && !paused) {
+        const newChanges = [...changes];
+        console.log({ newChanges });
         const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
         if (idx === -1) {
           data.count = 1;
@@ -864,46 +882,21 @@ const ProgramChangeView = (props: {
           setChanges(newChanges);
         }
       }
-    };
+    },
+    [changes, net, paused]
+  );
 
-    const unsubscribe = () => {
-      console.log('unsubscribe');
-      window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net: netRef.current,
-      });
-
-      window.electron.ipcRenderer.removeAllListeners('program-changes');
-    };
-
-    const unsubscribeListener = () => {
-      setChanges([]);
-    };
-
-    if (netRef.current !== net) {
-      if (netRef.current) unsubscribe();
-      window.addEventListener('beforeunload', unsubscribe);
-      window.electron.ipcRenderer.on('program-changes', changeListener);
-      window.electron.ipcRenderer.on(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
-      window.electron.ipcRenderer.subscribeProgramChanges({ net });
-      netRef.current = net;
-    }
-
+  useEffect(() => {
+    window.electron.ipcRenderer.once('program-changes', changeListener);
     return () => {
       window.electron.ipcRenderer.removeListener(
         'program-changes',
         changeListener
       );
-      window.electron.ipcRenderer.removeListener(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
     };
-  }, [net]);
-  const sortedChanges = [...changes];
+  }, [changeListener]);
 
+  const sortedChanges = [...changes];
   const maxCount = Math.max(...sortedChanges.map((c) => c.count));
   const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
   sortedChanges.sort((a, b) => {
@@ -915,20 +908,10 @@ const ProgramChangeView = (props: {
 
   return (
     <div
-      onMouseOver={() => {
-        console.log('entered');
-        pausedRef.current = true;
-      }}
-      onMouseOut={() => {
-        console.log('exited');
-        pausedRef.current = false;
-      }}
-      onBlur={() => {
-        pausedRef.current = false;
-      }}
-      onFocus={() => {
-        pausedRef.current = true;
-      }}
+      onMouseOver={() => setPaused(true)}
+      onFocus={() => setPaused(true)}
+      onMouseOut={() => setPaused(false)}
+      onBlur={() => setPaused(false)}
     >
       <ul className="list-group">
         {changes.length > 0 ? (
@@ -1207,7 +1190,7 @@ const Accounts = (props: {
         getAccountListener
       );
     };
-  }, [accounts, net, pushToast]);
+  }, [accounts, net, pushToast, rmAccount]);
 
   const selectedAccount: WBAccount | undefined = accounts.find(
     (a) => selected === a.pubKey

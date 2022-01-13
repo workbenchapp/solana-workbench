@@ -63,22 +63,43 @@ contextBridge.exposeInMainWorld('electron', {
       if (allValidChannels.includes(channel)) {
         // deliberately strip as it includes 'sender'
         ipcRenderer.on(channel, (event, ...args) => func(...args));
+      } else {
+        throw new Error(
+          `on() channel invalid channel=${channel} validChannels=${allValidChannels}`
+        );
       }
     },
     once(channel, func) {
-      const validChannels = ['accounts', 'fetch-anchor-idl'];
+      const validChannels = [
+        'accounts',
+        'fetch-anchor-idl',
+        'program-changes',
+        'unsubscribe-program-changes',
+      ];
       if (validChannels.includes(channel)) {
         ipcRenderer.once(channel, (event, ...args) => func(...args));
+      } else {
+        throw new Error(
+          `once() channel invalid channel=${channel} validChannels=${validChannels}`
+        );
       }
     },
     removeListener(channel, func) {
       if (allValidChannels.includes(channel)) {
         ipcRenderer.removeListener(channel, func);
+      } else {
+        throw new Error(
+          `removeListener() channel invalid channel=${channel} validChannels=${allValidChannels}`
+        );
       }
     },
     removeAllListeners(channel) {
       if (allValidChannels.includes(channel)) {
         ipcRenderer.removeAllListeners(channel);
+      } else {
+        throw new Error(
+          `removeAllListeners() channel invalid channel=${channel} validChannels=${allValidChannels}`
+        );
       }
     },
   },
