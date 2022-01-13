@@ -30,8 +30,6 @@ import {
   faTimes,
   faArrowLeft,
   faEllipsisH,
-  faPause,
-  faPlay,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -841,7 +839,6 @@ const ProgramChangeView = (props: {
     setChangesRef(c);
   };
   const netRef = useRef<Net | undefined>();
-  const [paused, setPaused] = useState(false);
   const pausedRef = useRef(false);
 
   const importedAccounts: ChangeViewAccountMap = {};
@@ -906,8 +903,7 @@ const ProgramChangeView = (props: {
     };
   }, [net]);
   const sortedChanges = [...changes];
-  /*
-  
+
   const maxCount = Math.max(...sortedChanges.map((c) => c.count));
   const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
   sortedChanges.sort((a, b) => {
@@ -916,27 +912,24 @@ const ProgramChangeView = (props: {
       rankChange(b.count, b.maxSol, maxCount, maxSol)
     );
   });
-*/
+
   return (
-    <div>
-      <div
-        onClick={() => {
-          if (!pausedRef.current) {
-            pausedRef.current = true;
-            setPaused(true);
-          } else {
-            pausedRef.current = false;
-            setPaused(false);
-          }
-        }}
-        className="d-inline-block ps-2 pe-2 icon rounded mb-2"
-      >
-        {paused ? (
-          <FontAwesomeIcon icon={faPlay} />
-        ) : (
-          <FontAwesomeIcon icon={faPause} />
-        )}
-      </div>
+    <div
+      onMouseOver={() => {
+        console.log('entered');
+        pausedRef.current = true;
+      }}
+      onMouseOut={() => {
+        console.log('exited');
+        pausedRef.current = false;
+      }}
+      onBlur={() => {
+        pausedRef.current = false;
+      }}
+      onFocus={() => {
+        pausedRef.current = true;
+      }}
+    >
       <ul className="list-group">
         {changes.length > 0 ? (
           sortedChanges
