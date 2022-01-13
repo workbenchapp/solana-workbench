@@ -892,14 +892,16 @@ const ProgramChangeView = (props: {
     }
 
     return () => {
-      window.electron.ipcRenderer.removeListener(
-        'program-changes',
-        changeListener
-      );
-      window.electron.ipcRenderer.removeListener(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
+      if (netRef.current !== net) {
+        window.electron.ipcRenderer.removeListener(
+          'program-changes',
+          changeListener
+        );
+        window.electron.ipcRenderer.removeListener(
+          'unsubscribe-program-changes',
+          unsubscribeListener
+        );
+      }
     };
   }, [net]);
   const sortedChanges = [...changes];
