@@ -69,7 +69,7 @@ const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 5000;
+const MAX_PROGRAM_CHANGES = 1000;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -854,6 +854,13 @@ const ProgramChangeView = (props: {
   });
 
   useEffect(() => {
+    const unsubscribe = () => {
+      window.electron.ipcRenderer.unsubscribeProgramChanges({
+        net: netRef.current,
+      });
+      window.electron.ipcRenderer.removeAllListeners('program-changes');
+    };
+
     const changeListener = (data: ProgramAccountChange) => {
       if (data.net === net && !pausedRef.current) {
         const newChanges = [...changesRef.current];
@@ -869,45 +876,23 @@ const ProgramChangeView = (props: {
         // Keep length of array finite
         if (newChanges.length <= MAX_PROGRAM_CHANGES) {
           setChanges(newChanges);
+        } else {
+          unsubscribe();
         }
       }
-    };
-
-    const unsubscribe = () => {
-      console.log('unsubscribe');
-      window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net: netRef.current,
-      });
-
-      window.electron.ipcRenderer.removeAllListeners('program-changes');
-    };
-
-    const unsubscribeListener = () => {
-      setChanges([]);
     };
 
     if (netRef.current !== net) {
       if (netRef.current) unsubscribe();
       window.addEventListener('beforeunload', unsubscribe);
       window.electron.ipcRenderer.on('program-changes', changeListener);
-      window.electron.ipcRenderer.on(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
       window.electron.ipcRenderer.subscribeProgramChanges({ net });
       netRef.current = net;
     }
 
     return () => {
       if (netRef.current !== net) {
-        window.electron.ipcRenderer.removeListener(
-          'program-changes',
-          changeListener
-        );
-        window.electron.ipcRenderer.removeListener(
-          'unsubscribe-program-changes',
-          unsubscribeListener
-        );
+        unsubscribe();
       }
     };
   }, [net]);
@@ -937,6 +922,19 @@ const ProgramChangeView = (props: {
         pausedRef.current = true;
       }}
     >
+      <div className="mb-1">
+        <small>
+          Changes from accounts owned by{' '}
+          <a
+            href="https://docs.solana.com/developing/runtime-facilities/programs#system-program"
+            className="sol-link"
+            target="_blank"
+            rel="noreferrer"
+          >
+            System Program
+          </a>
+        </small>
+      </div>
       <ul className="list-group">
         {changes.length > 0 ? (
           sortedChanges
@@ -1156,10 +1154,13 @@ const Accounts = (props: {
     setAccounts(accs);
   };
 
-  const rmAccount = (pubKey: string) => {
-    const accs = [...accounts];
-    setAccounts(accs.filter((a) => a.pubKey !== pubKey));
-  };
+  const rmAccount = useCallback(
+    (pubKey: string) => {
+      const accs = [...accounts];
+      setAccounts(accs.filter((a) => a.pubKey !== pubKey));
+    },
+    [accounts]
+  );
 
   useEffect(() => {
     const unshiftAccount = (account: WBAccount) => {
@@ -1201,11 +1202,8 @@ const Accounts = (props: {
       window.electron.ipcRenderer.accounts({ net });
     }
 
-    if (!effectSetup.current) {
-      window.electron.ipcRenderer.on('accounts', accountsListener);
-      window.electron.ipcRenderer.on('get-account', getAccountListener);
-      effectSetup.current = true;
-    }
+    window.electron.ipcRenderer.once('accounts', accountsListener);
+    window.electron.ipcRenderer.once('get-account', getAccountListener);
 
     return () => {
       window.electron.ipcRenderer.removeListener('accounts', accountsListener);
@@ -1214,7 +1212,7 @@ const Accounts = (props: {
         getAccountListener
       );
     };
-  }, [accounts, net, pushToast]);
+  }, [accounts, net, pushToast, rmAccount]);
 
   const selectedAccount: WBAccount | undefined = accounts.find(
     (a) => selected === a.pubKey
@@ -1342,7 +1340,7 @@ const Accounts = (props: {
                   setSelected('');
                 }}
               >
-                Live
+                Latest
               </small>
             </li>
           </ul>
