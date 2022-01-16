@@ -30,6 +30,7 @@ import {
   faTimes,
   faArrowLeft,
   faEllipsisH,
+  faTrash,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -731,7 +732,13 @@ const AccountListItem = (props: {
                       rmAccount(account.pubKey);
                     }}
                   >
-                    <small className="text-danger">Delete</small>
+                    <small className="text-danger">
+                      <FontAwesomeIcon
+                        className="text-danger me-1"
+                        icon={faTrash}
+                      />
+                      Delete
+                    </small>
                   </Dropdown.Item>
                 </Dropdown.Menu>
               </Dropdown>
@@ -918,11 +925,9 @@ const ProgramChangeView = (props: {
   return (
     <div
       onMouseOver={() => {
-        console.log('entered');
         pausedRef.current = true;
       }}
       onMouseOut={() => {
-        console.log('exited');
         pausedRef.current = false;
       }}
       onBlur={() => {
