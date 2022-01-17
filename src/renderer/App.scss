@@ -320,3 +320,7 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
     font-size: 0.75rem !important;
   }
 }
+
+.dropdown-menu {
+  z-index: 1020; // hack to fix other items being on top of dropdown
+}
