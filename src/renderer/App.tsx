@@ -33,6 +33,7 @@ import {
   faTrash,
   faNetworkWired,
   faSortAmountDown,
+  faFilter,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -46,6 +47,7 @@ import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 import { v4 as uuidv4 } from 'uuid';
 
+import ReactDOM from 'react-dom';
 import {
   WBAccount,
   SolState,
@@ -71,7 +73,7 @@ const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 1000;
+const MAX_PROGRAM_CHANGES = 1500;
 const SOL_SIGNIFICANCE = 6; // 0.000005
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
@@ -809,21 +811,23 @@ const ProgramChange = (props: {
   const imported = pubKey in importedAccounts;
   const [importing, setImporting] = useState(false);
   return (
-    <div
-      className={`${
-        !imported && 'cursor-pointer'
-      } pt-1 pb-1 ps-2 pe-2 icon rounded`}
-    >
-      <FontAwesomeIcon
-        onClick={() => {
-          if (!imported) {
-            setImporting(true);
-            attemptAccountAdd(pubKey, false);
-          }
-        }}
-        icon={faArrowLeft}
-        size="1x"
-      />
+    <>
+      <span
+        className={`${
+          !imported && 'cursor-pointer'
+        } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+      >
+        <FontAwesomeIcon
+          onClick={() => {
+            if (!imported) {
+              setImporting(true);
+              attemptAccountAdd(pubKey, false);
+            }
+          }}
+          icon={faArrowLeft}
+          size="1x"
+        />
+      </span>
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
       <span className="ms-2 rounded p-1 border border-light">
@@ -837,7 +841,7 @@ const ProgramChange = (props: {
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
       )}
-    </div>
+    </>
   );
 };
 
@@ -864,6 +868,7 @@ const ProgramChangeView = (props: {
   useEffect(() => {
     const changeListener = (data: ProgramAccountChange) => {
       if (data.net === net && !pausedRef.current) {
+        console.log(data);
         const newChanges = [...changesRef.current];
         const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
         if (idx === -1) {
@@ -887,9 +892,12 @@ const ProgramChangeView = (props: {
           newChanges[idx].solAmount = data.solAmount;
         }
 
-        // Keep length of array finite
         if (newChanges.length <= MAX_PROGRAM_CHANGES) {
-          setChanges(newChanges);
+          // TODO: HACK -- Probably a better way not to spam
+          // so many set state
+          ReactDOM.unstable_batchedUpdates(() => {
+            setChanges(newChanges);
+          });
         }
       }
     };
@@ -952,10 +960,18 @@ const ProgramChangeView = (props: {
   });
   */
 
-  const changeFilterDropdownTitle = (
+  const changeSortDropdownTitle = (
     <>
       <FontAwesomeIcon className="me-1" icon={faSortAmountDown} />
       <span>Sort</span>
+    </>
+  );
+  const changeSortDropdownSelect = () => {};
+
+  const changeFilterDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faFilter} />
+      <span>Filter</span>
     </>
   );
 
@@ -963,19 +979,32 @@ const ProgramChangeView = (props: {
 
   return (
     <div>
-      <DropdownButton
-        size="sm"
-        id="dropdown-basic-button"
-        title={changeFilterDropdownTitle}
-        onSelect={changeFilterDropdownSelect}
-        className="mb-2"
-        variant="light"
-        align="end"
-      >
-        <Dropdown.Item eventKey="amountDelta" href="#">
-          Max SOL Change
-        </Dropdown.Item>
-      </DropdownButton>
+      <div className="mb-2">
+        <DropdownButton
+          size="sm"
+          id="dropdown-basic-button"
+          title={changeSortDropdownTitle}
+          onSelect={changeSortDropdownSelect}
+          className="d-inline"
+          variant="light"
+        >
+          <Dropdown.Item eventKey="amountDelta" href="#">
+            Max SOL Change
+          </Dropdown.Item>
+        </DropdownButton>
+        <DropdownButton
+          size="sm"
+          id="dropdown-basic-button"
+          title={changeFilterDropdownTitle}
+          onSelect={changeFilterDropdownSelect}
+          className="ms-2 d-inline"
+          variant="light"
+        >
+          <Dropdown.Item eventKey="programID" href="#">
+            Program ID
+          </Dropdown.Item>
+        </DropdownButton>
+      </div>
       <div
         onMouseOver={() => {
           pausedRef.current = true;
