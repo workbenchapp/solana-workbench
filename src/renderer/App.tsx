@@ -809,28 +809,21 @@ const ProgramChange = (props: {
   const imported = pubKey in importedAccounts;
   const [importing, setImporting] = useState(false);
   return (
-    <li
-      className={`list-group-item d-flex justify-content-left align-items-center ${
-        pubKey in importedAccounts && 'opacity-25'
-      }`}
-      key={pubKey}
+    <div
+      className={`${
+        !imported && 'cursor-pointer'
+      } pt-1 pb-1 ps-2 pe-2 icon rounded`}
     >
-      <div
-        className={`${
-          !imported && 'cursor-pointer'
-        } pt-1 pb-1 ps-2 pe-2 icon rounded`}
-      >
-        <FontAwesomeIcon
-          onClick={() => {
-            if (!imported) {
-              setImporting(true);
-              attemptAccountAdd(pubKey, false);
-            }
-          }}
-          icon={faArrowLeft}
-          size="1x"
-        />
-      </div>
+      <FontAwesomeIcon
+        onClick={() => {
+          if (!imported) {
+            setImporting(true);
+            attemptAccountAdd(pubKey, false);
+          }
+        }}
+        icon={faArrowLeft}
+        size="1x"
+      />
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
       <span className="ms-2 rounded p-1 border border-light">
@@ -844,7 +837,7 @@ const ProgramChange = (props: {
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
       )}
-    </li>
+    </div>
   );
 };
 
@@ -980,7 +973,7 @@ const ProgramChangeView = (props: {
         align="end"
       >
         <Dropdown.Item eventKey="amountDelta" href="#">
-          Amount Delta
+          Max SOL Change
         </Dropdown.Item>
       </DropdownButton>
       <div
@@ -1002,13 +995,21 @@ const ProgramChangeView = (props: {
             sortedChanges
               .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
               .map((change: ProgramAccountChange) => {
+                const { pubKey } = change;
                 return (
-                  <ProgramChange
-                    key={change.pubKey}
-                    attemptAccountAdd={attemptAccountAdd}
-                    importedAccounts={importedAccounts}
-                    {...change}
-                  />
+                  <li
+                    className={`list-group-item d-flex justify-content-middle align-items-center ${
+                      pubKey in importedAccounts && 'opacity-25'
+                    }`}
+                    key={pubKey}
+                  >
+                    <ProgramChange
+                      key={pubKey}
+                      attemptAccountAdd={attemptAccountAdd}
+                      importedAccounts={importedAccounts}
+                      {...change}
+                    />
+                  </li>
                 );
               })
           ) : (
