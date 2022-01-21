@@ -56,7 +56,8 @@ import {
   GetAccountResponse,
   netToURL,
   ProgramAccountChange,
-  ChangeViewAccountMap,
+  ChangeLookupMap,
+  ImportedAccountMap,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -73,8 +74,8 @@ const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 1500;
-const SOL_SIGNIFICANCE = 6; // 0.000005
+const MAX_PROGRAM_CHANGES = 10000;
+const MIN_SOL_DELTA = 0.5;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -758,27 +759,6 @@ AccountListItem.defaultProps = {
   queriedAccount: undefined,
 };
 
-// We want changes of interest to be "bubbled up",
-// therefore we rank them according to some properties
-// like how often the address has been seen, the SOL
-// amount and so on
-//
-// lower is better so we get negative number for sort
-const rankChange = (
-  count: number,
-  maxSolIndv: number,
-  maxCount: number,
-  maxSol: number
-): number => {
-  // >maxSOL = higher rank, <count = higher rank
-  return 1 / (maxSolIndv / maxSol) + 1 / (count / maxCount);
-};
-
-console.log('rankChange', 'highest', rankChange(1, 100, 1, 5));
-console.log('rankChange', 'middle', rankChange(250, 100, 250, 100));
-console.log('rankChange', 'middle', rankChange(1, 0.5, 1, 0.5));
-console.log('rankChange', 'lowest', rankChange(250, 1, 250, 3));
-
 const explorerURL = (net: Net, address: string) => {
   switch (net) {
     case Net.Test:
@@ -798,7 +778,7 @@ const ProgramChange = (props: {
   solAmount: number;
   maxDelta: number;
   attemptAccountAdd: (pk: string, b: boolean) => void;
-  importedAccounts: ChangeViewAccountMap;
+  importedAccounts: ImportedAccountMap;
 }) => {
   const {
     count,
@@ -810,6 +790,12 @@ const ProgramChange = (props: {
   } = props;
   const imported = pubKey in importedAccounts;
   const [importing, setImporting] = useState(false);
+  const formatSolAmount = (amt: number): string => {
+    if (Math.abs(amt) < 0.01) {
+      return '<0.01';
+    }
+    return Math.abs(amt).toFixed(2);
+  };
   return (
     <>
       <span
@@ -831,12 +817,12 @@ const ProgramChange = (props: {
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
       <span className="ms-2 rounded p-1 border border-light">
-        <small className="text-secondary">Δ</small>
-        <small className="ms-2">{maxDelta.toFixed(SOL_SIGNIFICANCE)}</small>
+        <small className="text-secondary">MAX Δ</small>
+        <small className="ms-2">{formatSolAmount(maxDelta)}</small>
       </span>
       <span className="ms-2 rounded p-1 border border-light">
         <small className="text-secondary">SOL</small>
-        <small className="ms-2">{solAmount.toFixed(2)}</small>
+        <small className="ms-2">{formatSolAmount(solAmount)}</small>
       </span>
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
@@ -859,44 +845,60 @@ const ProgramChangeView = (props: {
   };
   const netRef = useRef<Net | undefined>();
   const pausedRef = useRef(false);
+  const changeLookupMap = useRef<ChangeLookupMap>({});
 
-  const importedAccounts: ChangeViewAccountMap = {};
+  const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
   useEffect(() => {
     const changeListener = (data: ProgramAccountChange) => {
+      let solDelta = 0;
       if (data.net === net && !pausedRef.current) {
-        console.log(data);
-        const newChanges = [...changesRef.current];
-        const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
-        if (idx === -1) {
+        if (!(data.pubKey in changeLookupMap.current)) {
           data.count = 1;
           data.solDelta = 0;
           data.maxDelta = 0;
-          newChanges.unshift(data);
+          changeLookupMap.current[data.pubKey] = data;
         } else {
-          newChanges[idx].count += 1;
-          newChanges[idx].solDelta = data.solAmount - newChanges[idx].solAmount;
+          const changeRecord = changeLookupMap.current[data.pubKey];
+          changeRecord.count += 1;
+          changeRecord.solDelta = data.solAmount - changeRecord.solAmount;
+          solDelta = changeRecord.solDelta;
           if (
-            Math.abs(newChanges[idx].solDelta) >
-            Math.abs(newChanges[idx].maxDelta)
+            Math.abs(changeRecord.solDelta) > Math.abs(changeRecord.maxDelta)
           ) {
-            console.log(
-              Math.abs(newChanges[idx].solDelta),
-              Math.abs(newChanges[idx].maxDelta)
-            );
-            newChanges[idx].maxDelta = newChanges[idx].solDelta;
+            changeRecord.maxDelta = changeRecord.solDelta;
           }
-          newChanges[idx].solAmount = data.solAmount;
+          changeRecord.solAmount = data.solAmount;
+          changeLookupMap.current[data.pubKey] = changeRecord;
         }
 
-        if (newChanges.length <= MAX_PROGRAM_CHANGES) {
+        if (changesRef.current.length <= MAX_PROGRAM_CHANGES) {
+          const sortedChanges = Object.values(changeLookupMap.current);
+
+          // Don't call setChanges() too much. Only do it when we're
+          // starting up or getting some good action.
+          if (
+            net !== Net.Localhost &&
+            solDelta < MIN_SOL_DELTA &&
+            sortedChanges.length > MAX_PROGRAM_CHANGES_DISPLAYED
+          ) {
+            return;
+          }
+
+          // TODO: I don't love sorting this every time,
+          // could use a much more efficient data structure like a b-tree,
+          // but, change/account list doesn't get that long
+          sortedChanges.sort((a, b) => {
+            return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+          });
+
           // TODO: HACK -- Probably a better way not to spam
           // so many set state
           ReactDOM.unstable_batchedUpdates(() => {
-            setChanges(newChanges);
+            setChanges(sortedChanges);
           });
         }
       }
@@ -916,6 +918,7 @@ const ProgramChangeView = (props: {
 
     if (netRef.current !== net) {
       if (netRef.current) unsubscribe();
+      changeLookupMap.current = {};
       window.addEventListener('beforeunload', unsubscribe);
       window.electron.ipcRenderer.on('program-changes', changeListener);
       window.electron.ipcRenderer.on(
@@ -939,26 +942,6 @@ const ProgramChangeView = (props: {
       }
     };
   }, [net]);
-  const sortedChanges = [...changes];
-
-  sortedChanges.sort((a, b) => {
-    return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
-  });
-  console.log(
-    'Max maxDelta of all changes',
-    Math.max(...changes.map((c) => c.maxDelta)),
-    sortedChanges[0]
-  );
-  /*
-  const maxCount = Math.max(...sortedChanges.map((c) => c.count));
-  const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
-  sortedChanges.sort((a, b) => {
-    return (
-      rankChange(a.count, a.maxSol, maxCount, maxSol) -
-      rankChange(b.count, b.maxSol, maxCount, maxSol)
-    );
-  });
-  */
 
   const changeSortDropdownTitle = (
     <>
@@ -1004,6 +987,9 @@ const ProgramChangeView = (props: {
             Program ID
           </Dropdown.Item>
         </DropdownButton>
+        <span>
+          <small className="ms-2">{changes.length} account(s) seen</small>
+        </span>
       </div>
       <div
         onMouseOver={() => {
@@ -1021,7 +1007,7 @@ const ProgramChangeView = (props: {
       >
         <ul className="list-group">
           {changes.length > 0 ? (
-            sortedChanges
+            changes
               .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
               .map((change: ProgramAccountChange) => {
                 const { pubKey } = change;
@@ -1044,7 +1030,7 @@ const ProgramChangeView = (props: {
           ) : (
             <div>
               <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-              <small className="me-2">Subscribing to program changes...</small>
+              <small className="me-2">Scanning for program changes...</small>
             </div>
           )}
         </ul>
@@ -1234,7 +1220,6 @@ const Accounts = (props: {
       pubKey,
       humanName: '',
     });
-    console.log({ accs });
     setAccounts(accs);
     setSelected('');
     setHoveredItem('');
@@ -1260,7 +1245,6 @@ const Accounts = (props: {
       } else {
         accs.unshift(account);
       }
-      console.log({ accs });
       setAccounts(accs);
     };
 
@@ -1320,7 +1304,6 @@ const Accounts = (props: {
       net: netRef.current,
     });
 
-    console.log({ initializing, pubKey, NONE_KEY });
     if (initializing && pubKey === NONE_KEY) {
       shiftAccount();
     } else {

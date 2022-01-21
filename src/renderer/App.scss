@@ -252,6 +252,7 @@ $pubkey-len: 44ch;
   &-white-translucent {
     background-color: rgba(var(--bs-white-rgb), 0.9) !important;
     backdrop-filter: blur(4px);
+    z-index: 1021;
   }
 
   &-xlight {

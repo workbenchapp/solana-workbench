@@ -103,6 +103,10 @@ export interface ChangeSubscriptionMap {
   };
 }
 
-export interface ChangeViewAccountMap {
+export interface ImportedAccountMap {
   [pubKey: string]: boolean;
+}
+
+export interface ChangeLookupMap {
+  [pubKey: string]: ProgramAccountChange;
 }
