@@ -43,6 +43,8 @@ import {
   ChangeSubscriptionMap,
   ProgramAccountChange,
   ChangeBatchSize,
+  ChangeLookupMap,
+  ProgramChangeResponse,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -53,7 +55,7 @@ const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
   [Net.Localhost]: 1,
   [Net.Dev]: 20,
   [Net.Test]: 100,
-  [Net.MainnetBeta]: 5000,
+  [Net.MainnetBeta]: 500,
 };
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
@@ -514,6 +516,8 @@ const subscribeProgramChanges = (
 ) => {
   const { net } = msg;
   let batch: ProgramAccountChange[] = [];
+  const changeLookupMap: ChangeLookupMap = {};
+
   if (!(net in changeSubscriptions)) {
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
@@ -521,21 +525,42 @@ const subscribeProgramChanges = (
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
+        let [count, maxDelta, maxSol, solDelta, prevSolAmount] = [
+          1, 0, 0, 0, 0,
+        ];
+
+        if (pubKey in changeLookupMap) {
+          ({ count, maxDelta, maxSol } = changeLookupMap[pubKey]);
+          prevSolAmount = changeLookupMap[pubKey].solAmount;
+          solDelta = solAmount - prevSolAmount;
+          if (Math.abs(solDelta) > Math.abs(maxDelta)) {
+            maxDelta = solDelta;
+          }
+        }
+
         if (batch.length === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
-          event.reply('program-changes', batch);
+          const resp: ProgramChangeResponse = {
+            net,
+            changes: batch,
+            uniqueAccounts: Object.keys(changeLookupMap).length,
+          };
+          event.reply('program-changes', resp);
           batch = [];
         } else {
-          batch.push({
+          const programAccountChange: ProgramAccountChange = {
             net,
             pubKey,
             info,
             ctx,
             solAmount,
-            count: 0.0,
-            solDelta: 0.0,
-            maxDelta: 0.0,
-            maxSol: 0.0,
-          });
+            count,
+            solDelta,
+            maxDelta,
+            maxSol,
+          };
+          batch.push(programAccountChange);
+          changeLookupMap[pubKey] = programAccountChange;
+          console.log(batch.length);
         }
       }
     );

@@ -75,6 +75,12 @@ export type GetAccountResponse = {
   err?: Error;
 };
 
+export type ProgramChangeResponse = {
+  changes: ProgramAccountChange[];
+  net: Net;
+  uniqueAccounts: number;
+};
+
 export type SubscribeProgramChangesRequest = {
   net: Net;
 };

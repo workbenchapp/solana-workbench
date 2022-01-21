@@ -47,7 +47,7 @@ import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 import { v4 as uuidv4 } from 'uuid';
 
-import ReactDOM from 'react-dom';
+//import ReactDOM from 'react-dom';
 import {
   WBAccount,
   SolState,
@@ -56,8 +56,8 @@ import {
   GetAccountResponse,
   netToURL,
   ProgramAccountChange,
-  ChangeLookupMap,
   ImportedAccountMap,
+  ProgramChangeResponse,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -74,8 +74,6 @@ const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 10000;
-const MIN_SOL_DELTA = 0.5;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -800,7 +798,7 @@ const ProgramChange = (props: {
     <>
       <span
         className={`${
-          !imported && 'cursor-pointer'
+          imported ? 'cursor-not-allowed' : 'cursor-pointer'
         } pt-1 pb-1 ps-2 pe-2 icon rounded`}
       >
         <FontAwesomeIcon
@@ -816,11 +814,11 @@ const ProgramChange = (props: {
       </span>
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
-      <span className="ms-2 rounded p-1 border border-light">
+      <span className="ms-2 rounded p-1">
         <small className="text-secondary">Max Δ</small>
         <small className="ms-2">{formatSolAmount(maxDelta)}</small>
       </span>
-      <span className="ms-2 rounded p-1 border border-light">
+      <span className="ms-2 rounded p-1">
         <small className="text-secondary">SOL</small>
         <small className="ms-2">{formatSolAmount(solAmount)}</small>
       </span>
@@ -843,9 +841,19 @@ const ProgramChangeView = (props: {
     changesRef.current = c;
     setChangesRef(c);
   };
+  const [uniqueAccounts, setUniqueAccountsRef] = useState(0);
+  const uniqueAccountsRef = useRef(0);
+  const setUniqueAccounts = (ua: number) => {
+    uniqueAccountsRef.current = ua;
+    setUniqueAccountsRef(ua);
+  };
   const netRef = useRef<Net | undefined>();
+  const [paused, setPausedRef] = useState(false);
   const pausedRef = useRef(false);
-  const changeLookupMap = useRef<ChangeLookupMap>({});
+  const setPaused = (p: boolean) => {
+    pausedRef.current = p;
+    setPausedRef(p);
+  };
 
   const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
@@ -853,57 +861,19 @@ const ProgramChangeView = (props: {
   });
 
   useEffect(() => {
-    const changeListener = (newChanges: ProgramAccountChange[]) => {
-      newChanges.forEach((data) => {
-        let solDelta = 0;
-        if (data.net === net && !pausedRef.current) {
-          if (!(data.pubKey in changeLookupMap.current)) {
-            data.count = 1;
-            data.solDelta = 0;
-            data.maxDelta = 0;
-            changeLookupMap.current[data.pubKey] = data;
-          } else {
-            const changeRecord = changeLookupMap.current[data.pubKey];
-            changeRecord.count += 1;
-            changeRecord.solDelta = data.solAmount - changeRecord.solAmount;
-            solDelta = changeRecord.solDelta;
-            if (
-              Math.abs(changeRecord.solDelta) > Math.abs(changeRecord.maxDelta)
-            ) {
-              changeRecord.maxDelta = changeRecord.solDelta;
-            }
-            changeRecord.solAmount = data.solAmount;
-            changeLookupMap.current[data.pubKey] = changeRecord;
-          }
-
-          if (changesRef.current.length <= MAX_PROGRAM_CHANGES) {
-            const sortedChanges = Object.values(changeLookupMap.current);
-
-            // Don't call setChanges() too much. Only do it when we're
-            // starting up or getting some good action.
-            if (
-              net !== Net.Localhost &&
-              solDelta < MIN_SOL_DELTA &&
-              sortedChanges.length > MAX_PROGRAM_CHANGES_DISPLAYED
-            ) {
-              return;
-            }
-
-            // TODO: I don't love sorting this every time,
-            // could use a much more efficient data structure like a b-tree,
-            // but, change/account list doesn't get that long
-            sortedChanges.sort((a, b) => {
-              return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
-            });
-
-            // TODO: HACK -- Probably a better way not to spam
-            // so many set state
-            ReactDOM.unstable_batchedUpdates(() => {
-              setChanges(sortedChanges);
-            });
-          }
-        }
-      });
+    const changeListener = (resp: ProgramChangeResponse) => {
+      console.log(resp);
+      if (resp.net === net && !pausedRef.current) {
+        // TODO: HACK -- Probably a better way not to spam
+        // so many set state
+        const sortedChanges = resp.changes;
+        sortedChanges.sort((a, b) => {
+          return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+        });
+        const ua = resp.uniqueAccounts;
+        setChanges(sortedChanges);
+        setUniqueAccounts(ua);
+      }
     };
 
     const unsubscribe = () => {
@@ -920,7 +890,6 @@ const ProgramChangeView = (props: {
 
     if (netRef.current !== net) {
       if (netRef.current) unsubscribe();
-      changeLookupMap.current = {};
       window.addEventListener('beforeunload', unsubscribe);
       window.electron.ipcRenderer.on('program-changes', changeListener);
       window.electron.ipcRenderer.on(
@@ -990,24 +959,16 @@ const ProgramChangeView = (props: {
           </Dropdown.Item>
         </DropdownButton>
         <span>
-          <small className="ms-2">
-            {Object.keys(changeLookupMap.current).length} account(s) seen
+          <small className="ms-2 text-secondary">
+            {paused ? 'Paused' : `${uniqueAccounts} account(s) seen`}
           </small>
         </span>
       </div>
       <div
-        onMouseOver={() => {
-          pausedRef.current = true;
-        }}
-        onMouseOut={() => {
-          pausedRef.current = false;
-        }}
-        onBlur={() => {
-          pausedRef.current = false;
-        }}
-        onFocus={() => {
-          pausedRef.current = true;
-        }}
+        onMouseOver={() => setPaused(true)}
+        onMouseOut={() => setPaused(false)}
+        onBlur={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
       >
         <ul className="list-group">
           {changes.length > 0 ? (
