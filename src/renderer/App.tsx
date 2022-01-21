@@ -47,7 +47,6 @@ import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 import { v4 as uuidv4 } from 'uuid';
 
-//import ReactDOM from 'react-dom';
 import {
   WBAccount,
   SolState,
@@ -73,7 +72,7 @@ const TOAST_PAUSE_MS = 1000;
 const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
-const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
+const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -864,15 +863,8 @@ const ProgramChangeView = (props: {
     const changeListener = (resp: ProgramChangeResponse) => {
       console.log(resp);
       if (resp.net === net && !pausedRef.current) {
-        // TODO: HACK -- Probably a better way not to spam
-        // so many set state
-        const sortedChanges = resp.changes;
-        sortedChanges.sort((a, b) => {
-          return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
-        });
-        const ua = resp.uniqueAccounts;
-        setChanges(sortedChanges);
-        setUniqueAccounts(ua);
+        setChanges(resp.changes);
+        setUniqueAccounts(resp.uniqueAccounts);
       }
     };
 
@@ -978,7 +970,7 @@ const ProgramChangeView = (props: {
                 const { pubKey } = change;
                 return (
                   <li
-                    className={`list-group-item d-flex justify-content-middle align-items-center ${
+                    className={`list-group-item d-flex justify-content-middle align-items-center p-0 ${
                       pubKey in importedAccounts && 'opacity-25'
                     }`}
                     key={pubKey}

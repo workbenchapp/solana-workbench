@@ -515,7 +515,7 @@ const subscribeProgramChanges = (
   msg: SubscribeProgramChangesRequest
 ) => {
   const { net } = msg;
-  let batch: ProgramAccountChange[] = [];
+  let batchLen = 0;
   const changeLookupMap: ChangeLookupMap = {};
 
   if (!(net in changeSubscriptions)) {
@@ -536,16 +536,21 @@ const subscribeProgramChanges = (
           if (Math.abs(solDelta) > Math.abs(maxDelta)) {
             maxDelta = solDelta;
           }
+          count += 1;
         }
 
-        if (batch.length === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
+        if (batchLen === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
+          const sortedChanges = Object.values(changeLookupMap);
+          sortedChanges.sort((a, b) => {
+            return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+          });
           const resp: ProgramChangeResponse = {
             net,
-            changes: batch,
+            changes: sortedChanges,
             uniqueAccounts: Object.keys(changeLookupMap).length,
           };
           event.reply('program-changes', resp);
-          batch = [];
+          batchLen = 0;
         } else {
           const programAccountChange: ProgramAccountChange = {
             net,
@@ -558,9 +563,8 @@ const subscribeProgramChanges = (
             maxDelta,
             maxSol,
           };
-          batch.push(programAccountChange);
           changeLookupMap[pubKey] = programAccountChange;
-          console.log(batch.length);
+          batchLen += 1;
         }
       }
     );
