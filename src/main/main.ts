@@ -41,12 +41,20 @@ import {
   SubscribeProgramChangesRequest,
   UnsubscribeProgramChangesRequest,
   ChangeSubscriptionMap,
+  ProgramAccountChange,
+  ChangeBatchSize,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_VERSION = '0.1.3-dev';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
+const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
+  [Net.Localhost]: 1,
+  [Net.Dev]: 20,
+  [Net.Test]: 100,
+  [Net.MainnetBeta]: 5000,
+};
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
@@ -505,6 +513,7 @@ const subscribeProgramChanges = (
   msg: SubscribeProgramChangesRequest
 ) => {
   const { net } = msg;
+  let batch: ProgramAccountChange[] = [];
   if (!(net in changeSubscriptions)) {
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
@@ -512,13 +521,22 @@ const subscribeProgramChanges = (
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
-        event.reply('program-changes', {
-          net,
-          pubKey,
-          info,
-          ctx,
-          solAmount,
-        });
+        if (batch.length === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
+          event.reply('program-changes', batch);
+          batch = [];
+        } else {
+          batch.push({
+            net,
+            pubKey,
+            info,
+            ctx,
+            solAmount,
+            count: 0.0,
+            solDelta: 0.0,
+            maxDelta: 0.0,
+            maxSol: 0.0,
+          });
+        }
       }
     );
     changeSubscriptions[net] = { subscriptionID, solConn };

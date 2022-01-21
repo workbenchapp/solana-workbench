@@ -110,3 +110,7 @@ export interface ImportedAccountMap {
 export interface ChangeLookupMap {
   [pubKey: string]: ProgramAccountChange;
 }
+
+export interface ChangeBatchSize {
+  [net: string]: number;
+}

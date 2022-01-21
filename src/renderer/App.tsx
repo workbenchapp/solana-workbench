@@ -805,7 +805,7 @@ const ProgramChange = (props: {
       >
         <FontAwesomeIcon
           onClick={() => {
-            if (!imported) {
+            if (!imported && !importing) {
               setImporting(true);
               attemptAccountAdd(pubKey, false);
             }
@@ -817,7 +817,7 @@ const ProgramChange = (props: {
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
       <span className="ms-2 rounded p-1 border border-light">
-        <small className="text-secondary">MAX Δ</small>
+        <small className="text-secondary">Max Δ</small>
         <small className="ms-2">{formatSolAmount(maxDelta)}</small>
       </span>
       <span className="ms-2 rounded p-1 border border-light">
@@ -853,55 +853,57 @@ const ProgramChangeView = (props: {
   });
 
   useEffect(() => {
-    const changeListener = (data: ProgramAccountChange) => {
-      let solDelta = 0;
-      if (data.net === net && !pausedRef.current) {
-        if (!(data.pubKey in changeLookupMap.current)) {
-          data.count = 1;
-          data.solDelta = 0;
-          data.maxDelta = 0;
-          changeLookupMap.current[data.pubKey] = data;
-        } else {
-          const changeRecord = changeLookupMap.current[data.pubKey];
-          changeRecord.count += 1;
-          changeRecord.solDelta = data.solAmount - changeRecord.solAmount;
-          solDelta = changeRecord.solDelta;
-          if (
-            Math.abs(changeRecord.solDelta) > Math.abs(changeRecord.maxDelta)
-          ) {
-            changeRecord.maxDelta = changeRecord.solDelta;
-          }
-          changeRecord.solAmount = data.solAmount;
-          changeLookupMap.current[data.pubKey] = changeRecord;
-        }
-
-        if (changesRef.current.length <= MAX_PROGRAM_CHANGES) {
-          const sortedChanges = Object.values(changeLookupMap.current);
-
-          // Don't call setChanges() too much. Only do it when we're
-          // starting up or getting some good action.
-          if (
-            net !== Net.Localhost &&
-            solDelta < MIN_SOL_DELTA &&
-            sortedChanges.length > MAX_PROGRAM_CHANGES_DISPLAYED
-          ) {
-            return;
+    const changeListener = (newChanges: ProgramAccountChange[]) => {
+      newChanges.forEach((data) => {
+        let solDelta = 0;
+        if (data.net === net && !pausedRef.current) {
+          if (!(data.pubKey in changeLookupMap.current)) {
+            data.count = 1;
+            data.solDelta = 0;
+            data.maxDelta = 0;
+            changeLookupMap.current[data.pubKey] = data;
+          } else {
+            const changeRecord = changeLookupMap.current[data.pubKey];
+            changeRecord.count += 1;
+            changeRecord.solDelta = data.solAmount - changeRecord.solAmount;
+            solDelta = changeRecord.solDelta;
+            if (
+              Math.abs(changeRecord.solDelta) > Math.abs(changeRecord.maxDelta)
+            ) {
+              changeRecord.maxDelta = changeRecord.solDelta;
+            }
+            changeRecord.solAmount = data.solAmount;
+            changeLookupMap.current[data.pubKey] = changeRecord;
           }
 
-          // TODO: I don't love sorting this every time,
-          // could use a much more efficient data structure like a b-tree,
-          // but, change/account list doesn't get that long
-          sortedChanges.sort((a, b) => {
-            return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
-          });
+          if (changesRef.current.length <= MAX_PROGRAM_CHANGES) {
+            const sortedChanges = Object.values(changeLookupMap.current);
 
-          // TODO: HACK -- Probably a better way not to spam
-          // so many set state
-          ReactDOM.unstable_batchedUpdates(() => {
-            setChanges(sortedChanges);
-          });
+            // Don't call setChanges() too much. Only do it when we're
+            // starting up or getting some good action.
+            if (
+              net !== Net.Localhost &&
+              solDelta < MIN_SOL_DELTA &&
+              sortedChanges.length > MAX_PROGRAM_CHANGES_DISPLAYED
+            ) {
+              return;
+            }
+
+            // TODO: I don't love sorting this every time,
+            // could use a much more efficient data structure like a b-tree,
+            // but, change/account list doesn't get that long
+            sortedChanges.sort((a, b) => {
+              return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+            });
+
+            // TODO: HACK -- Probably a better way not to spam
+            // so many set state
+            ReactDOM.unstable_batchedUpdates(() => {
+              setChanges(sortedChanges);
+            });
+          }
         }
-      }
+      });
     };
 
     const unsubscribe = () => {
@@ -988,7 +990,9 @@ const ProgramChangeView = (props: {
           </Dropdown.Item>
         </DropdownButton>
         <span>
-          <small className="ms-2">{changes.length} account(s) seen</small>
+          <small className="ms-2">
+            {Object.keys(changeLookupMap.current).length} account(s) seen
+          </small>
         </span>
       </div>
       <div
