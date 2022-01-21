@@ -31,6 +31,9 @@ import {
   faArrowLeft,
   faEllipsisH,
   faTrash,
+  faNetworkWired,
+  faSortAmountDown,
+  faFilter,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
   useCallback,
@@ -52,7 +55,8 @@ import {
   GetAccountResponse,
   netToURL,
   ProgramAccountChange,
-  ChangeViewAccountMap,
+  ImportedAccountMap,
+  ProgramChangeResponse,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -68,8 +72,7 @@ const TOAST_PAUSE_MS = 1000;
 const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
-const MAX_PROGRAM_CHANGES_DISPLAYED = 10;
-const MAX_PROGRAM_CHANGES = 5000;
+const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -617,10 +620,7 @@ const AccountListItem = (props: {
             if (onClick) onClick(e);
           }}
         >
-          <div className="ps-2 pe-2 icon rounded">
-            <FontAwesomeIcon size="sm" icon={faEllipsisH} />
-          </div>
-          {children}
+          <div className="ps-2 pe-2 icon rounded">{children}</div>
         </div>
       );
     }
@@ -720,7 +720,9 @@ const AccountListItem = (props: {
             </div>
             <div className="col-auto">
               <Dropdown>
-                <Dropdown.Toggle as={EllipsisToggle} />
+                <Dropdown.Toggle as={EllipsisToggle}>
+                  <FontAwesomeIcon size="sm" icon={faEllipsisH} />
+                </Dropdown.Toggle>
                 <Dropdown.Menu as={EllipsisMenu}>
                   <Dropdown.Item
                     onClick={(e: React.MouseEvent) => {
@@ -754,27 +756,6 @@ AccountListItem.defaultProps = {
   queriedAccount: undefined,
 };
 
-// We want changes of interest to be "bubbled up",
-// therefore we rank them according to some properties
-// like how often the address has been seen, the SOL
-// amount and so on
-//
-// lower is better so we get negative number for sort
-const rankChange = (
-  count: number,
-  maxSolIndv: number,
-  maxCount: number,
-  maxSol: number
-): number => {
-  // >maxSOL = higher rank, <count = higher rank
-  return 1 / (maxSolIndv / maxSol) + 1 / (count / maxCount);
-};
-
-console.log('rankChange', 'highest', rankChange(1, 100, 1, 5));
-console.log('rankChange', 'middle', rankChange(250, 100, 250, 100));
-console.log('rankChange', 'middle', rankChange(1, 0.5, 1, 0.5));
-console.log('rankChange', 'lowest', rankChange(250, 1, 250, 3));
-
 const explorerURL = (net: Net, address: string) => {
   switch (net) {
     case Net.Test:
@@ -792,28 +773,36 @@ const ProgramChange = (props: {
   pubKey: string;
   count: number;
   solAmount: number;
+  maxDelta: number;
   attemptAccountAdd: (pk: string, b: boolean) => void;
-  importedAccounts: ChangeViewAccountMap;
+  importedAccounts: ImportedAccountMap;
 }) => {
-  const { count, pubKey, attemptAccountAdd, importedAccounts, solAmount } =
-    props;
+  const {
+    count,
+    pubKey,
+    attemptAccountAdd,
+    importedAccounts,
+    solAmount,
+    maxDelta,
+  } = props;
   const imported = pubKey in importedAccounts;
   const [importing, setImporting] = useState(false);
+  const formatSolAmount = (amt: number): string => {
+    if (Math.abs(amt) < 0.01) {
+      return '<0.01';
+    }
+    return Math.abs(amt).toFixed(2);
+  };
   return (
-    <li
-      className={`list-group-item d-flex justify-content-left align-items-center ${
-        pubKey in importedAccounts && 'opacity-25'
-      }`}
-      key={pubKey}
-    >
-      <div
+    <>
+      <span
         className={`${
-          !imported && 'cursor-pointer'
+          imported ? 'cursor-not-allowed' : 'cursor-pointer'
         } pt-1 pb-1 ps-2 pe-2 icon rounded`}
       >
         <FontAwesomeIcon
           onClick={() => {
-            if (!imported) {
+            if (!imported && !importing) {
               setImporting(true);
               attemptAccountAdd(pubKey, false);
             }
@@ -821,15 +810,21 @@ const ProgramChange = (props: {
           icon={faArrowLeft}
           size="1x"
         />
-      </div>
+      </span>
       <InlinePK className="ms-2" pk={pubKey} />
       <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
-      <small className="ms-2">{solAmount.toFixed(2)}</small>
-      <small className="ms-2 text-secondary">SOL</small>
+      <span className="ms-2 rounded p-1">
+        <small className="text-secondary">Max Δ</small>
+        <small className="ms-2">{formatSolAmount(maxDelta)}</small>
+      </span>
+      <span className="ms-2 rounded p-1">
+        <small className="text-secondary">SOL</small>
+        <small className="ms-2">{formatSolAmount(solAmount)}</small>
+      </span>
       {importing && (
         <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
       )}
-    </li>
+    </>
   );
 };
 
@@ -845,36 +840,35 @@ const ProgramChangeView = (props: {
     changesRef.current = c;
     setChangesRef(c);
   };
+  const [uniqueAccounts, setUniqueAccountsRef] = useState(0);
+  const uniqueAccountsRef = useRef(0);
+  const setUniqueAccounts = (ua: number) => {
+    uniqueAccountsRef.current = ua;
+    setUniqueAccountsRef(ua);
+  };
   const netRef = useRef<Net | undefined>();
+  const [paused, setPausedRef] = useState(false);
   const pausedRef = useRef(false);
+  const setPaused = (p: boolean) => {
+    pausedRef.current = p;
+    setPausedRef(p);
+  };
 
-  const importedAccounts: ChangeViewAccountMap = {};
+  const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
   useEffect(() => {
-    const changeListener = (data: ProgramAccountChange) => {
-      if (data.net === net && !pausedRef.current) {
-        const newChanges = [...changesRef.current];
-        const idx = newChanges.findIndex((c) => c.pubKey === data.pubKey);
-        if (idx === -1) {
-          data.count = 1;
-          data.maxSol = data.solAmount;
-          newChanges.unshift(data);
-        } else {
-          newChanges[idx].count += 1;
-        }
-
-        // Keep length of array finite
-        if (newChanges.length <= MAX_PROGRAM_CHANGES) {
-          setChanges(newChanges);
-        }
+    const changeListener = (resp: ProgramChangeResponse) => {
+      console.log(resp);
+      if (resp.net === net && !pausedRef.current) {
+        setChanges(resp.changes);
+        setUniqueAccounts(resp.uniqueAccounts);
       }
     };
 
     const unsubscribe = () => {
-      console.log('unsubscribe');
       window.electron.ipcRenderer.unsubscribeProgramChanges({
         net: netRef.current,
       });
@@ -911,53 +905,93 @@ const ProgramChangeView = (props: {
       }
     };
   }, [net]);
-  const sortedChanges = [...changes];
 
-  const maxCount = Math.max(...sortedChanges.map((c) => c.count));
-  const maxSol = Math.max(...sortedChanges.map((c) => c.maxSol));
-  sortedChanges.sort((a, b) => {
-    return (
-      rankChange(a.count, a.maxSol, maxCount, maxSol) -
-      rankChange(b.count, b.maxSol, maxCount, maxSol)
-    );
-  });
+  const changeSortDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faSortAmountDown} />
+      <span>Sort</span>
+    </>
+  );
+  const changeSortDropdownSelect = () => {};
+
+  const changeFilterDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faFilter} />
+      <span>Filter</span>
+    </>
+  );
+
+  const changeFilterDropdownSelect = () => {};
 
   return (
-    <div
-      onMouseOver={() => {
-        pausedRef.current = true;
-      }}
-      onMouseOut={() => {
-        pausedRef.current = false;
-      }}
-      onBlur={() => {
-        pausedRef.current = false;
-      }}
-      onFocus={() => {
-        pausedRef.current = true;
-      }}
-    >
-      <ul className="list-group">
-        {changes.length > 0 ? (
-          sortedChanges
-            .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
-            .map((change: ProgramAccountChange) => {
-              return (
-                <ProgramChange
-                  key={change.pubKey}
-                  attemptAccountAdd={attemptAccountAdd}
-                  importedAccounts={importedAccounts}
-                  {...change}
-                />
-              );
-            })
-        ) : (
-          <div>
-            <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-            <small className="me-2">Subscribing to program changes...</small>
-          </div>
-        )}
-      </ul>
+    <div>
+      <div className="mb-2">
+        <DropdownButton
+          size="sm"
+          id="dropdown-basic-button"
+          title={changeSortDropdownTitle}
+          onSelect={changeSortDropdownSelect}
+          className="d-inline"
+          variant="light"
+        >
+          <Dropdown.Item eventKey="amountDelta" href="#">
+            Max SOL Change
+          </Dropdown.Item>
+        </DropdownButton>
+        <DropdownButton
+          size="sm"
+          id="dropdown-basic-button"
+          title={changeFilterDropdownTitle}
+          onSelect={changeFilterDropdownSelect}
+          className="ms-2 d-inline"
+          variant="light"
+        >
+          <Dropdown.Item eventKey="programID" href="#">
+            Program ID
+          </Dropdown.Item>
+        </DropdownButton>
+        <span>
+          <small className="ms-2 text-secondary">
+            {paused ? 'Paused' : `${uniqueAccounts} account(s) seen`}
+          </small>
+        </span>
+      </div>
+      <div
+        onMouseOver={() => setPaused(true)}
+        onMouseOut={() => setPaused(false)}
+        onBlur={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+      >
+        <ul className="list-group">
+          {changes.length > 0 ? (
+            changes
+              .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
+              .map((change: ProgramAccountChange) => {
+                const { pubKey } = change;
+                return (
+                  <li
+                    className={`list-group-item d-flex justify-content-middle align-items-center p-0 ${
+                      pubKey in importedAccounts && 'opacity-25'
+                    }`}
+                    key={pubKey}
+                  >
+                    <ProgramChange
+                      key={pubKey}
+                      attemptAccountAdd={attemptAccountAdd}
+                      importedAccounts={importedAccounts}
+                      {...change}
+                    />
+                  </li>
+                );
+              })
+          ) : (
+            <div>
+              <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+              <small className="me-2">Scanning for program changes...</small>
+            </div>
+          )}
+        </ul>
+      </div>
     </div>
   );
 };
@@ -1143,7 +1177,6 @@ const Accounts = (props: {
       pubKey,
       humanName: '',
     });
-    console.log({ accs });
     setAccounts(accs);
     setSelected('');
     setHoveredItem('');
@@ -1169,7 +1202,6 @@ const Accounts = (props: {
       } else {
         accs.unshift(account);
       }
-      console.log({ accs });
       setAccounts(accs);
     };
 
@@ -1229,7 +1261,6 @@ const Accounts = (props: {
       net: netRef.current,
     });
 
-    console.log({ initializing, pubKey, NONE_KEY });
     if (initializing && pubKey === NONE_KEY) {
       shiftAccount();
     } else {
@@ -1481,6 +1512,13 @@ export default function App() {
     if (eventKey) setNet(eventKey as Net);
   };
 
+  const netDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
+      <span>{net}</span>
+    </>
+  );
+
   return (
     <Router>
       <Switch>
@@ -1496,7 +1534,7 @@ export default function App() {
                 <DropdownButton
                   size="sm"
                   id="dropdown-basic-button"
-                  title={net}
+                  title={netDropdownTitle}
                   onSelect={netDropdownSelect}
                   className="float-end"
                   variant="light"

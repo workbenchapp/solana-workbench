@@ -252,6 +252,7 @@ $pubkey-len: 44ch;
   &-white-translucent {
     background-color: rgba(var(--bs-white-rgb), 0.9) !important;
     backdrop-filter: blur(4px);
+    z-index: 1021;
   }
 
   &-xlight {
@@ -319,4 +320,8 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
   &-8 {
     font-size: 0.75rem !important;
   }
+}
+
+.dropdown-menu {
+  z-index: 1020; // hack to fix other items being on top of dropdown
 }

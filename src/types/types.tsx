@@ -75,6 +75,12 @@ export type GetAccountResponse = {
   err?: Error;
 };
 
+export type ProgramChangeResponse = {
+  changes: ProgramAccountChange[];
+  net: Net;
+  uniqueAccounts: number;
+};
+
 export type SubscribeProgramChangesRequest = {
   net: Net;
 };
@@ -91,6 +97,8 @@ export type ProgramAccountChange = {
   ctx: sol.Context;
   solAmount: number; // solAmount is the lamports from info in SOL
   count: number; // count tracks how often this account has been seen
+  solDelta: number; // difference between last change amount and this one
+  maxDelta: number;
   maxSol: number; // maxSOL represents the max SOL seen during subscription
 };
 
@@ -101,6 +109,14 @@ export interface ChangeSubscriptionMap {
   };
 }
 
-export interface ChangeViewAccountMap {
+export interface ImportedAccountMap {
   [pubKey: string]: boolean;
+}
+
+export interface ChangeLookupMap {
+  [pubKey: string]: ProgramAccountChange;
+}
+
+export interface ChangeBatchSize {
+  [net: string]: number;
 }

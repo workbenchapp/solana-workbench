@@ -41,12 +41,22 @@ import {
   SubscribeProgramChangesRequest,
   UnsubscribeProgramChangesRequest,
   ChangeSubscriptionMap,
+  ProgramAccountChange,
+  ChangeBatchSize,
+  ChangeLookupMap,
+  ProgramChangeResponse,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_VERSION = '0.1.3-dev';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
+const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
+  [Net.Localhost]: 1,
+  [Net.Dev]: 20,
+  [Net.Test]: 100,
+  [Net.MainnetBeta]: 500,
+};
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
@@ -505,6 +515,9 @@ const subscribeProgramChanges = (
   msg: SubscribeProgramChangesRequest
 ) => {
   const { net } = msg;
+  let batchLen = 0;
+  const changeLookupMap: ChangeLookupMap = {};
+
   if (!(net in changeSubscriptions)) {
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
@@ -512,13 +525,47 @@ const subscribeProgramChanges = (
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
-        event.reply('program-changes', {
-          net,
-          pubKey,
-          info,
-          ctx,
-          solAmount,
-        });
+        let [count, maxDelta, maxSol, solDelta, prevSolAmount] = [
+          1, 0, 0, 0, 0,
+        ];
+
+        if (pubKey in changeLookupMap) {
+          ({ count, maxDelta, maxSol } = changeLookupMap[pubKey]);
+          prevSolAmount = changeLookupMap[pubKey].solAmount;
+          solDelta = solAmount - prevSolAmount;
+          if (Math.abs(solDelta) > Math.abs(maxDelta)) {
+            maxDelta = solDelta;
+          }
+          count += 1;
+        }
+
+        if (batchLen === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
+          const sortedChanges = Object.values(changeLookupMap);
+          sortedChanges.sort((a, b) => {
+            return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+          });
+          const resp: ProgramChangeResponse = {
+            net,
+            changes: sortedChanges,
+            uniqueAccounts: Object.keys(changeLookupMap).length,
+          };
+          event.reply('program-changes', resp);
+          batchLen = 0;
+        } else {
+          const programAccountChange: ProgramAccountChange = {
+            net,
+            pubKey,
+            info,
+            ctx,
+            solAmount,
+            count,
+            solDelta,
+            maxDelta,
+            maxSol,
+          };
+          changeLookupMap[pubKey] = programAccountChange;
+          batchLen += 1;
+        }
       }
     );
     changeSubscriptions[net] = { subscriptionID, solConn };
