@@ -386,19 +386,20 @@ const prettifyPubkey = (pk = '') =>
     : '';
 
 const Editable = (props: {
-  outerHovered: boolean;
-  outerSelected: boolean;
   value: string;
-  setSelected: (s: string) => void;
-  setHoveredItem: (s: string) => void;
   editingStarted: (ref: MutableRefObject<HTMLInputElement>) => void;
-  editingStopped: () => void;
-  handleOutsideClick: (ref: MutableRefObject<HTMLInputElement>) => void;
+  setSelected?: (s: string) => void;
+  setHoveredItem?: (s: string) => void;
+  editingStopped?: () => void;
+  handleOutsideClick?: (ref: MutableRefObject<HTMLInputElement>) => void;
+  outerHovered?: boolean;
+  outerSelected?: boolean;
   className?: string;
   inputClassName?: string;
   clearAllOnSelect?: boolean;
   autoFocus?: boolean;
   placeholder?: string;
+  onPaste?: (e: any, ref: any) => void;
 }) => {
   const {
     value,
@@ -414,6 +415,7 @@ const Editable = (props: {
     clearAllOnSelect,
     autoFocus,
     placeholder,
+    onPaste,
   } = props;
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(autoFocus);
@@ -449,8 +451,8 @@ const Editable = (props: {
     if (editing) {
       setHovered(false);
       setEditing(false);
-      editingStopped();
-      handleOutsideClick(valRef);
+      if (editingStopped) editingStopped();
+      if (handleOutsideClick) handleOutsideClick(valRef);
     }
   };
 
@@ -461,10 +463,10 @@ const Editable = (props: {
         onMouseLeave={() => setHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
-          setSelected('');
+          if (setSelected) setSelected('');
           setEditing(true);
-          setHoveredItem('');
-          editingStarted(valRef);
+          if (setHoveredItem) setHoveredItem('');
+          if (editingStarted) editingStarted(valRef);
         }}
       >
         <InputGroup
@@ -484,6 +486,9 @@ const Editable = (props: {
                 completeEdit();
               }
             }}
+            onPaste={(e) => {
+              if (onPaste) onPaste(e, valRef);
+            }}
           />
         </InputGroup>
       </div>
@@ -497,6 +502,13 @@ Editable.defaultProps = {
   clearAllOnSelect: false,
   autoFocus: false,
   placeholder: '',
+  outerHovered: false,
+  outerSelected: false,
+  setSelected: () => {},
+  setHoveredItem: () => {},
+  editingStopped: () => {},
+  handleOutsideClick: () => {},
+  onPaste: () => {},
 };
 
 const CopyIcon = (props: { writeValue: string }) => {
@@ -855,10 +867,19 @@ const ProgramChangeView = (props: {
     setPausedRef(p);
   };
 
+  const [programID, setProgramIDRef] = useState('System Program');
+  const programIDRef = useRef('');
+  const setProgramID = (pid: string) => {
+    programIDRef.current = pid;
+    setProgramIDRef(pid);
+  };
+
   const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
+
+  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
 
   useEffect(() => {
     const changeListener = (resp: ProgramChangeResponse) => {
@@ -889,7 +910,10 @@ const ProgramChangeView = (props: {
         'unsubscribe-program-changes',
         unsubscribeListener
       );
-      window.electron.ipcRenderer.subscribeProgramChanges({ net });
+      window.electron.ipcRenderer.subscribeProgramChanges({
+        net,
+        programID: programIDRef.current,
+      });
       netRef.current = net;
     }
 
@@ -927,61 +951,73 @@ const ProgramChangeView = (props: {
   return (
     <div>
       <div className="mb-2">
-        <DropdownButton
-          size="sm"
-          id="dropdown-basic-button"
-          title={changeSortDropdownTitle}
-          onSelect={changeSortDropdownSelect}
-          className="d-inline"
-          variant="light"
-        >
-          <Dropdown.Item eventKey="amountDelta" href="#">
-            <small>Max SOL Change</small>
-          </Dropdown.Item>
-        </DropdownButton>
-        <DropdownButton
-          size="sm"
-          id="dropdown-basic-button"
-          title={changeFilterDropdownTitle}
-          onSelect={changeFilterDropdownSelect}
-          className="ms-2 d-inline"
-          variant="light"
-        >
-          <div className="ms-1 p-1 border-bottom border-light">
-            <small>
-              <strong>Program ID</strong>
-            </small>
-          </div>
-          <Dropdown.Item eventKey="program-id-serum">
-            <small>Serum DEX</small>
-          </Dropdown.Item>
-          <Dropdown.Item eventKey="program-id-token">
-            <small>Token Program</small>
-          </Dropdown.Item>
-          <Dropdown.Item eventKey="program-id-mango">
-            <small>Mango</small>
-          </Dropdown.Item>
-          <div className="p-2">
-            <Editable
-              outerHovered={false}
-              outerSelected={false}
-              value="Custom"
-              setSelected={() => {}}
-              setHoveredItem={() => {}}
-              editingStarted={(ref) => {
-                ref.current.value = '';
-              }}
-              placeholder="Paste Program ID"
-              editingStopped={() => {}}
-              handleOutsideClick={(ref) => {
-                ref.current.value = 'Custom';
-              }}
-            />
-          </div>
-        </DropdownButton>
+        <Dropdown>
+          <DropdownButton
+            size="sm"
+            id="dropdown-basic-button"
+            title={changeSortDropdownTitle}
+            onSelect={changeSortDropdownSelect}
+            className="d-inline"
+            variant="light"
+          >
+            <Dropdown.Item eventKey="amountDelta" href="#">
+              <small>Max SOL Change</small>
+            </Dropdown.Item>
+          </DropdownButton>
+          <DropdownButton
+            size="sm"
+            id="dropdown-basic-button"
+            title={changeFilterDropdownTitle}
+            onSelect={changeFilterDropdownSelect}
+            className="ms-2 d-inline"
+            variant="light"
+            onClick={() => setFilterDropdownShow(true)}
+          >
+            {filterDropdownShow && (
+              <>
+                <div className="ms-1 p-1 border-bottom border-light">
+                  <small>
+                    <strong>Program ID</strong>
+                  </small>
+                </div>
+                <Dropdown.Item eventKey="program-id-serum">
+                  <small>Serum DEX</small>
+                </Dropdown.Item>
+                <Dropdown.Item eventKey="program-id-token">
+                  <small>Token Program</small>
+                </Dropdown.Item>
+                <Dropdown.Item eventKey="program-id-mango">
+                  <small>Mango</small>
+                </Dropdown.Item>
+                <div className="p-2">
+                  <Editable
+                    value="Custom"
+                    editingStarted={(ref) => {
+                      ref.current.value = '';
+                    }}
+                    placeholder="Paste Program ID"
+                    onPaste={(e, ref) => {
+                      setProgramID(e.clipboardData.getData('Text'));
+                      ref.current.value = 'Custom';
+                      ref.current.blur();
+                      setFilterDropdownShow(false);
+                    }}
+                  />
+                </div>
+              </>
+            )}
+          </DropdownButton>
+        </Dropdown>
         <span>
           <small className="ms-2 text-secondary">
-            {paused ? 'Paused' : `${uniqueAccounts} account(s) seen`}
+            {paused ? (
+              'Paused'
+            ) : (
+              <span>
+                <code className="me-2">{programID}</code>
+                {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
+              </span>
+            )}
           </small>
         </span>
       </div>
