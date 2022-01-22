@@ -222,6 +222,10 @@ $pubkey-len: 44ch;
     background-color: $lightblue;
   }
 
+  &-code {
+    @include inline-code;
+  }
+
   &-clean-code > input {
     border: none;
     max-width: 12ch;

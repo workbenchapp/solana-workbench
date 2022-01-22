@@ -41,6 +41,7 @@ import React, {
   useRef,
   useState,
   cloneElement,
+  MutableRefObject,
 } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
@@ -390,9 +391,9 @@ const Editable = (props: {
   value: string;
   setSelected: (s: string) => void;
   setHoveredItem: (s: string) => void;
-  editingStarted: () => void;
+  editingStarted: (ref: MutableRefObject<HTMLInputElement>) => void;
   editingStopped: () => void;
-  handleOutsideClick: (ref: any) => void;
+  handleOutsideClick: (ref: MutableRefObject<HTMLInputElement>) => void;
   className?: string;
   inputClassName?: string;
   clearAllOnSelect?: boolean;
@@ -463,7 +464,7 @@ const Editable = (props: {
           setSelected('');
           setEditing(true);
           setHoveredItem('');
-          editingStarted();
+          editingStarted(valRef);
         }}
       >
         <InputGroup
@@ -935,7 +936,7 @@ const ProgramChangeView = (props: {
           variant="light"
         >
           <Dropdown.Item eventKey="amountDelta" href="#">
-            Max SOL Change
+            <small>Max SOL Change</small>
           </Dropdown.Item>
         </DropdownButton>
         <DropdownButton
@@ -946,9 +947,37 @@ const ProgramChangeView = (props: {
           className="ms-2 d-inline"
           variant="light"
         >
-          <Dropdown.Item eventKey="programID" href="#">
-            Program ID
+          <div className="ms-1 p-1 border-bottom border-light">
+            <small>
+              <strong>Program ID</strong>
+            </small>
+          </div>
+          <Dropdown.Item eventKey="program-id-serum">
+            <small>Serum DEX</small>
           </Dropdown.Item>
+          <Dropdown.Item eventKey="program-id-token">
+            <small>Token Program</small>
+          </Dropdown.Item>
+          <Dropdown.Item eventKey="program-id-mango">
+            <small>Mango</small>
+          </Dropdown.Item>
+          <div className="p-2">
+            <Editable
+              outerHovered={false}
+              outerSelected={false}
+              value="Custom"
+              setSelected={() => {}}
+              setHoveredItem={() => {}}
+              editingStarted={(ref) => {
+                ref.current.value = '';
+              }}
+              placeholder="Paste Program ID"
+              editingStopped={() => {}}
+              handleOutsideClick={(ref) => {
+                ref.current.value = 'Custom';
+              }}
+            />
+          </div>
         </DropdownButton>
         <span>
           <small className="ms-2 text-secondary">

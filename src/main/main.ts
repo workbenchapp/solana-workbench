@@ -525,12 +525,10 @@ const subscribeProgramChanges = (
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
-        let [count, maxDelta, maxSol, solDelta, prevSolAmount] = [
-          1, 0, 0, 0, 0,
-        ];
+        let [count, maxDelta, solDelta, prevSolAmount] = [1, 0, 0, 0];
 
         if (pubKey in changeLookupMap) {
-          ({ count, maxDelta, maxSol } = changeLookupMap[pubKey]);
+          ({ count, maxDelta } = changeLookupMap[pubKey]);
           prevSolAmount = changeLookupMap[pubKey].solAmount;
           solDelta = solAmount - prevSolAmount;
           if (Math.abs(solDelta) > Math.abs(maxDelta)) {
@@ -561,7 +559,6 @@ const subscribeProgramChanges = (
             count,
             solDelta,
             maxDelta,
-            maxSol,
           };
           changeLookupMap[pubKey] = programAccountChange;
           batchLen += 1;
