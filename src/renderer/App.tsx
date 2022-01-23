@@ -808,35 +808,47 @@ const ProgramChange = (props: {
   };
   return (
     <>
-      <span
-        className={`${
-          imported ? 'cursor-not-allowed' : 'cursor-pointer'
-        } pt-1 pb-1 ps-2 pe-2 icon rounded`}
-      >
-        <FontAwesomeIcon
-          onClick={() => {
-            if (!imported && !importing) {
-              setImporting(true);
-              attemptAccountAdd(pubKey, false);
-            }
-          }}
-          icon={faArrowLeft}
-          size="1x"
-        />
-      </span>
-      <InlinePK className="ms-2" pk={pubKey} />
-      <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
-      <span className="ms-2 rounded p-1">
-        <small className="text-secondary">Max Δ</small>
-        <small className="ms-2">{formatSolAmount(maxDelta)}</small>
-      </span>
-      <span className="ms-2 rounded p-1">
-        <small className="text-secondary">SOL</small>
-        <small className="ms-2">{formatSolAmount(solAmount)}</small>
-      </span>
-      {importing && (
-        <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
-      )}
+      <td>
+        <span
+          className={`${
+            imported ? 'cursor-not-allowed' : 'cursor-pointer'
+          } pt-1 pb-1 ps-2 pe-2 icon rounded`}
+        >
+          <FontAwesomeIcon
+            onClick={() => {
+              if (!imported && !importing) {
+                setImporting(true);
+                attemptAccountAdd(pubKey, false);
+              }
+            }}
+            icon={faArrowLeft}
+            size="1x"
+          />
+        </span>
+      </td>
+      <td>
+        <InlinePK className="ms-2" pk={pubKey} />
+      </td>
+      <td>
+        <span className="ms-2 rounded p-1">
+          <small className="text-secondary">Max Δ</small>
+          <small className="ms-2">{formatSolAmount(maxDelta)}</small>
+        </span>
+      </td>
+      <td>
+        <span className="ms-2 rounded p-1">
+          <small className="text-secondary">SOL</small>
+          <small className="ms-2">{formatSolAmount(solAmount)}</small>
+        </span>
+      </td>
+      <td>
+        <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
+      </td>
+      <td>
+        {importing && (
+          <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
+        )}
+      </td>
     </>
   );
 };
@@ -1027,35 +1039,37 @@ const ProgramChangeView = (props: {
         onBlur={() => setPaused(false)}
         onFocus={() => setPaused(true)}
       >
-        <ul className="list-group">
-          {changes.length > 0 ? (
-            changes
-              .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
-              .map((change: ProgramAccountChange) => {
-                const { pubKey } = change;
-                return (
-                  <li
-                    className={`list-group-item d-flex justify-content-middle align-items-center p-0 ${
-                      pubKey in importedAccounts && 'opacity-25'
-                    }`}
-                    key={pubKey}
-                  >
-                    <ProgramChange
+        {changes.length > 0 ? (
+          <table className="table table-sm">
+            <tbody>
+              {changes
+                .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
+                .map((change: ProgramAccountChange) => {
+                  const { pubKey } = change;
+                  return (
+                    <tr
+                      className={`${
+                        pubKey in importedAccounts ? 'opacity-25' : ''
+                      }`}
                       key={pubKey}
-                      attemptAccountAdd={attemptAccountAdd}
-                      importedAccounts={importedAccounts}
-                      {...change}
-                    />
-                  </li>
-                );
-              })
-          ) : (
-            <div>
-              <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-              <small className="me-2">Scanning for program changes...</small>
-            </div>
-          )}
-        </ul>
+                    >
+                      <ProgramChange
+                        key={pubKey}
+                        attemptAccountAdd={attemptAccountAdd}
+                        importedAccounts={importedAccounts}
+                        {...change}
+                      />
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        ) : (
+          <div>
+            <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+            <small className="me-2">Scanning for program changes...</small>
+          </div>
+        )}
       </div>
     </div>
   );
