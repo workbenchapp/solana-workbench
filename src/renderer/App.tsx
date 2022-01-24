@@ -963,8 +963,6 @@ const ProgramChangeView = (props: {
     </>
   );
 
-  const changeFilterDropdownSelect = () => {};
-
   const pause = () => {
     if (pausedTimeoutRef.current === 0) {
       pausedTimeoutRef.current = window.setTimeout(() => {
@@ -1001,10 +999,16 @@ const ProgramChangeView = (props: {
             size="sm"
             id="dropdown-basic-button"
             title={changeFilterDropdownTitle}
-            onSelect={changeFilterDropdownSelect}
+            onSelect={(s: string | null) => {
+              console.log('select', s);
+              setFilterDropdownShow(false);
+            }}
+            onClick={() => {
+              console.log('click');
+              if (!filterDropdownShow) setFilterDropdownShow(true);
+            }}
             className="ms-2 d-inline"
             variant="light"
-            onClick={() => setFilterDropdownShow(true)}
             show={filterDropdownShow}
           >
             <div className="ms-1 p-1 border-bottom border-light">
@@ -1012,17 +1016,14 @@ const ProgramChangeView = (props: {
                 <strong>Program ID</strong>
               </small>
             </div>
-            <Dropdown.Item eventKey="program-id-serum">
+            <Dropdown.Item eventKey="program-id-system">
               <small>System Program</small>
-            </Dropdown.Item>
-            <Dropdown.Item eventKey="program-id-serum">
-              <small>Serum DEX</small>
             </Dropdown.Item>
             <Dropdown.Item eventKey="program-id-token">
               <small>Token Program</small>
             </Dropdown.Item>
-            <Dropdown.Item eventKey="program-id-mango">
-              <small>Mango</small>
+            <Dropdown.Item eventKey="program-id-serum">
+              <small>Serum DEX</small>
             </Dropdown.Item>
             <div className="p-2">
               <Editable
@@ -1055,9 +1056,9 @@ const ProgramChangeView = (props: {
                     pushToast(
                       <Toast
                         msg={
-                          <span>
+                          <div className="ms-3">
                             Invalid program ID: <code>{pastedID}</code>
-                          </span>
+                          </div>
                         }
                         variant="warning"
                       />
