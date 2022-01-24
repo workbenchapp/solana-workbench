@@ -115,7 +115,7 @@ const useInterval = (callback: any, delay: number) => {
 };
 
 const Toast = (props: {
-  msg: string;
+  msg: string | JSX.Element;
   variant?: string;
   bottom?: number;
 
@@ -400,6 +400,7 @@ const Editable = (props: {
   autoFocus?: boolean;
   placeholder?: string;
   onPaste?: (e: any, ref: any) => void;
+  onKeyDown?: (e: any, ref: any) => void;
 }) => {
   const {
     value,
@@ -416,6 +417,7 @@ const Editable = (props: {
     autoFocus,
     placeholder,
     onPaste,
+    onKeyDown,
   } = props;
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(autoFocus);
@@ -486,6 +488,9 @@ const Editable = (props: {
                 completeEdit();
               }
             }}
+            onKeyDown={(e) => {
+              if (onKeyDown) onKeyDown(e, valRef);
+            }}
             onPaste={(e) => {
               if (onPaste) onPaste(e, valRef);
             }}
@@ -509,6 +514,7 @@ Editable.defaultProps = {
   editingStopped: () => {},
   handleOutsideClick: () => {},
   onPaste: () => {},
+  onKeyDown: () => {},
 };
 
 const CopyIcon = (props: { writeValue: string }) => {
@@ -855,8 +861,9 @@ const ProgramChangeView = (props: {
   net: Net;
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
+  pushToast: (toast: JSX.Element) => void;
 }) => {
-  const { net, accounts, attemptAccountAdd } = props;
+  const { net, accounts, attemptAccountAdd, pushToast } = props;
   const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
   const changesRef = useRef<ProgramAccountChange[]>([]);
   const setChanges = (c: ProgramAccountChange[]) => {
@@ -959,7 +966,6 @@ const ProgramChangeView = (props: {
   const changeFilterDropdownSelect = () => {};
 
   const pause = () => {
-    console.log('pause', pausedTimeoutRef.current);
     if (pausedTimeoutRef.current === 0) {
       pausedTimeoutRef.current = window.setTimeout(() => {
         setPaused(true);
@@ -968,7 +974,6 @@ const ProgramChangeView = (props: {
     }
   };
   const unpause = () => {
-    console.log('unpause', pausedTimeoutRef.current);
     if (pausedTimeoutRef.current !== 0) {
       window.clearTimeout(pausedTimeoutRef.current);
       pausedTimeoutRef.current = 0;
@@ -1008,6 +1013,9 @@ const ProgramChangeView = (props: {
               </small>
             </div>
             <Dropdown.Item eventKey="program-id-serum">
+              <small>System Program</small>
+            </Dropdown.Item>
+            <Dropdown.Item eventKey="program-id-serum">
               <small>Serum DEX</small>
             </Dropdown.Item>
             <Dropdown.Item eventKey="program-id-token">
@@ -1023,8 +1031,38 @@ const ProgramChangeView = (props: {
                   ref.current.value = '';
                 }}
                 placeholder="Paste Program ID"
+                onKeyDown={(e, ref) => {
+                  console.log(e.code);
+                  if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
+                    console.log("that's no good");
+                    pushToast(
+                      <Toast
+                        msg="Must paste in valid program ID"
+                        variant="warning"
+                      />
+                    );
+                    console.log(e, ref.current.value);
+                    ref.current.value = 'Custom';
+                    ref.current.blur();
+                    setFilterDropdownShow(false);
+                  }
+                }}
                 onPaste={(e, ref) => {
-                  setProgramID(e.clipboardData.getData('Text'));
+                  const pastedID = e.clipboardData.getData('Text');
+                  if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                    setProgramID(pastedID);
+                  } else {
+                    pushToast(
+                      <Toast
+                        msg={
+                          <span>
+                            Invalid program ID: <code>{pastedID}</code>
+                          </span>
+                        }
+                        variant="warning"
+                      />
+                    );
+                  }
                   ref.current.value = 'Custom';
                   ref.current.blur();
                   setFilterDropdownShow(false);
@@ -1478,6 +1516,7 @@ const Accounts = (props: {
               net={net}
               accounts={accounts}
               attemptAccountAdd={attemptAccountAdd}
+              pushToast={pushToast}
             />
           )}
         </div>
