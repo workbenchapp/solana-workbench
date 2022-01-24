@@ -533,7 +533,7 @@ const CopyIcon = (props: { writeValue: string }) => {
       delay={{ show: 250, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
-      <span className="ms-2 p-1 icon rounded">
+      <span className="p-1 icon rounded">
         <FontAwesomeIcon
           className="cursor-pointer"
           icon={faCopy}
@@ -825,9 +825,7 @@ const ProgramChange = (props: {
             size="1x"
           />
         </span>
-      </td>
-      <td>
-        <InlinePK className="ms-2" pk={pubKey} />
+        <InlinePK pk={pubKey} />
       </td>
       <td>
         <span className="ms-2 rounded p-1">
@@ -878,6 +876,7 @@ const ProgramChangeView = (props: {
     pausedRef.current = p;
     setPausedRef(p);
   };
+  const pausedTimeoutRef = useRef(0);
 
   const [programID, setProgramIDRef] = useState('System Program');
   const programIDRef = useRef('');
@@ -895,7 +894,6 @@ const ProgramChangeView = (props: {
 
   useEffect(() => {
     const changeListener = (resp: ProgramChangeResponse) => {
-      console.log(resp);
       if (resp.net === net && !pausedRef.current) {
         setChanges(resp.changes);
         setUniqueAccounts(resp.uniqueAccounts);
@@ -959,6 +957,24 @@ const ProgramChangeView = (props: {
   );
 
   const changeFilterDropdownSelect = () => {};
+
+  const pause = () => {
+    console.log('pause', pausedTimeoutRef.current);
+    if (pausedTimeoutRef.current === 0) {
+      pausedTimeoutRef.current = window.setTimeout(() => {
+        setPaused(true);
+        pausedTimeoutRef.current = 0;
+      }, 250);
+    }
+  };
+  const unpause = () => {
+    console.log('unpause', pausedTimeoutRef.current);
+    if (pausedTimeoutRef.current !== 0) {
+      window.clearTimeout(pausedTimeoutRef.current);
+      pausedTimeoutRef.current = 0;
+    }
+    setPaused(false);
+  };
 
   return (
     <div>
@@ -1034,10 +1050,10 @@ const ProgramChangeView = (props: {
         </span>
       </div>
       <div
-        onMouseOver={() => setPaused(true)}
-        onMouseOut={() => setPaused(false)}
-        onBlur={() => setPaused(false)}
-        onFocus={() => setPaused(true)}
+        onMouseOver={pause}
+        onMouseLeave={unpause}
+        onFocus={pause}
+        onBlur={unpause}
       >
         {changes.length > 0 ? (
           <table className="table table-sm">
