@@ -1000,40 +1000,37 @@ const ProgramChangeView = (props: {
             className="ms-2 d-inline"
             variant="light"
             onClick={() => setFilterDropdownShow(true)}
+            show={filterDropdownShow}
           >
-            {filterDropdownShow && (
-              <>
-                <div className="ms-1 p-1 border-bottom border-light">
-                  <small>
-                    <strong>Program ID</strong>
-                  </small>
-                </div>
-                <Dropdown.Item eventKey="program-id-serum">
-                  <small>Serum DEX</small>
-                </Dropdown.Item>
-                <Dropdown.Item eventKey="program-id-token">
-                  <small>Token Program</small>
-                </Dropdown.Item>
-                <Dropdown.Item eventKey="program-id-mango">
-                  <small>Mango</small>
-                </Dropdown.Item>
-                <div className="p-2">
-                  <Editable
-                    value="Custom"
-                    editingStarted={(ref) => {
-                      ref.current.value = '';
-                    }}
-                    placeholder="Paste Program ID"
-                    onPaste={(e, ref) => {
-                      setProgramID(e.clipboardData.getData('Text'));
-                      ref.current.value = 'Custom';
-                      ref.current.blur();
-                      setFilterDropdownShow(false);
-                    }}
-                  />
-                </div>
-              </>
-            )}
+            <div className="ms-1 p-1 border-bottom border-light">
+              <small>
+                <strong>Program ID</strong>
+              </small>
+            </div>
+            <Dropdown.Item eventKey="program-id-serum">
+              <small>Serum DEX</small>
+            </Dropdown.Item>
+            <Dropdown.Item eventKey="program-id-token">
+              <small>Token Program</small>
+            </Dropdown.Item>
+            <Dropdown.Item eventKey="program-id-mango">
+              <small>Mango</small>
+            </Dropdown.Item>
+            <div className="p-2">
+              <Editable
+                value="Custom"
+                editingStarted={(ref) => {
+                  ref.current.value = '';
+                }}
+                placeholder="Paste Program ID"
+                onPaste={(e, ref) => {
+                  setProgramID(e.clipboardData.getData('Text'));
+                  ref.current.value = 'Custom';
+                  ref.current.blur();
+                  setFilterDropdownShow(false);
+                }}
+              />
+            </div>
           </DropdownButton>
         </Dropdown>
         <span>
