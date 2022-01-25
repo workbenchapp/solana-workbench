@@ -41,7 +41,6 @@ import React, {
   useRef,
   useState,
   cloneElement,
-  MutableRefObject,
 } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
@@ -385,132 +384,138 @@ const prettifyPubkey = (pk = '') =>
     ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
     : '';
 
-const Editable = (props: {
+type EditableProps = {
   value: string;
-  editingStarted: (ref: MutableRefObject<HTMLInputElement>) => void;
-  setSelected?: (s: string) => void;
-  setHoveredItem?: (s: string) => void;
-  editingStopped?: () => void;
-  handleOutsideClick?: (ref: MutableRefObject<HTMLInputElement>) => void;
   outerHovered?: boolean;
   outerSelected?: boolean;
   className?: string;
   inputClassName?: string;
   clearAllOnSelect?: boolean;
-  autoFocus?: boolean;
   placeholder?: string;
-  onPaste?: (e: any, ref: any) => void;
-  onKeyDown?: (e: any, ref: any) => void;
-  onBlur?: (e: any, ref: any) => void;
-}) => {
-  const {
-    value,
-    outerHovered,
-    outerSelected,
-    setSelected,
-    setHoveredItem,
-    editingStarted,
-    editingStopped,
-    className,
-    inputClassName,
-    handleOutsideClick,
-    clearAllOnSelect,
-    autoFocus,
-    placeholder,
-    onPaste,
-    onKeyDown,
-    onBlur,
-  } = props;
-  const [hovered, setHovered] = useState(false);
-  const [editing, setEditing] = useState(autoFocus);
-  const valRef = useRef<HTMLInputElement>({} as HTMLInputElement);
-  useEffect(() => {
-    if (autoFocus) {
-      valRef.current.focus();
-    }
-  });
 
-  let formValue = value;
-  if (clearAllOnSelect) {
-    formValue = '';
-  }
-
-  let classes = `${className} border rounded`;
-  if (outerHovered) {
-    classes = `${classes} bg-white`;
-  } else if (!outerSelected) {
-    classes = `${classes} border-white`;
-  }
-  if (hovered && !editing) {
-    classes = `${classes} border-soft-dark`;
-  }
-  if (editing) {
-    classes = `${classes} border-white`;
-  }
-  if (outerSelected && !outerHovered) {
-    classes = `${classes} border-selected`;
-  }
-
-  const completeEdit = () => {
-    if (editing) {
-      setHovered(false);
-      setEditing(false);
-      if (editingStopped) editingStopped();
-      if (handleOutsideClick) handleOutsideClick(valRef);
-    }
-  };
-
-  return (
-    <OutsideClickHandler onOutsideClick={completeEdit}>
-      <div
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
-        onClick={(e) => {
-          e.stopPropagation();
-          if (setSelected) setSelected('');
-          setEditing(true);
-          if (setHoveredItem) setHoveredItem('');
-          if (editingStarted) editingStarted(valRef);
-        }}
-      >
-        <InputGroup
-          size="sm"
-          className={`${inputClassName} ${
-            outerSelected && !hovered && !outerHovered && 'input-selected'
-          }`}
-        >
-          <FormControl
-            className={classes}
-            ref={valRef}
-            defaultValue={formValue}
-            placeholder={editing ? placeholder : ''}
-            onKeyPress={(e: React.KeyboardEvent) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                completeEdit();
-              }
-            }}
-            onKeyDown={(e) => {
-              if (onKeyDown) onKeyDown(e, valRef);
-            }}
-            onPaste={(e) => {
-              if (onPaste) onPaste(e, valRef);
-            }}
-            onBlur={(e) => {
-              if (onBlur) onBlur(e, valRef);
-            }}
-          />
-        </InputGroup>
-      </div>
-    </OutsideClickHandler>
-  );
+  // TODO: factor these out into forwardRefs?
+  onClick?: () => void;
+  handleOutsideClick?: () => void;
+  setSelected?: (s: string) => void;
+  setHoveredItem?: (s: string) => void;
+  editingStopped?: () => void;
+  onPaste?: (e: any) => void;
+  onKeyDown?: (e: any) => void;
+  onBlur?: (e: any) => void;
+  effect?: React.EffectCallback;
 };
+
+const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
+  (props, ref) => {
+    const {
+      value,
+      outerHovered,
+      outerSelected,
+      setSelected,
+      setHoveredItem,
+      onClick,
+      editingStopped,
+      className,
+      inputClassName,
+      handleOutsideClick,
+      clearAllOnSelect,
+      placeholder,
+      onPaste,
+      onKeyDown,
+      onBlur,
+      effect,
+    } = props;
+    const [hovered, setHovered] = useState(false);
+    const [editing, setEditing] = useState(false);
+
+    useEffect(() => {
+      if (effect) effect();
+    });
+
+    let formValue = value;
+    if (clearAllOnSelect) {
+      formValue = '';
+    }
+
+    let classes = `${className} border rounded`;
+    if (outerHovered) {
+      classes = `${classes} bg-white`;
+    } else if (!outerSelected) {
+      classes = `${classes} border-white`;
+    }
+    if (hovered && !editing) {
+      classes = `${classes} border-soft-dark`;
+    }
+    if (editing) {
+      classes = `${classes} border-white`;
+    }
+    if (outerSelected && !outerHovered) {
+      classes = `${classes} border-selected`;
+    }
+
+    const completeEdit = () => {
+      if (editing) {
+        setHovered(false);
+        setEditing(false);
+        if (editingStopped) editingStopped();
+        if (handleOutsideClick) handleOutsideClick();
+      }
+    };
+
+    return (
+      <OutsideClickHandler onOutsideClick={completeEdit}>
+        <div
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (setSelected) setSelected('');
+            setEditing(true);
+            if (setHoveredItem) setHoveredItem('');
+            if (onClick) onClick();
+          }}
+        >
+          <InputGroup
+            size="sm"
+            className={`${inputClassName} ${
+              outerSelected && !hovered && !outerHovered && 'input-selected'
+            }`}
+          >
+            <FormControl
+              className={classes}
+              ref={ref}
+              defaultValue={formValue}
+              placeholder={editing ? placeholder : ''}
+              onKeyPress={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  completeEdit();
+                }
+              }}
+              onFocus={() => {
+                setEditing(true);
+              }}
+              onKeyDown={(e) => {
+                if (onKeyDown) onKeyDown(e);
+              }}
+              onPaste={(e) => {
+                if (onPaste) onPaste(e);
+              }}
+              onBlur={(e) => {
+                if (onBlur) onBlur(e);
+              }}
+            />
+          </InputGroup>
+        </div>
+      </OutsideClickHandler>
+    );
+  }
+);
 
 Editable.defaultProps = {
   className: '',
   inputClassName: 'input-clean',
   clearAllOnSelect: false,
-  autoFocus: false,
   placeholder: '',
   outerHovered: false,
   outerSelected: false,
@@ -520,7 +525,9 @@ Editable.defaultProps = {
   handleOutsideClick: () => {},
   onPaste: () => {},
   onKeyDown: () => {},
+  onClick: () => {},
   onBlur: () => {},
+  effect: () => {},
 };
 
 const CopyIcon = (props: { writeValue: string }) => {
@@ -598,6 +605,40 @@ RandomArt.defaultProps = {
   className: '',
 };
 
+const AccountNameEditable = (props: {
+  net: Net;
+  account: WBAccount;
+  setEdited: (s: string) => void;
+  innerProps: {
+    placeholder: string;
+    outerSelected: boolean | undefined;
+    outerHovered: boolean | undefined;
+    setSelected: (s: string) => void;
+    setHoveredItem: (s: string) => void;
+  };
+}) => {
+  const { net, account, setEdited, innerProps } = props;
+  const { pubKey, humanName } = account;
+  const ref = useRef<HTMLInputElement>({} as HTMLInputElement);
+  return (
+    <Editable
+      ref={ref}
+      value={humanName || ''}
+      onClick={() => setEdited(pubKey)}
+      editingStopped={() => setEdited('')}
+      handleOutsideClick={() => {
+        analytics('updateAccountName', {});
+        window.electron.ipcRenderer.updateAccountName({
+          net,
+          pubKey,
+          humanName: ref.current.value,
+        });
+      }}
+      {...innerProps}
+    />
+  );
+};
+
 const AccountListItem = (props: {
   net: Net;
   account: WBAccount;
@@ -626,6 +667,7 @@ const AccountListItem = (props: {
     attemptAccountAdd,
     queriedAccount,
   } = props;
+  const addAcctRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   type EllipsisToggleProps = {
     children?: React.ReactNode;
@@ -633,7 +675,6 @@ const AccountListItem = (props: {
   };
 
   const EllipsisToggle = React.forwardRef<HTMLDivElement>(
-    // eslint-disable-next-line react/prop-types
     (toggleProps: EllipsisToggleProps, ref) => {
       const { onClick, children } = toggleProps;
       return (
@@ -659,7 +700,6 @@ const AccountListItem = (props: {
   };
 
   const EllipsisMenu = React.forwardRef<HTMLDivElement>(
-    // eslint-disable-next-line react/prop-types
     (toggleProps: EllipsisMenuProps, ref) => {
       const { children, style, className } = toggleProps;
       return (
@@ -691,24 +731,27 @@ const AccountListItem = (props: {
         <div className="col">
           {account.pubKey === NONE_KEY ? (
             <Editable
+              ref={addAcctRef}
               outerSelected={selected}
               outerHovered={hovered}
               setSelected={setSelected}
               setHoveredItem={setHoveredItem}
               value={account.pubKey}
-              editingStarted={() => setEdited(account.pubKey)}
+              effect={() => {
+                setEdited(account.pubKey);
+                addAcctRef.current.focus();
+              }}
               editingStopped={() => setEdited('')}
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
-              handleOutsideClick={(ref) => {
-                let pubKey = ref.current.value;
+              handleOutsideClick={() => {
+                let pubKey = addAcctRef.current.value;
                 if (pubKey === '') {
                   pubKey = NONE_KEY;
                 }
                 attemptAccountAdd(pubKey, initializing);
               }}
-              autoFocus={edited}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
             />
@@ -723,23 +766,17 @@ const AccountListItem = (props: {
           <>
             <div className="col-auto">
               <small>
-                <Editable
-                  outerSelected={selected}
-                  outerHovered={hovered}
-                  setSelected={setSelected}
-                  setHoveredItem={setHoveredItem}
-                  value={account.humanName || ''}
-                  editingStarted={() => setEdited(account.pubKey)}
-                  editingStopped={() => setEdited('')}
-                  handleOutsideClick={(ref) => {
-                    analytics('updateAccountName', {});
-                    window.electron.ipcRenderer.updateAccountName({
-                      net,
-                      pubKey: account.pubKey,
-                      humanName: ref.current.value,
-                    });
+                <AccountNameEditable
+                  net={net}
+                  account={account}
+                  setEdited={setEdited}
+                  innerProps={{
+                    placeholder: 'Write a description',
+                    outerSelected: selected,
+                    outerHovered: hovered,
+                    setSelected,
+                    setHoveredItem,
                   }}
-                  placeholder="Write a description"
                 />
               </small>
             </div>
@@ -904,6 +941,7 @@ const ProgramChangeView = (props: {
   });
 
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
+  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   useEffect(() => {
     const changeListener = (resp: ProgramChangeResponse) => {
@@ -1041,11 +1079,12 @@ const ProgramChangeView = (props: {
               <div className="p-2">
                 <Editable
                   value="Custom"
-                  editingStarted={(ref) => {
-                    ref.current.value = '';
+                  ref={filterProgramIDRef}
+                  onClick={() => {
+                    filterProgramIDRef.current.value = '';
                   }}
                   placeholder="Paste Program ID"
-                  onKeyDown={(e, ref) => {
+                  onKeyDown={(e) => {
                     if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
                       pushToast(
                         <Toast
@@ -1053,12 +1092,12 @@ const ProgramChangeView = (props: {
                           variant="warning"
                         />
                       );
-                      ref.current.value = 'Custom';
-                      ref.current.blur();
+                      filterProgramIDRef.current.value = 'Custom';
+                      filterProgramIDRef.current.blur();
                       setFilterDropdownShow(false);
                     }
                   }}
-                  onPaste={(e, ref) => {
+                  onPaste={(e) => {
                     const pastedID = e.clipboardData.getData('Text');
                     if (pastedID.match(BASE58_PUBKEY_REGEX)) {
                       setProgramID(pastedID);
@@ -1074,12 +1113,9 @@ const ProgramChangeView = (props: {
                         />
                       );
                     }
-                    ref.current.value = 'Custom';
-                    ref.current.blur();
+                    filterProgramIDRef.current.value = 'Custom';
+                    filterProgramIDRef.current.blur();
                     setFilterDropdownShow(false);
-                  }}
-                  onBlur={(_e, ref) => {
-                    ref.current.value = 'Custom';
                   }}
                 />
               </div>
