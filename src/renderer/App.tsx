@@ -401,6 +401,7 @@ const Editable = (props: {
   placeholder?: string;
   onPaste?: (e: any, ref: any) => void;
   onKeyDown?: (e: any, ref: any) => void;
+  onBlur?: (e: any, ref: any) => void;
 }) => {
   const {
     value,
@@ -418,6 +419,7 @@ const Editable = (props: {
     placeholder,
     onPaste,
     onKeyDown,
+    onBlur,
   } = props;
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(autoFocus);
@@ -494,6 +496,9 @@ const Editable = (props: {
             onPaste={(e) => {
               if (onPaste) onPaste(e, valRef);
             }}
+            onBlur={(e) => {
+              if (onBlur) onBlur(e, valRef);
+            }}
           />
         </InputGroup>
       </div>
@@ -515,6 +520,7 @@ Editable.defaultProps = {
   handleOutsideClick: () => {},
   onPaste: () => {},
   onKeyDown: () => {},
+  onBlur: () => {},
 };
 
 const CopyIcon = (props: { writeValue: string }) => {
@@ -995,82 +1001,90 @@ const ProgramChangeView = (props: {
               <small>Max SOL Change</small>
             </Dropdown.Item>
           </DropdownButton>
-          <DropdownButton
-            size="sm"
-            id="dropdown-basic-button"
-            title={changeFilterDropdownTitle}
-            onSelect={(s: string | null) => {
-              console.log('select', s);
-              setFilterDropdownShow(false);
-            }}
-            onClick={() => {
-              console.log('click');
-              if (!filterDropdownShow) setFilterDropdownShow(true);
-            }}
-            className="ms-2 d-inline"
-            variant="light"
-            show={filterDropdownShow}
+          <OutsideClickHandler
+            onOutsideClick={() => setFilterDropdownShow(false)}
+            display="inline"
           >
-            <div className="ms-1 p-1 border-bottom border-light">
-              <small>
-                <strong>Program ID</strong>
-              </small>
-            </div>
-            <Dropdown.Item eventKey="program-id-system">
-              <small>System Program</small>
-            </Dropdown.Item>
-            <Dropdown.Item eventKey="program-id-token">
-              <small>Token Program</small>
-            </Dropdown.Item>
-            <Dropdown.Item eventKey="program-id-serum">
-              <small>Serum DEX</small>
-            </Dropdown.Item>
-            <div className="p-2">
-              <Editable
-                value="Custom"
-                editingStarted={(ref) => {
-                  ref.current.value = '';
-                }}
-                placeholder="Paste Program ID"
-                onKeyDown={(e, ref) => {
-                  console.log(e.code);
-                  if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
-                    console.log("that's no good");
-                    pushToast(
-                      <Toast
-                        msg="Must paste in valid program ID"
-                        variant="warning"
-                      />
-                    );
-                    console.log(e, ref.current.value);
+            <DropdownButton
+              size="sm"
+              id="dropdown-basic-button"
+              title={changeFilterDropdownTitle}
+              onSelect={(s: string | null) => {
+                console.log(s);
+                setFilterDropdownShow(false);
+              }}
+              onClick={() => {
+                if (!filterDropdownShow) {
+                  setFilterDropdownShow(true);
+                } else {
+                  setFilterDropdownShow(false);
+                }
+              }}
+              className="ms-2 d-inline"
+              variant="light"
+              show={filterDropdownShow}
+            >
+              <div className="ms-1 p-1 border-bottom border-light">
+                <small>
+                  <strong>Program ID</strong>
+                </small>
+              </div>
+              <Dropdown.Item eventKey="program-id-system">
+                <small>System Program</small>
+              </Dropdown.Item>
+              <Dropdown.Item eventKey="program-id-token">
+                <small>Token Program</small>
+              </Dropdown.Item>
+              <Dropdown.Item eventKey="program-id-serum">
+                <small>Serum DEX</small>
+              </Dropdown.Item>
+              <div className="p-2">
+                <Editable
+                  value="Custom"
+                  editingStarted={(ref) => {
+                    ref.current.value = '';
+                  }}
+                  placeholder="Paste Program ID"
+                  onKeyDown={(e, ref) => {
+                    if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
+                      pushToast(
+                        <Toast
+                          msg="Must paste in valid program ID"
+                          variant="warning"
+                        />
+                      );
+                      ref.current.value = 'Custom';
+                      ref.current.blur();
+                      setFilterDropdownShow(false);
+                    }
+                  }}
+                  onPaste={(e, ref) => {
+                    const pastedID = e.clipboardData.getData('Text');
+                    if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                      setProgramID(pastedID);
+                    } else {
+                      pushToast(
+                        <Toast
+                          msg={
+                            <div className="ms-3">
+                              Invalid program ID: <code>{pastedID}</code>
+                            </div>
+                          }
+                          variant="warning"
+                        />
+                      );
+                    }
                     ref.current.value = 'Custom';
                     ref.current.blur();
                     setFilterDropdownShow(false);
-                  }
-                }}
-                onPaste={(e, ref) => {
-                  const pastedID = e.clipboardData.getData('Text');
-                  if (pastedID.match(BASE58_PUBKEY_REGEX)) {
-                    setProgramID(pastedID);
-                  } else {
-                    pushToast(
-                      <Toast
-                        msg={
-                          <div className="ms-3">
-                            Invalid program ID: <code>{pastedID}</code>
-                          </div>
-                        }
-                        variant="warning"
-                      />
-                    );
-                  }
-                  ref.current.value = 'Custom';
-                  ref.current.blur();
-                  setFilterDropdownShow(false);
-                }}
-              />
-            </div>
-          </DropdownButton>
+                  }}
+                  onBlur={(_e, ref) => {
+                    ref.current.value = 'Custom';
+                  }}
+                />
+              </div>
+            </DropdownButton>
+          </OutsideClickHandler>
         </Dropdown>
         <span>
           <small className="ms-2 text-secondary">
