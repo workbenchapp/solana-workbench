@@ -29,6 +29,12 @@ export const netToURL = (net: Net): string => {
   return '';
 };
 
+export enum ProgramID {
+  SystemProgram = '11111111111111111111111111111111',
+  SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+  TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+}
+
 export type WBAccount = {
   pubKey: string;
   humanName?: string;
@@ -83,11 +89,13 @@ export type ProgramChangeResponse = {
 
 export type SubscribeProgramChangesRequest = {
   net: Net;
+  programID: string;
 };
 
 export type UnsubscribeProgramChangesRequest = {
   net: Net;
   subscriptionID: number;
+  programID: string;
 };
 
 export type ProgramAccountChange = {
@@ -98,13 +106,16 @@ export type ProgramAccountChange = {
   solAmount: number; // solAmount is the lamports from info in SOL
   count: number; // count tracks how often this account has been seen
   solDelta: number; // difference between last change amount and this one
-  maxDelta: number; // maxDelta represents
+  maxDelta: number; // maxDelta represents the max change in SOL seen during session
+  programID: string;
 };
 
 export interface ChangeSubscriptionMap {
   [net: string]: {
-    subscriptionID: number;
-    solConn: sol.Connection;
+    [programID: string]: {
+      subscriptionID: number;
+      solConn: sol.Connection;
+    };
   };
 }
 

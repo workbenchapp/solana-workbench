@@ -57,6 +57,7 @@ import {
   ProgramAccountChange,
   ImportedAccountMap,
   ProgramChangeResponse,
+  ProgramID,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -928,12 +929,13 @@ const ProgramChangeView = (props: {
   };
   const pausedTimeoutRef = useRef(0);
 
-  const [programID, setProgramIDRef] = useState('System Program');
-  const programIDRef = useRef('');
-  const setProgramID = (pid: string) => {
+  const [programID, setProgramIDRef] = useState(ProgramID.SystemProgram);
+  const programIDRef = useRef(ProgramID.SystemProgram);
+  const setProgramID = (pid: ProgramID) => {
     programIDRef.current = pid;
     setProgramIDRef(pid);
   };
+  const prevProgramIDRef = useRef(ProgramID.SystemProgram);
 
   const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
@@ -944,6 +946,7 @@ const ProgramChangeView = (props: {
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   useEffect(() => {
+    console.log('effect', netRef.current, programID, prevProgramIDRef.current);
     const changeListener = (resp: ProgramChangeResponse) => {
       if (resp.net === net && !pausedRef.current) {
         setChanges(resp.changes);
@@ -953,9 +956,10 @@ const ProgramChangeView = (props: {
 
     const unsubscribe = () => {
       window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net: netRef.current,
+        net,
+        programID: prevProgramIDRef.current,
       });
-
+      prevProgramIDRef.current = programID;
       window.electron.ipcRenderer.removeAllListeners('program-changes');
     };
 
@@ -963,34 +967,36 @@ const ProgramChangeView = (props: {
       setChanges([]);
     };
 
+    if (netRef.current) unsubscribe();
     if (netRef.current !== net) {
-      if (netRef.current) unsubscribe();
-      window.addEventListener('beforeunload', unsubscribe);
-      window.electron.ipcRenderer.on('program-changes', changeListener);
-      window.electron.ipcRenderer.on(
+      setProgramID(ProgramID.SystemProgram);
+      netRef.current = net;
+    }
+    window.addEventListener('beforeunload', unsubscribe);
+    window.electron.ipcRenderer.on('program-changes', changeListener);
+
+    // todo: gets added too many times
+    window.electron.ipcRenderer.on(
+      'unsubscribe-program-changes',
+      unsubscribeListener
+    );
+    console.log(programIDRef.current);
+    window.electron.ipcRenderer.subscribeProgramChanges({
+      net,
+      programID: programIDRef.current,
+    });
+
+    return () => {
+      window.electron.ipcRenderer.removeListener(
+        'program-changes',
+        changeListener
+      );
+      window.electron.ipcRenderer.removeListener(
         'unsubscribe-program-changes',
         unsubscribeListener
       );
-      window.electron.ipcRenderer.subscribeProgramChanges({
-        net,
-        programID: programIDRef.current,
-      });
-      netRef.current = net;
-    }
-
-    return () => {
-      if (netRef.current !== net) {
-        window.electron.ipcRenderer.removeListener(
-          'program-changes',
-          changeListener
-        );
-        window.electron.ipcRenderer.removeListener(
-          'unsubscribe-program-changes',
-          unsubscribeListener
-        );
-      }
     };
-  }, [net]);
+  }, [net, programID]);
 
   const changeSortDropdownTitle = (
     <>
@@ -1035,8 +1041,11 @@ const ProgramChangeView = (props: {
             className="d-inline"
             variant="light"
           >
-            <Dropdown.Item eventKey="amountDelta" href="#">
-              <small>Max SOL Change</small>
+            <Dropdown.Item eventKey="sortMaxSolDelta" href="#">
+              <small>Max SOL Δ</small>
+            </Dropdown.Item>
+            <Dropdown.Item eventKey="sortLatestSolDelta" href="#">
+              <small>Latest SOL Δ</small>
             </Dropdown.Item>
           </DropdownButton>
           <OutsideClickHandler
@@ -1048,8 +1057,8 @@ const ProgramChangeView = (props: {
               id="dropdown-basic-button"
               title={changeFilterDropdownTitle}
               onSelect={(s: string | null) => {
-                console.log(s);
                 setFilterDropdownShow(false);
+                if (s) setProgramID(s as ProgramID);
               }}
               onClick={() => {
                 if (!filterDropdownShow) {
@@ -1067,14 +1076,14 @@ const ProgramChangeView = (props: {
                   <strong>Program ID</strong>
                 </small>
               </div>
-              <Dropdown.Item eventKey="program-id-system">
+              <Dropdown.Item eventKey="">
                 <small>System Program</small>
               </Dropdown.Item>
-              <Dropdown.Item eventKey="program-id-token">
+              <Dropdown.Item eventKey={ProgramID.TokenProgram}>
                 <small>Token Program</small>
               </Dropdown.Item>
-              <Dropdown.Item eventKey="program-id-serum">
-                <small>Serum DEX</small>
+              <Dropdown.Item eventKey={ProgramID.SerumDEXV3}>
+                <small>Serum DEX V3</small>
               </Dropdown.Item>
               <div className="p-2">
                 <Editable

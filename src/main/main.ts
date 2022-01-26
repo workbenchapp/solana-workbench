@@ -111,7 +111,7 @@ const initLogging = async () => {
       info.message
     } \t${logfmt.stringify(info.metadata)}`;
   });
-  logger = winston.createLogger({
+  const loggerConfig: winston.LoggerOptions = {
     format: winston.format.combine(
       winston.format.timestamp(),
       winston.format.metadata(),
@@ -123,8 +123,11 @@ const initLogging = async () => {
         handleExceptions: true,
       }),
     ],
-  });
-
+  };
+  if (process.env.NODE_ENV === 'development') {
+    loggerConfig.transports = [new winston.transports.Console()];
+  }
+  logger = winston.createLogger(loggerConfig);
   logger.info('Workbench session begin', {
     version: WORKBENCH_VERSION,
     workdir: process.cwd(),
@@ -510,19 +513,31 @@ ipcMain.on(
 );
 
 const changeSubscriptions: ChangeSubscriptionMap = {};
-const subscribeProgramChanges = (
+const subscribeProgramChanges = async (
   event: Electron.IpcMainEvent,
   msg: SubscribeProgramChangesRequest
 ) => {
-  const { net } = msg;
+  console.log('subscribing', msg, Object.keys(changeSubscriptions));
+  const { net, programID } = msg;
+  let programIDPubkey: sol.PublicKey;
+  if (programID === sol.SystemProgram.programId.toString()) {
+    programIDPubkey = sol.SystemProgram.programId;
+  } else {
+    programIDPubkey = new sol.PublicKey(programID);
+  }
   let batchLen = 0;
   const changeLookupMap: ChangeLookupMap = {};
 
-  if (!(net in changeSubscriptions)) {
+  if (
+    !(net in changeSubscriptions) ||
+    !(programID in changeSubscriptions[net])
+  ) {
+    console.log('conn', programID.toString());
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
-      sol.SystemProgram.programId,
+      programIDPubkey,
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
+        console.log(info.accountInfo.owner.toString());
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
         let [count, maxDelta, solDelta, prevSolAmount] = [1, 0, 0, 0];
@@ -559,13 +574,19 @@ const subscribeProgramChanges = (
             count,
             solDelta,
             maxDelta,
+            programID,
           };
           changeLookupMap[pubKey] = programAccountChange;
           batchLen += 1;
         }
       }
     );
-    changeSubscriptions[net] = { subscriptionID, solConn };
+    changeSubscriptions[net] = {
+      [programID]: {
+        subscriptionID,
+        solConn,
+      },
+    };
   }
 };
 ipcMain.on(
@@ -581,10 +602,12 @@ ipcMain.on(
       event: Electron.IpcMainEvent,
       msg: UnsubscribeProgramChangesRequest
     ) => {
-      const sub = changeSubscriptions[msg.net];
+      console.log('unsubscribing', msg, changeSubscriptions);
+      const sub = changeSubscriptions[msg.net][msg.programID];
       if (!sub) return;
+      console.log('unsubcribe lfg');
       await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
-      delete changeSubscriptions[msg.net];
+      delete changeSubscriptions[msg.net][msg.programID];
       event.reply('unsubscribe-program-changes', true);
     }
   )
