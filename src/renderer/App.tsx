@@ -946,7 +946,6 @@ const ProgramChangeView = (props: {
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   useEffect(() => {
-    console.log('effect', netRef.current, programID, prevProgramIDRef.current);
     const changeListener = (resp: ProgramChangeResponse) => {
       if (resp.net === net && !pausedRef.current) {
         setChanges(resp.changes);
@@ -980,7 +979,7 @@ const ProgramChangeView = (props: {
       'unsubscribe-program-changes',
       unsubscribeListener
     );
-    console.log(programIDRef.current);
+
     window.electron.ipcRenderer.subscribeProgramChanges({
       net,
       programID: programIDRef.current,

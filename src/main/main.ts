@@ -517,7 +517,6 @@ const subscribeProgramChanges = async (
   event: Electron.IpcMainEvent,
   msg: SubscribeProgramChangesRequest
 ) => {
-  console.log('subscribing', msg, Object.keys(changeSubscriptions));
   const { net, programID } = msg;
   let programIDPubkey: sol.PublicKey;
   if (programID === sol.SystemProgram.programId.toString()) {
@@ -532,12 +531,10 @@ const subscribeProgramChanges = async (
     !(net in changeSubscriptions) ||
     !(programID in changeSubscriptions[net])
   ) {
-    console.log('conn', programID.toString());
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
       programIDPubkey,
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
-        console.log(info.accountInfo.owner.toString());
         const pubKey = info.accountId.toString();
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
         let [count, maxDelta, solDelta, prevSolAmount] = [1, 0, 0, 0];
@@ -602,10 +599,8 @@ ipcMain.on(
       event: Electron.IpcMainEvent,
       msg: UnsubscribeProgramChangesRequest
     ) => {
-      console.log('unsubscribing', msg, changeSubscriptions);
       const sub = changeSubscriptions[msg.net][msg.programID];
       if (!sub) return;
-      console.log('unsubcribe lfg');
       await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
       delete changeSubscriptions[msg.net][msg.programID];
       event.reply('unsubscribe-program-changes', true);
