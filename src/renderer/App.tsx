@@ -32,6 +32,7 @@ import {
   faEllipsisH,
   faTrash,
   faNetworkWired,
+  faSortAmountDown,
   faFilter,
 } from '@fortawesome/free-solid-svg-icons';
 import React, {
@@ -996,6 +997,14 @@ const ProgramChangeView = (props: {
     };
   }, [net, programID]);
 
+  const changeSortDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faSortAmountDown} />
+      <span>Sort</span>
+    </>
+  );
+  const changeSortDropdownSelect = () => {};
+
   const changeFilterDropdownTitle = (
     <>
       <FontAwesomeIcon className="me-1" icon={faFilter} />
@@ -1023,6 +1032,21 @@ const ProgramChangeView = (props: {
     <div>
       <div className="mb-2">
         <Dropdown>
+          <DropdownButton
+            size="sm"
+            id="dropdown-basic-button"
+            title={changeSortDropdownTitle}
+            onSelect={changeSortDropdownSelect}
+            className="d-inline"
+            variant="light"
+          >
+            <Dropdown.Item eventKey="sortMaxSolDelta" href="#">
+              <small>Max SOL Δ</small>
+            </Dropdown.Item>
+            <Dropdown.Item eventKey="sortLatestSolDelta" href="#">
+              <small>Latest SOL Δ</small>
+            </Dropdown.Item>
+          </DropdownButton>
           <OutsideClickHandler
             onOutsideClick={() => setFilterDropdownShow(false)}
             display="inline"
