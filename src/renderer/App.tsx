@@ -1022,6 +1022,11 @@ const ProgramChangeView = (props: {
   return (
     <div>
       <div className="mb-2">
+        <div className="mb-2">
+          <small>
+            <strong>Program Account Changes</strong>
+          </small>
+        </div>
         <Dropdown>
           <OutsideClickHandler
             onOutsideClick={() => setFilterDropdownShow(false)}
