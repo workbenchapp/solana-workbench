@@ -48,7 +48,7 @@ import {
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
-const WORKBENCH_VERSION = '0.2.0';
+const WORKBENCH_VERSION = '0.2.1-dev';
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
