@@ -13,12 +13,14 @@ of other fun tricks too.
 
 ## Run
 
-install modules, then native deps:
+Install modules, then native deps:
 
 ```
 $ npm install --legacy-peer-deps &&
   (cd release/app && npm install)
 ```
+
+To get `npm run package` to run on M1 mac, Node version 16 was required.
 
 to run:
 
