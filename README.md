@@ -16,7 +16,7 @@ of other fun tricks too.
 install modules, then native deps:
 
 ```
-$ npm install &&
+$ npm install --legacy-peer-deps &&
   (cd release/app && npm install)
 ```
 
