@@ -1,12 +1,12 @@
 {
   "name": "solana-workbench",
   "productName": "solana-workbench",
-  "version": "0.2.1-dev",
+  "version": "0.2.1",
   "description": "Your one stop shop for Solana development",
   "main": "./dist/main/main.js",
   "author": {
     "name": "Nathan LeClaire",
-    "email": "nathan.leclaire@gmail.com",
+    "email": "nathan@cryptoworkbench.io",
     "url": "https://github.com/workbenchapp/solana-workbench-releases"
   },
   "scripts": {

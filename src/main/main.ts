@@ -48,7 +48,7 @@ import {
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
-const WORKBENCH_VERSION = '0.2.1-dev';
+const WORKBENCH_VERSION = '0.2.1';
 const RESOURCES_PATH = app.isPackaged
   ? path.join(process.resourcesPath, 'assets')
   : path.join(__dirname, '..', '..', 'assets');
