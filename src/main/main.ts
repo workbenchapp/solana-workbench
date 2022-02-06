@@ -49,6 +49,9 @@ import {
 
 const execAsync = util.promisify(exec);
 const WORKBENCH_VERSION = '0.2.1-dev';
+const RESOURCES_PATH = app.isPackaged
+  ? path.join(process.resourcesPath, 'assets')
+  : path.join(__dirname, '..', '..', 'assets');
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
 const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
@@ -62,7 +65,7 @@ const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
-const MIGRATION_DIR = 'assets/migrations';
+const MIGRATION_DIR = path.join(RESOURCES_PATH, 'migrations');
 const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'wb.db');
 const HEXDUMP_BYTES = 512;
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
@@ -129,8 +132,8 @@ const initLogging = async () => {
   }
   logger = winston.createLogger(loggerConfig);
   logger.info('Workbench session begin', {
-    version: WORKBENCH_VERSION,
-    workdir: process.cwd(),
+    WORKBENCH_VERSION,
+    RESOURCES_PATH,
   });
 };
 initLogging();
@@ -637,10 +640,6 @@ const createWindow = async () => {
   if (isDevelopment) {
     await installExtensions();
   }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
 
   const getAssetPath = (...paths: string[]): string => {
     return path.join(RESOURCES_PATH, ...paths);
