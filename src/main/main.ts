@@ -217,7 +217,7 @@ async function getAccount(
 
 async function accounts(net: Net): Promise<AccountsResponse> {
   const kp = await localKeypair(KEY_PATH);
-  logger.info('accounts', { net });
+  logger.info('accounts', { net, pubKey: kp.publicKey });
   const solConn = new sol.Connection(netToURL(net));
   const existingAccounts = await db.all(
     'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC, humanName ASC',
@@ -401,16 +401,107 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
-const ipcMiddleware = (
-  channel: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  fn: (event: Electron.IpcMainEvent, ...args: any[]) => void
+
+const solState = async (event: Electron.IpcMainEvent, msg) => {
+  const solState = await connectSOL(msg.net);
+  event.reply('sol-state', solState);
+};
+
+const runValidator = async (event: Electron.IpcMainEvent) => {
+  runValidator();
+  event.reply('run-validator', {});
+};
+
+const validatorLogs = async (
+  event: Electron.IpcMainEvent,
+  msg: ValidatorLogsRequest
 ) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return async (event: Electron.IpcMainEvent, ...args: any[]) => {
-    logger.info('IPC event', Object.assign({ channel }, ...args));
+  const logs = await validatorLogs(msg.filter);
+  event.reply('validator-logs', logs);
+};
+
+const getAccount = async (
+  event: Electron.IpcMainEvent,
+  msg: GetAccountRequest
+) => {
+  const account = await getAccount(msg.net, msg.pk);
+  event.reply('get-account', account);
+};
+
+const accounts = async (event: Electron.IpcMainEvent, msg: AccountsRequest) => {
+  try {
+    await fs.promises.access(KEY_PATH);
+  } catch {
+    logger.info('Creating root key', { KEY_PATH });
+    await addKeypair(msg.net, KEY_PATH);
+  }
+  const pairs = await accounts(msg.net);
+  event.reply('accounts', pairs);
+};
+
+const updateAccountName = async (event: Electron.IpcMainEvent, msg) => {
+  event.reply(
+    'update-account-name',
+    await updateAccountName(msg.net, msg.pubKey, msg.humanName)
+  );
+};
+
+const importAccount = async (
+  event: Electron.IpcMainEvent,
+  msg: ImportAccountRequest
+) => {
+  event.reply('import-account', await importAccount(msg.net, msg.pubKey));
+};
+
+const fetchAnchorIdl = async (event: Electron.IpcMainEvent, msg) => {
+  const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
+  event.reply('fetch-anchor-idl', JSON.parse(stdout));
+};
+
+ipcMain.on(
+  'main',
+  async (event: Electron.IpcMainEvent, method: string, msg: any) => {
+    logger.info('IPC event', Object.assign({ method }, ...msg));
     try {
-      await fn(event, ...args);
+      switch (method) {
+        case 'sol-state':
+          await solState(event, msg);
+          break;
+        case 'run-validator':
+          await runValidator(event, msg);
+          break;
+        case 'accounts':
+          await accounts(event, msg);
+          break;
+        case 'validator-logs':
+          await validatorLogs(event, msg);
+          break;
+        case 'fetch-anchor-idl':
+          await fetchAnchorIdl(event, msg);
+          break;
+        case 'update-account-name':
+          await updateAccountName(event, msg);
+          break;
+        case 'import-account':
+          await importAccount(event, msg);
+          break;
+        case 'get-account':
+          await solState(event, msg);
+          break;
+        case 'delete-account':
+          await deleteAccount(event, msg);
+          break;
+        case 'program-changes':
+          await programChanges(event, msg);
+          break;
+        case 'subscribe-program-changes':
+          await subscribeProgramChanges(event, msg);
+          break;
+        case 'unsubscribe-program-changes':
+          await unsubscribeProgramChanges(event, msg);
+          break;
+        default:
+      }
     } catch (e) {
       const error = e as Error;
       const { stack } = error;
@@ -421,98 +512,7 @@ const ipcMiddleware = (
       logger.error('Stacktrace:');
       stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
     }
-  };
-};
-
-ipcMain.on(
-  'sol-state',
-  ipcMiddleware('sol-state', async (event: Electron.IpcMainEvent, msg) => {
-    const solState = await connectSOL(msg.net);
-    event.reply('sol-state', solState);
-  })
-);
-
-ipcMain.on(
-  'run-validator',
-  ipcMiddleware('run-validator', async (event: Electron.IpcMainEvent) => {
-    runValidator();
-    event.reply('run-validator', {});
-  })
-);
-
-ipcMain.on(
-  'validator-logs',
-  ipcMiddleware(
-    'validator-logs',
-    async (event: Electron.IpcMainEvent, msg: ValidatorLogsRequest) => {
-      const logs = await validatorLogs(msg.filter);
-      event.reply('validator-logs', logs);
-    }
-  )
-);
-
-ipcMain.on(
-  'get-account',
-  ipcMiddleware(
-    'get-account',
-    async (event: Electron.IpcMainEvent, msg: GetAccountRequest) => {
-      const account = await getAccount(msg.net, msg.pk);
-      event.reply('get-account', account);
-    }
-  )
-);
-
-ipcMain.on(
-  'accounts',
-  ipcMiddleware(
-    'accounts',
-    async (event: Electron.IpcMainEvent, msg: AccountsRequest) => {
-      try {
-        await fs.promises.access(KEY_PATH);
-      } catch {
-        logger.info('Creating root key', { KEY_PATH });
-        await addKeypair(msg.net, KEY_PATH);
-      }
-      const pairs = await accounts(msg.net);
-      event.reply('accounts', pairs);
-    }
-  )
-);
-
-ipcMain.on(
-  'update-account-name',
-  ipcMiddleware(
-    'update-account-name',
-    async (event: Electron.IpcMainEvent, msg) => {
-      event.reply(
-        'update-account-name',
-        await updateAccountName(msg.net, msg.pubKey, msg.humanName)
-      );
-    }
-  )
-);
-
-ipcMain.on(
-  'import-account',
-  ipcMiddleware(
-    'import-account',
-    async (event: Electron.IpcMainEvent, msg: ImportAccountRequest) => {
-      event.reply('import-account', await importAccount(msg.net, msg.pubKey));
-    }
-  )
-);
-
-ipcMain.on('delete-account', ipcMiddleware('delete-account', deleteAccount));
-
-ipcMain.on(
-  'fetch-anchor-idl',
-  ipcMiddleware(
-    'fetch-anchor-idl',
-    async (event: Electron.IpcMainEvent, msg) => {
-      const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
-      event.reply('fetch-anchor-idl', JSON.parse(stdout));
-    }
-  )
+  }
 );
 
 const changeSubscriptions: ChangeSubscriptionMap = {};
