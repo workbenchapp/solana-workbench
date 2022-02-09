@@ -62,6 +62,7 @@ export type AccountsRequest = {
 };
 
 export type UpdateAccountRequest = {
+  net: Net;
   pubKey: string;
   humanName: string;
 };
