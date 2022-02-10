@@ -175,25 +175,41 @@ const connectSOL = async (net: Net): Promise<SolState> => {
   return ret;
 };
 
+const addKeypair = async (net: Net, kpPath: string) => {
+  const kp = sol.Keypair.generate();
+  const solConn = new sol.Connection(netToURL(net));
+
+  // todo: this conn might not be initialized yet
+  await solConn.confirmTransaction(
+    await solConn.requestAirdrop(
+      kp.publicKey,
+      AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
+    )
+  );
+
+  // goofy looking but otherwise stringify encodes Uint8Array like:
+  // {"0": 1, "1": 2, "2": 3 ...}
+  const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
+  const fileContents = JSON.stringify(secretKeyUint);
+  await fs.promises.writeFile(kpPath, fileContents);
+};
+
 const localKeypair = async (f: string): Promise<sol.Keypair> => {
   const fileContents = await fs.promises.readFile(f);
   const data = Uint8Array.from(JSON.parse(fileContents.toString()));
   return sol.Keypair.fromSecretKey(data);
 };
 
-async function deleteAccount(
-  _event: Electron.IpcMainEvent,
-  msg: ImportAccountRequest
-): Promise<number> {
+async function deleteAccount(msg: ImportAccountRequest): Promise<number> {
   const { pubKey } = msg;
   const res = await db.run('DELETE FROM account WHERE pubKey = ?', pubKey);
   return res.changes || 0;
 }
 
 async function getAccount(
-  net: Net,
-  pubKey: string
+  msg: ImportAccountRequest
 ): Promise<GetAccountResponse> {
+  const { net, pubKey } = msg;
   const solConn = new sol.Connection(netToURL(net));
   const resp: GetAccountResponse = {};
   try {
@@ -215,7 +231,14 @@ async function getAccount(
   return resp;
 }
 
-async function accounts(net: Net): Promise<AccountsResponse> {
+async function accounts(msg: ImportAccountRequest): Promise<AccountsResponse> {
+  const { net } = msg;
+  try {
+    await fs.promises.access(KEY_PATH);
+  } catch {
+    logger.info('Creating root key', { KEY_PATH });
+    await addKeypair(msg.net, KEY_PATH);
+  }
   const kp = await localKeypair(KEY_PATH);
   logger.info('accounts', { net, pubKey: kp.publicKey });
   const solConn = new sol.Connection(netToURL(net));
@@ -311,35 +334,17 @@ async function updateAccountName(net: Net, pubKey: string, humanName: string) {
   return res;
 }
 
-async function importAccount(net: string, pubKey: string) {
+async function importAccount(msg: ImportAccountRequest) {
+  const { net, pubKey } = event;
   const res = await db.run(
     'INSERT INTO account (net, pubKey) VALUES (?, ?)',
     net,
     pubKey
   );
-  return res;
+  event.reply('main', res);
 }
 
-const addKeypair = async (net: Net, kpPath: string) => {
-  const kp = sol.Keypair.generate();
-  const solConn = new sol.Connection(netToURL(net));
-
-  // todo: this conn might not be initialized yet
-  await solConn.confirmTransaction(
-    await solConn.requestAirdrop(
-      kp.publicKey,
-      AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
-    )
-  );
-
-  // goofy looking but otherwise stringify encodes Uint8Array like:
-  // {"0": 1, "1": 2, "2": 3 ...}
-  const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
-  const fileContents = JSON.stringify(secretKeyUint);
-  await fs.promises.writeFile(kpPath, fileContents);
-};
-
-const runValidator = async () => {
+const runValidator = async (msg: ValidatorLogsRequest) => {
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
@@ -363,7 +368,8 @@ const runValidator = async () => {
   await execAsync(`${DOCKER_PATH} start solana-test-validator`);
 };
 
-const validatorLogs = async (filter: string) => {
+const validatorLogs = async (msg: ValidatorLogsRequest) => {
+  const { filter } = msg;
   const MAX_TAIL_LINES = 10000;
   const MAX_DISPLAY_LINES = 30;
 
@@ -392,6 +398,17 @@ const validatorLogs = async (filter: string) => {
   return stderr;
 };
 
+const unsubscribeProgramChanges = async (
+  event: Electron.IpcMainEvent,
+  msg: UnsubscribeProgramChangesRequest
+) => {
+  const sub = changeSubscriptions[msg.net][msg.programID];
+  if (!sub) return;
+  await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
+  delete changeSubscriptions[msg.net][msg.programID];
+  event.reply('unsubscribe-program-changes', true);
+};
+
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -402,55 +419,9 @@ export default class AppUpdater {
 
 let mainWindow: BrowserWindow | null = null;
 
-const solState = async (event: Electron.IpcMainEvent, msg) => {
-  const solState = await connectSOL(msg.net);
-  event.reply('sol-state', solState);
-};
-
-const runValidator = async (event: Electron.IpcMainEvent) => {
-  runValidator();
-  event.reply('run-validator', {});
-};
-
-const validatorLogs = async (
-  event: Electron.IpcMainEvent,
-  msg: ValidatorLogsRequest
-) => {
+const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const logs = await validatorLogs(msg.filter);
   event.reply('validator-logs', logs);
-};
-
-const getAccount = async (
-  event: Electron.IpcMainEvent,
-  msg: GetAccountRequest
-) => {
-  const account = await getAccount(msg.net, msg.pk);
-  event.reply('get-account', account);
-};
-
-const accounts = async (event: Electron.IpcMainEvent, msg: AccountsRequest) => {
-  try {
-    await fs.promises.access(KEY_PATH);
-  } catch {
-    logger.info('Creating root key', { KEY_PATH });
-    await addKeypair(msg.net, KEY_PATH);
-  }
-  const pairs = await accounts(msg.net);
-  event.reply('accounts', pairs);
-};
-
-const updateAccountName = async (event: Electron.IpcMainEvent, msg) => {
-  event.reply(
-    'update-account-name',
-    await updateAccountName(msg.net, msg.pubKey, msg.humanName)
-  );
-};
-
-const importAccount = async (
-  event: Electron.IpcMainEvent,
-  msg: ImportAccountRequest
-) => {
-  event.reply('import-account', await importAccount(msg.net, msg.pubKey));
 };
 
 const fetchAnchorIdl = async (event: Electron.IpcMainEvent, msg) => {
@@ -462,51 +433,54 @@ ipcMain.on(
   'main',
   async (event: Electron.IpcMainEvent, method: string, msg: any) => {
     logger.info('IPC event', Object.assign({ method }, ...msg));
+    const ret = { method };
+    let res = {};
     try {
       switch (method) {
         case 'sol-state':
-          await solState(event, msg);
+          res = await solState(msg);
           break;
         case 'run-validator':
-          await runValidator(event, msg);
+          res = await runValidator(msg);
           break;
         case 'accounts':
-          await accounts(event, msg);
+          res = await accounts(msg);
           break;
         case 'validator-logs':
-          await validatorLogs(event, msg);
+          res = await validatorLogs(msg);
           break;
         case 'fetch-anchor-idl':
-          await fetchAnchorIdl(event, msg);
+          res = await fetchAnchorIdl(msg);
           break;
         case 'update-account-name':
-          await updateAccountName(event, msg);
+          res = await updateAccountName(msg);
           break;
         case 'import-account':
-          await importAccount(event, msg);
+          res = await importAccount(msg);
           break;
         case 'get-account':
-          await solState(event, msg);
+          res = await getAccount(msg);
           break;
         case 'delete-account':
-          await deleteAccount(event, msg);
+          res = await deleteAccount(msg);
           break;
         case 'program-changes':
-          await programChanges(event, msg);
+          res = await programChanges(msg);
           break;
         case 'subscribe-program-changes':
-          await subscribeProgramChanges(event, msg);
+          res = await subscribeProgramChanges(msg);
           break;
         case 'unsubscribe-program-changes':
-          await unsubscribeProgramChanges(event, msg);
+          res = await unsubscribeProgramChanges(msg);
           break;
         default:
       }
+      event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;
       const { stack } = error;
       logger.error('IPC error', {
-        channel,
+        method,
         name: error.name,
       });
       logger.error('Stacktrace:');
@@ -589,27 +563,6 @@ const subscribeProgramChanges = async (
     };
   }
 };
-ipcMain.on(
-  'subscribe-program-changes',
-  ipcMiddleware('subscribe-program-changes', subscribeProgramChanges)
-);
-
-ipcMain.on(
-  'unsubscribe-program-changes',
-  ipcMiddleware(
-    'unsubscribe-program-changes',
-    async (
-      event: Electron.IpcMainEvent,
-      msg: UnsubscribeProgramChangesRequest
-    ) => {
-      const sub = changeSubscriptions[msg.net][msg.programID];
-      if (!sub) return;
-      await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
-      delete changeSubscriptions[msg.net][msg.programID];
-      event.reply('unsubscribe-program-changes', true);
-    }
-  )
-);
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
