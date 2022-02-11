@@ -54,7 +54,7 @@ export type ValidatorLogsRequest = {
 
 export type GetAccountRequest = {
   net: Net;
-  pk: string;
+  pubKey: string;
 };
 
 export type AccountsRequest = {
@@ -62,6 +62,7 @@ export type AccountsRequest = {
 };
 
 export type UpdateAccountRequest = {
+  net: Net;
   pubKey: string;
   humanName: string;
 };
@@ -95,6 +96,10 @@ export type SubscribeProgramChangesRequest = {
 export type UnsubscribeProgramChangesRequest = {
   net: Net;
   subscriptionID: number;
+  programID: string;
+};
+
+export type FetchAnchorIDLRequest = {
   programID: string;
 };
 

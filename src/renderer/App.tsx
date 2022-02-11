@@ -1656,6 +1656,10 @@ export default function App() {
   const [net, setNet] = useState(Net.Localhost);
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
 
+  /*
+  single on listener that switches over channels
+  */
+
   const rmToast = (key: React.Key | null) => {
     const newToasts = [...toasts];
     newToasts.filter((t) => t.key !== key);

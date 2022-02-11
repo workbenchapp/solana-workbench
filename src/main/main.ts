@@ -45,6 +45,9 @@ import {
   ChangeBatchSize,
   ChangeLookupMap,
   ProgramChangeResponse,
+  UpdateAccountRequest,
+  FetchAnchorIDLRequest,
+  SolStateRequest,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -150,7 +153,8 @@ const initDB = async () => {
 };
 initDB();
 
-const connectSOL = async (net: Net): Promise<SolState> => {
+const solState = async (msg: SolStateRequest): Promise<SolState> => {
+  const { net } = msg;
   let solConn: sol.Connection;
 
   // Connect to cluster
@@ -206,9 +210,7 @@ async function deleteAccount(msg: ImportAccountRequest): Promise<number> {
   return res.changes || 0;
 }
 
-async function getAccount(
-  msg: ImportAccountRequest
-): Promise<GetAccountResponse> {
+async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
   const { net, pubKey } = msg;
   const solConn = new sol.Connection(netToURL(net));
   const resp: GetAccountResponse = {};
@@ -231,7 +233,7 @@ async function getAccount(
   return resp;
 }
 
-async function accounts(msg: ImportAccountRequest): Promise<AccountsResponse> {
+async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
   const { net } = msg;
   try {
     await fs.promises.access(KEY_PATH);
@@ -324,7 +326,8 @@ async function accounts(msg: ImportAccountRequest): Promise<AccountsResponse> {
   };
 }
 
-async function updateAccountName(net: Net, pubKey: string, humanName: string) {
+async function updateAccountName(msg: UpdateAccountRequest) {
+  const { net, pubKey, humanName } = msg;
   const res = await db.run(
     'UPDATE account SET humanName = ? WHERE pubKey = ? AND net = ?',
     humanName,
@@ -335,16 +338,16 @@ async function updateAccountName(net: Net, pubKey: string, humanName: string) {
 }
 
 async function importAccount(msg: ImportAccountRequest) {
-  const { net, pubKey } = event;
+  const { net, pubKey } = msg;
   const res = await db.run(
     'INSERT INTO account (net, pubKey) VALUES (?, ?)',
     net,
     pubKey
   );
-  event.reply('main', res);
+  return res;
 }
 
-const runValidator = async (msg: ValidatorLogsRequest) => {
+const runValidator = async () => {
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
@@ -398,97 +401,6 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return stderr;
 };
 
-const unsubscribeProgramChanges = async (
-  event: Electron.IpcMainEvent,
-  msg: UnsubscribeProgramChangesRequest
-) => {
-  const sub = changeSubscriptions[msg.net][msg.programID];
-  if (!sub) return;
-  await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
-  delete changeSubscriptions[msg.net][msg.programID];
-  event.reply('unsubscribe-program-changes', true);
-};
-
-export default class AppUpdater {
-  constructor() {
-    log.transports.file.level = 'info';
-    autoUpdater.logger = log;
-    autoUpdater.checkForUpdatesAndNotify();
-  }
-}
-
-let mainWindow: BrowserWindow | null = null;
-
-const validatorLogs = async (msg: ValidatorLogsRequest) => {
-  const logs = await validatorLogs(msg.filter);
-  event.reply('validator-logs', logs);
-};
-
-const fetchAnchorIdl = async (event: Electron.IpcMainEvent, msg) => {
-  const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
-  event.reply('fetch-anchor-idl', JSON.parse(stdout));
-};
-
-ipcMain.on(
-  'main',
-  async (event: Electron.IpcMainEvent, method: string, msg: any) => {
-    logger.info('IPC event', Object.assign({ method }, ...msg));
-    const ret = { method };
-    let res = {};
-    try {
-      switch (method) {
-        case 'sol-state':
-          res = await solState(msg);
-          break;
-        case 'run-validator':
-          res = await runValidator(msg);
-          break;
-        case 'accounts':
-          res = await accounts(msg);
-          break;
-        case 'validator-logs':
-          res = await validatorLogs(msg);
-          break;
-        case 'fetch-anchor-idl':
-          res = await fetchAnchorIdl(msg);
-          break;
-        case 'update-account-name':
-          res = await updateAccountName(msg);
-          break;
-        case 'import-account':
-          res = await importAccount(msg);
-          break;
-        case 'get-account':
-          res = await getAccount(msg);
-          break;
-        case 'delete-account':
-          res = await deleteAccount(msg);
-          break;
-        case 'program-changes':
-          res = await programChanges(msg);
-          break;
-        case 'subscribe-program-changes':
-          res = await subscribeProgramChanges(msg);
-          break;
-        case 'unsubscribe-program-changes':
-          res = await unsubscribeProgramChanges(msg);
-          break;
-        default:
-      }
-      event.reply('main', { method, res });
-    } catch (e) {
-      const error = e as Error;
-      const { stack } = error;
-      logger.error('IPC error', {
-        method,
-        name: error.name,
-      });
-      logger.error('Stacktrace:');
-      stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
-    }
-  }
-);
-
 const changeSubscriptions: ChangeSubscriptionMap = {};
 const subscribeProgramChanges = async (
   event: Electron.IpcMainEvent,
@@ -536,7 +448,10 @@ const subscribeProgramChanges = async (
             changes: sortedChanges,
             uniqueAccounts: Object.keys(changeLookupMap).length,
           };
-          event.reply('program-changes', resp);
+          event.reply('main', {
+            method: 'program-changes',
+            resp,
+          });
           batchLen = 0;
         } else {
           const programAccountChange: ProgramAccountChange = {
@@ -563,6 +478,86 @@ const subscribeProgramChanges = async (
     };
   }
 };
+
+const unsubscribeProgramChanges = async (
+  msg: UnsubscribeProgramChangesRequest
+) => {
+  const sub = changeSubscriptions[msg.net][msg.programID];
+  if (!sub) return;
+  await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
+  delete changeSubscriptions[msg.net][msg.programID];
+};
+
+export default class AppUpdater {
+  constructor() {
+    log.transports.file.level = 'info';
+    autoUpdater.logger = log;
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+}
+
+let mainWindow: BrowserWindow | null = null;
+
+const fetchAnchorIdl = async (msg: FetchAnchorIDLRequest) => {
+  const { stdout } = await execAsync(`anchor idl fetch ${msg.programID}`);
+  return JSON.parse(stdout);
+};
+
+ipcMain.on(
+  'main',
+  async (event: Electron.IpcMainEvent, method: string, msg: any) => {
+    logger.info('IPC event', Object.assign({ method }, ...msg));
+    let res = {};
+    try {
+      switch (method) {
+        case 'sol-state':
+          res = await solState(msg);
+          break;
+        case 'run-validator':
+          await runValidator();
+          break;
+        case 'accounts':
+          res = await accounts(msg);
+          break;
+        case 'validator-logs':
+          res = await validatorLogs(msg);
+          break;
+        case 'fetch-anchor-idl':
+          res = await fetchAnchorIdl(msg);
+          break;
+        case 'update-account-name':
+          res = await updateAccountName(msg);
+          break;
+        case 'import-account':
+          await importAccount(msg);
+          break;
+        case 'get-account':
+          res = await getAccount(msg);
+          break;
+        case 'delete-account':
+          res = await deleteAccount(msg);
+          break;
+        case 'subscribe-program-changes':
+          await subscribeProgramChanges(event, msg);
+          break;
+        case 'unsubscribe-program-changes':
+          await unsubscribeProgramChanges(msg);
+          break;
+        default:
+      }
+      event.reply('main', { method, res });
+    } catch (e) {
+      const error = e as Error;
+      const { stack } = error;
+      logger.error('IPC error', {
+        method,
+        name: error.name,
+      });
+      logger.error('Stacktrace:');
+      stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
+    }
+  }
+);
 
 if (process.env.NODE_ENV === 'production') {
   const sourceMapSupport = require('source-map-support');
