@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import * as sol from '@solana/web3.js';
 
-export interface SolState {
-  installed: boolean;
+export interface ValidatorState {
   running: boolean;
-  keyId: string;
+  waitingForRun: boolean;
+  loading: boolean;
 }
 
 export enum Net {
@@ -44,7 +44,7 @@ export type WBAccount = {
   solAccount?: sol.AccountInfo<Buffer> | null;
 };
 
-export type SolStateRequest = {
+export type ValidatorStateRequest = {
   net: Net;
 };
 

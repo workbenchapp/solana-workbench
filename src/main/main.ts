@@ -32,7 +32,7 @@ import {
   WBAccount,
   AccountsResponse,
   Net,
-  SolState,
+  ValidatorState,
   GetAccountResponse,
   ValidatorLogsRequest,
   AccountsRequest,
@@ -47,7 +47,7 @@ import {
   ProgramChangeResponse,
   UpdateAccountRequest,
   FetchAnchorIDLRequest,
-  SolStateRequest,
+  ValidatorStateRequest,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -153,15 +153,16 @@ const initDB = async () => {
 };
 initDB();
 
-const solState = async (msg: SolStateRequest): Promise<SolState> => {
+const validatorState = async (
+  msg: ValidatorStateRequest
+): Promise<ValidatorState> => {
   const { net } = msg;
   let solConn: sol.Connection;
 
   // Connect to cluster
   const ret = {
     running: false,
-    keyId: '',
-  } as SolState;
+  } as ValidatorState;
   if (net !== Net.Localhost) {
     ret.running = true;
     return ret;
@@ -510,8 +511,8 @@ ipcMain.on(
     let res = {};
     try {
       switch (method) {
-        case 'sol-state':
-          res = await solState(msg);
+        case 'validator-state':
+          res = await validatorState(msg);
           break;
         case 'run-validator':
           await runValidator();

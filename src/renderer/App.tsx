@@ -45,10 +45,16 @@ import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
 import { v4 as uuidv4 } from 'uuid';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  RootState,
+  setValidatorState,
+  setValidatorWaitingForRun,
+} from './slices/mainSlice';
 
 import {
   WBAccount,
-  SolState,
+  ValidatorState,
   AccountsResponse,
   Net,
   GetAccountResponse,
@@ -264,50 +270,41 @@ const Nav = () => {
 };
 
 const Run = () => {
-  const [solStatus, setSolStatus] = useState({} as SolState);
-  const [loading, setLoading] = useState(true);
-  const [waitingForRun, setWaitingForRun] = useState(false);
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+  const validatorState: ValidatorState = useSelector(
+    (state: RootState) => state.validatorState
+  );
+  const dispatch = useDispatch();
 
   const fetchLogs = useCallback(() => {
-    if (solStatus.running) {
+    if (validatorState.running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value,
       });
     }
-  }, [solStatus.running]);
+  }, [validatorState.running]);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
   const runValidator = () => {
-    setWaitingForRun(true);
+    dispatch(setValidatorWaitingForRun(true));
     window.electron.ipcRenderer.runValidator();
   };
 
-  useInterval(window.electron.ipcRenderer.solState, 5000);
+  useInterval(window.electron.ipcRenderer.validatorState, 5000);
   useInterval(fetchLogs, 5000);
   useEffect(() => {
-    const solStateListener = (arg: SolState) => {
-      setSolStatus(arg);
-      setLoading(false);
-      if (arg.running) {
-        setWaitingForRun(false);
-      }
-    };
-
     const validatorLogsListener = (logs: string) => {
       setValidatorLogs(logs);
     };
-    window.electron.ipcRenderer.on('sol-state', solStateListener);
     window.electron.ipcRenderer.on('validator-logs', validatorLogsListener);
-    window.electron.ipcRenderer.solState({
+    window.electron.ipcRenderer.validatorState({
       net: Net.Localhost,
     });
     fetchLogs();
 
     return () => {
-      window.electron.ipcRenderer.removeListener('sol-state', solStateListener);
       window.electron.ipcRenderer.removeListener(
         'validator-logs',
         validatorLogsListener
@@ -318,7 +315,7 @@ const Run = () => {
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      {waitingForRun && (
+      {validatorState.waitingForRun && (
         <small className="text-muted">
           Starting validator. This can take about a minute...
         </small>
@@ -326,8 +323,8 @@ const Run = () => {
     </div>
   );
 
-  if (!loading && !waitingForRun) {
-    if (solStatus.running) {
+  if (!validatorState.loading && !validatorState.waitingForRun) {
+    if (validatorState.running) {
       statusDisplay = (
         <span className="badge bg-light text-dark">
           <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
@@ -370,7 +367,7 @@ const Run = () => {
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
-          <code className={`${!solStatus.running ? 'text-muted' : ''}`}>
+          <code className={`${!validatorState.running ? 'text-muted' : ''}`}>
             {validatorLogs}
           </code>
         </pre>
@@ -1655,10 +1652,22 @@ const Header = () => {
 export default function App() {
   const [net, setNet] = useState(Net.Localhost);
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
+  const dispatch = useDispatch();
 
-  /*
-  single on listener that switches over channels
-  */
+  const validatorStateListener = (arg: ValidatorState) => {
+    dispatch(setValidatorState(arg));
+  };
+
+  window.electron.ipcRenderer.on('main', (resp: any) => {
+    const { method, res } = resp;
+    switch (method) {
+      case 'validator-state':
+        validatorStateListener(res as ValidatorState);
+        break;
+      default:
+        console.log(res);
+    }
+  });
 
   const rmToast = (key: React.Key | null) => {
     const newToasts = [...toasts];
