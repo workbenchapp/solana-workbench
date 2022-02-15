@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const send = (method, msg) => {
   ipcRenderer.send('main', method, msg);
 };
+
 contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     runValidator() {
@@ -48,12 +49,7 @@ contextBridge.exposeInMainWorld('electron', {
       send('unsubscribe-program-changes', msg);
     },
     on(method, func) {
-      // deliberately strip as it includes 'sender'
-      ipcRenderer.on(method, (event, ...args) => {
-        if (args.method === method) {
-          func(...args);
-        }
-      });
+      ipcRenderer.once(method, (event, ...args) => func(...args));
     },
     once(method, func) {
       ipcRenderer.once(method, (event, ...args) => func(...args));

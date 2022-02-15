@@ -444,14 +444,14 @@ const subscribeProgramChanges = async (
           sortedChanges.sort((a, b) => {
             return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
           });
-          const resp: ProgramChangeResponse = {
+          const res: ProgramChangeResponse = {
             net,
             changes: sortedChanges,
             uniqueAccounts: Object.keys(changeLookupMap).length,
           };
           event.reply('main', {
             method: 'program-changes',
-            resp,
+            res,
           });
           batchLen = 0;
         } else {
@@ -507,7 +507,7 @@ const fetchAnchorIdl = async (msg: FetchAnchorIDLRequest) => {
 ipcMain.on(
   'main',
   async (event: Electron.IpcMainEvent, method: string, msg: any) => {
-    logger.info('IPC event', Object.assign({ method }, ...msg));
+    logger.info('IPC event', { method, ...msg });
     let res = {};
     try {
       switch (method) {
@@ -546,6 +546,7 @@ ipcMain.on(
           break;
         default:
       }
+      logger.info('res', { method, ...res });
       event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;

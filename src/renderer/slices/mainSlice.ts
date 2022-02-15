@@ -14,6 +14,7 @@ export const mainSlice = createSlice({
   },
   reducers: {
     setValidatorState: (state, action: PayloadAction<ValidatorState>) => {
+      console.log('setting validator state', state, action);
       state.validatorState = action.payload;
     },
     setValidatorWaitingForRun: (state, action: PayloadAction<boolean>) => {

@@ -292,16 +292,22 @@ const Run = () => {
     window.electron.ipcRenderer.runValidator();
   };
 
-  useInterval(window.electron.ipcRenderer.validatorState, 5000);
+  useEffect(() => {
+    window.electron.ipcRenderer.validatorState({
+      net: Net.Localhost,
+    });
+  }, []);
+
+  useInterval(
+    () => window.electron.ipcRenderer.validatorState({ net: Net.Localhost }),
+    5000
+  );
   useInterval(fetchLogs, 5000);
   useEffect(() => {
     const validatorLogsListener = (logs: string) => {
       setValidatorLogs(logs);
     };
     window.electron.ipcRenderer.on('validator-logs', validatorLogsListener);
-    window.electron.ipcRenderer.validatorState({
-      net: Net.Localhost,
-    });
     fetchLogs();
 
     return () => {
@@ -1654,20 +1660,23 @@ export default function App() {
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
   const dispatch = useDispatch();
 
-  const validatorStateListener = (arg: ValidatorState) => {
-    dispatch(setValidatorState(arg));
-  };
-
-  window.electron.ipcRenderer.on('main', (resp: any) => {
-    const { method, res } = resp;
-    switch (method) {
-      case 'validator-state':
-        validatorStateListener(res as ValidatorState);
-        break;
-      default:
-        console.log(res);
-    }
+  window.electron.ipcRenderer.validatorState({
+    net: Net.Localhost,
   });
+
+  useEffect(() => {
+    window.electron.ipcRenderer.on('main', (resp: any) => {
+      const { method, res } = resp;
+      console.log(resp);
+      switch (method) {
+        case 'validator-state':
+          dispatch(setValidatorState(res));
+          break;
+        default:
+          console.log('no method found', res);
+      }
+    });
+  }, []);
 
   const rmToast = (key: React.Key | null) => {
     const newToasts = [...toasts];
