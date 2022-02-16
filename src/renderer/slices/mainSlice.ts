@@ -1,5 +1,5 @@
 import { combineReducers, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ValidatorState, AccountsState } from 'types/types';
+import { ValidatorState, AccountsState, WBAccount } from 'types/types';
 
 const validatorState: ValidatorState = {
   running: false,
@@ -31,7 +31,11 @@ const accountsState: AccountsState = {
 export const accountsSlice = createSlice({
   name: 'accounts',
   initialState: accountsState,
-  reducers: {},
+  reducers: {
+    setListedAccounts: (state, action: PayloadAction<WBAccount[]>) => {
+      state.listedAccounts = action.payload;
+    },
+  },
 });
 
 const mainReducer = combineReducers({
@@ -45,4 +49,5 @@ export const {
   setValidatorWaitingForRun,
   setValidatorLoading,
 } = validatorSlice.actions;
+export const { setListedAccounts } = accountsSlice.actions;
 export default mainReducer;

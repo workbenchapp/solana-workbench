@@ -51,6 +51,7 @@ import {
   setValidatorRunning,
   setValidatorWaitingForRun,
   setValidatorLoading,
+  setListedAccounts,
 } from './slices/mainSlice';
 
 import {
@@ -64,6 +65,7 @@ import {
   ImportedAccountMap,
   ProgramChangeResponse,
   ProgramID,
+  AccountsState,
 } from '../types/types';
 
 // dummy var value, could be undefined,
@@ -1329,7 +1331,12 @@ const Accounts = (props: {
   pushToast: (toast: JSX.Element) => void;
 }) => {
   const { net, pushToast } = props;
-  const [accounts, setAccountsRef] = useState<WBAccount[]>([]);
+  const dispatch = useDispatch();
+  const accounts: AccountsState = useSelector(
+    (state: RootState) => state.accounts
+  );
+  const { listedAccounts } = accounts;
+  const [oldAccounts, setAccountsRef] = useState<WBAccount[]>([]);
   const [selected, setSelected] = useState<string>('');
   const [hoveredItem, setHoveredItem] = useState<string>('');
   const [rootKey, setRootKey] = useState<string>('');
@@ -1346,7 +1353,7 @@ const Accounts = (props: {
   };
 
   const addAccount = (pubKey: string = NONE_KEY) => {
-    const accs = [...accounts];
+    const accs = [...oldAccounts];
     accs.splice(0, 0, {
       pubKey,
       humanName: '',
@@ -1358,15 +1365,53 @@ const Accounts = (props: {
   };
 
   const shiftAccount = () => {
-    const accs = [...accounts];
+    const accs = [...oldAccounts];
     accs.shift();
     setAccounts(accs);
   };
 
   const rmAccount = (pubKey: string) => {
-    const accs = [...accounts];
+    const accs = [...oldAccounts];
     setAccounts(accs.filter((a) => a.pubKey !== pubKey));
   };
+
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      // too spammy
+      if (method !== 'program-changes') {
+        console.log(resp);
+      }
+      switch (method) {
+        case 'accounts':
+          dispatch(setListedAccounts(res.accounts));
+          break;
+        case 'update-account-name':
+          break;
+        case 'import-account':
+          break;
+        case 'get-account':
+          break;
+        case 'delete-account':
+          break;
+        case 'subscribe-program-changes':
+          break;
+        case 'unsubscribe-program-changes':
+          break;
+        case 'program-changes':
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    window.electron.ipcRenderer.accounts({
+      net: Net.Localhost,
+    });
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
 
   useEffect(() => {
     const unshiftAccount = (account: WBAccount) => {
@@ -1420,18 +1465,18 @@ const Accounts = (props: {
         getAccountListener
       );
     };
-  }, [accounts, net, pushToast]);
+  }, [oldAccounts, net, pushToast]);
 
-  const selectedAccount: WBAccount | undefined = accounts.find(
+  const selectedAccount: WBAccount | undefined = oldAccounts.find(
     (a) => selected === a.pubKey
   );
 
   const initializingAccount: boolean =
-    accounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
+    oldAccounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
     analytics('accountAddAttempt', {
-      nAccounts: accounts.length,
+      nAccounts: oldAccounts.length,
       net: netRef.current,
     });
 
@@ -1444,7 +1489,7 @@ const Accounts = (props: {
         // accounts has an entry for the new (attempted) account ID already,
         // so we sum up the instances of that key, and it'll be 2 if it's
         // a duplicate of an existing one
-        accounts
+        oldAccounts
           .map((a): number => (a.pubKey === pubKey ? 1 : 0))
           .reduce((a, b) => a + b, 0) === 2
       ) {
@@ -1507,10 +1552,10 @@ const Accounts = (props: {
               <span className="ms-1 text-white">Add Account</span>
             </button>
           </div>
-          {accounts.length > 0 || net !== Net.Localhost ? (
+          {listedAccounts.length > 0 || net !== Net.Localhost ? (
             <AccountListView
               net={net}
-              accounts={accounts}
+              accounts={listedAccounts}
               hoveredItem={hoveredItem}
               selected={selected}
               edited={edited}
@@ -1558,7 +1603,7 @@ const Accounts = (props: {
           ) : (
             <ProgramChangeView
               net={net}
-              accounts={accounts}
+              accounts={oldAccounts}
               attemptAccountAdd={attemptAccountAdd}
               pushToast={pushToast}
             />
@@ -1677,32 +1722,19 @@ export default function App() {
           break;
         case 'validator-logs':
           break;
-        case 'accounts':
-          break;
-        case 'update-account-name':
-          break;
-        case 'import-account':
-          break;
-        case 'get-account':
-          break;
-        case 'delete-account':
-          break;
-        case 'subscribe-program-changes':
-          break;
-        case 'unsubscribe-program-changes':
-          break;
-        case 'program-changes':
-          break;
         case 'fetch-anchor-idl':
           break;
         default:
-          console.log('no method found', res);
       }
     };
     window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.validatorState({
       net: Net.Localhost,
     });
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
   }, []);
 
   const rmToast = (key: React.Key | null) => {
