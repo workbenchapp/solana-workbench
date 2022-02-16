@@ -1,5 +1,5 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ValidatorState } from 'types/types';
+import { combineReducers, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ValidatorState, AccountsState } from 'types/types';
 
 const validatorState: ValidatorState = {
   running: false,
@@ -7,29 +7,42 @@ const validatorState: ValidatorState = {
   loading: false,
 };
 
-export const mainSlice = createSlice({
-  name: 'main',
-  initialState: {
-    validatorState,
-  },
+export const validatorSlice = createSlice({
+  name: 'validator',
+  initialState: validatorState,
   reducers: {
-    setValidatorState: (state, action: PayloadAction<ValidatorState>) => {
-      console.log('setting validator state', state, action);
-      state.validatorState = action.payload;
+    setValidatorRunning: (state, action: PayloadAction<boolean>) => {
+      state.running = action.payload;
     },
     setValidatorWaitingForRun: (state, action: PayloadAction<boolean>) => {
-      state.validatorState.waitingForRun = action.payload;
+      state.waitingForRun = action.payload;
     },
-    setValidatorStateLoading: (state, action: PayloadAction<boolean>) => {
-      state.validatorState.loading = action.payload;
+    setValidatorLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
   },
 });
 
-export type RootState = ReturnType<typeof mainSlice.reducer>;
+const accountsState: AccountsState = {
+  selectedAccount: undefined,
+  listedAccounts: [],
+};
+
+export const accountsSlice = createSlice({
+  name: 'accounts',
+  initialState: accountsState,
+  reducers: {},
+});
+
+const mainReducer = combineReducers({
+  validator: validatorSlice.reducer,
+  accounts: accountsSlice.reducer,
+});
+
+export type RootState = ReturnType<typeof mainReducer>;
 export const {
-  setValidatorState,
+  setValidatorRunning,
   setValidatorWaitingForRun,
-  setValidatorStateLoading,
-} = mainSlice.actions;
-export default mainSlice.reducer;
+  setValidatorLoading,
+} = validatorSlice.actions;
+export default mainReducer;

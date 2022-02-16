@@ -49,7 +49,7 @@ contextBridge.exposeInMainWorld('electron', {
       send('unsubscribe-program-changes', msg);
     },
     on(method, func) {
-      ipcRenderer.once(method, (event, ...args) => func(...args));
+      ipcRenderer.on(method, (event, ...args) => func(...args));
     },
     once(method, func) {
       ipcRenderer.once(method, (event, ...args) => func(...args));

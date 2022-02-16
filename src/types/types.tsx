@@ -1,12 +1,6 @@
 /* eslint-disable no-console */
 import * as sol from '@solana/web3.js';
 
-export interface ValidatorState {
-  running: boolean;
-  waitingForRun: boolean;
-  loading: boolean;
-}
-
 export enum Net {
   Localhost = 'localhost',
   Dev = 'devnet',
@@ -134,4 +128,15 @@ export interface ChangeLookupMap {
 
 export interface ChangeBatchSize {
   [net: string]: number;
+}
+
+export interface ValidatorState {
+  running: boolean;
+  waitingForRun: boolean;
+  loading: boolean;
+}
+
+export interface AccountsState {
+  selectedAccount: undefined | WBAccount;
+  listedAccounts: WBAccount[];
 }

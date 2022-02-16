@@ -48,8 +48,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   RootState,
-  setValidatorState,
+  setValidatorRunning,
   setValidatorWaitingForRun,
+  setValidatorLoading,
 } from './slices/mainSlice';
 
 import {
@@ -272,18 +273,18 @@ const Nav = () => {
 const Run = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
-  const validatorState: ValidatorState = useSelector(
-    (state: RootState) => state.validatorState
+  const validator: ValidatorState = useSelector(
+    (state: RootState) => state.validator
   );
   const dispatch = useDispatch();
 
   const fetchLogs = useCallback(() => {
-    if (validatorState.running) {
+    if (validator.running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value,
       });
     }
-  }, [validatorState.running]);
+  }, [validator.running]);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
@@ -321,7 +322,7 @@ const Run = () => {
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      {validatorState.waitingForRun && (
+      {validator.waitingForRun && (
         <small className="text-muted">
           Starting validator. This can take about a minute...
         </small>
@@ -329,8 +330,8 @@ const Run = () => {
     </div>
   );
 
-  if (!validatorState.loading && !validatorState.waitingForRun) {
-    if (validatorState.running) {
+  if (!validator.loading && !validator.waitingForRun) {
+    if (validator.running) {
       statusDisplay = (
         <span className="badge bg-light text-dark">
           <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
@@ -373,7 +374,7 @@ const Run = () => {
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
-          <code className={`${!validatorState.running ? 'text-muted' : ''}`}>
+          <code className={`${!validator.running ? 'text-muted' : ''}`}>
             {validatorLogs}
           </code>
         </pre>
@@ -1660,21 +1661,47 @@ export default function App() {
   const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
   const dispatch = useDispatch();
 
-  window.electron.ipcRenderer.validatorState({
-    net: Net.Localhost,
-  });
-
   useEffect(() => {
-    window.electron.ipcRenderer.on('main', (resp: any) => {
+    const listener = (resp: any) => {
       const { method, res } = resp;
-      console.log(resp);
+      // too spammy
+      if (method !== 'program-changes') {
+        console.log(resp);
+      }
       switch (method) {
         case 'validator-state':
-          dispatch(setValidatorState(res));
+          dispatch(setValidatorRunning(res.running));
+          dispatch(setValidatorLoading(false));
+          break;
+        case 'run-validator':
+          break;
+        case 'validator-logs':
+          break;
+        case 'accounts':
+          break;
+        case 'update-account-name':
+          break;
+        case 'import-account':
+          break;
+        case 'get-account':
+          break;
+        case 'delete-account':
+          break;
+        case 'subscribe-program-changes':
+          break;
+        case 'unsubscribe-program-changes':
+          break;
+        case 'program-changes':
+          break;
+        case 'fetch-anchor-idl':
           break;
         default:
           console.log('no method found', res);
       }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    window.electron.ipcRenderer.validatorState({
+      net: Net.Localhost,
     });
   }, []);
 

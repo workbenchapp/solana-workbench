@@ -66,6 +66,7 @@ const PROGRAM_CHANGE_MAX_BATCH_SIZES: ChangeBatchSize = {
 const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const LOG_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'logs');
 const LOG_FILE_PATH = path.join(LOG_DIR_PATH, 'latest.log');
+const LOG_KV_PAD = 50;
 const KEY_FILE_NAME = 'wbkey.json';
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
 const MIGRATION_DIR = path.join(RESOURCES_PATH, 'migrations');
@@ -113,9 +114,10 @@ const initLogging = async () => {
   const logfmtFormat = winston.format.printf((info) => {
     const { timestamp } = info.metadata;
     delete info.metadata.timestamp;
-    return `${timestamp} ${info.level.toUpperCase()} ${
-      info.message
-    } \t${logfmt.stringify(info.metadata)}`;
+    return `${timestamp} ${info.level.toUpperCase()} ${info.message.padEnd(
+      LOG_KV_PAD,
+      ' '
+    )}${logfmt.stringify(info.metadata)}`;
   });
   const loggerConfig: winston.LoggerOptions = {
     format: winston.format.combine(
@@ -557,6 +559,7 @@ ipcMain.on(
       });
       logger.error('Stacktrace:');
       stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
+      event.reply('main', { method, error });
     }
   }
 );
