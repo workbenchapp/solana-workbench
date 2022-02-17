@@ -1,5 +1,10 @@
 import { combineReducers, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ValidatorState, AccountsState, WBAccount } from 'types/types';
+import {
+  ValidatorState,
+  AccountsState,
+  WBAccount,
+  ACCOUNTS_NONE_KEY,
+} from 'types/types';
 
 const validatorState: ValidatorState = {
   running: false,
@@ -26,6 +31,10 @@ export const validatorSlice = createSlice({
 const accountsState: AccountsState = {
   selectedAccount: undefined,
   listedAccounts: [],
+  selected: '',
+  hovered: '',
+  edited: '',
+  rootKey: '',
 };
 
 export const accountsSlice = createSlice({
@@ -34,6 +43,46 @@ export const accountsSlice = createSlice({
   reducers: {
     setListedAccounts: (state, action: PayloadAction<WBAccount[]>) => {
       state.listedAccounts = action.payload;
+    },
+    setAccountsRootKey: (state, action: PayloadAction<string>) => {
+      state.rootKey = action.payload;
+    },
+    addAccount: (state, action: PayloadAction<string>) => {
+      let pubKey = action.payload;
+      if (!pubKey) {
+        pubKey = ACCOUNTS_NONE_KEY;
+      }
+      state.listedAccounts.splice(0, 0, {
+        pubKey,
+        humanName: '',
+      });
+      state.selected = '';
+      state.hovered = '';
+      state.edited = ACCOUNTS_NONE_KEY;
+    },
+    shiftAccount: (state) => {
+      state.listedAccounts.shift();
+    },
+    unshiftAccount: (state, action: PayloadAction<WBAccount>) => {
+      if (state.listedAccounts[0].pubKey === ACCOUNTS_NONE_KEY) {
+        state.listedAccounts[0] = action.payload;
+      } else {
+        state.listedAccounts.unshift(action.payload);
+      }
+    },
+    rmAccount: (state, action: PayloadAction<string>) => {
+      state.listedAccounts = state.listedAccounts.filter(
+        (a) => a.pubKey !== action.payload
+      );
+    },
+    setEdited: (state, action: PayloadAction<string>) => {
+      state.edited = action.payload;
+    },
+    setHovered: (state, action: PayloadAction<string>) => {
+      state.hovered = action.payload;
+    },
+    setSelected: (state, action: PayloadAction<string>) => {
+      state.selected = action.payload;
     },
   },
 });
@@ -49,5 +98,15 @@ export const {
   setValidatorWaitingForRun,
   setValidatorLoading,
 } = validatorSlice.actions;
-export const { setListedAccounts } = accountsSlice.actions;
+export const {
+  setListedAccounts,
+  setAccountsRootKey,
+  addAccount,
+  shiftAccount,
+  unshiftAccount,
+  rmAccount,
+  setEdited,
+  setHovered,
+  setSelected,
+} = accountsSlice.actions;
 export default mainReducer;

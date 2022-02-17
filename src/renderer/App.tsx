@@ -52,6 +52,14 @@ import {
   setValidatorWaitingForRun,
   setValidatorLoading,
   setListedAccounts,
+  setAccountsRootKey,
+  rmAccount,
+  unshiftAccount,
+  shiftAccount,
+  addAccount,
+  setSelected,
+  setEdited,
+  setHovered,
 } from './slices/mainSlice';
 
 import {
@@ -66,11 +74,11 @@ import {
   ProgramChangeResponse,
   ProgramID,
   AccountsState,
+  ACCOUNTS_NONE_KEY,
 } from '../types/types';
 
 // dummy var value, could be undefined,
 // but need to refactor for that
-const NONE_KEY = 'none';
 const RANDOMART_W_CH = 17;
 const RANDOMART_H_CH = 10;
 const TOAST_HEIGHT = 270;
@@ -386,7 +394,7 @@ const Run = () => {
 };
 
 const prettifyPubkey = (pk = '') =>
-  pk !== NONE_KEY
+  pk !== ACCOUNTS_NONE_KEY
     ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
     : '';
 
@@ -619,8 +627,6 @@ const AccountNameEditable = (props: {
     placeholder: string;
     outerSelected: boolean | undefined;
     outerHovered: boolean | undefined;
-    setSelected: (s: string) => void;
-    setHoveredItem: (s: string) => void;
   };
 }) => {
   const { net, account, setEdited, innerProps } = props;
@@ -647,32 +653,15 @@ const AccountNameEditable = (props: {
 
 const AccountListItem = (props: {
   net: Net;
-  account: WBAccount;
-  hovered: boolean;
-  selected: boolean;
-  edited: boolean;
   initializing: boolean;
-  setHoveredItem: (s: string) => void;
-  setSelected: (s: string) => void;
-  setEdited: (s: string) => void;
-  rmAccount: (s: string) => void;
+  account: WBAccount;
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-  queriedAccount?: GetAccountResponse;
 }) => {
-  const {
-    net,
-    account,
-    hovered,
-    edited,
-    selected,
-    setHoveredItem,
-    setSelected,
-    setEdited,
-    rmAccount,
-    initializing,
-    attemptAccountAdd,
-    queriedAccount,
-  } = props;
+  const { net, initializing, account, attemptAccountAdd } = props;
+  const dispatch = useDispatch();
+  const { selected, hovered, edited } = useSelector(
+    (state: RootState) => state.accounts
+  );
   const addAcctRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   type EllipsisToggleProps = {
@@ -728,23 +717,19 @@ const AccountListItem = (props: {
           : 'border-top border-bottom'
       } ${hovered && !selected && 'bg-xlight'} ${
         edited && 'border-top border-bottom border-primary'
-      } ${queriedAccount && 'border-solgreen-shadow'}`}
+      }`}
       key={account.pubKey}
-      onMouseEnter={() => setHoveredItem(account.pubKey)}
-      onMouseLeave={() => setHoveredItem('')}
+      onMouseEnter={() => dispatch(setHovered(account.pubKey))}
+      onMouseLeave={() => dispatch(setHovered(''))}
     >
       <div className="row flex-nowrap">
         <div className="col">
-          {account.pubKey === NONE_KEY ? (
+          {account.pubKey === ACCOUNTS_NONE_KEY ? (
             <Editable
               ref={addAcctRef}
-              outerSelected={selected}
-              outerHovered={hovered}
-              setSelected={setSelected}
-              setHoveredItem={setHoveredItem}
               value={account.pubKey}
               effect={() => {
-                setEdited(account.pubKey);
+                dispatch(setEdited(account.pubKey));
                 addAcctRef.current.focus();
               }}
               editingStopped={() => setEdited('')}
@@ -754,7 +739,7 @@ const AccountListItem = (props: {
               handleOutsideClick={() => {
                 let pubKey = addAcctRef.current.value;
                 if (pubKey === '') {
-                  pubKey = NONE_KEY;
+                  pubKey = ACCOUNTS_NONE_KEY;
                 }
                 attemptAccountAdd(pubKey, initializing);
               }}
@@ -778,10 +763,8 @@ const AccountListItem = (props: {
                   setEdited={setEdited}
                   innerProps={{
                     placeholder: 'Write a description',
-                    outerSelected: selected,
-                    outerHovered: hovered,
-                    setSelected,
-                    setHoveredItem,
+                    outerSelected: account.pubKey === selected,
+                    outerHovered: account.pubKey === hovered,
                   }}
                 />
               </small>
@@ -1275,50 +1258,21 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
   );
 };
 
-const AccountListView = (props: {
-  net: Net;
-  accounts: WBAccount[];
-  hoveredItem: string;
-  selected: string;
-  edited: string;
-  setEdited: (s: string) => void;
-  setSelected: (s: string) => void;
-  setHoveredItem: (s: string) => void;
-  rmAccount: (s: string) => void;
-  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-}) => {
-  const {
-    net,
-    accounts,
-    hoveredItem,
-    selected,
-    edited,
-    setEdited,
-    setSelected,
-    setHoveredItem,
-    attemptAccountAdd,
-    rmAccount,
-  } = props;
+const AccountListView = (props: { net: Net }) => {
+  const { net } = props;
+  const accounts: AccountsState = useSelector(
+    (state: RootState) => state.accounts
+  );
+  const { listedAccounts } = accounts;
   return (
     <>
-      {accounts.map((account: WBAccount) => {
-        const initializing = account.pubKey === NONE_KEY;
+      {listedAccounts.map((account: WBAccount) => {
+        const initializing = account.pubKey === ACCOUNTS_NONE_KEY;
         return (
           <AccountListItem
+            initializing={initializing}
             net={net}
             key={`pubKey=${account.pubKey},initializing=${initializing}`}
-            account={account}
-            hovered={account.pubKey === hoveredItem}
-            selected={account.pubKey === selected}
-            edited={account.pubKey === edited}
-            initializing={initializing}
-            setHoveredItem={setHoveredItem}
-            setEdited={setEdited}
-            setSelected={setSelected}
-            rmAccount={rmAccount}
-            attemptAccountAdd={(pubKey: string) =>
-              attemptAccountAdd(pubKey, initializing)
-            }
           />
         );
       })}
@@ -1335,45 +1289,10 @@ const Accounts = (props: {
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
   );
-  const { listedAccounts } = accounts;
-  const [oldAccounts, setAccountsRef] = useState<WBAccount[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [hoveredItem, setHoveredItem] = useState<string>('');
-  const [rootKey, setRootKey] = useState<string>('');
-  const [edited, setEdited] = useState<string>('');
+  const { rootKey, selected, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
-
   const effectSetup = useRef<boolean>();
-  const accountsRef = useRef<WBAccount[]>([]);
   const netRef = useRef<Net>(Net.Localhost);
-
-  const setAccounts = (accs: WBAccount[]) => {
-    accountsRef.current = accs;
-    setAccountsRef(accs);
-  };
-
-  const addAccount = (pubKey: string = NONE_KEY) => {
-    const accs = [...oldAccounts];
-    accs.splice(0, 0, {
-      pubKey,
-      humanName: '',
-    });
-    setAccounts(accs);
-    setSelected('');
-    setHoveredItem('');
-    setEdited(NONE_KEY);
-  };
-
-  const shiftAccount = () => {
-    const accs = [...oldAccounts];
-    accs.shift();
-    setAccounts(accs);
-  };
-
-  const rmAccount = (pubKey: string) => {
-    const accs = [...oldAccounts];
-    setAccounts(accs.filter((a) => a.pubKey !== pubKey));
-  };
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -1385,6 +1304,7 @@ const Accounts = (props: {
       switch (method) {
         case 'accounts':
           dispatch(setListedAccounts(res.accounts));
+          dispatch(setAccountsRootKey(res.accounts));
           break;
         case 'update-account-name':
           break;
@@ -1405,7 +1325,7 @@ const Accounts = (props: {
     };
     window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.accounts({
-      net: Net.Localhost,
+      net,
     });
 
     return () => {
@@ -1414,21 +1334,6 @@ const Accounts = (props: {
   }, []);
 
   useEffect(() => {
-    const unshiftAccount = (account: WBAccount) => {
-      const accs = [...accountsRef.current];
-      if (accs[0].pubKey === NONE_KEY) {
-        accs[0] = account;
-      } else {
-        accs.unshift(account);
-      }
-      setAccounts(accs);
-    };
-
-    const accountsListener = (data: AccountsResponse) => {
-      setRootKey(data.rootKey);
-      setAccounts(data.accounts);
-    };
-
     const getAccountListener = (resp: GetAccountResponse) => {
       if (resp.account?.solAccount) {
         unshiftAccount(resp.account);
@@ -1447,40 +1352,28 @@ const Accounts = (props: {
       }
     };
 
-    if (netRef.current !== net || !effectSetup.current) {
-      netRef.current = net;
-      window.electron.ipcRenderer.accounts({ net });
-    }
-
-    if (!effectSetup.current) {
-      window.electron.ipcRenderer.on('accounts', accountsListener);
-      window.electron.ipcRenderer.on('get-account', getAccountListener);
-      effectSetup.current = true;
-    }
-
     return () => {
-      window.electron.ipcRenderer.removeListener('accounts', accountsListener);
       window.electron.ipcRenderer.removeListener(
         'get-account',
         getAccountListener
       );
     };
-  }, [oldAccounts, net, pushToast]);
+  }, [net, pushToast]);
 
-  const selectedAccount: WBAccount | undefined = oldAccounts.find(
+  const selectedAccount: WBAccount | undefined = listedAccounts.find(
     (a) => selected === a.pubKey
   );
 
   const initializingAccount: boolean =
-    oldAccounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
+    listedAccounts.filter((a) => ACCOUNTS_NONE_KEY === a.pubKey).length > 0;
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
     analytics('accountAddAttempt', {
-      nAccounts: oldAccounts.length,
+      nAccounts: listedAccounts.length,
       net: netRef.current,
     });
 
-    if (initializing && pubKey === NONE_KEY) {
+    if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
       shiftAccount();
     } else {
       // todo: excludes first (same) element, not generic to anywhere
@@ -1489,7 +1382,7 @@ const Accounts = (props: {
         // accounts has an entry for the new (attempted) account ID already,
         // so we sum up the instances of that key, and it'll be 2 if it's
         // a duplicate of an existing one
-        oldAccounts
+        listedAccounts
           .map((a): number => (a.pubKey === pubKey ? 1 : 0))
           .reduce((a, b) => a + b, 0) === 2
       ) {
@@ -1553,18 +1446,7 @@ const Accounts = (props: {
             </button>
           </div>
           {listedAccounts.length > 0 || net !== Net.Localhost ? (
-            <AccountListView
-              net={net}
-              accounts={listedAccounts}
-              hoveredItem={hoveredItem}
-              selected={selected}
-              edited={edited}
-              setEdited={setEdited}
-              setSelected={setSelected}
-              setHoveredItem={setHoveredItem}
-              attemptAccountAdd={attemptAccountAdd}
-              rmAccount={rmAccount}
-            />
+            <AccountListView net={net} />
           ) : (
             initView
           )}
@@ -1603,7 +1485,7 @@ const Accounts = (props: {
           ) : (
             <ProgramChangeView
               net={net}
-              accounts={oldAccounts}
+              accounts={listedAccounts}
               attemptAccountAdd={attemptAccountAdd}
               pushToast={pushToast}
             />

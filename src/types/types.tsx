@@ -8,6 +8,8 @@ export enum Net {
   MainnetBeta = 'mainnet-beta',
 }
 
+export const ACCOUNTS_NONE_KEY = 'none';
+
 export const netToURL = (net: Net): string => {
   switch (net) {
     case Net.Localhost:
@@ -137,6 +139,10 @@ export interface ValidatorState {
 }
 
 export interface AccountsState {
-  selectedAccount: undefined | WBAccount;
+  selectedAccount: string | undefined;
   listedAccounts: WBAccount[];
+  selected: string;
+  hovered: string;
+  edited: string;
+  rootKey: string;
 }
