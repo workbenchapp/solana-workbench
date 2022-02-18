@@ -74,7 +74,6 @@ import {
   netToURL,
   ProgramAccountChange,
   ImportedAccountMap,
-  ProgramChangeResponse,
   ProgramID,
   AccountsState,
 } from '../types/types';
@@ -871,94 +870,50 @@ const ProgramChangeView = (props: {
 }) => {
   const dispatch = useDispatch();
   const { net, accounts, attemptAccountAdd, pushToast } = props;
-  const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
-  const changesRef = useRef<ProgramAccountChange[]>([]);
-  const setChanges = (c: ProgramAccountChange[]) => {
-    changesRef.current = c;
-    setChangesRef(c);
-  };
-  const [uniqueAccounts, setUniqueAccountsRef] = useState(0);
-  const uniqueAccountsRef = useRef(0);
-  const setUniqueAccounts = (ua: number) => {
-    uniqueAccountsRef.current = ua;
-    setUniqueAccountsRef(ua);
-  };
-  const netRef = useRef<Net | undefined>();
-  const [paused, setPausedRef] = useState(false);
-  const pausedRef = useRef(false);
-  const setPaused = (p: boolean) => {
-    pausedRef.current = p;
-    setPausedRef(p);
-  };
-  const pausedTimeoutRef = useRef(0);
 
-  const [programID, setProgramIDRef] = useState(ProgramID.SystemProgram);
-  const programIDRef = useRef(ProgramID.SystemProgram);
-  const setProgramID = (pid: ProgramID) => {
-    programIDRef.current = pid;
-    setProgramIDRef(pid);
-  };
-  const prevProgramIDRef = useRef(ProgramID.SystemProgram);
+  const [changes, setChanges] = useState<ProgramAccountChange[]>([]);
+  const [uniqueAccounts, setUniqueAccounts] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
+  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+
+  const [programID, setProgramID] = useState(ProgramID.SystemProgram);
+
+  const pausedTimeoutRef = useRef(0);
 
   const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
-  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
-  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
-
   useEffect(() => {
-    const changeListener = (resp: ProgramChangeResponse) => {
-      if (resp.net === net && !pausedRef.current) {
-        setChanges(resp.changes);
-        setUniqueAccounts(resp.uniqueAccounts);
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      if (method !== 'program-changes') {
+        console.log(resp);
+      }
+      switch (method) {
+        case 'subscribe-program-changes':
+          break;
+        case 'unsubscribe-program-changes':
+          window.electron.ipcRenderer.removeAllListeners('program-changes');
+          break;
+        case 'program-changes':
+          setChanges(res.changes);
+          setUniqueAccounts(res.uniqueAccounts);
+          break;
+        default:
       }
     };
-
-    const unsubscribe = () => {
-      window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net,
-        programID: prevProgramIDRef.current,
-      });
-      prevProgramIDRef.current = programID;
-      window.electron.ipcRenderer.removeAllListeners('program-changes');
-    };
-
-    const unsubscribeListener = () => {
-      setChanges([]);
-    };
-
-    if (netRef.current) unsubscribe();
-    if (netRef.current !== net) {
-      setProgramID(ProgramID.SystemProgram);
-      netRef.current = net;
-    }
-    window.addEventListener('beforeunload', unsubscribe);
-    window.electron.ipcRenderer.on('program-changes', changeListener);
-
-    // todo: gets added too many times
-    window.electron.ipcRenderer.on(
-      'unsubscribe-program-changes',
-      unsubscribeListener
-    );
-
+    window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.subscribeProgramChanges({
       net,
-      programID: programIDRef.current,
+      programID,
     });
-
     return () => {
-      window.electron.ipcRenderer.removeListener(
-        'program-changes',
-        changeListener
-      );
-      window.electron.ipcRenderer.removeListener(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
+      window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, [net, programID]);
+  }, []);
 
   const changeFilterDropdownTitle = (
     <>
@@ -1056,6 +1011,14 @@ const ProgramChangeView = (props: {
                   onPaste={(e) => {
                     const pastedID = e.clipboardData.getData('Text');
                     if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                      window.electron.ipcRenderer.unsubscribeProgramChanges({
+                        net,
+                        programID,
+                      });
+                      window.electron.ipcRenderer.subscribeProgramChanges({
+                        net,
+                        programID: pastedID,
+                      });
                       setProgramID(pastedID);
                     } else {
                       dispatch(
