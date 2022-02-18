@@ -1449,7 +1449,7 @@ const Accounts = (props: { net: Net }) => {
             >
               <small
                 onClick={() => {
-                  setSelected('');
+                  dispatch(setSelected(''));
                 }}
               >
                 Live
