@@ -158,3 +158,8 @@ export interface AccountsState {
 export interface ToastState {
   toasts: JSX.Element[];
 }
+
+export interface ProgramChangesState {
+  changes: ProgramAccountChange[];
+  paused: boolean;
+}

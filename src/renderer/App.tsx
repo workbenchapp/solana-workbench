@@ -56,6 +56,8 @@ import {
   rmToast,
   shiftAccount,
   pushToast,
+  setProgramChanges,
+  setProgramChangesPaused,
 } from './slices/mainSlice';
 
 import {
@@ -869,11 +871,12 @@ const ProgramChangeView = (props: {
   pushToast: (toast: JSX.Element) => void;
 }) => {
   const dispatch = useDispatch();
+  const { changes, paused } = useSelector(
+    (state: RootState) => state.programChanges
+  );
   const { net, accounts, attemptAccountAdd, pushToast } = props;
 
-  const [changes, setChanges] = useState<ProgramAccountChange[]>([]);
   const [uniqueAccounts, setUniqueAccounts] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
@@ -899,8 +902,11 @@ const ProgramChangeView = (props: {
           window.electron.ipcRenderer.removeAllListeners('program-changes');
           break;
         case 'program-changes':
-          setChanges(res.changes);
-          setUniqueAccounts(res.uniqueAccounts);
+          console.log({ paused });
+          if (!paused) {
+            dispatch(setProgramChanges(res.changes));
+            setUniqueAccounts(res.uniqueAccounts);
+          }
           break;
         default:
       }
@@ -912,6 +918,10 @@ const ProgramChangeView = (props: {
     });
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
+      window.electron.ipcRenderer.unsubscribeProgramChanges({
+        net,
+        programID,
+      });
     };
   }, []);
 
@@ -925,7 +935,7 @@ const ProgramChangeView = (props: {
   const pause = () => {
     if (pausedTimeoutRef.current === 0) {
       pausedTimeoutRef.current = window.setTimeout(() => {
-        setPaused(true);
+        dispatch(setProgramChangesPaused(true));
         pausedTimeoutRef.current = 0;
       }, 250);
     }
@@ -935,7 +945,7 @@ const ProgramChangeView = (props: {
       window.clearTimeout(pausedTimeoutRef.current);
       pausedTimeoutRef.current = 0;
     }
-    setPaused(false);
+    dispatch(setProgramChangesPaused(false));
   };
 
   return (
