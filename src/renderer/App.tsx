@@ -599,14 +599,15 @@ const AccountNameEditable = (props: {
   };
 }) => {
   const { net, account, setEdited, innerProps } = props;
+  const dispatch = useDispatch();
   const { pubKey, humanName } = account;
   const ref = useRef<HTMLInputElement>({} as HTMLInputElement);
   return (
     <Editable
       ref={ref}
       value={humanName || ''}
-      onClick={() => setEdited(pubKey)}
-      editingStopped={() => setEdited('')}
+      onClick={() => dispatch(setEdited(pubKey))}
+      editingStopped={() => dispatch(setEdited(''))}
       handleOutsideClick={() => {
         analytics('updateAccountName', {});
         window.electron.ipcRenderer.updateAccountName({
