@@ -682,7 +682,7 @@ const AccountListItem = (props: {
     <div
       onClick={() => {
         analytics('selectAccount', { net });
-        setSelected(account.pubKey);
+        dispatch(setSelected(account.pubKey));
       }}
       className={`p-1 account-list-item ${
         selected
@@ -705,7 +705,7 @@ const AccountListItem = (props: {
                 dispatch(setEdited(account.pubKey));
                 addAcctRef.current.focus();
               }}
-              editingStopped={() => setEdited('')}
+              editingStopped={() => dispatch(setEdited(''))}
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
