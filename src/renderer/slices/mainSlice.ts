@@ -7,8 +7,6 @@ import {
   ACCOUNTS_NONE_KEY,
   ToastState,
   TOAST_BOTTOM_OFFSET,
-  ProgramChangesState,
-  ProgramAccountChange,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
@@ -111,32 +109,10 @@ export const accountsSlice = createSlice({
   },
 });
 
-const programChangesState: ProgramChangesState = {
-  changes: [],
-  paused: false,
-};
-
-export const programChangesSlice = createSlice({
-  name: 'programChanges',
-  initialState: programChangesState,
-  reducers: {
-    setProgramChanges: (
-      state,
-      action: PayloadAction<ProgramAccountChange[]>
-    ) => {
-      state.changes = action.payload;
-    },
-    setProgramChangesPaused: (state, action: PayloadAction<boolean>) => {
-      state.paused = action.payload;
-    },
-  },
-});
-
 const mainReducer = combineReducers({
   toast: toastSlice.reducer,
   validator: validatorSlice.reducer,
   accounts: accountsSlice.reducer,
-  programChanges: programChangesSlice.reducer,
 });
 
 export type RootState = ReturnType<typeof mainReducer>;
@@ -157,6 +133,4 @@ export const {
   setHovered,
   setSelected,
 } = accountsSlice.actions;
-export const { setProgramChanges, setProgramChangesPaused } =
-  programChangesSlice.actions;
 export default mainReducer;

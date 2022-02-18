@@ -56,8 +56,6 @@ import {
   rmToast,
   shiftAccount,
   pushToast,
-  setProgramChanges,
-  setProgramChangesPaused,
 } from './slices/mainSlice';
 
 import {
@@ -78,6 +76,7 @@ import {
   ImportedAccountMap,
   ProgramID,
   AccountsState,
+  ProgramChangesState,
 } from '../types/types';
 import analytics from 'common/analytics';
 
@@ -871,10 +870,15 @@ const ProgramChangeView = (props: {
   pushToast: (toast: JSX.Element) => void;
 }) => {
   const dispatch = useDispatch();
-  const { changes, paused } = useSelector(
-    (state: RootState) => state.programChanges
-  );
   const { net, accounts, attemptAccountAdd, pushToast } = props;
+
+  // want to check paused before updating changes later,
+  // so we include these together
+  const [changesState, setChangesState] = useState<ProgramChangesState>({
+    changes: [],
+    paused: false,
+  });
+  const { changes, paused } = changesState;
 
   const [uniqueAccounts, setUniqueAccounts] = useState(0);
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
@@ -902,11 +906,13 @@ const ProgramChangeView = (props: {
           window.electron.ipcRenderer.removeAllListeners('program-changes');
           break;
         case 'program-changes':
-          console.log({ paused });
-          if (!paused) {
-            dispatch(setProgramChanges(res.changes));
-            setUniqueAccounts(res.uniqueAccounts);
-          }
+          setChangesState((prevState) => {
+            if (!prevState.paused) {
+              setUniqueAccounts(res.uniqueAccounts);
+              return { ...prevState, changes: res.changes };
+            }
+            return prevState;
+          });
           break;
         default:
       }
@@ -932,10 +938,16 @@ const ProgramChangeView = (props: {
     </>
   );
 
+  const setPaused = (p: boolean) => {
+    setChangesState((prevState) => ({
+      ...prevState,
+      paused: p,
+    }));
+  };
   const pause = () => {
     if (pausedTimeoutRef.current === 0) {
       pausedTimeoutRef.current = window.setTimeout(() => {
-        dispatch(setProgramChangesPaused(true));
+        setPaused(true);
         pausedTimeoutRef.current = 0;
       }, 250);
     }
@@ -945,9 +957,10 @@ const ProgramChangeView = (props: {
       window.clearTimeout(pausedTimeoutRef.current);
       pausedTimeoutRef.current = 0;
     }
-    dispatch(setProgramChangesPaused(false));
+    setPaused(false);
   };
 
+  console.log({ changes, len: changes.length });
   return (
     <div>
       <div className="mb-2">
