@@ -384,8 +384,6 @@ type EditableProps = {
   // TODO: factor these out into forwardRefs?
   onClick?: () => void;
   handleOutsideClick?: () => void;
-  setSelected?: (s: string) => void;
-  setHoveredItem?: (s: string) => void;
   editingStopped?: () => void;
   onPaste?: (e: any) => void;
   onKeyDown?: (e: any) => void;
@@ -395,12 +393,11 @@ type EditableProps = {
 
 const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
   (props, ref) => {
+    const dispatch = useDispatch();
     const {
       value,
       outerHovered,
       outerSelected,
-      setSelected,
-      setHoveredItem,
       onClick,
       editingStopped,
       className,
@@ -413,7 +410,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
       onBlur,
       effect,
     } = props;
-    const [hovered, setHovered] = useState(false);
+    const [hovering, setHovering] = useState(false);
     const [editing, setEditing] = useState(false);
 
     useEffect(() => {
@@ -431,7 +428,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
     } else if (!outerSelected) {
       classes = `${classes} border-white`;
     }
-    if (hovered && !editing) {
+    if (hovering && !editing) {
       classes = `${classes} border-soft-dark`;
     }
     if (editing) {
@@ -443,7 +440,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
 
     const completeEdit = () => {
       if (editing) {
-        setHovered(false);
+        setHovering(false);
         setEditing(false);
         if (editingStopped) editingStopped();
         if (handleOutsideClick) handleOutsideClick();
@@ -453,20 +450,20 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
     return (
       <OutsideClickHandler onOutsideClick={completeEdit}>
         <div
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
           onClick={(e) => {
             e.stopPropagation();
-            if (setSelected) setSelected('');
+            dispatch(setSelected(''));
             setEditing(true);
-            if (setHoveredItem) setHoveredItem('');
+            dispatch(setHovered(''));
             if (onClick) onClick();
           }}
         >
           <InputGroup
             size="sm"
             className={`${inputClassName} ${
-              outerSelected && !hovered && !outerHovered && 'input-selected'
+              outerSelected && !hovering && !outerHovered && 'input-selected'
             }`}
           >
             <FormControl
@@ -507,8 +504,6 @@ Editable.defaultProps = {
   placeholder: '',
   outerHovered: false,
   outerSelected: false,
-  setSelected: () => {},
-  setHoveredItem: () => {},
   editingStopped: () => {},
   handleOutsideClick: () => {},
   onPaste: () => {},
