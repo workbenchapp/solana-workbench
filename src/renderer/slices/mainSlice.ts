@@ -1,9 +1,12 @@
 import { combineReducers, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { cloneElement } from 'react';
 import {
   ValidatorState,
   AccountsState,
   WBAccount,
   ACCOUNTS_NONE_KEY,
+  ToastState,
+  TOAST_BOTTOM_OFFSET,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
@@ -11,6 +14,26 @@ const validatorState: ValidatorState = {
   waitingForRun: false,
   loading: false,
 };
+
+const toastState: ToastState = {
+  toasts: [],
+};
+
+export const toastSlice = createSlice({
+  name: 'toast',
+  initialState: toastState,
+  reducers: {
+    rmToast: (state, action: PayloadAction<React.Key | null>) => {
+      state.toasts.filter((t) => t.key !== action.payload);
+    },
+    pushToast: (state, action: PayloadAction<JSX.Element>) => {
+      const newToast = cloneElement(action.payload, {
+        bottom: TOAST_BOTTOM_OFFSET * state.toasts.length + 1,
+      });
+      state.toasts.push(newToast);
+    },
+  },
+});
 
 export const validatorSlice = createSlice({
   name: 'validator',
@@ -47,7 +70,7 @@ export const accountsSlice = createSlice({
     setAccountsRootKey: (state, action: PayloadAction<string>) => {
       state.rootKey = action.payload;
     },
-    addAccount: (state, action: PayloadAction<string>) => {
+    addAccount: (state, action: PayloadAction<string | undefined>) => {
       let pubKey = action.payload;
       if (!pubKey) {
         pubKey = ACCOUNTS_NONE_KEY;
@@ -88,11 +111,13 @@ export const accountsSlice = createSlice({
 });
 
 const mainReducer = combineReducers({
+  toast: toastSlice.reducer,
   validator: validatorSlice.reducer,
   accounts: accountsSlice.reducer,
 });
 
 export type RootState = ReturnType<typeof mainReducer>;
+export const { rmToast, pushToast } = toastSlice.actions;
 export const {
   setValidatorRunning,
   setValidatorWaitingForRun,

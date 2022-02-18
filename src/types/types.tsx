@@ -9,6 +9,15 @@ export enum Net {
 }
 
 export const ACCOUNTS_NONE_KEY = 'none';
+export const RANDOMART_W_CH = 17;
+export const RANDOMART_H_CH = 10;
+export const TOAST_HEIGHT = 270;
+export const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
+export const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
+export const TOAST_HIDE_MS = 1200;
+export const TOAST_PAUSE_MS = 1000;
+export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
 export const netToURL = (net: Net): string => {
   switch (net) {
@@ -145,4 +154,8 @@ export interface AccountsState {
   hovered: string;
   edited: string;
   rootKey: string;
+}
+
+export interface ToastState {
+  toasts: JSX.Element[];
 }
