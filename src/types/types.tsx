@@ -148,11 +148,10 @@ export interface ValidatorState {
 }
 
 export interface AccountsState {
-  selectedAccount: string | undefined;
   listedAccounts: WBAccount[];
-  selected: string;
-  hovered: string;
-  edited: string;
+  selectedAccount: string | undefined;
+  hoveredAccount: string;
+  editedAccount: string;
   rootKey: string;
 }
 

@@ -52,11 +52,10 @@ export const validatorSlice = createSlice({
 });
 
 const accountsState: AccountsState = {
-  selectedAccount: undefined,
   listedAccounts: [],
-  selected: '',
-  hovered: '',
-  edited: '',
+  selectedAccount: '',
+  hoveredAccount: '',
+  editedAccount: '',
   rootKey: '',
 };
 
@@ -79,9 +78,9 @@ export const accountsSlice = createSlice({
         pubKey,
         humanName: '',
       });
-      state.selected = '';
-      state.hovered = '';
-      state.edited = ACCOUNTS_NONE_KEY;
+      state.selectedAccount = '';
+      state.hoveredAccount = '';
+      state.editedAccount = ACCOUNTS_NONE_KEY;
     },
     shiftAccount: (state) => {
       state.listedAccounts.shift();
@@ -99,13 +98,13 @@ export const accountsSlice = createSlice({
       );
     },
     setEdited: (state, action: PayloadAction<string>) => {
-      state.edited = action.payload;
+      state.editedAccount = action.payload;
     },
     setHovered: (state, action: PayloadAction<string>) => {
-      state.hovered = action.payload;
+      state.hoveredAccount = action.payload;
     },
     setSelected: (state, action: PayloadAction<string>) => {
-      state.selected = action.payload;
+      state.selectedAccount = action.payload;
     },
   },
 });

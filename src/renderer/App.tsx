@@ -633,9 +633,13 @@ const AccountListItem = (props: {
 }) => {
   const { net, initializing, account, attemptAccountAdd } = props;
   const dispatch = useDispatch();
-  const { selected, hovered, edited } = useSelector(
+  const { selectedAccount, hoveredAccount, editedAccount } = useSelector(
     (state: RootState) => state.accounts
   );
+  const { pubKey } = account;
+  const selected = selectedAccount === pubKey;
+  const hovered = hoveredAccount === pubKey;
+  const edited = editedAccount === pubKey;
   const addAcctRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   type EllipsisToggleProps = {
@@ -737,8 +741,8 @@ const AccountListItem = (props: {
                   setEdited={setEdited}
                   innerProps={{
                     placeholder: 'Write a description',
-                    outerSelected: account.pubKey === selected,
-                    outerHovered: account.pubKey === hovered,
+                    outerSelected: selected,
+                    outerHovered: hovered,
                   }}
                 />
               </small>
@@ -1254,9 +1258,9 @@ const AccountListView = (props: {
         const initializing = account.pubKey === ACCOUNTS_NONE_KEY;
         return (
           <AccountListItem
+            net={net}
             account={account}
             initializing={initializing}
-            net={net}
             key={`pubKey=${account.pubKey},initializing=${initializing}`}
             attemptAccountAdd={attemptAccountAdd}
           />
@@ -1272,7 +1276,7 @@ const Accounts = (props: { net: Net }) => {
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
   );
-  const { rootKey, selected, listedAccounts } = accounts;
+  const { rootKey, selectedAccount, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
@@ -1386,8 +1390,8 @@ const Accounts = (props: { net: Net }) => {
     };
   }, []);
 
-  const selectedAccount: WBAccount | undefined = listedAccounts.find(
-    (a) => selected === a.pubKey
+  const selectedAccountInfo: WBAccount | undefined = listedAccounts.find(
+    (a) => selectedAccount === a.pubKey
   );
 
   const initializingAccount: boolean =
@@ -1399,6 +1403,7 @@ const Accounts = (props: { net: Net }) => {
       <small className="me-2">Generating seed wallets...</small>
     </>
   );
+
   if (net !== Net.Localhost) {
     initView = (
       <small className="me-2">
@@ -1457,7 +1462,7 @@ const Accounts = (props: { net: Net }) => {
             </li>
             <li
               className={`${
-                selectedAccount ? '' : 'border-bottom active'
+                selectedAccountInfo ? '' : 'border-bottom active'
               } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
             >
               <small
@@ -1471,8 +1476,8 @@ const Accounts = (props: { net: Net }) => {
           </ul>
         </div>
         <div className="m-2">
-          {selectedAccount ? (
-            <AccountView net={net} account={selectedAccount} />
+          {selectedAccountInfo ? (
+            <AccountView net={net} account={selectedAccountInfo} />
           ) : (
             <ProgramChangeView
               net={net}
