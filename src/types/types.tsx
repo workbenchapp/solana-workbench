@@ -46,7 +46,8 @@ export type WBAccount = {
   art?: string;
   solAmount?: number;
   hexDump?: string;
-  solAccount?: sol.AccountInfo<Buffer> | null;
+  exists?: boolean;
+  executable?: boolean;
 };
 
 export type ValidatorStateRequest = {
@@ -155,8 +156,16 @@ export interface AccountsState {
   rootKey: string;
 }
 
+export interface ToastProps {
+  msg: string;
+  variant?: string;
+  hideAfter?: number;
+  bottom?: number;
+  key?: string;
+}
+
 export interface ToastState {
-  toasts: JSX.Element[];
+  toasts: ToastProps[];
 }
 
 export interface ProgramChangesState {

@@ -1,5 +1,5 @@
 import { combineReducers, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { cloneElement } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import {
   ValidatorState,
   AccountsState,
@@ -7,6 +7,7 @@ import {
   ACCOUNTS_NONE_KEY,
   ToastState,
   TOAST_BOTTOM_OFFSET,
+  ToastProps,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
@@ -23,13 +24,13 @@ export const toastSlice = createSlice({
   name: 'toast',
   initialState: toastState,
   reducers: {
-    rmToast: (state, action: PayloadAction<React.Key | null>) => {
+    rmToast: (state, action: PayloadAction<string | undefined>) => {
       state.toasts.filter((t) => t.key !== action.payload);
     },
-    pushToast: (state, action: PayloadAction<JSX.Element>) => {
-      const newToast = cloneElement(action.payload, {
-        bottom: TOAST_BOTTOM_OFFSET * state.toasts.length + 1,
-      });
+    pushToast: (state, action: PayloadAction<ToastProps>) => {
+      const newToast = action.payload;
+      newToast.bottom = TOAST_BOTTOM_OFFSET * state.toasts.length + 1;
+      newToast.key = uuidv4();
       state.toasts.push(newToast);
     },
   },

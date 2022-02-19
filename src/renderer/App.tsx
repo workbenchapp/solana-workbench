@@ -38,7 +38,6 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { debounce } from 'underscore';
 import { useSelector, useDispatch } from 'react-redux';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   RootState,
@@ -108,11 +107,11 @@ const useInterval = (callback: any, delay: number) => {
 };
 
 const Toast = (props: {
-  msg: string | JSX.Element;
+  msg: string;
   variant?: string;
   bottom?: number;
   hideAfter?: number;
-  key: React.Key;
+  key?: string | undefined;
 }) => {
   const dispatch = useDispatch();
   const { key, msg, variant, bottom, hideAfter } = props;
@@ -591,14 +590,13 @@ RandomArt.defaultProps = {
 const AccountNameEditable = (props: {
   net: Net;
   account: WBAccount;
-  setEdited: (s: string) => void;
   innerProps: {
     placeholder: string;
     outerSelected: boolean | undefined;
     outerHovered: boolean | undefined;
   };
 }) => {
-  const { net, account, setEdited, innerProps } = props;
+  const { net, account, innerProps } = props;
   const dispatch = useDispatch();
   const { pubKey, humanName } = account;
   const ref = useRef<HTMLInputElement>({} as HTMLInputElement);
@@ -734,7 +732,6 @@ const AccountListItem = (props: {
                 <AccountNameEditable
                   net={net}
                   account={account}
-                  setEdited={setEdited}
                   innerProps={{
                     placeholder: 'Write a description',
                     outerSelected: selected,
@@ -756,7 +753,7 @@ const AccountListItem = (props: {
                       window.electron.ipcRenderer.deleteAccount({
                         pubKey: account.pubKey,
                       });
-                      rmAccount(account.pubKey);
+                      dispatch(rmAccount(account.pubKey));
                     }}
                   >
                     <small className="text-danger">
@@ -867,10 +864,9 @@ const ProgramChangeView = (props: {
   net: Net;
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-  pushToast: (toast: JSX.Element) => void;
 }) => {
   const dispatch = useDispatch();
-  const { net, accounts, attemptAccountAdd, pushToast } = props;
+  const { net, accounts, attemptAccountAdd } = props;
 
   // want to check paused before updating changes later,
   // so we include these together
@@ -896,9 +892,6 @@ const ProgramChangeView = (props: {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method !== 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'subscribe-program-changes':
           break;
@@ -929,7 +922,7 @@ const ProgramChangeView = (props: {
         programID,
       });
     };
-  }, []);
+  }, [net]);
 
   const changeFilterDropdownTitle = (
     <>
@@ -960,7 +953,6 @@ const ProgramChangeView = (props: {
     setPaused(false);
   };
 
-  console.log({ changes, len: changes.length });
   return (
     <div>
       <div className="mb-2">
@@ -1018,13 +1010,10 @@ const ProgramChangeView = (props: {
                   onKeyDown={(e) => {
                     if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
                       dispatch(
-                        pushToast(
-                          <Toast
-                            key={uuidv4()}
-                            msg="Must paste in valid program ID"
-                            variant="warning"
-                          />
-                        )
+                        pushToast({
+                          msg: 'Must paste in valid program ID',
+                          variant: 'warning',
+                        })
                       );
                       filterProgramIDRef.current.value = 'Custom';
                       filterProgramIDRef.current.blur();
@@ -1045,17 +1034,11 @@ const ProgramChangeView = (props: {
                       setProgramID(pastedID);
                     } else {
                       dispatch(
-                        pushToast(
-                          <Toast
-                            key={uuidv4()}
-                            msg={
-                              <div className="ms-3">
-                                Invalid program ID: <code>{pastedID}</code>
-                              </div>
-                            }
-                            variant="warning"
-                          />
-                        )
+                        pushToast({
+                          // todo: full jsx access would be better (code)
+                          msg: `Invalid program ID: ${pastedID}`,
+                          variant: 'warning',
+                        })
                       );
                     }
                     filterProgramIDRef.current.value = 'Custom';
@@ -1164,7 +1147,7 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
                       <small className="text-muted">Executable</small>
                     </td>
                     <td>
-                      {account.solAccount?.executable ? (
+                      {account.executable ? (
                         <div>
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
@@ -1262,6 +1245,7 @@ const Accounts = (props: { net: Net }) => {
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
+    console.log('attemptAccountAdd', { pubKey, initializing });
     if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
       dispatch(shiftAccount());
     } else {
@@ -1276,39 +1260,28 @@ const Accounts = (props: { net: Net }) => {
           .reduce((a, b) => a + b, 0) === 2
       ) {
         dispatch(
-          pushToast(
-            <Toast
-              key={uuidv4()}
-              msg="Account already imported"
-              variant="warning"
-            />
-          )
+          pushToast({ msg: 'Account already imported', variant: 'warning' })
         );
         dispatch(shiftAccount());
         return;
       }
       if (pubKey.match(BASE58_PUBKEY_REGEX)) {
+        console.log('getting!');
         window.electron.ipcRenderer.getAccount({
           net,
-          pk: pubKey,
+          pubKey,
         });
       } else {
-        dispatch(
-          pushToast(
-            <Toast key={uuidv4()} msg="Invalid account ID" variant="warning" />
-          )
-        );
+        dispatch(pushToast({ msg: 'Invalid account ID', variant: 'warning' }));
         dispatch(shiftAccount());
       }
     }
   };
 
   useEffect(() => {
+    console.log('useEffect');
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method !== 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'accounts':
           dispatch(setListedAccounts(res.accounts));
@@ -1319,7 +1292,8 @@ const Accounts = (props: { net: Net }) => {
         case 'import-account':
           break;
         case 'get-account':
-          if (res.account?.solAccount) {
+          if (res.account?.exists) {
+            console.log('get account was called and account exists', res);
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(res.account.pubKey));
             analytics('accountAddSuccess', { net });
@@ -1328,36 +1302,24 @@ const Accounts = (props: { net: Net }) => {
               pubKey: res.account.pubKey,
             });
             dispatch(
-              pushToast(
-                <Toast
-                  key={uuidv4()}
-                  msg="Account imported"
-                  variant="sol-green"
-                />
-              )
+              pushToast({
+                msg: 'Account imported',
+                variant: 'sol-green',
+              })
             );
           } else {
             if (resp.account?.pubKey) {
               dispatch(rmAccount(resp.account?.pubKey));
             }
             dispatch(
-              pushToast(
-                <Toast
-                  key={uuidv4()}
-                  msg={`Account not found in ${net}`}
-                  variant="warning"
-                />
-              )
+              pushToast({
+                msg: `Account not found in ${net}`,
+                variant: 'warning',
+              })
             );
           }
           break;
         case 'delete-account':
-          break;
-        case 'subscribe-program-changes':
-          break;
-        case 'unsubscribe-program-changes':
-          break;
-        case 'program-changes':
           break;
         default:
       }
@@ -1370,7 +1332,7 @@ const Accounts = (props: { net: Net }) => {
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, []);
+  }, [net]);
 
   const selectedAccountInfo: WBAccount | undefined = listedAccounts.find(
     (a) => selectedAccount === a.pubKey
@@ -1414,7 +1376,7 @@ const Accounts = (props: { net: Net }) => {
                 e.preventDefault();
                 setAddBtnClicked(true);
                 if (!initializingAccount) {
-                  addAccount(undefined);
+                  dispatch(addAccount(undefined));
                 }
               }}
               onMouseUp={() => setAddBtnClicked(false)}
@@ -1465,7 +1427,6 @@ const Accounts = (props: { net: Net }) => {
               net={net}
               accounts={listedAccounts}
               attemptAccountAdd={attemptAccountAdd}
-              pushToast={pushToast}
             />
           )}
         </div>
@@ -1570,9 +1531,6 @@ export default function App() {
     const listener = (resp: any) => {
       const { method, res } = resp;
       // too spammy
-      if (method !== 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'validator-state':
           dispatch(setValidatorRunning(res.running));
@@ -1615,7 +1573,9 @@ export default function App() {
         <div className="row flex-nowrap g-0">
           <div className="col-auto">
             <Nav />
-            {toasts}
+            {toasts.map((t) => (
+              <Toast {...t} />
+            ))}
           </div>
           <div className="col-10 bg-white ms-4">
             <div className="row sticky-top sticky-nav bg-white-translucent">

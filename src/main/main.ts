@@ -226,9 +226,16 @@ async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
       solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
     const hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
     if (solAccount !== null) {
-      resp.account = { pubKey, solAmount, art, solAccount, hexDump };
+      resp.account = {
+        pubKey,
+        solAmount,
+        art,
+        hexDump,
+        executable: solAccount.executable,
+        exists: true,
+      };
     } else {
-      resp.account = { pubKey };
+      resp.account = { pubKey, exists: false, executable: false };
     }
   } catch (e) {
     resp.err = e as Error;
@@ -264,7 +271,6 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
         const art = randomart(key.toBytes());
         const newAcc: WBAccount = { art, humanName, pubKey: key.toString() };
         if (solAccount) {
-          newAcc.solAccount = solAccount;
           newAcc.solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
           newAcc.hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
         }
@@ -548,12 +554,12 @@ ipcMain.on(
           break;
         default:
       }
-      logger.info('res', { method, ...res });
+      logger.info('OK', { method, ...res });
       event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;
       const { stack } = error;
-      logger.error('IPC error', {
+      logger.error('ERROR', {
         method,
         name: error.name,
       });
