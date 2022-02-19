@@ -55,6 +55,7 @@ import {
   rmToast,
   shiftAccount,
   pushToast,
+  setNet,
 } from './slices/mainSlice';
 
 import {
@@ -111,10 +112,10 @@ const Toast = (props: {
   variant?: string;
   bottom?: number;
   hideAfter?: number;
-  key?: string | undefined;
+  toastKey?: string | undefined;
 }) => {
   const dispatch = useDispatch();
-  const { key, msg, variant, bottom, hideAfter } = props;
+  const { toastKey, msg, variant, bottom, hideAfter } = props;
   const [left, setRefLeft] = useState(-300);
   const leftRef = useRef<number>(0);
   const beginTimeout = useRef<number>();
@@ -137,7 +138,7 @@ const Toast = (props: {
           window.clearTimeout(beginTimeout.current);
           window.clearTimeout(rmInterval.current);
           window.clearTimeout(slideInterval.current);
-          dispatch(rmToast(key));
+          dispatch(rmToast(toastKey));
         }, hideAfter * 2 + TOAST_PAUSE_MS);
         slideInterval.current = window.setTimeout(() => {
           setLeft(-300);
@@ -170,7 +171,7 @@ const Toast = (props: {
                 window.clearTimeout(beginTimeout.current);
                 window.clearTimeout(rmInterval.current);
                 window.clearTimeout(slideInterval.current);
-                dispatch(rmToast(key));
+                dispatch(rmToast(toastKey));
               }}
               className="text-muted"
               size="lg"
@@ -186,7 +187,6 @@ const Toast = (props: {
 Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
-  rmToast: () => {},
   hideAfter: TOAST_HIDE_MS,
 };
 
@@ -259,6 +259,7 @@ const Run = () => {
   const validator: ValidatorState = useSelector(
     (state: RootState) => state.validator
   );
+
   const dispatch = useDispatch();
 
   const fetchLogs = useCallback(() => {
@@ -412,9 +413,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
     const [hovering, setHovering] = useState(false);
     const [editing, setEditing] = useState(false);
 
-    useEffect(() => {
-      if (effect) effect();
-    });
+    if (effect) useEffect(effect);
 
     let formValue = value;
     if (clearAllOnSelect) {
@@ -588,7 +587,6 @@ RandomArt.defaultProps = {
 };
 
 const AccountNameEditable = (props: {
-  net: Net;
   account: WBAccount;
   innerProps: {
     placeholder: string;
@@ -596,7 +594,8 @@ const AccountNameEditable = (props: {
     outerHovered: boolean | undefined;
   };
 }) => {
-  const { net, account, innerProps } = props;
+  const { account, innerProps } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
   const dispatch = useDispatch();
   const { pubKey, humanName } = account;
   const ref = useRef<HTMLInputElement>({} as HTMLInputElement);
@@ -620,16 +619,16 @@ const AccountNameEditable = (props: {
 };
 
 const AccountListItem = (props: {
-  net: Net;
   initializing: boolean;
   account: WBAccount;
   attemptAccountAdd: (pk: string, b: boolean) => void;
 }) => {
-  const { net, initializing, account, attemptAccountAdd } = props;
+  const { initializing, account, attemptAccountAdd } = props;
   const dispatch = useDispatch();
   const { selectedAccount, hoveredAccount, editedAccount } = useSelector(
     (state: RootState) => state.accounts
   );
+  const { net } = useSelector((state: RootState) => state.validator);
   const { pubKey } = account;
   const selected = selectedAccount === pubKey;
   const hovered = hoveredAccount === pubKey;
@@ -730,7 +729,6 @@ const AccountListItem = (props: {
             <div className="col-auto">
               <small>
                 <AccountNameEditable
-                  net={net}
                   account={account}
                   innerProps={{
                     placeholder: 'Write a description',
@@ -861,12 +859,12 @@ const ProgramChange = (props: {
 };
 
 const ProgramChangeView = (props: {
-  net: Net;
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
 }) => {
   const dispatch = useDispatch();
-  const { net, accounts, attemptAccountAdd } = props;
+  const { accounts, attemptAccountAdd } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
 
   // want to check paused before updating changes later,
   // so we include these together
@@ -1105,8 +1103,9 @@ const ProgramChangeView = (props: {
   );
 };
 
-const AccountView = (props: { net: Net; account: WBAccount }) => {
-  const { net, account } = props;
+const AccountView = (props: { account: WBAccount }) => {
+  const { account } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
   return (
     <>
       <div className="row">
@@ -1209,10 +1208,9 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
 };
 
 const AccountListView = (props: {
-  net: Net;
   attemptAccountAdd: (pk: string, b: boolean) => void;
 }) => {
-  const { net, attemptAccountAdd } = props;
+  const { attemptAccountAdd } = props;
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
   );
@@ -1223,7 +1221,6 @@ const AccountListView = (props: {
         const initializing = account.pubKey === ACCOUNTS_NONE_KEY;
         return (
           <AccountListItem
-            net={net}
             account={account}
             initializing={initializing}
             key={`pubKey=${account.pubKey},initializing=${initializing}`}
@@ -1235,12 +1232,12 @@ const AccountListView = (props: {
   );
 };
 
-const Accounts = (props: { net: Net }) => {
-  const { net } = props;
+const Accounts = () => {
   const dispatch = useDispatch();
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
   );
+  const { net } = useSelector((state: RootState) => state.validator);
   const { rootKey, selectedAccount, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
@@ -1297,10 +1294,12 @@ const Accounts = (props: { net: Net }) => {
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(res.account.pubKey));
             analytics('accountAddSuccess', { net });
+            /*
             window.electron.ipcRenderer.importAccount({
               net,
               pubKey: res.account.pubKey,
             });
+            */
             dispatch(
               pushToast({
                 msg: 'Account imported',
@@ -1308,6 +1307,7 @@ const Accounts = (props: { net: Net }) => {
               })
             );
           } else {
+            console.log('no exist', resp);
             if (resp.account?.pubKey) {
               dispatch(rmAccount(resp.account?.pubKey));
             }
@@ -1330,6 +1330,7 @@ const Accounts = (props: { net: Net }) => {
     });
 
     return () => {
+      console.log('removing listener');
       window.electron.ipcRenderer.removeListener('main', listener);
     };
   }, [net]);
@@ -1386,7 +1387,7 @@ const Accounts = (props: { net: Net }) => {
             </button>
           </div>
           {listedAccounts.length > 0 || net !== Net.Localhost ? (
-            <AccountListView net={net} attemptAccountAdd={attemptAccountAdd} />
+            <AccountListView attemptAccountAdd={attemptAccountAdd} />
           ) : (
             initView
           )}
@@ -1421,10 +1422,9 @@ const Accounts = (props: { net: Net }) => {
         </div>
         <div className="m-2">
           {selectedAccountInfo ? (
-            <AccountView net={net} account={selectedAccountInfo} />
+            <AccountView account={selectedAccountInfo} />
           ) : (
             <ProgramChangeView
-              net={net}
               accounts={listedAccounts}
               attemptAccountAdd={attemptAccountAdd}
             />
@@ -1523,9 +1523,9 @@ const Header = () => {
 };
 
 export default function App() {
-  const [net, setNet] = useState(Net.Localhost);
   const dispatch = useDispatch();
   const { toasts } = useSelector((state: RootState) => state.toast);
+  const { net } = useSelector((state: RootState) => state.validator);
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -1557,7 +1557,7 @@ export default function App() {
 
   const netDropdownSelect = (eventKey: string | null) => {
     analytics('selectNet', { prevNet: net, newNet: eventKey });
-    if (eventKey) setNet(eventKey as Net);
+    if (eventKey) dispatch(setNet(eventKey as Net));
   };
 
   const netDropdownTitle = (
@@ -1607,7 +1607,7 @@ export default function App() {
             </div>
             <div className="row flex-nowrap">
               <Route exact path="/">
-                <Accounts net={net} />
+                <Accounts />
               </Route>
               <Route path="/validator">
                 <Run />

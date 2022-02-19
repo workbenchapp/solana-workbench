@@ -8,9 +8,11 @@ import {
   ToastState,
   TOAST_BOTTOM_OFFSET,
   ToastProps,
+  Net,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
+  net: Net.Localhost,
   running: false,
   waitingForRun: false,
   loading: false,
@@ -25,12 +27,16 @@ export const toastSlice = createSlice({
   initialState: toastState,
   reducers: {
     rmToast: (state, action: PayloadAction<string | undefined>) => {
-      state.toasts.filter((t) => t.key !== action.payload);
+      state.toasts = state.toasts.filter((t) => {
+        console.log(t.toastKey, action.payload);
+        return t.toastKey !== action.payload;
+      });
     },
     pushToast: (state, action: PayloadAction<ToastProps>) => {
+      console.log(state.toasts.length);
       const newToast = action.payload;
       newToast.bottom = TOAST_BOTTOM_OFFSET * state.toasts.length + 1;
-      newToast.key = uuidv4();
+      newToast.toastKey = uuidv4();
       state.toasts.push(newToast);
     },
   },
@@ -40,6 +46,9 @@ export const validatorSlice = createSlice({
   name: 'validator',
   initialState: validatorState,
   reducers: {
+    setNet: (state, action: PayloadAction<Net>) => {
+      state.net = action.payload;
+    },
     setValidatorRunning: (state, action: PayloadAction<boolean>) => {
       state.running = action.payload;
     },
@@ -71,6 +80,7 @@ export const accountsSlice = createSlice({
       state.rootKey = action.payload;
     },
     addAccount: (state, action: PayloadAction<string | undefined>) => {
+      console.log({ state, action });
       let pubKey = action.payload;
       if (!pubKey) {
         pubKey = ACCOUNTS_NONE_KEY;
@@ -87,6 +97,7 @@ export const accountsSlice = createSlice({
       state.listedAccounts.shift();
     },
     unshiftAccount: (state, action: PayloadAction<WBAccount>) => {
+      console.log({ state, action });
       if (state.listedAccounts[0].pubKey === ACCOUNTS_NONE_KEY) {
         state.listedAccounts[0] = action.payload;
       } else {
@@ -122,6 +133,7 @@ export const {
   setValidatorRunning,
   setValidatorWaitingForRun,
   setValidatorLoading,
+  setNet,
 } = validatorSlice.actions;
 export const {
   setListedAccounts,

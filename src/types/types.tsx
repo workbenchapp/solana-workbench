@@ -143,6 +143,7 @@ export interface ChangeBatchSize {
 }
 
 export interface ValidatorState {
+  net: Net;
   running: boolean;
   waitingForRun: boolean;
   loading: boolean;
@@ -161,7 +162,7 @@ export interface ToastProps {
   variant?: string;
   hideAfter?: number;
   bottom?: number;
-  key?: string;
+  toastKey?: string;
 }
 
 export interface ToastState {
