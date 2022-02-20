@@ -41,6 +41,7 @@ export enum ProgramID {
 }
 
 export type WBAccount = {
+  net: Net | undefined;
   pubKey: string;
   humanName?: string;
   art?: string;

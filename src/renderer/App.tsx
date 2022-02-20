@@ -1299,15 +1299,18 @@ const Accounts = () => {
         case 'import-account':
           break;
         case 'get-account':
-          if (res.account?.exists) {
+          const { exists, net, pubKey } = res.account;
+          if (exists) {
             console.log('get account was called and account exists', res);
             dispatch(unshiftAccount(res.account));
-            dispatch(setSelected(res.account.pubKey));
+            dispatch(setSelected(pubKey));
+
+            // TODO: wrong
             analytics('accountAddSuccess', { net });
 
             window.electron.ipcRenderer.importAccount({
               net,
-              pubKey: res.account.pubKey,
+              pubKey,
             });
 
             dispatch(
@@ -1318,8 +1321,8 @@ const Accounts = () => {
             );
           } else {
             console.log('no exist', resp);
-            if (resp.account?.pubKey) {
-              dispatch(rmAccount(resp.account?.pubKey));
+            if (pubKey) {
+              dispatch(rmAccount(pubKey));
             }
             dispatch(
               pushToast({

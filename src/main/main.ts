@@ -227,6 +227,7 @@ async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
     const hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
     if (solAccount !== null) {
       resp.account = {
+        net,
         pubKey,
         solAmount,
         art,
@@ -235,7 +236,7 @@ async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
         exists: true,
       };
     } else {
-      resp.account = { pubKey, exists: false, executable: false };
+      resp.account = { net, pubKey, exists: false, executable: false };
     }
   } catch (e) {
     resp.err = e as Error;
@@ -269,7 +270,12 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
         const key = new sol.PublicKey(existingAccounts[i].pubKey);
         const { humanName } = existingAccounts[i];
         const art = randomart(key.toBytes());
-        const newAcc: WBAccount = { art, humanName, pubKey: key.toString() };
+        const newAcc: WBAccount = {
+          net,
+          art,
+          humanName,
+          pubKey: key.toString(),
+        };
         if (solAccount) {
           newAcc.solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
           newAcc.hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
@@ -327,6 +333,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
     // todo: this should be on created accounts from DB
     accounts: createdAccounts.map((acc, i) => {
       return {
+        net,
         art: randomart(acc.publicKey.toBytes()),
         pubKey: acc.publicKey.toString(),
         humanName: `Wallet ${i}`,

@@ -83,7 +83,11 @@ export const accountsSlice = createSlice({
       if (!pubKey) {
         pubKey = ACCOUNTS_NONE_KEY;
       }
+
+      // todo: this is stupid, net should be defined
+      // (thread net through)
       state.listedAccounts.splice(0, 0, {
+        net: undefined,
         pubKey,
         humanName: '',
       });
