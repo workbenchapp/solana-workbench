@@ -79,6 +79,10 @@ export type ImportAccountRequest = {
   pubKey: string;
 };
 
+export type ImportAccountResponse = {
+  net: Net;
+};
+
 export type AccountsResponse = {
   rootKey: string;
   accounts: WBAccount[];

@@ -1261,7 +1261,7 @@ const Accounts = () => {
         // a duplicate of an existing one
         listedAccounts
           .map((a): number => (a.pubKey === pubKey ? 1 : 0))
-          .reduce((a, b) => a + b, 0) === 2
+          .reduce((a, b) => a + b, 0) === 1
       ) {
         dispatch(
           pushToast({ msg: 'Account already imported', variant: 'warning' })
@@ -1299,14 +1299,14 @@ const Accounts = () => {
         case 'import-account':
           break;
         case 'get-account':
-          const { exists, net, pubKey } = res.account;
+          const { exists, pubKey } = res.account;
           if (exists) {
             console.log('get account was called and account exists', res);
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(pubKey));
 
             // TODO: wrong
-            analytics('accountAddSuccess', { net });
+            analytics('accountAddSuccess', { net: res.account.net });
 
             window.electron.ipcRenderer.importAccount({
               net,

@@ -48,6 +48,7 @@ import {
   UpdateAccountRequest,
   FetchAnchorIDLRequest,
   ValidatorStateRequest,
+  ImportAccountResponse,
 } from '../types/types';
 
 const execAsync = util.promisify(exec);
@@ -353,14 +354,12 @@ async function updateAccountName(msg: UpdateAccountRequest) {
   return res;
 }
 
-async function importAccount(msg: ImportAccountRequest) {
+async function importAccount(
+  msg: ImportAccountRequest
+): Promise<ImportAccountResponse> {
   const { net, pubKey } = msg;
-  const res = await db.run(
-    'INSERT INTO account (net, pubKey) VALUES (?, ?)',
-    net,
-    pubKey
-  );
-  return res;
+  await db.run('INSERT INTO account (net, pubKey) VALUES (?, ?)', net, pubKey);
+  return { net };
 }
 
 const runValidator = async () => {
