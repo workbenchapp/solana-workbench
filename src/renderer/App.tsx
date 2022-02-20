@@ -287,7 +287,6 @@ const Run = () => {
     () => window.electron.ipcRenderer.validatorState({ net: Net.Localhost }),
     5000
   );
-  useInterval(fetchLogs, 5000);
   useEffect(() => {
     const validatorLogsListener = (logs: string) => {
       setValidatorLogs(logs);
@@ -927,7 +926,7 @@ const ProgramChangeView = (props: {
         programID,
       });
     };
-  }, [net]);
+  }, [net, programID]);
 
   const changeFilterDropdownTitle = (
     <>
@@ -1448,15 +1447,21 @@ const Anchor = () => {
   const programIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const [idl, setIDL] = useState<any>({});
 
-  const fetchIDL = () => {
-    window.electron.ipcRenderer.once('fetch-anchor-idl', (fetchedIDL: any) => {
-      setIDL(fetchedIDL);
-    });
-
-    window.electron.ipcRenderer.fetchAnchorIDL({
-      programID: programIDRef.current.value,
-    });
-  };
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      switch (method) {
+        case 'fetch-anchor-idl':
+          setIDL(res);
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
 
   return (
     <div className="row">
@@ -1468,7 +1473,11 @@ const Anchor = () => {
               style={{ fontFamily: 'Consolas, monospace', fontWeight: 500 }}
               aria-label="Program ID"
               ref={programIDRef}
-              onKeyUp={fetchIDL}
+              onKeyUp={() => {
+                window.electron.ipcRenderer.fetchAnchorIDL({
+                  programID: programIDRef.current.value,
+                });
+              }}
             />
           </InputGroup>
         </div>
