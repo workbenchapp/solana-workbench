@@ -909,12 +909,19 @@ const ProgramChangeView = (props: {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
+
+  useEffect(() => {
     window.electron.ipcRenderer.subscribeProgramChanges({
       net,
       programID,
     });
+
     return () => {
-      window.electron.ipcRenderer.removeListener('main', listener);
       window.electron.ipcRenderer.unsubscribeProgramChanges({
         net,
         programID,
@@ -1279,6 +1286,9 @@ const Accounts = () => {
     console.log('useEffect');
     const listener = (resp: any) => {
       const { method, res } = resp;
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
       switch (method) {
         case 'accounts':
           dispatch(setListedAccounts(res.accounts));
@@ -1294,12 +1304,12 @@ const Accounts = () => {
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(res.account.pubKey));
             analytics('accountAddSuccess', { net });
-            /*
+
             window.electron.ipcRenderer.importAccount({
               net,
               pubKey: res.account.pubKey,
             });
-            */
+
             dispatch(
               pushToast({
                 msg: 'Account imported',
@@ -1325,14 +1335,17 @@ const Accounts = () => {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
-    window.electron.ipcRenderer.accounts({
-      net,
-    });
 
     return () => {
       console.log('removing listener');
       window.electron.ipcRenderer.removeListener('main', listener);
     };
+  }, []);
+
+  useEffect(() => {
+    window.electron.ipcRenderer.accounts({
+      net,
+    });
   }, [net]);
 
   const selectedAccountInfo: WBAccount | undefined = listedAccounts.find(

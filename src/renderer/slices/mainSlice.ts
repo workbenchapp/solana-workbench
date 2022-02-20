@@ -28,12 +28,10 @@ export const toastSlice = createSlice({
   reducers: {
     rmToast: (state, action: PayloadAction<string | undefined>) => {
       state.toasts = state.toasts.filter((t) => {
-        console.log(t.toastKey, action.payload);
         return t.toastKey !== action.payload;
       });
     },
     pushToast: (state, action: PayloadAction<ToastProps>) => {
-      console.log(state.toasts.length);
       const newToast = action.payload;
       newToast.bottom = TOAST_BOTTOM_OFFSET * state.toasts.length + 1;
       newToast.toastKey = uuidv4();
