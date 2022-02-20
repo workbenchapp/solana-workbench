@@ -1249,7 +1249,6 @@ const Accounts = () => {
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
-    console.log('attemptAccountAdd', { pubKey, initializing });
     if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
       dispatch(shiftAccount());
     } else {
@@ -1270,7 +1269,6 @@ const Accounts = () => {
         return;
       }
       if (pubKey.match(BASE58_PUBKEY_REGEX)) {
-        console.log('getting!');
         window.electron.ipcRenderer.getAccount({
           net,
           pubKey,
@@ -1283,7 +1281,6 @@ const Accounts = () => {
   };
 
   useEffect(() => {
-    console.log('useEffect');
     const listener = (resp: any) => {
       const { method, res } = resp;
       if (method != 'program-changes') {
@@ -1301,15 +1298,13 @@ const Accounts = () => {
         case 'get-account':
           const { exists, pubKey } = res.account;
           if (exists) {
-            console.log('get account was called and account exists', res);
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(pubKey));
 
-            // TODO: wrong
             analytics('accountAddSuccess', { net: res.account.net });
 
             window.electron.ipcRenderer.importAccount({
-              net,
+              net: res.account.net,
               pubKey,
             });
 
@@ -1320,7 +1315,6 @@ const Accounts = () => {
               })
             );
           } else {
-            console.log('no exist', resp);
             if (pubKey) {
               dispatch(rmAccount(pubKey));
             }
@@ -1340,7 +1334,6 @@ const Accounts = () => {
     window.electron.ipcRenderer.on('main', listener);
 
     return () => {
-      console.log('removing listener');
       window.electron.ipcRenderer.removeListener('main', listener);
     };
   }, []);
