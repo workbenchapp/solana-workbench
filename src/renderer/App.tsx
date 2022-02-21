@@ -1295,7 +1295,7 @@ const Accounts = () => {
         case 'import-account':
           break;
         case 'get-account':
-          const { exists, pubKey } = res.account;
+          const { pubKey, exists } = res.account;
           if (exists) {
             dispatch(unshiftAccount(res.account));
             dispatch(setSelected(pubKey));
@@ -1314,12 +1314,10 @@ const Accounts = () => {
               })
             );
           } else {
-            if (pubKey) {
-              dispatch(rmAccount(pubKey));
-            }
+            dispatch(rmAccount(pubKey));
             dispatch(
               pushToast({
-                msg: `Account not found in ${net}`,
+                msg: `Account not found in ${res.account.net}`,
                 variant: 'warning',
               })
             );
@@ -1450,6 +1448,9 @@ const Anchor = () => {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
       switch (method) {
         case 'fetch-anchor-idl':
           setIDL(res);
@@ -1548,7 +1549,9 @@ export default function App() {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      // too spammy
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
       switch (method) {
         case 'validator-state':
           dispatch(setValidatorRunning(res.running));

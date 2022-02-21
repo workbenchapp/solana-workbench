@@ -78,7 +78,6 @@ export const accountsSlice = createSlice({
       state.rootKey = action.payload;
     },
     addAccount: (state, action: PayloadAction<string | undefined>) => {
-      console.log({ state, action });
       let pubKey = action.payload;
       if (!pubKey) {
         pubKey = ACCOUNTS_NONE_KEY;
@@ -99,8 +98,10 @@ export const accountsSlice = createSlice({
       state.listedAccounts.shift();
     },
     unshiftAccount: (state, action: PayloadAction<WBAccount>) => {
-      console.log({ state, action });
-      if (state.listedAccounts[0].pubKey === ACCOUNTS_NONE_KEY) {
+      if (
+        state.listedAccounts.length > 0 &&
+        state.listedAccounts[0].pubKey === ACCOUNTS_NONE_KEY
+      ) {
         state.listedAccounts[0] = action.payload;
       } else {
         state.listedAccounts.unshift(action.payload);
