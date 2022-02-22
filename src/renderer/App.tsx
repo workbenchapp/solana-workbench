@@ -41,21 +41,9 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import {
   RootState,
-  setValidatorRunning,
-  setValidatorWaitingForRun,
-  setValidatorLoading,
-  setListedAccounts,
-  setAccountsRootKey,
-  rmAccount,
-  unshiftAccount,
-  addAccount,
-  setSelected,
-  setEdited,
-  setHovered,
-  rmToast,
-  shiftAccount,
-  pushToast,
-  setNet,
+  toastActions,
+  accountsActions,
+  validatorActions,
 } from './slices/mainSlice';
 
 import {
@@ -138,7 +126,7 @@ const Toast = (props: {
           window.clearTimeout(beginTimeout.current);
           window.clearTimeout(rmInterval.current);
           window.clearTimeout(slideInterval.current);
-          dispatch(rmToast(toastKey));
+          dispatch(toastActions.rm(toastKey));
         }, hideAfter * 2 + TOAST_PAUSE_MS);
         slideInterval.current = window.setTimeout(() => {
           setLeft(-300);
@@ -171,7 +159,7 @@ const Toast = (props: {
                 window.clearTimeout(beginTimeout.current);
                 window.clearTimeout(rmInterval.current);
                 window.clearTimeout(slideInterval.current);
-                dispatch(rmToast(toastKey));
+                dispatch(toastActions.rm(toastKey));
               }}
               className="text-muted"
               size="lg"
@@ -273,7 +261,7 @@ const Run = () => {
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
   const runValidator = () => {
-    dispatch(setValidatorWaitingForRun(true));
+    dispatch(validatorActions.setWaitingForRun(true));
     window.electron.ipcRenderer.runValidator();
   };
 
@@ -451,9 +439,9 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
           onMouseLeave={() => setHovering(false)}
           onClick={(e) => {
             e.stopPropagation();
-            dispatch(setSelected(''));
             setEditing(true);
-            dispatch(setHovered(''));
+            dispatch(accountsActions.setSelected(''));
+            dispatch(accountsActions.setHovered(''));
             if (onClick) onClick();
           }}
         >
@@ -602,8 +590,8 @@ const AccountNameEditable = (props: {
     <Editable
       ref={ref}
       value={humanName || ''}
-      onClick={() => dispatch(setEdited(pubKey))}
-      editingStopped={() => dispatch(setEdited(''))}
+      onClick={() => dispatch(accountsActions.setEdited(pubKey))}
+      editingStopped={() => dispatch(accountsActions.setEdited(''))}
       handleOutsideClick={() => {
         analytics('updateAccountName', {});
         window.electron.ipcRenderer.updateAccountName({
@@ -679,7 +667,7 @@ const AccountListItem = (props: {
     <div
       onClick={() => {
         analytics('selectAccount', { net });
-        dispatch(setSelected(account.pubKey));
+        dispatch(accountsActions.setSelected(account.pubKey));
       }}
       className={`p-1 account-list-item ${
         !initializing && !exists && 'opacity-25'
@@ -691,8 +679,8 @@ const AccountListItem = (props: {
         edited && 'border-top border-bottom border-primary'
       }`}
       key={account.pubKey}
-      onMouseEnter={() => dispatch(setHovered(account.pubKey))}
-      onMouseLeave={() => dispatch(setHovered(''))}
+      onMouseEnter={() => dispatch(accountsActions.setHovered(account.pubKey))}
+      onMouseLeave={() => dispatch(accountsActions.setHovered(''))}
     >
       <div className="row flex-nowrap">
         <div className="col">
@@ -701,10 +689,10 @@ const AccountListItem = (props: {
               ref={addAcctRef}
               value={account.pubKey}
               effect={() => {
-                dispatch(setEdited(account.pubKey));
+                dispatch(accountsActions.setEdited(account.pubKey));
                 addAcctRef.current.focus();
               }}
-              editingStopped={() => dispatch(setEdited(''))}
+              editingStopped={() => dispatch(accountsActions.setEdited(''))}
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
@@ -752,7 +740,7 @@ const AccountListItem = (props: {
                       window.electron.ipcRenderer.deleteAccount({
                         pubKey: account.pubKey,
                       });
-                      dispatch(rmAccount(account.pubKey));
+                      dispatch(accountsActions.rm(account.pubKey));
                     }}
                   >
                     <small className="text-danger">
@@ -1015,7 +1003,7 @@ const ProgramChangeView = (props: {
                   onKeyDown={(e) => {
                     if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
                       dispatch(
-                        pushToast({
+                        toastActions.push({
                           msg: 'Must paste in valid program ID',
                           variant: 'warning',
                         })
@@ -1039,7 +1027,7 @@ const ProgramChangeView = (props: {
                       setProgramID(pastedID);
                     } else {
                       dispatch(
-                        pushToast({
+                        toastActions.push({
                           // todo: full jsx access would be better (code)
                           msg: `Invalid program ID: ${pastedID}`,
                           variant: 'warning',
@@ -1250,7 +1238,7 @@ const Accounts = () => {
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
     if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
-      dispatch(shiftAccount());
+      dispatch(accountsActions.shift());
     } else {
       // todo: excludes first (same) element, not generic to anywhere
       // in array but it'll do
@@ -1263,9 +1251,12 @@ const Accounts = () => {
           .reduce((a, b) => a + b, 0) === 1
       ) {
         dispatch(
-          pushToast({ msg: 'Account already imported', variant: 'warning' })
+          toastActions.push({
+            msg: 'Account already imported',
+            variant: 'warning',
+          })
         );
-        dispatch(shiftAccount());
+        dispatch(accountsActions.shift());
         return;
       }
       if (pubKey.match(BASE58_PUBKEY_REGEX)) {
@@ -1274,8 +1265,10 @@ const Accounts = () => {
           pubKey,
         });
       } else {
-        dispatch(pushToast({ msg: 'Invalid account ID', variant: 'warning' }));
-        dispatch(shiftAccount());
+        dispatch(
+          toastActions.push({ msg: 'Invalid account ID', variant: 'warning' })
+        );
+        dispatch(accountsActions.shift());
       }
     }
   };
@@ -1288,8 +1281,8 @@ const Accounts = () => {
       }
       switch (method) {
         case 'accounts':
-          dispatch(setListedAccounts(res.accounts));
-          dispatch(setAccountsRootKey(res.rootKey));
+          dispatch(accountsActions.setAccounts(res.accounts));
+          dispatch(accountsActions.setRootKey(res.rootKey));
           break;
         case 'update-account-name':
           break;
@@ -1298,8 +1291,8 @@ const Accounts = () => {
         case 'get-account':
           const { pubKey, exists } = res.account;
           if (exists) {
-            dispatch(unshiftAccount(res.account));
-            dispatch(setSelected(pubKey));
+            dispatch(accountsActions.unshift(res.account));
+            dispatch(accountsActions.setSelected(pubKey));
 
             analytics('accountAddSuccess', { net: res.account.net });
 
@@ -1309,15 +1302,15 @@ const Accounts = () => {
             });
 
             dispatch(
-              pushToast({
+              toastActions.push({
                 msg: 'Account imported',
                 variant: 'sol-green',
               })
             );
           } else {
-            dispatch(rmAccount(pubKey));
+            dispatch(accountsActions.rm(pubKey));
             dispatch(
-              pushToast({
+              toastActions.push({
                 msg: `Account not found in ${res.account.net}`,
                 variant: 'warning',
               })
@@ -1384,7 +1377,7 @@ const Accounts = () => {
                 e.preventDefault();
                 setAddBtnClicked(true);
                 if (!initializingAccount) {
-                  dispatch(addAccount(undefined));
+                  dispatch(accountsActions.init(undefined));
                 }
               }}
               onMouseUp={() => setAddBtnClicked(false)}
@@ -1419,7 +1412,7 @@ const Accounts = () => {
             >
               <small
                 onClick={() => {
-                  dispatch(setSelected(''));
+                  dispatch(accountsActions.setSelected(''));
                 }}
               >
                 Live
@@ -1555,8 +1548,8 @@ export default function App() {
       }
       switch (method) {
         case 'validator-state':
-          dispatch(setValidatorRunning(res.running));
-          dispatch(setValidatorLoading(false));
+          dispatch(validatorActions.setRunning(res.running));
+          dispatch(validatorActions.setLoading(false));
           break;
         case 'run-validator':
           break;
@@ -1579,7 +1572,7 @@ export default function App() {
 
   const netDropdownSelect = (eventKey: string | null) => {
     analytics('selectNet', { prevNet: net, newNet: eventKey });
-    if (eventKey) dispatch(setNet(eventKey as Net));
+    if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
   };
 
   const netDropdownTitle = (

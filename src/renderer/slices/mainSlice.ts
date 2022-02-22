@@ -26,12 +26,12 @@ export const toastSlice = createSlice({
   name: 'toast',
   initialState: toastState,
   reducers: {
-    rmToast: (state, action: PayloadAction<string | undefined>) => {
+    rm: (state, action: PayloadAction<string | undefined>) => {
       state.toasts = state.toasts.filter((t) => {
         return t.toastKey !== action.payload;
       });
     },
-    pushToast: (state, action: PayloadAction<ToastProps>) => {
+    push: (state, action: PayloadAction<ToastProps>) => {
       const newToast = action.payload;
       newToast.bottom = TOAST_BOTTOM_OFFSET * state.toasts.length + 1;
       newToast.toastKey = uuidv4();
@@ -47,13 +47,13 @@ export const validatorSlice = createSlice({
     setNet: (state, action: PayloadAction<Net>) => {
       state.net = action.payload;
     },
-    setValidatorRunning: (state, action: PayloadAction<boolean>) => {
+    setRunning: (state, action: PayloadAction<boolean>) => {
       state.running = action.payload;
     },
-    setValidatorWaitingForRun: (state, action: PayloadAction<boolean>) => {
+    setWaitingForRun: (state, action: PayloadAction<boolean>) => {
       state.waitingForRun = action.payload;
     },
-    setValidatorLoading: (state, action: PayloadAction<boolean>) => {
+    setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
   },
@@ -71,13 +71,15 @@ export const accountsSlice = createSlice({
   name: 'accounts',
   initialState: accountsState,
   reducers: {
-    setListedAccounts: (state, action: PayloadAction<WBAccount[]>) => {
+    setAccounts: (state, action: PayloadAction<WBAccount[]>) => {
       state.listedAccounts = action.payload;
     },
-    setAccountsRootKey: (state, action: PayloadAction<string>) => {
+    setRootKey: (state, action: PayloadAction<string>) => {
       state.rootKey = action.payload;
     },
-    addAccount: (state, action: PayloadAction<string | undefined>) => {
+    init: (state, action: PayloadAction<string | undefined>) => {
+      // TODO: seems this method is only called once and undefined
+      // is always passed in, do we need the arg any more?
       let pubKey = action.payload;
       if (!pubKey) {
         pubKey = ACCOUNTS_NONE_KEY;
@@ -94,10 +96,10 @@ export const accountsSlice = createSlice({
       state.hoveredAccount = '';
       state.editedAccount = ACCOUNTS_NONE_KEY;
     },
-    shiftAccount: (state) => {
+    shift: (state) => {
       state.listedAccounts.shift();
     },
-    unshiftAccount: (state, action: PayloadAction<WBAccount>) => {
+    unshift: (state, action: PayloadAction<WBAccount>) => {
       if (
         state.listedAccounts.length > 0 &&
         state.listedAccounts[0].pubKey === ACCOUNTS_NONE_KEY
@@ -107,7 +109,7 @@ export const accountsSlice = createSlice({
         state.listedAccounts.unshift(action.payload);
       }
     },
-    rmAccount: (state, action: PayloadAction<string>) => {
+    rm: (state, action: PayloadAction<string>) => {
       state.listedAccounts = state.listedAccounts.filter(
         (a) => a.pubKey !== action.payload
       );
@@ -131,22 +133,9 @@ const mainReducer = combineReducers({
 });
 
 export type RootState = ReturnType<typeof mainReducer>;
-export const { rmToast, pushToast } = toastSlice.actions;
-export const {
-  setValidatorRunning,
-  setValidatorWaitingForRun,
-  setValidatorLoading,
-  setNet,
-} = validatorSlice.actions;
-export const {
-  setListedAccounts,
-  setAccountsRootKey,
-  addAccount,
-  shiftAccount,
-  unshiftAccount,
-  rmAccount,
-  setEdited,
-  setHovered,
-  setSelected,
-} = accountsSlice.actions;
-export default mainReducer;
+const [toastActions, accountsActions, validatorActions] = [
+  toastSlice.actions,
+  accountsSlice.actions,
+  validatorSlice.actions,
+];
+export { toastActions, accountsActions, validatorActions, mainReducer };
