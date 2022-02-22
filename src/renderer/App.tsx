@@ -34,57 +34,39 @@ import {
   faNetworkWired,
   faFilter,
 } from '@fortawesome/free-solid-svg-icons';
-import React, {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  cloneElement,
-} from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
-import amplitude from 'amplitude-js';
 import { debounce } from 'underscore';
-import { v4 as uuidv4 } from 'uuid';
+import { useSelector, useDispatch } from 'react-redux';
 
 import {
+  RootState,
+  toastActions,
+  accountsActions,
+  validatorActions,
+} from './slices/mainSlice';
+
+import {
+  ACCOUNTS_NONE_KEY,
+  RANDOMART_W_CH,
+  RANDOMART_H_CH,
+  TOAST_HEIGHT,
+  TOAST_WIDTH,
+  TOAST_HIDE_MS,
+  TOAST_PAUSE_MS,
+  BASE58_PUBKEY_REGEX,
+  MAX_PROGRAM_CHANGES_DISPLAYED,
   WBAccount,
-  SolState,
-  AccountsResponse,
+  ValidatorState,
   Net,
-  GetAccountResponse,
   netToURL,
   ProgramAccountChange,
   ImportedAccountMap,
-  ProgramChangeResponse,
   ProgramID,
+  AccountsState,
+  ProgramChangesState,
 } from '../types/types';
-
-// dummy var value, could be undefined,
-// but need to refactor for that
-const NONE_KEY = 'none';
-const RANDOMART_W_CH = 17;
-const RANDOMART_H_CH = 10;
-const TOAST_HEIGHT = 270;
-const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
-const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
-const TOAST_HIDE_MS = 1200;
-const TOAST_PAUSE_MS = 1000;
-const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
-const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
-const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
-const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
-
-amplitude.getInstance().init(AMPLITUDE_KEY);
-
-const analytics = (event: string, metadata: any) => {
-  if (process.env.NODE_ENV !== 'development' /* and user has not opted out */) {
-    amplitude.getInstance().logEvent(event, metadata);
-  }
-};
-analytics('openApp', {});
-setInterval(() => {
-  analytics('heartbeat', {});
-}, AMPLITUDE_HEARTBEAT_INTERVAL);
+import analytics from 'common/analytics';
 
 declare global {
   interface Window {
@@ -114,17 +96,14 @@ const useInterval = (callback: any, delay: number) => {
 };
 
 const Toast = (props: {
-  msg: string | JSX.Element;
+  msg: string;
   variant?: string;
   bottom?: number;
-
-  // TODO: This is not a good solution
-  // as it can interrupt animations in flight
-  // by forcing a re-render
-  rmToast?: () => void;
   hideAfter?: number;
+  toastKey?: string | undefined;
 }) => {
-  const { msg, variant, bottom, rmToast, hideAfter } = props;
+  const dispatch = useDispatch();
+  const { toastKey, msg, variant, bottom, hideAfter } = props;
   const [left, setRefLeft] = useState(-300);
   const leftRef = useRef<number>(0);
   const beginTimeout = useRef<number>();
@@ -147,7 +126,7 @@ const Toast = (props: {
           window.clearTimeout(beginTimeout.current);
           window.clearTimeout(rmInterval.current);
           window.clearTimeout(slideInterval.current);
-          if (rmToast) rmToast();
+          dispatch(toastActions.rm(toastKey));
         }, hideAfter * 2 + TOAST_PAUSE_MS);
         slideInterval.current = window.setTimeout(() => {
           setLeft(-300);
@@ -180,7 +159,7 @@ const Toast = (props: {
                 window.clearTimeout(beginTimeout.current);
                 window.clearTimeout(rmInterval.current);
                 window.clearTimeout(slideInterval.current);
-                if (rmToast) rmToast();
+                dispatch(toastActions.rm(toastKey));
               }}
               className="text-muted"
               size="lg"
@@ -196,7 +175,6 @@ const Toast = (props: {
 Toast.defaultProps = {
   variant: 'success-lighter',
   bottom: 0,
-  rmToast: () => {},
   hideAfter: TOAST_HIDE_MS,
 };
 
@@ -264,50 +242,47 @@ const Nav = () => {
 };
 
 const Run = () => {
-  const [solStatus, setSolStatus] = useState({} as SolState);
-  const [loading, setLoading] = useState(true);
-  const [waitingForRun, setWaitingForRun] = useState(false);
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+  const validator: ValidatorState = useSelector(
+    (state: RootState) => state.validator
+  );
+
+  const dispatch = useDispatch();
 
   const fetchLogs = useCallback(() => {
-    if (solStatus.running) {
+    if (validator.running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value,
       });
     }
-  }, [solStatus.running]);
+  }, [validator.running]);
 
   const triggerFetchLogs = debounce(fetchLogs, 800);
 
   const runValidator = () => {
-    setWaitingForRun(true);
+    dispatch(validatorActions.setWaitingForRun(true));
     window.electron.ipcRenderer.runValidator();
   };
 
-  useInterval(window.electron.ipcRenderer.solState, 5000);
-  useInterval(fetchLogs, 5000);
   useEffect(() => {
-    const solStateListener = (arg: SolState) => {
-      setSolStatus(arg);
-      setLoading(false);
-      if (arg.running) {
-        setWaitingForRun(false);
-      }
-    };
+    window.electron.ipcRenderer.validatorState({
+      net: Net.Localhost,
+    });
+  }, []);
 
+  useInterval(
+    () => window.electron.ipcRenderer.validatorState({ net: Net.Localhost }),
+    5000
+  );
+  useEffect(() => {
     const validatorLogsListener = (logs: string) => {
       setValidatorLogs(logs);
     };
-    window.electron.ipcRenderer.on('sol-state', solStateListener);
     window.electron.ipcRenderer.on('validator-logs', validatorLogsListener);
-    window.electron.ipcRenderer.solState({
-      net: Net.Localhost,
-    });
     fetchLogs();
 
     return () => {
-      window.electron.ipcRenderer.removeListener('sol-state', solStateListener);
       window.electron.ipcRenderer.removeListener(
         'validator-logs',
         validatorLogsListener
@@ -318,7 +293,7 @@ const Run = () => {
   let statusDisplay = (
     <div>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      {waitingForRun && (
+      {validator.waitingForRun && (
         <small className="text-muted">
           Starting validator. This can take about a minute...
         </small>
@@ -326,8 +301,8 @@ const Run = () => {
     </div>
   );
 
-  if (!loading && !waitingForRun) {
-    if (solStatus.running) {
+  if (!validator.loading && !validator.waitingForRun) {
+    if (validator.running) {
       statusDisplay = (
         <span className="badge bg-light text-dark">
           <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
@@ -370,7 +345,7 @@ const Run = () => {
           />
         </InputGroup>
         <pre className="mt-2 pre-scrollable">
-          <code className={`${!solStatus.running ? 'text-muted' : ''}`}>
+          <code className={`${!validator.running ? 'text-muted' : ''}`}>
             {validatorLogs}
           </code>
         </pre>
@@ -380,7 +355,7 @@ const Run = () => {
 };
 
 const prettifyPubkey = (pk = '') =>
-  pk !== NONE_KEY
+  pk !== ACCOUNTS_NONE_KEY
     ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
     : '';
 
@@ -396,8 +371,6 @@ type EditableProps = {
   // TODO: factor these out into forwardRefs?
   onClick?: () => void;
   handleOutsideClick?: () => void;
-  setSelected?: (s: string) => void;
-  setHoveredItem?: (s: string) => void;
   editingStopped?: () => void;
   onPaste?: (e: any) => void;
   onKeyDown?: (e: any) => void;
@@ -407,12 +380,11 @@ type EditableProps = {
 
 const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
   (props, ref) => {
+    const dispatch = useDispatch();
     const {
       value,
       outerHovered,
       outerSelected,
-      setSelected,
-      setHoveredItem,
       onClick,
       editingStopped,
       className,
@@ -425,12 +397,10 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
       onBlur,
       effect,
     } = props;
-    const [hovered, setHovered] = useState(false);
+    const [hovering, setHovering] = useState(false);
     const [editing, setEditing] = useState(false);
 
-    useEffect(() => {
-      if (effect) effect();
-    });
+    if (effect) useEffect(effect);
 
     let formValue = value;
     if (clearAllOnSelect) {
@@ -443,7 +413,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
     } else if (!outerSelected) {
       classes = `${classes} border-white`;
     }
-    if (hovered && !editing) {
+    if (hovering && !editing) {
       classes = `${classes} border-soft-dark`;
     }
     if (editing) {
@@ -455,7 +425,7 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
 
     const completeEdit = () => {
       if (editing) {
-        setHovered(false);
+        setHovering(false);
         setEditing(false);
         if (editingStopped) editingStopped();
         if (handleOutsideClick) handleOutsideClick();
@@ -465,20 +435,20 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
     return (
       <OutsideClickHandler onOutsideClick={completeEdit}>
         <div
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+          onMouseEnter={() => setHovering(true)}
+          onMouseLeave={() => setHovering(false)}
           onClick={(e) => {
             e.stopPropagation();
-            if (setSelected) setSelected('');
             setEditing(true);
-            if (setHoveredItem) setHoveredItem('');
+            dispatch(accountsActions.setSelected(''));
+            dispatch(accountsActions.setHovered(''));
             if (onClick) onClick();
           }}
         >
           <InputGroup
             size="sm"
             className={`${inputClassName} ${
-              outerSelected && !hovered && !outerHovered && 'input-selected'
+              outerSelected && !hovering && !outerHovered && 'input-selected'
             }`}
           >
             <FormControl
@@ -519,8 +489,6 @@ Editable.defaultProps = {
   placeholder: '',
   outerHovered: false,
   outerSelected: false,
-  setSelected: () => {},
-  setHoveredItem: () => {},
   editingStopped: () => {},
   handleOutsideClick: () => {},
   onPaste: () => {},
@@ -606,26 +574,24 @@ RandomArt.defaultProps = {
 };
 
 const AccountNameEditable = (props: {
-  net: Net;
   account: WBAccount;
-  setEdited: (s: string) => void;
   innerProps: {
     placeholder: string;
     outerSelected: boolean | undefined;
     outerHovered: boolean | undefined;
-    setSelected: (s: string) => void;
-    setHoveredItem: (s: string) => void;
   };
 }) => {
-  const { net, account, setEdited, innerProps } = props;
+  const { account, innerProps } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
+  const dispatch = useDispatch();
   const { pubKey, humanName } = account;
   const ref = useRef<HTMLInputElement>({} as HTMLInputElement);
   return (
     <Editable
       ref={ref}
       value={humanName || ''}
-      onClick={() => setEdited(pubKey)}
-      editingStopped={() => setEdited('')}
+      onClick={() => dispatch(accountsActions.setEdited(pubKey))}
+      editingStopped={() => dispatch(accountsActions.setEdited(''))}
       handleOutsideClick={() => {
         analytics('updateAccountName', {});
         window.electron.ipcRenderer.updateAccountName({
@@ -640,33 +606,20 @@ const AccountNameEditable = (props: {
 };
 
 const AccountListItem = (props: {
-  net: Net;
-  account: WBAccount;
-  hovered: boolean;
-  selected: boolean;
-  edited: boolean;
   initializing: boolean;
-  setHoveredItem: (s: string) => void;
-  setSelected: (s: string) => void;
-  setEdited: (s: string) => void;
-  rmAccount: (s: string) => void;
-  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-  queriedAccount?: GetAccountResponse;
+  account: WBAccount;
+  attemptAccountAdd: (pk: string, b: boolean) => void;
 }) => {
-  const {
-    net,
-    account,
-    hovered,
-    edited,
-    selected,
-    setHoveredItem,
-    setSelected,
-    setEdited,
-    rmAccount,
-    initializing,
-    attemptAccountAdd,
-    queriedAccount,
-  } = props;
+  const { initializing, account, attemptAccountAdd } = props;
+  const dispatch = useDispatch();
+  const { selectedAccount, hoveredAccount, editedAccount } = useSelector(
+    (state: RootState) => state.accounts
+  );
+  const { net } = useSelector((state: RootState) => state.validator);
+  const { exists, pubKey } = account;
+  const selected = selectedAccount === pubKey;
+  const hovered = hoveredAccount === pubKey;
+  const edited = editedAccount === pubKey;
   const addAcctRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   type EllipsisToggleProps = {
@@ -714,41 +667,39 @@ const AccountListItem = (props: {
     <div
       onClick={() => {
         analytics('selectAccount', { net });
-        setSelected(account.pubKey);
+        dispatch(accountsActions.setSelected(account.pubKey));
       }}
       className={`p-1 account-list-item ${
+        !initializing && !exists && 'opacity-25'
+      } ${
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
           : 'border-top border-bottom'
       } ${hovered && !selected && 'bg-xlight'} ${
         edited && 'border-top border-bottom border-primary'
-      } ${queriedAccount && 'border-solgreen-shadow'}`}
+      }`}
       key={account.pubKey}
-      onMouseEnter={() => setHoveredItem(account.pubKey)}
-      onMouseLeave={() => setHoveredItem('')}
+      onMouseEnter={() => dispatch(accountsActions.setHovered(account.pubKey))}
+      onMouseLeave={() => dispatch(accountsActions.setHovered(''))}
     >
       <div className="row flex-nowrap">
         <div className="col">
-          {account.pubKey === NONE_KEY ? (
+          {account.pubKey === ACCOUNTS_NONE_KEY ? (
             <Editable
               ref={addAcctRef}
-              outerSelected={selected}
-              outerHovered={hovered}
-              setSelected={setSelected}
-              setHoveredItem={setHoveredItem}
               value={account.pubKey}
               effect={() => {
-                setEdited(account.pubKey);
+                dispatch(accountsActions.setEdited(account.pubKey));
                 addAcctRef.current.focus();
               }}
-              editingStopped={() => setEdited('')}
+              editingStopped={() => dispatch(accountsActions.setEdited(''))}
               inputClassName={`input-clean-code ${
                 initializing && 'input-no-max'
               }`}
               handleOutsideClick={() => {
                 let pubKey = addAcctRef.current.value;
                 if (pubKey === '') {
-                  pubKey = NONE_KEY;
+                  pubKey = ACCOUNTS_NONE_KEY;
                 }
                 attemptAccountAdd(pubKey, initializing);
               }}
@@ -767,15 +718,11 @@ const AccountListItem = (props: {
             <div className="col-auto">
               <small>
                 <AccountNameEditable
-                  net={net}
                   account={account}
-                  setEdited={setEdited}
                   innerProps={{
                     placeholder: 'Write a description',
                     outerSelected: selected,
                     outerHovered: hovered,
-                    setSelected,
-                    setHoveredItem,
                   }}
                 />
               </small>
@@ -793,7 +740,7 @@ const AccountListItem = (props: {
                       window.electron.ipcRenderer.deleteAccount({
                         pubKey: account.pubKey,
                       });
-                      rmAccount(account.pubKey);
+                      dispatch(accountsActions.rm(account.pubKey));
                     }}
                   >
                     <small className="text-danger">
@@ -901,98 +848,72 @@ const ProgramChange = (props: {
 };
 
 const ProgramChangeView = (props: {
-  net: Net;
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-  pushToast: (toast: JSX.Element) => void;
 }) => {
-  const { net, accounts, attemptAccountAdd, pushToast } = props;
-  const [changes, setChangesRef] = useState<ProgramAccountChange[]>([]);
-  const changesRef = useRef<ProgramAccountChange[]>([]);
-  const setChanges = (c: ProgramAccountChange[]) => {
-    changesRef.current = c;
-    setChangesRef(c);
-  };
-  const [uniqueAccounts, setUniqueAccountsRef] = useState(0);
-  const uniqueAccountsRef = useRef(0);
-  const setUniqueAccounts = (ua: number) => {
-    uniqueAccountsRef.current = ua;
-    setUniqueAccountsRef(ua);
-  };
-  const netRef = useRef<Net | undefined>();
-  const [paused, setPausedRef] = useState(false);
-  const pausedRef = useRef(false);
-  const setPaused = (p: boolean) => {
-    pausedRef.current = p;
-    setPausedRef(p);
-  };
-  const pausedTimeoutRef = useRef(0);
+  const dispatch = useDispatch();
+  const { accounts, attemptAccountAdd } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
 
-  const [programID, setProgramIDRef] = useState(ProgramID.SystemProgram);
-  const programIDRef = useRef(ProgramID.SystemProgram);
-  const setProgramID = (pid: ProgramID) => {
-    programIDRef.current = pid;
-    setProgramIDRef(pid);
-  };
-  const prevProgramIDRef = useRef(ProgramID.SystemProgram);
+  // want to check paused before updating changes later,
+  // so we include these together
+  const [changesState, setChangesState] = useState<ProgramChangesState>({
+    changes: [],
+    paused: false,
+  });
+  const { changes, paused } = changesState;
+
+  const [uniqueAccounts, setUniqueAccounts] = useState(0);
+  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
+  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
+
+  const [programID, setProgramID] = useState(ProgramID.SystemProgram);
+
+  const pausedTimeoutRef = useRef(0);
 
   const importedAccounts: ImportedAccountMap = {};
   accounts.forEach((a) => {
     importedAccounts[a.pubKey] = true;
   });
 
-  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
-  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
-
   useEffect(() => {
-    const changeListener = (resp: ProgramChangeResponse) => {
-      if (resp.net === net && !pausedRef.current) {
-        setChanges(resp.changes);
-        setUniqueAccounts(resp.uniqueAccounts);
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      switch (method) {
+        case 'subscribe-program-changes':
+          break;
+        case 'unsubscribe-program-changes':
+          break;
+        case 'program-changes':
+          setChangesState((prevState) => {
+            if (!prevState.paused) {
+              setUniqueAccounts(res.uniqueAccounts);
+              return { ...prevState, changes: res.changes };
+            }
+            return prevState;
+          });
+          break;
+        default:
       }
     };
+    window.electron.ipcRenderer.on('main', listener);
 
-    const unsubscribe = () => {
-      window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net,
-        programID: prevProgramIDRef.current,
-      });
-      prevProgramIDRef.current = programID;
-      window.electron.ipcRenderer.removeAllListeners('program-changes');
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
     };
+  }, []);
 
-    const unsubscribeListener = () => {
-      setChanges([]);
-    };
-
-    if (netRef.current) unsubscribe();
-    if (netRef.current !== net) {
-      setProgramID(ProgramID.SystemProgram);
-      netRef.current = net;
-    }
-    window.addEventListener('beforeunload', unsubscribe);
-    window.electron.ipcRenderer.on('program-changes', changeListener);
-
-    // todo: gets added too many times
-    window.electron.ipcRenderer.on(
-      'unsubscribe-program-changes',
-      unsubscribeListener
-    );
-
+  useEffect(() => {
     window.electron.ipcRenderer.subscribeProgramChanges({
       net,
-      programID: programIDRef.current,
+      programID,
     });
 
     return () => {
-      window.electron.ipcRenderer.removeListener(
-        'program-changes',
-        changeListener
-      );
-      window.electron.ipcRenderer.removeListener(
-        'unsubscribe-program-changes',
-        unsubscribeListener
-      );
+      window.electron.ipcRenderer.unsubscribeProgramChanges({
+        net,
+        programID,
+      });
     };
   }, [net, programID]);
 
@@ -1003,6 +924,12 @@ const ProgramChangeView = (props: {
     </>
   );
 
+  const setPaused = (p: boolean) => {
+    setChangesState((prevState) => ({
+      ...prevState,
+      paused: p,
+    }));
+  };
   const pause = () => {
     if (pausedTimeoutRef.current === 0) {
       pausedTimeoutRef.current = window.setTimeout(() => {
@@ -1075,11 +1002,11 @@ const ProgramChangeView = (props: {
                   placeholder="Paste Program ID"
                   onKeyDown={(e) => {
                     if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
-                      pushToast(
-                        <Toast
-                          msg="Must paste in valid program ID"
-                          variant="warning"
-                        />
+                      dispatch(
+                        toastActions.push({
+                          msg: 'Must paste in valid program ID',
+                          variant: 'warning',
+                        })
                       );
                       filterProgramIDRef.current.value = 'Custom';
                       filterProgramIDRef.current.blur();
@@ -1089,17 +1016,22 @@ const ProgramChangeView = (props: {
                   onPaste={(e) => {
                     const pastedID = e.clipboardData.getData('Text');
                     if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                      window.electron.ipcRenderer.unsubscribeProgramChanges({
+                        net,
+                        programID,
+                      });
+                      window.electron.ipcRenderer.subscribeProgramChanges({
+                        net,
+                        programID: pastedID,
+                      });
                       setProgramID(pastedID);
                     } else {
-                      pushToast(
-                        <Toast
-                          msg={
-                            <div className="ms-3">
-                              Invalid program ID: <code>{pastedID}</code>
-                            </div>
-                          }
-                          variant="warning"
-                        />
+                      dispatch(
+                        toastActions.push({
+                          // todo: full jsx access would be better (code)
+                          msg: `Invalid program ID: ${pastedID}`,
+                          variant: 'warning',
+                        })
                       );
                     }
                     filterProgramIDRef.current.value = 'Custom';
@@ -1166,8 +1098,9 @@ const ProgramChangeView = (props: {
   );
 };
 
-const AccountView = (props: { net: Net; account: WBAccount }) => {
-  const { net, account } = props;
+const AccountView = (props: { account: WBAccount }) => {
+  const { account } = props;
+  const { net } = useSelector((state: RootState) => state.validator);
   return (
     <>
       <div className="row">
@@ -1208,7 +1141,7 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
                       <small className="text-muted">Executable</small>
                     </td>
                     <td>
-                      {account.solAccount?.executable ? (
+                      {account.executable ? (
                         <div>
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
@@ -1270,49 +1203,23 @@ const AccountView = (props: { net: Net; account: WBAccount }) => {
 };
 
 const AccountListView = (props: {
-  net: Net;
-  accounts: WBAccount[];
-  hoveredItem: string;
-  selected: string;
-  edited: string;
-  setEdited: (s: string) => void;
-  setSelected: (s: string) => void;
-  setHoveredItem: (s: string) => void;
-  rmAccount: (s: string) => void;
-  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
+  attemptAccountAdd: (pk: string, b: boolean) => void;
 }) => {
-  const {
-    net,
-    accounts,
-    hoveredItem,
-    selected,
-    edited,
-    setEdited,
-    setSelected,
-    setHoveredItem,
-    attemptAccountAdd,
-    rmAccount,
-  } = props;
+  const { attemptAccountAdd } = props;
+  const accounts: AccountsState = useSelector(
+    (state: RootState) => state.accounts
+  );
+  const { listedAccounts } = accounts;
   return (
     <>
-      {accounts.map((account: WBAccount) => {
-        const initializing = account.pubKey === NONE_KEY;
+      {listedAccounts.map((account: WBAccount) => {
+        const initializing = account.pubKey === ACCOUNTS_NONE_KEY;
         return (
           <AccountListItem
-            net={net}
-            key={`pubKey=${account.pubKey},initializing=${initializing}`}
             account={account}
-            hovered={account.pubKey === hoveredItem}
-            selected={account.pubKey === selected}
-            edited={account.pubKey === edited}
             initializing={initializing}
-            setHoveredItem={setHoveredItem}
-            setEdited={setEdited}
-            setSelected={setSelected}
-            rmAccount={rmAccount}
-            attemptAccountAdd={(pubKey: string) =>
-              attemptAccountAdd(pubKey, initializing)
-            }
+            key={`pubKey=${account.pubKey},initializing=${initializing}`}
+            attemptAccountAdd={attemptAccountAdd}
           />
         );
       })}
@@ -1320,119 +1227,18 @@ const AccountListView = (props: {
   );
 };
 
-const Accounts = (props: {
-  net: Net;
-  pushToast: (toast: JSX.Element) => void;
-}) => {
-  const { net, pushToast } = props;
-  const [accounts, setAccountsRef] = useState<WBAccount[]>([]);
-  const [selected, setSelected] = useState<string>('');
-  const [hoveredItem, setHoveredItem] = useState<string>('');
-  const [rootKey, setRootKey] = useState<string>('');
-  const [edited, setEdited] = useState<string>('');
+const Accounts = () => {
+  const dispatch = useDispatch();
+  const accounts: AccountsState = useSelector(
+    (state: RootState) => state.accounts
+  );
+  const { net } = useSelector((state: RootState) => state.validator);
+  const { rootKey, selectedAccount, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
-  const effectSetup = useRef<boolean>();
-  const accountsRef = useRef<WBAccount[]>([]);
-  const netRef = useRef<Net>(Net.Localhost);
-
-  const setAccounts = (accs: WBAccount[]) => {
-    accountsRef.current = accs;
-    setAccountsRef(accs);
-  };
-
-  const addAccount = (pubKey: string = NONE_KEY) => {
-    const accs = [...accounts];
-    accs.splice(0, 0, {
-      pubKey,
-      humanName: '',
-    });
-    setAccounts(accs);
-    setSelected('');
-    setHoveredItem('');
-    setEdited(NONE_KEY);
-  };
-
-  const shiftAccount = () => {
-    const accs = [...accounts];
-    accs.shift();
-    setAccounts(accs);
-  };
-
-  const rmAccount = (pubKey: string) => {
-    const accs = [...accounts];
-    setAccounts(accs.filter((a) => a.pubKey !== pubKey));
-  };
-
-  useEffect(() => {
-    const unshiftAccount = (account: WBAccount) => {
-      const accs = [...accountsRef.current];
-      if (accs[0].pubKey === NONE_KEY) {
-        accs[0] = account;
-      } else {
-        accs.unshift(account);
-      }
-      setAccounts(accs);
-    };
-
-    const accountsListener = (data: AccountsResponse) => {
-      setRootKey(data.rootKey);
-      setAccounts(data.accounts);
-    };
-
-    const getAccountListener = (resp: GetAccountResponse) => {
-      if (resp.account?.solAccount) {
-        unshiftAccount(resp.account);
-        setSelected(resp.account.pubKey);
-        analytics('accountAddSuccess', { net: netRef.current });
-        window.electron.ipcRenderer.importAccount({
-          net: netRef.current,
-          pubKey: resp.account.pubKey,
-        });
-        pushToast(<Toast msg="Account imported" variant="sol-green" />);
-      } else {
-        if (resp.account?.pubKey) rmAccount(resp.account?.pubKey);
-        pushToast(
-          <Toast msg={`Account not found in ${net}`} variant="warning" />
-        );
-      }
-    };
-
-    if (netRef.current !== net || !effectSetup.current) {
-      netRef.current = net;
-      window.electron.ipcRenderer.accounts({ net });
-    }
-
-    if (!effectSetup.current) {
-      window.electron.ipcRenderer.on('accounts', accountsListener);
-      window.electron.ipcRenderer.on('get-account', getAccountListener);
-      effectSetup.current = true;
-    }
-
-    return () => {
-      window.electron.ipcRenderer.removeListener('accounts', accountsListener);
-      window.electron.ipcRenderer.removeListener(
-        'get-account',
-        getAccountListener
-      );
-    };
-  }, [accounts, net, pushToast]);
-
-  const selectedAccount: WBAccount | undefined = accounts.find(
-    (a) => selected === a.pubKey
-  );
-
-  const initializingAccount: boolean =
-    accounts.filter((a) => NONE_KEY === a.pubKey).length > 0;
-
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
-    analytics('accountAddAttempt', {
-      nAccounts: accounts.length,
-      net: netRef.current,
-    });
-
-    if (initializing && pubKey === NONE_KEY) {
-      shiftAccount();
+    if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
+      dispatch(accountsActions.shift());
     } else {
       // todo: excludes first (same) element, not generic to anywhere
       // in array but it'll do
@@ -1440,25 +1246,101 @@ const Accounts = (props: {
         // accounts has an entry for the new (attempted) account ID already,
         // so we sum up the instances of that key, and it'll be 2 if it's
         // a duplicate of an existing one
-        accounts
+        listedAccounts
           .map((a): number => (a.pubKey === pubKey ? 1 : 0))
-          .reduce((a, b) => a + b, 0) === 2
+          .reduce((a, b) => a + b, 0) === 1
       ) {
-        pushToast(<Toast msg="Account already imported" variant="warning" />);
-        shiftAccount();
+        dispatch(
+          toastActions.push({
+            msg: 'Account already imported',
+            variant: 'warning',
+          })
+        );
+        dispatch(accountsActions.shift());
         return;
       }
       if (pubKey.match(BASE58_PUBKEY_REGEX)) {
         window.electron.ipcRenderer.getAccount({
           net,
-          pk: pubKey,
+          pubKey,
         });
       } else {
-        pushToast(<Toast msg="Invalid account ID" variant="warning" />);
-        shiftAccount();
+        dispatch(
+          toastActions.push({ msg: 'Invalid account ID', variant: 'warning' })
+        );
+        dispatch(accountsActions.shift());
       }
     }
   };
+
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
+      switch (method) {
+        case 'accounts':
+          dispatch(accountsActions.setAccounts(res.accounts));
+          dispatch(accountsActions.setRootKey(res.rootKey));
+          break;
+        case 'update-account-name':
+          break;
+        case 'import-account':
+          break;
+        case 'get-account':
+          const { pubKey, exists } = res.account;
+          if (exists) {
+            dispatch(accountsActions.unshift(res.account));
+            dispatch(accountsActions.setSelected(pubKey));
+
+            analytics('accountAddSuccess', { net: res.account.net });
+
+            window.electron.ipcRenderer.importAccount({
+              net: res.account.net,
+              pubKey,
+            });
+
+            dispatch(
+              toastActions.push({
+                msg: 'Account imported',
+                variant: 'sol-green',
+              })
+            );
+          } else {
+            dispatch(accountsActions.rm(pubKey));
+            dispatch(
+              toastActions.push({
+                msg: `Account not found in ${res.account.net}`,
+                variant: 'warning',
+              })
+            );
+          }
+          break;
+        case 'delete-account':
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    window.electron.ipcRenderer.accounts({
+      net,
+    });
+  }, [net]);
+
+  const selectedAccountInfo: WBAccount | undefined = listedAccounts.find(
+    (a) => selectedAccount === a.pubKey
+  );
+
+  const initializingAccount: boolean =
+    listedAccounts.filter((a) => ACCOUNTS_NONE_KEY === a.pubKey).length > 0;
 
   let initView = (
     <>
@@ -1466,6 +1348,7 @@ const Accounts = (props: {
       <small className="me-2">Generating seed wallets...</small>
     </>
   );
+
   if (net !== Net.Localhost) {
     initView = (
       <small className="me-2">
@@ -1494,7 +1377,7 @@ const Accounts = (props: {
                 e.preventDefault();
                 setAddBtnClicked(true);
                 if (!initializingAccount) {
-                  addAccount();
+                  dispatch(accountsActions.init(undefined));
                 }
               }}
               onMouseUp={() => setAddBtnClicked(false)}
@@ -1503,19 +1386,8 @@ const Accounts = (props: {
               <span className="ms-1 text-white">Add Account</span>
             </button>
           </div>
-          {accounts.length > 0 || net !== Net.Localhost ? (
-            <AccountListView
-              net={net}
-              accounts={accounts}
-              hoveredItem={hoveredItem}
-              selected={selected}
-              edited={edited}
-              setEdited={setEdited}
-              setSelected={setSelected}
-              setHoveredItem={setHoveredItem}
-              attemptAccountAdd={attemptAccountAdd}
-              rmAccount={rmAccount}
-            />
+          {listedAccounts.length > 0 || net !== Net.Localhost ? (
+            <AccountListView attemptAccountAdd={attemptAccountAdd} />
           ) : (
             initView
           )}
@@ -1535,12 +1407,12 @@ const Accounts = (props: {
             </li>
             <li
               className={`${
-                selectedAccount ? '' : 'border-bottom active'
+                selectedAccountInfo ? '' : 'border-bottom active'
               } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
             >
               <small
                 onClick={() => {
-                  setSelected('');
+                  dispatch(accountsActions.setSelected(''));
                 }}
               >
                 Live
@@ -1549,14 +1421,12 @@ const Accounts = (props: {
           </ul>
         </div>
         <div className="m-2">
-          {selectedAccount ? (
-            <AccountView net={net} account={selectedAccount} />
+          {selectedAccountInfo ? (
+            <AccountView account={selectedAccountInfo} />
           ) : (
             <ProgramChangeView
-              net={net}
-              accounts={accounts}
+              accounts={listedAccounts}
               attemptAccountAdd={attemptAccountAdd}
-              pushToast={pushToast}
             />
           )}
         </div>
@@ -1569,15 +1439,24 @@ const Anchor = () => {
   const programIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const [idl, setIDL] = useState<any>({});
 
-  const fetchIDL = () => {
-    window.electron.ipcRenderer.once('fetch-anchor-idl', (fetchedIDL: any) => {
-      setIDL(fetchedIDL);
-    });
-
-    window.electron.ipcRenderer.fetchAnchorIDL({
-      programID: programIDRef.current.value,
-    });
-  };
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
+      switch (method) {
+        case 'fetch-anchor-idl':
+          setIDL(res);
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
 
   return (
     <div className="row">
@@ -1589,7 +1468,11 @@ const Anchor = () => {
               style={{ fontFamily: 'Consolas, monospace', fontWeight: 500 }}
               aria-label="Program ID"
               ref={programIDRef}
-              onKeyUp={fetchIDL}
+              onKeyUp={() => {
+                window.electron.ipcRenderer.fetchAnchorIDL({
+                  programID: programIDRef.current.value,
+                });
+              }}
             />
           </InputGroup>
         </div>
@@ -1653,34 +1536,43 @@ const Header = () => {
 };
 
 export default function App() {
-  const [net, setNet] = useState(Net.Localhost);
-  const [toasts, setActiveToasts] = useState<JSX.Element[]>([]);
+  const dispatch = useDispatch();
+  const { toasts } = useSelector((state: RootState) => state.toast);
+  const { net } = useSelector((state: RootState) => state.validator);
 
-  const rmToast = (key: React.Key | null) => {
-    const newToasts = [...toasts];
-    newToasts.filter((t) => t.key !== key);
-    setActiveToasts(newToasts);
-  };
-
-  const pushToast = (toast: JSX.Element) => {
-    const newToasts = [...toasts];
-    let newToast = toast;
-
-    // normally bad but we'll allow it
-    // b/c short lived
-    const key = uuidv4();
-    newToast = cloneElement(toast, {
-      key,
-      rmToast: () => rmToast(key),
-      bottom: TOAST_BOTTOM_OFFSET * newToasts.length + 1,
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      if (method != 'program-changes') {
+        console.log(resp);
+      }
+      switch (method) {
+        case 'validator-state':
+          dispatch(validatorActions.setRunning(res.running));
+          dispatch(validatorActions.setLoading(false));
+          break;
+        case 'run-validator':
+          break;
+        case 'validator-logs':
+          break;
+        case 'fetch-anchor-idl':
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    window.electron.ipcRenderer.validatorState({
+      net: Net.Localhost,
     });
-    newToasts.push(newToast);
-    setActiveToasts(newToasts);
-  };
+
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, []);
 
   const netDropdownSelect = (eventKey: string | null) => {
     analytics('selectNet', { prevNet: net, newNet: eventKey });
-    if (eventKey) setNet(eventKey as Net);
+    if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
   };
 
   const netDropdownTitle = (
@@ -1696,7 +1588,9 @@ export default function App() {
         <div className="row flex-nowrap g-0">
           <div className="col-auto">
             <Nav />
-            {toasts}
+            {toasts.map((t) => (
+              <Toast {...t} />
+            ))}
           </div>
           <div className="col-10 bg-white ms-4">
             <div className="row sticky-top sticky-nav bg-white-translucent">
@@ -1728,7 +1622,7 @@ export default function App() {
             </div>
             <div className="row flex-nowrap">
               <Route exact path="/">
-                <Accounts net={net} pushToast={pushToast} />
+                <Accounts />
               </Route>
               <Route path="/validator">
                 <Run />

@@ -1,18 +1,23 @@
 /* eslint-disable no-console */
 import * as sol from '@solana/web3.js';
 
-export interface SolState {
-  installed: boolean;
-  running: boolean;
-  keyId: string;
-}
-
 export enum Net {
   Localhost = 'localhost',
   Dev = 'devnet',
   Test = 'testnet',
   MainnetBeta = 'mainnet-beta',
 }
+
+export const ACCOUNTS_NONE_KEY = 'none';
+export const RANDOMART_W_CH = 17;
+export const RANDOMART_H_CH = 10;
+export const TOAST_HEIGHT = 270;
+export const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
+export const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
+export const TOAST_HIDE_MS = 1200;
+export const TOAST_PAUSE_MS = 1000;
+export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
 export const netToURL = (net: Net): string => {
   switch (net) {
@@ -36,15 +41,17 @@ export enum ProgramID {
 }
 
 export type WBAccount = {
+  net: Net | undefined;
   pubKey: string;
   humanName?: string;
   art?: string;
   solAmount?: number;
   hexDump?: string;
-  solAccount?: sol.AccountInfo<Buffer> | null;
+  exists?: boolean;
+  executable?: boolean;
 };
 
-export type SolStateRequest = {
+export type ValidatorStateRequest = {
   net: Net;
 };
 
@@ -54,7 +61,7 @@ export type ValidatorLogsRequest = {
 
 export type GetAccountRequest = {
   net: Net;
-  pk: string;
+  pubKey: string;
 };
 
 export type AccountsRequest = {
@@ -62,6 +69,7 @@ export type AccountsRequest = {
 };
 
 export type UpdateAccountRequest = {
+  net: Net;
   pubKey: string;
   humanName: string;
 };
@@ -69,6 +77,10 @@ export type UpdateAccountRequest = {
 export type ImportAccountRequest = {
   net: Net;
   pubKey: string;
+};
+
+export type ImportAccountResponse = {
+  net: Net;
 };
 
 export type AccountsResponse = {
@@ -95,6 +107,10 @@ export type SubscribeProgramChangesRequest = {
 export type UnsubscribeProgramChangesRequest = {
   net: Net;
   subscriptionID: number;
+  programID: string;
+};
+
+export type FetchAnchorIDLRequest = {
   programID: string;
 };
 
@@ -129,4 +145,36 @@ export interface ChangeLookupMap {
 
 export interface ChangeBatchSize {
   [net: string]: number;
+}
+
+export interface ValidatorState {
+  net: Net;
+  running: boolean;
+  waitingForRun: boolean;
+  loading: boolean;
+}
+
+export interface AccountsState {
+  listedAccounts: WBAccount[];
+  selectedAccount: string | undefined;
+  hoveredAccount: string;
+  editedAccount: string;
+  rootKey: string;
+}
+
+export interface ToastProps {
+  msg: string;
+  variant?: string;
+  hideAfter?: number;
+  bottom?: number;
+  toastKey?: string;
+}
+
+export interface ToastState {
+  toasts: ToastProps[];
+}
+
+export interface ProgramChangesState {
+  changes: ProgramAccountChange[];
+  paused: boolean;
 }
