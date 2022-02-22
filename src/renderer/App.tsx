@@ -628,7 +628,7 @@ const AccountListItem = (props: {
     (state: RootState) => state.accounts
   );
   const { net } = useSelector((state: RootState) => state.validator);
-  const { pubKey } = account;
+  const { exists, pubKey } = account;
   const selected = selectedAccount === pubKey;
   const hovered = hoveredAccount === pubKey;
   const edited = editedAccount === pubKey;
@@ -682,6 +682,8 @@ const AccountListItem = (props: {
         dispatch(setSelected(account.pubKey));
       }}
       className={`p-1 account-list-item ${
+        !initializing && !exists && 'opacity-25'
+      } ${
         selected
           ? 'account-list-item-selected border-top border-bottom border-primary'
           : 'border-top border-bottom'
@@ -893,7 +895,6 @@ const ProgramChangeView = (props: {
         case 'subscribe-program-changes':
           break;
         case 'unsubscribe-program-changes':
-          window.electron.ipcRenderer.removeAllListeners('program-changes');
           break;
         case 'program-changes':
           setChangesState((prevState) => {

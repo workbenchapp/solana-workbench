@@ -271,15 +271,18 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
         const key = new sol.PublicKey(existingAccounts[i].pubKey);
         const { humanName } = existingAccounts[i];
         const art = randomart(key.toBytes());
+        const exists = false;
         const newAcc: WBAccount = {
           net,
           art,
           humanName,
+          exists,
           pubKey: key.toString(),
         };
         if (solAccount) {
           newAcc.solAmount = solAccount.lamports / sol.LAMPORTS_PER_SOL;
           newAcc.hexDump = hexdump(solAccount?.data.subarray(0, HEXDUMP_BYTES));
+          newAcc.exists = true;
         }
         return newAcc;
       }
@@ -335,6 +338,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
     accounts: createdAccounts.map((acc, i) => {
       return {
         net,
+        exists: true,
         art: randomart(acc.publicKey.toBytes()),
         pubKey: acc.publicKey.toString(),
         humanName: `Wallet ${i}`,
