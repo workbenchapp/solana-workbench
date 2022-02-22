@@ -19,21 +19,6 @@ export const TOAST_PAUSE_MS = 1000;
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
-export const netToURL = (net: Net): string => {
-  switch (net) {
-    case Net.Localhost:
-      return 'http://127.0.0.1:8899';
-    case Net.Dev:
-      return 'https://api.devnet.solana.com';
-    case Net.Test:
-      return 'https://api.testnet.solana.com';
-    case Net.MainnetBeta:
-      return 'https://api.mainnet-beta.solana.com';
-    default:
-  }
-  return '';
-};
-
 export enum ProgramID {
   SystemProgram = '11111111111111111111111111111111',
   SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',

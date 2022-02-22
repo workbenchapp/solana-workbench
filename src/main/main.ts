@@ -25,10 +25,10 @@ import hexdump from 'hexdump-nodejs';
 import sqlite3 from 'sqlite3';
 import { Database, open } from 'sqlite';
 import logfmt from 'logfmt';
+import { netToURL } from '../common/strings';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import {
-  netToURL,
   WBAccount,
   AccountsResponse,
   Net,
