@@ -7,7 +7,7 @@ import {
 } from '../types/types';
 import { netToURL } from '../common/strings';
 import { execAsync } from './const';
-import logger from './logger';
+import { logger } from './logger';
 
 const DOCKER_IMAGE =
   process.arch === 'arm64'

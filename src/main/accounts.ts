@@ -14,8 +14,8 @@ import {
   UpdateAccountRequest,
   WBAccount,
 } from '../types/types';
-import logger from './logger';
-import db from './db';
+import { logger } from './logger';
+import { db } from './db';
 import { KEY_PATH } from './const';
 
 const HEXDUMP_BYTES = 512;

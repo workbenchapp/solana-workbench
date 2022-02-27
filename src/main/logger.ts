@@ -6,7 +6,8 @@ import { RESOURCES_PATH, WORKBENCH_DIR_PATH, WORKBENCH_VERSION } from './const';
 
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 
-let innerLogger = winston.createLogger({
+// eslint-disable-next-line import/no-mutable-exports
+let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
@@ -56,13 +57,11 @@ const initLogging = async () => {
   if (process.env.NODE_ENV === 'development') {
     loggerConfig.transports = [new winston.transports.Console()];
   }
-  innerLogger = winston.createLogger(loggerConfig);
-  innerLogger.info('Workbench session begin', {
+  logger = winston.createLogger(loggerConfig);
+  logger.info('Workbench session begin', {
     WORKBENCH_VERSION,
     RESOURCES_PATH,
   });
 };
-initLogging();
-const logger = innerLogger;
 
-export default logger;
+export { logger, initLogging };

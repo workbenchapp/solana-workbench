@@ -7,7 +7,7 @@ import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
-import logger from './logger';
+import { logger, initLogging } from './logger';
 import { runValidator, validatorState, validatorLogs } from './validator';
 import {
   accounts,
@@ -22,7 +22,7 @@ import {
   unsubscribeProgramChanges,
 } from './programChanges';
 import { RESOURCES_PATH } from './const';
-import db from './db';
+import { db, initDB } from './db';
 
 export default class AppUpdater {
   constructor() {
@@ -121,6 +121,8 @@ const createWindow = async () => {
   if (isDevelopment) {
     await installExtensions();
   }
+  await initDB();
+  await initLogging();
 
   const getAssetPath = (...paths: string[]): string => {
     return path.join(RESOURCES_PATH, ...paths);
