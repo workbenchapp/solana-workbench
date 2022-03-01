@@ -159,22 +159,20 @@ export default function App() {
 
   let statusDisplay = <></>;
 
-  if (!validator.loading && !validator.waitingForRun) {
-    if (validator.running) {
-      statusDisplay = (
-        <span className="badge bg-light text-dark p-2">
-          <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
-          Available
-        </span>
-      );
-    } else {
-      statusDisplay = (
-        <span className="badge bg-light text-dark p-2">
-          <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
-          Unavailable
-        </span>
-      );
-    }
+  if (validator.running) {
+    statusDisplay = (
+      <span className="badge bg-light text-dark p-2">
+        <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
+        Available
+      </span>
+    );
+  } else {
+    statusDisplay = (
+      <span className="badge bg-light text-dark p-2">
+        <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
+        Unavailable
+      </span>
+    );
   }
 
   return (

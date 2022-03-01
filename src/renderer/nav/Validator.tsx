@@ -26,7 +26,11 @@ const Validator = () => {
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorState({ net: Net.Localhost });
-    window.electron.ipcRenderer.validatorLogs({ net: Net.Localhost });
+    if (validator.running) {
+      window.electron.ipcRenderer.validatorLogs({
+        filter: filterRef.current.value || '',
+      });
+    }
   }, 5000);
 
   useEffect(() => {
@@ -43,7 +47,10 @@ const Validator = () => {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
-    window.electron.ipcRenderer.validatorLogs({ net: Net.Localhost });
+    window.electron.ipcRenderer.validatorLogs({
+      filter: '',
+      net: Net.Localhost,
+    });
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
@@ -52,9 +59,7 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="row">
-      {validator.loading ? (
-        <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      ) : !validator.running ? (
+      {!validator.running && !validator.waitingForRun ? (
         <Button
           onClick={() => {
             dispatch(validatorActions.setWaitingForRun(true));
@@ -66,9 +71,12 @@ const Validator = () => {
           Run
         </Button>
       ) : validator.waitingForRun ? (
-        <small className="text-muted">
-          Starting validator. This can take about a minute...
-        </small>
+        <div>
+          <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
+          <small className="text-muted">
+            Starting validator. This can take about a minute...
+          </small>
+        </div>
       ) : (
         <>
           <InputGroup size="sm">
@@ -79,16 +87,14 @@ const Validator = () => {
               onKeyDown={debounce(() => {
                 if (validator.running) {
                   window.electron.ipcRenderer.validatorLogs({
-                    filter: filterRef.current.value,
+                    filter: filterRef.current.value || '',
                   });
                 }
-              }, 800)}
+              }, 300)}
             />
           </InputGroup>
           <pre className="mt-2 pre-scrollable">
-            <code className={`${!validator.running ? 'text-muted' : ''}`}>
-              {validatorLogs}
-            </code>
+            <code>{validatorLogs}</code>
           </pre>
         </>
       )}
