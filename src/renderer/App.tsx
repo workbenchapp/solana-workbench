@@ -16,6 +16,7 @@ import {
   faTh,
   faAnchor,
   faNetworkWired,
+  faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
@@ -24,8 +25,8 @@ import { Net } from '../types/types';
 import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
-import Run from './nav/Run';
 import Anchor from './nav/Anchor';
+import Validator from './nav/Validator';
 
 declare global {
   interface Window {
@@ -64,7 +65,7 @@ const Nav = () => {
       <OverlayTrigger
         placement="right"
         delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('logs', 'Validator Logs')}
+        overlay={renderTooltip('logs', 'Validator')}
       >
         <NavLink
           className="nav-link nav-icon"
@@ -100,7 +101,7 @@ const Header = () => {
   const location = useLocation();
   const routes: Record<string, string> = {
     '/': 'Accounts',
-    '/validator': 'Validator Logs',
+    '/validator': 'Validator',
     '/anchor': 'Anchor',
   };
   return <strong>{routes[location.pathname]}</strong>;
@@ -109,7 +110,8 @@ const Header = () => {
 export default function App() {
   const dispatch = useDispatch();
   const { toasts } = useSelector((state: RootState) => state.toast);
-  const { net } = useSelector((state: RootState) => state.validator);
+  const validator = useSelector((state: RootState) => state.validator);
+  const { net } = validator;
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -120,7 +122,9 @@ export default function App() {
       switch (method) {
         case 'validator-state':
           dispatch(validatorActions.setRunning(res.running));
-          dispatch(validatorActions.setLoading(false));
+          if (res.running) {
+            dispatch(validatorActions.setWaitingForRun(false));
+          }
           break;
         case 'run-validator':
           break;
@@ -153,6 +157,26 @@ export default function App() {
     </>
   );
 
+  let statusDisplay = <></>;
+
+  if (!validator.loading && !validator.waitingForRun) {
+    if (validator.running) {
+      statusDisplay = (
+        <span className="badge bg-light text-dark p-2">
+          <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
+          Available
+        </span>
+      );
+    } else {
+      statusDisplay = (
+        <span className="badge bg-light text-dark p-2">
+          <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
+          Unavailable
+        </span>
+      );
+    }
+  }
+
   return (
     <Router>
       <Switch>
@@ -167,28 +191,31 @@ export default function App() {
             <div className="row sticky-top sticky-nav bg-white-translucent">
               <div>
                 <Header />
-                <DropdownButton
-                  size="sm"
-                  id="dropdown-basic-button"
-                  title={netDropdownTitle}
-                  onSelect={netDropdownSelect}
-                  className="float-end"
-                  variant="light"
-                  align="end"
-                >
-                  <Dropdown.Item eventKey={Net.Localhost} href="#">
-                    {Net.Localhost}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.Dev} href="#">
-                    {Net.Dev}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.Test} href="#">
-                    {Net.Test}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
-                    {Net.MainnetBeta}
-                  </Dropdown.Item>
-                </DropdownButton>
+                <span className="float-end">
+                  {statusDisplay}
+                  <DropdownButton
+                    size="sm"
+                    id="dropdown-basic-button"
+                    title={netDropdownTitle}
+                    onSelect={netDropdownSelect}
+                    className="ms-2 float-end"
+                    variant="light"
+                    align="end"
+                  >
+                    <Dropdown.Item eventKey={Net.Localhost} href="#">
+                      {Net.Localhost}
+                    </Dropdown.Item>
+                    <Dropdown.Item eventKey={Net.Dev} href="#">
+                      {Net.Dev}
+                    </Dropdown.Item>
+                    <Dropdown.Item eventKey={Net.Test} href="#">
+                      {Net.Test}
+                    </Dropdown.Item>
+                    <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
+                      {Net.MainnetBeta}
+                    </Dropdown.Item>
+                  </DropdownButton>
+                </span>
               </div>
             </div>
             <div className="row flex-nowrap">
@@ -196,7 +223,7 @@ export default function App() {
                 <Accounts />
               </Route>
               <Route path="/validator">
-                <Run />
+                <Validator />
               </Route>
               <Route path="/anchor">
                 <Anchor />
