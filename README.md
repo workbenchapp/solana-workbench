@@ -15,10 +15,10 @@ of other fun tricks too.
   - `source $HOME/.cargo/env`
   - `sh -c "$(curl -sSfL https://release.solana.com/v1.9.9/install)"`
   - `cargo install --git https://github.com/project-serum/anchor avm --locked --force`
-  - `avm use latest` -- dies on my linux box (needs libudev) - which makes me think there's lots of hidden dependences.
+  - `avm use latest` -- on Sven's linux box (needs libudev)
+  - `warning: be sure to add `/home/sven/.avm/bin` to your PATH to be able to run the installed binaries`
 - XCode Command Line Tools (if on OSX)
 
-## Run
 
 Install modules, then native deps:
 
@@ -27,7 +27,7 @@ $ npm install --legacy-peer-deps &&
   (cd release/app && npm install)
 ```
 
-To get `npm run package` to run on M1 mac, Node version 16 was required.
+## Run
 
 to run:
 
@@ -36,3 +36,7 @@ $ npm run start
 ```
 
 Now you're working with Workbench!
+
+## building a release
+
+To get `npm run package` to run on M1 mac, Node version 16 was required.
