@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import analytics from 'common/analytics';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { NavLink } from 'react-router-dom';
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
@@ -29,7 +30,8 @@ const Accounts = () => {
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
   );
-  const { net } = useSelector((state: RootState) => state.validator);
+  const validator = useSelector((state: RootState) => state.validator);
+  const { net } = validator;
   const { rootKey, selectedAccount, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
 
@@ -154,82 +156,95 @@ const Accounts = () => {
     );
   }
 
-  return (
-    <>
-      <div className="col-auto">
-        <div className="sticky-top sticky-account-list">
-          <div className="mb-3">
-            <FontAwesomeIcon icon={faKey} />
-            <span className="ms-1">
-              <InlinePK pk={rootKey} />
-            </span>
-            <button
-              type="button"
-              className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
-                addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
-              }`}
-              onMouseDown={(
-                e: React.MouseEvent<HTMLButtonElement, MouseEvent>
-              ): void => {
-                e.preventDefault();
-                setAddBtnClicked(true);
-                if (!initializingAccount) {
-                  dispatch(accountsActions.init(undefined));
-                }
-              }}
-              onMouseUp={() => setAddBtnClicked(false)}
-            >
-              <FontAwesomeIcon className="text-white" icon={faPlus} />
-              <span className="ms-1 text-white">Add Account</span>
-            </button>
-          </div>
-          {listedAccounts.length > 0 || net !== Net.Localhost ? (
-            <AccountListView attemptAccountAdd={attemptAccountAdd} />
-          ) : (
-            initView
-          )}
-        </div>
-      </div>
-      <div className="col">
-        <div>
-          <ul className="nav">
-            <li
-              className={`${
-                selectedAccount
-                  ? 'border-bottom active'
-                  : 'opacity-25 cursor-not-allowed'
-              } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
-            >
-              <small>Account</small>
-            </li>
-            <li
-              className={`${
-                selectedAccountInfo ? '' : 'border-bottom active'
-              } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
-            >
-              <small
-                onClick={() => {
-                  dispatch(accountsActions.setSelected(''));
+  let display = <></>;
+  if (validator.running) {
+    display = (
+      <>
+        <div className="col-auto">
+          <div className="sticky-top sticky-account-list">
+            <div className="mb-3">
+              <FontAwesomeIcon icon={faKey} />
+              <span className="ms-1">
+                <InlinePK pk={rootKey} />
+              </span>
+              <button
+                type="button"
+                className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
+                  addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
+                }`}
+                onMouseDown={(
+                  e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+                ): void => {
+                  e.preventDefault();
+                  setAddBtnClicked(true);
+                  if (!initializingAccount) {
+                    dispatch(accountsActions.init(undefined));
+                  }
                 }}
+                onMouseUp={() => setAddBtnClicked(false)}
               >
-                Live
-              </small>
-            </li>
-          </ul>
+                <FontAwesomeIcon className="text-white" icon={faPlus} />
+                <span className="ms-1 text-white">Add Account</span>
+              </button>
+            </div>
+            {listedAccounts.length > 0 || net !== Net.Localhost ? (
+              <AccountListView attemptAccountAdd={attemptAccountAdd} />
+            ) : (
+              initView
+            )}
+          </div>
         </div>
-        <div className="m-2">
-          {selectedAccountInfo ? (
-            <AccountView account={selectedAccountInfo} />
-          ) : (
-            <ProgramChangeView
-              accounts={listedAccounts}
-              attemptAccountAdd={attemptAccountAdd}
-            />
-          )}
+        <div className="col">
+          <div>
+            <ul className="nav">
+              <li
+                className={`${
+                  selectedAccount
+                    ? 'border-bottom active'
+                    : 'opacity-25 cursor-not-allowed'
+                } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
+              >
+                <small>Account</small>
+              </li>
+              <li
+                className={`${
+                  selectedAccountInfo ? '' : 'border-bottom active'
+                } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
+              >
+                <small
+                  onClick={() => {
+                    dispatch(accountsActions.setSelected(''));
+                  }}
+                >
+                  Live
+                </small>
+              </li>
+            </ul>
+          </div>
+          <div className="m-2">
+            {selectedAccountInfo ? (
+              <AccountView account={selectedAccountInfo} />
+            ) : (
+              <ProgramChangeView
+                accounts={listedAccounts}
+                attemptAccountAdd={attemptAccountAdd}
+              />
+            )}
+          </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
+  } else {
+    display = (
+      <p>
+        No validator is running on this network. Use{' '}
+        <NavLink to="/validator">Validator</NavLink> or run your own local test
+        validator.
+      </p>
+    );
+  }
+
+  return <>{display}</>;
 };
 
 export default Accounts;

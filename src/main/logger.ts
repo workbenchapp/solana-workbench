@@ -39,7 +39,7 @@ const initLogging = async () => {
     return `${timestamp} ${info.level.toUpperCase()} ${info.message.padEnd(
       LOG_KV_PAD,
       ' '
-    )}${logfmt.stringify(info.metadata)}`;
+    )}${typeof info.metadata === 'object' && logfmt.stringify(info.metadata)}`;
   });
   const loggerConfig: winston.LoggerOptions = {
     format: winston.format.combine(
