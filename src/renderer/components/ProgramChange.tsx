@@ -1,5 +1,6 @@
 import { faArrowLeft, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { truncateSolAmount } from 'common/strings';
 import { useState } from 'react';
 import { ImportedAccountMap } from 'types/types';
 import InlinePK from './InlinePK';
@@ -58,7 +59,7 @@ const ProgramChange = (props: {
       <td>
         <span className="ms-2 rounded p-1">
           <small className="text-secondary">SOL</small>
-          <small className="ms-2">{formatSolAmount(solAmount)}</small>
+          <small className="ms-2">{truncateSolAmount(solAmount)}</small>
         </span>
       </td>
       <td>

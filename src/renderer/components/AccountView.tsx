@@ -1,7 +1,7 @@
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import analytics from 'common/analytics';
-import { explorerURL } from 'common/strings';
+import { explorerURL, truncateSolAmount } from 'common/strings';
 import { useSelector } from 'react-redux';
 import { RootState } from 'renderer/slices/mainSlice';
 import { WBAccount } from 'types/types';
@@ -43,7 +43,7 @@ const AccountView = (props: { account: WBAccount }) => {
                       <small className="text-muted">SOL</small>
                     </td>
                     <td>
-                      <small>{account.solAmount?.toFixed(2)}</small>
+                      <small>{truncateSolAmount(account.solAmount)}</small>
                     </td>
                   </tr>
                   <tr>
