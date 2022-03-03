@@ -54,6 +54,12 @@ contextBridge.exposeInMainWorld('electron', {
     config(msg) {
       send('config', msg);
     },
+    subscribeTransactionLogs(msg) {
+      send('subscribe-transaction-logs', msg);
+    },
+    unsubscribeTransactionLogs(msg) {
+      send('unsubscribe-transaction-logs', msg);
+    },
     on(method, func) {
       ipcRenderer.on(method, (event, ...args) => func(...args));
     },

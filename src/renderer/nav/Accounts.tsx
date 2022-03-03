@@ -12,7 +12,8 @@ import { NavLink } from 'react-router-dom';
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
-import ProgramChangeView from 'renderer/components/ProgramChangeView';
+import LogView from 'renderer/components/LogView';
+
 import {
   accountsActions,
   RootState,
@@ -212,10 +213,7 @@ const Accounts = () => {
             {selectedAccountInfo ? (
               <AccountView account={selectedAccountInfo} />
             ) : (
-              <ProgramChangeView
-                accounts={listedAccounts}
-                attemptAccountAdd={attemptAccountAdd}
-              />
+              <LogView />
             )}
           </div>
         </div>
