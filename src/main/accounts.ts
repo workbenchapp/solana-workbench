@@ -30,7 +30,8 @@ const addKeypair = async (net: Net, kpPath: string) => {
     await solConn.requestAirdrop(
       kp.publicKey,
       AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
-    )
+    ),
+    'processed'
   );
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
@@ -156,7 +157,8 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
     const txnID = await sol.sendAndConfirmTransaction(
       solConn,
       txn,
-      [kp, createdAccounts].flat()
+      [kp, createdAccounts].flat(),
+      { commitment: 'processed' }
     );
 
     logger.info('created accounts', { txnID });

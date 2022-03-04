@@ -1,3 +1,4 @@
+/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
 /* eslint-disable jsx-a11y/no-static-element-interactions */
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable no-console */
@@ -210,14 +211,11 @@ const Accounts = () => {
                 className={`${
                   selectedAccountInfo ? '' : 'border-bottom active'
                 } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
+                onClick={() => {
+                  dispatch(accountsActions.setSelected(''));
+                }}
               >
-                <small
-                  onClick={() => {
-                    dispatch(accountsActions.setSelected(''));
-                  }}
-                >
-                  Live
-                </small>
+                <small>Live</small>
               </li>
             </ul>
           </div>

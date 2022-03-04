@@ -2,6 +2,7 @@ import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Dropdown, DropdownButton } from 'react-bootstrap';
+import ReactDOM from 'react-dom';
 import OutsideClickHandler from 'react-outside-click-handler';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, toastActions } from 'renderer/slices/mainSlice';
@@ -55,12 +56,14 @@ const ProgramChangeView = (props: {
         case 'unsubscribe-program-changes':
           break;
         case 'program-changes':
-          setChangesState((prevState) => {
-            if (!prevState.paused) {
-              setUniqueAccounts(res.uniqueAccounts);
-              return { ...prevState, changes: res.changes };
-            }
-            return prevState;
+          ReactDOM.unstable_batchedUpdates(() => {
+            setChangesState((prevState) => {
+              if (!prevState.paused) {
+                setUniqueAccounts(res.uniqueAccounts);
+                return { ...prevState, changes: res.changes };
+              }
+              return prevState;
+            });
           });
           break;
         default:
