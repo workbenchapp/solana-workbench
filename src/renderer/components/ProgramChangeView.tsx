@@ -105,7 +105,7 @@ const ProgramChangeView = (props: {
       pausedTimeoutRef.current = window.setTimeout(() => {
         setPaused(true);
         pausedTimeoutRef.current = 0;
-      }, 250);
+      }, 3000);
     }
   };
   const unpause = () => {
