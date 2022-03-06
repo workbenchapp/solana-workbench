@@ -19,6 +19,7 @@ sh -c "$(curl -sSfL https://release.solana.com/v1.9.9/install)"
 echo 'export PATH="/root/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
 # needs build-essential libssl-dev pkg-config
 # see https://github.com/project-serum/anchor/pull/1558 for `avm use --yes`
-cargo install --git https://github.com/SvenDowideit/anchor --branch add-use--yes-for-non-interactie-use avm --locked --force
-avm use --yes latest
+cargo install --git https://github.com/project-serum/anchor avm --locked --force
+avm install latest
+avm use latest
 #   - `warning: be sure to add `/home/sven/.avm/bin` to your PATH to be able to run the installed binaries`
