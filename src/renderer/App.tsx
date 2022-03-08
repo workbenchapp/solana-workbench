@@ -29,6 +29,7 @@ import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import { Button, Form } from 'react-bootstrap';
+import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
   interface Window {
@@ -95,6 +96,21 @@ const Nav = () => {
           </div>
         </NavLink>
       </OverlayTrigger>
+      <OverlayTrigger
+        placement="right"
+        delay={{ show: 250, hide: 0 }}
+        overlay={renderTooltip('version', 'Version')}
+      >
+        <NavLink
+          className="nav-link nav-icon"
+          activeClassName="selected-nav-icon"
+          to="/validatornetworkinfo"
+        >
+          <div style={{ cursor: 'pointer' }}>
+            <FontAwesomeIcon size="2x" icon={faNetworkWired} />
+          </div>
+        </NavLink>
+      </OverlayTrigger>
     </div>
   );
 };
@@ -105,6 +121,7 @@ const Header = () => {
     '/': 'Accounts',
     '/validator': 'Validator',
     '/anchor': 'Anchor',
+    '/validatornetworkinfo': 'ValidatorNetworkInfo'
   };
   return <strong>{routes[location.pathname]}</strong>;
 };
@@ -143,6 +160,8 @@ export default function App() {
               values: res.values,
             })
           );
+          break;
+        case 'get-validator-network-info':
           break;
         default:
       }
@@ -289,6 +308,9 @@ export default function App() {
             </Route>
             <Route path="/anchor">
               <Anchor />
+            </Route>
+            <Route path="/validatornetworkinfo">
+              <ValidatorNetworkInfo />
             </Route>
           </div>
         </div>

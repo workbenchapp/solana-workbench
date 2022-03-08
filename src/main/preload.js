@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electron', {
     fetchAnchorIDL(msg) {
       send('fetch-anchor-idl', msg);
     },
+    fetchValidatorNetworkInfo(msg) {
+      send('get-validator-network-info', msg);
+    },
     updateAccountName(msg) {
       send('update-account-name', msg);
     },

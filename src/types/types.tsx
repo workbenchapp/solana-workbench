@@ -79,6 +79,11 @@ export type ImportAccountRequest = {
   pubKey: string;
 };
 
+export type ValidatorNetworkInfoRequest = {
+  net: Net;
+};
+
+
 export type ImportAccountResponse = {
   net: Net;
 };
@@ -195,3 +200,19 @@ export interface ConfigState {
   loading: boolean;
   values: ConfigMap;
 }
+
+
+export type ValidatorNetworkInfoResponse = {
+  version: string;
+  nodes: NodeInfo[];
+};
+// https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
+export type NodeInfo = {
+  pubkey: string; // - Node public key, as base-58 encoded string
+  gossip: string | null; // - Gossip network address for the node
+  tpu?: string | null; // - TPU network address for the node
+  rpc?: string | null; // - JSON RPC network address for the node, or null if the JSON RPC service is not enabled
+  version?: string | null; // - The software version of the node, or null if the version information is not available
+  featureSet?: number | null; // - The unique identifier of the node's feature set
+  shredVersion?: number | null; // - The shred version the node has been configured to use
+};
