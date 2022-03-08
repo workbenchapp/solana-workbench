@@ -126,12 +126,6 @@ export default function App() {
             dispatch(validatorActions.setWaitingForRun(false));
           }
           break;
-        case 'run-validator':
-          break;
-        case 'validator-logs':
-          break;
-        case 'fetch-anchor-idl':
-          break;
         default:
       }
     };

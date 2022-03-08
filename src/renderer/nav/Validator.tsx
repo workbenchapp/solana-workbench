@@ -36,9 +36,6 @@ const Validator = () => {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method !== 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'validator-logs':
           setValidatorLogs(res);

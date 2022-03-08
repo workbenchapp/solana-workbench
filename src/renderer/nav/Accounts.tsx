@@ -76,17 +76,10 @@ const Accounts = () => {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method !== 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'accounts':
           dispatch(accountsActions.setAccounts(res.accounts));
           dispatch(accountsActions.setRootKey(res.rootKey));
-          break;
-        case 'update-account-name':
-          break;
-        case 'import-account':
           break;
         case 'get-account':
           const { pubKey, exists } = res.account;
@@ -116,8 +109,6 @@ const Accounts = () => {
               })
             );
           }
-          break;
-        case 'delete-account':
           break;
         default:
       }

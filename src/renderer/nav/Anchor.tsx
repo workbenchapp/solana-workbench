@@ -8,9 +8,6 @@ const Anchor = () => {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method != 'program-changes') {
-        console.log(resp);
-      }
       switch (method) {
         case 'fetch-anchor-idl':
           setIDL(res);
