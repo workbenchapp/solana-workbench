@@ -5,6 +5,8 @@ of other fun tricks too.
 
 ## Deps
 
+>> NOTE: see `bin/setup.sh`
+
 - [Nvm](https://github.com/nvm-sh/nvm): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`
 - Node (latest version): `nvm install v16.14.0`
 - Docker: `curl -o- https://get.docker.com | bash`
@@ -15,7 +17,7 @@ of other fun tricks too.
   - `source $HOME/.cargo/env`
   - `sh -c "$(curl -sSfL https://release.solana.com/v1.9.9/install)"`
   - `cargo install --git https://github.com/project-serum/anchor avm --locked --force`
-  - `avm use latest` -- on Sven's linux box (needs libudev)
+  - `avm use latest` -- on Sven's linux box (needs libudev-dev)
   - `warning: be sure to add `/home/sven/.avm/bin` to your PATH to be able to run the installed binaries`
 - XCode Command Line Tools (if on OSX)
 
