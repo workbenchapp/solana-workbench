@@ -150,6 +150,13 @@ export interface ChangeSubscriptionMap {
   };
 }
 
+export interface LogSubscriptionMap {
+  [net: string]: {
+    subscriptionID: number;
+    solConn: sol.Connection;
+  };
+}
+
 export interface ImportedAccountMap {
   [pubKey: string]: boolean;
 }

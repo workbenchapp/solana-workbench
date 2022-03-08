@@ -205,7 +205,7 @@ const Accounts = () => {
                   dispatch(accountsActions.setSelected(''));
                 }}
               >
-                <small>Live</small>
+                <small>Logs</small>
               </li>
             </ul>
           </div>

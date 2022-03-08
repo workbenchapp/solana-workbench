@@ -1,28 +1,31 @@
 import * as sol from '@solana/web3.js';
 import Electron from 'electron';
+import { LogSubscriptionMap } from 'types/types';
 import { netToURL } from '../common/strings';
-import { logger } from './logger';
 
-let sub: any = {};
+const logSubscriptions: LogSubscriptionMap = {};
 const subscribeTransactionLogs = async (
   event: Electron.IpcMainEvent,
   msg: any
 ) => {
   const solConn = new sol.Connection(netToURL(msg.net));
-  sub = { solConn };
-  sub.subscriptionID = solConn.onLogs(
+  const subscriptionID = solConn.onLogs(
     'all',
     (logsInfo) => {
-      logger.info('logs', logsInfo);
       event.reply('transaction-logs', logsInfo);
     },
     'processed'
   );
+  logSubscriptions[msg.net] = { subscriptionID, solConn };
 };
 
-const unsubscribeTransactionLogs = async () => {
-  await sub.solConn.removeProgramAccountChangeListener(sub.subscriptionID);
-  sub.subscriptionID = 0;
+const unsubscribeTransactionLogs = async (
+  _event: Electron.IpcMainEvent,
+  msg: any
+) => {
+  const sub = logSubscriptions[msg.net];
+  await sub.solConn.removeOnLogsListener(sub.subscriptionID);
+  delete logSubscriptions[msg.net];
 };
 
 export { unsubscribeTransactionLogs, subscribeTransactionLogs };
