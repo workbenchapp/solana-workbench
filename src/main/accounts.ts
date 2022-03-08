@@ -25,15 +25,6 @@ const addKeypair = async (net: Net, kpPath: string) => {
   const kp = sol.Keypair.generate();
   const solConn = new sol.Connection(netToURL(net));
 
-  // todo: this conn might not be initialized yet
-  await solConn.confirmTransaction(
-    await solConn.requestAirdrop(
-      kp.publicKey,
-      AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
-    ),
-    'processed'
-  );
-
   // goofy looking but otherwise stringify encodes Uint8Array like:
   // {"0": 1, "1": 2, "2": 3 ...}
   const secretKeyUint = Array.from(Uint8Array.from(kp.secretKey));
@@ -133,6 +124,13 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
   }
   const createdAccounts: sol.Keypair[] = [];
   if (net === Net.Localhost) {
+    await solConn.confirmTransaction(
+      await solConn.requestAirdrop(
+        kp.publicKey,
+        AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
+      ),
+      'processed'
+    );
     const N_ACCOUNTS = 5;
     const txn = new sol.Transaction();
     for (let i = 0; i < N_ACCOUNTS; i += 1) {
