@@ -21,7 +21,7 @@ import { KEY_PATH } from './const';
 const HEXDUMP_BYTES = 512;
 const AIRDROP_AMOUNT = 100;
 
-const addKeypair = async (net: Net, kpPath: string) => {
+const addKeypair = async (kpPath: string) => {
   const kp = sol.Keypair.generate();
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
@@ -80,7 +80,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
     await fs.promises.access(KEY_PATH);
   } catch {
     logger.info('Creating root key', { KEY_PATH });
-    await addKeypair(msg.net, KEY_PATH);
+    await addKeypair(KEY_PATH);
   }
   const kp = await localKeypair(KEY_PATH);
   logger.info('accounts', { net, pubKey: kp.publicKey });
