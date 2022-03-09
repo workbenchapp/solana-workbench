@@ -99,6 +99,16 @@ export type FetchAnchorIDLRequest = {
   programID: string;
 };
 
+export type WBConfigRequest = {
+  key: string;
+  val?: string;
+  action: string;
+};
+
+export type WBConfigResponse = {
+  val: string | undefined;
+};
+
 export type ProgramAccountChange = {
   pubKey: string;
   net: Net;
