@@ -23,7 +23,6 @@ const AIRDROP_AMOUNT = 100;
 
 const addKeypair = async (net: Net, kpPath: string) => {
   const kp = sol.Keypair.generate();
-  const solConn = new sol.Connection(netToURL(net));
 
   // goofy looking but otherwise stringify encodes Uint8Array like:
   // {"0": 1, "1": 2, "2": 3 ...}
