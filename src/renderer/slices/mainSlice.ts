@@ -9,6 +9,7 @@ import {
   TOAST_BOTTOM_OFFSET,
   ToastProps,
   Net,
+  ConfigState,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
@@ -126,16 +127,40 @@ export const accountsSlice = createSlice({
   },
 });
 
+const configState: ConfigState = {
+  loading: true,
+  values: {},
+};
+
+export const configSlice = createSlice({
+  name: 'config',
+  initialState: configState,
+  reducers: {
+    set: (state, action: PayloadAction<ConfigState>) => {
+      state.loading = action.payload.loading;
+      state.values = action.payload.values;
+    },
+  },
+});
+
 const mainReducer = combineReducers({
   toast: toastSlice.reducer,
   validator: validatorSlice.reducer,
   accounts: accountsSlice.reducer,
+  config: configSlice.reducer,
 });
 
 export type RootState = ReturnType<typeof mainReducer>;
-const [toastActions, accountsActions, validatorActions] = [
+const [toastActions, accountsActions, validatorActions, configActions] = [
   toastSlice.actions,
   accountsSlice.actions,
   validatorSlice.actions,
+  configSlice.actions,
 ];
-export { toastActions, accountsActions, validatorActions, mainReducer };
+export {
+  toastActions,
+  accountsActions,
+  validatorActions,
+  configActions,
+  mainReducer,
+};

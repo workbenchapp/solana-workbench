@@ -1,15 +1,30 @@
-import { WBConfigRequest, WBConfigResponse } from 'types/types';
+import {
+  ConfigAction,
+  ConfigMap,
+  WBConfigRequest,
+  WBConfigResponse,
+} from '../types/types';
 import { db } from './db';
 
 async function wbConfig(msg: WBConfigRequest): Promise<WBConfigResponse> {
   const { action, key } = msg;
-  if (action === 'set') {
+  if (action === ConfigAction.Set) {
     const { val } = msg;
-    db.run('UPDATE config SET val = ? WHERE name = ?', val, key);
-    return { val };
+    const existingRow = await db.get('SELECT * FROM config WHERE key = ?', key);
+    if (existingRow) {
+      await db.run('UPDATE config SET val = ? WHERE key = ?', val, key);
+    } else {
+      await db.run('INSERT INTO config (key, val) VALUES (?, ?)', key, val);
+    }
   }
-  const val = await db.get('SELECT val FROM config WHERE name = ?', key);
-  return { val };
+  const cfgVals = await db.all('SELECT * FROM config');
+  const values: ConfigMap = {};
+  if (cfgVals) {
+    cfgVals.forEach((setting: any) => {
+      values[setting.key] = setting.val;
+    });
+  }
+  return { values };
 }
 
 export default wbConfig;
