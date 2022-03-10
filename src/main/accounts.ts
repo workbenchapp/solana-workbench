@@ -83,7 +83,6 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
     await addKeypair(KEY_PATH);
   }
   const kp = await localKeypair(KEY_PATH);
-  logger.info('accounts', { net, pubKey: kp.publicKey });
   const solConn = new sol.Connection(netToURL(net));
   const existingAccounts = await db.all(
     'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC, humanName ASC',

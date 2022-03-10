@@ -329,3 +329,10 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
 .dropdown-menu {
   z-index: 1020; // hack to fix other items being on top of dropdown
 }
+
+.btn-outline-dark {
+  &:hover {
+    color: $black;
+    background-color: $white;
+  }
+}

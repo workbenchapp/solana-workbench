@@ -48,6 +48,9 @@ contextBridge.exposeInMainWorld('electron', {
     unsubscribeProgramChanges(msg) {
       send('unsubscribe-program-changes', msg);
     },
+    config(msg) {
+      send('config', msg);
+    },
     on(method, func) {
       ipcRenderer.on(method, (event, ...args) => func(...args));
     },

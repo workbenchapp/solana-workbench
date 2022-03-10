@@ -25,6 +25,15 @@ export enum ProgramID {
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 }
 
+export enum ConfigKey {
+  AnalyticsEnabled = 'analytics_enabled',
+}
+
+export enum ConfigAction {
+  Get = 'get',
+  Set = 'set',
+}
+
 export type WBAccount = {
   net: Net | undefined;
   pubKey: string;
@@ -99,6 +108,16 @@ export type FetchAnchorIDLRequest = {
   programID: string;
 };
 
+export type WBConfigRequest = {
+  key: string;
+  val?: string;
+  action: string;
+};
+
+export type WBConfigResponse = {
+  values: ConfigMap;
+};
+
 export type ProgramAccountChange = {
   pubKey: string;
   net: Net;
@@ -162,4 +181,13 @@ export interface ToastState {
 export interface ProgramChangesState {
   changes: ProgramAccountChange[];
   paused: boolean;
+}
+
+export interface ConfigMap {
+  [key: string]: string;
+}
+
+export interface ConfigState {
+  loading: boolean;
+  values: ConfigMap;
 }

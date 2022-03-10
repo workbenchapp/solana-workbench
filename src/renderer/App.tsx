@@ -18,15 +18,16 @@ import {
   faNetworkWired,
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState, validatorActions } from './slices/mainSlice';
-import { Net } from '../types/types';
+import { configActions, RootState, validatorActions } from './slices/mainSlice';
+import { ConfigAction, ConfigKey, Net } from '../types/types';
 import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
+import { Button, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
 
 declare global {
   interface Window {
@@ -111,7 +112,10 @@ export default function App() {
   const dispatch = useDispatch();
   const { toasts } = useSelector((state: RootState) => state.toast);
   const validator = useSelector((state: RootState) => state.validator);
+  const config = useSelector((state: RootState) => state.config);
   const { net } = validator;
+
+  const [analyticsEnabled, setAnalyticsEnabled] = useState('yes');
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -126,12 +130,23 @@ export default function App() {
             dispatch(validatorActions.setWaitingForRun(false));
           }
           break;
+        case 'config':
+          dispatch(
+            configActions.set({
+              loading: false,
+              values: res.values,
+            })
+          );
+          break;
         default:
       }
     };
     window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.validatorState({
       net: Net.Localhost,
+    });
+    window.electron.ipcRenderer.config({
+      action: ConfigAction.Get,
     });
 
     return () => {
@@ -169,61 +184,132 @@ export default function App() {
     );
   }
 
-  return (
-    <Router>
-      <Switch>
-        <div className="row flex-nowrap g-0">
-          <div className="col-auto">
-            <Nav />
-            {toasts.map((t) => (
-              <Toast {...t} />
-            ))}
+  let mainDisplay = <></>;
+
+  if (!config.loading && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+    mainDisplay = (
+      <div className="container">
+        <div className="mt-2">
+          <h3>Will you help us out?</h3>
+          Workbench collects usage analytics. You can audit this code on{' '}
+          <a
+            href="https://github.com/workbenchapp/solana-workbench"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Github
+          </a>
+          . You can opt out below.
+        </div>
+        <div className="mt-2 mb-2">
+          <h5>What We Collect</h5>
+          <ul>
+            <li>Which features are popular</li>
+            <li>System properties like OS version</li>
+            <li>How often people are using Workbench</li>
+          </ul>
+          We do not collect addresses or private keys.
+        </div>
+        <ToggleButtonGroup type="radio" name="options" defaultValue={1}>
+          <ToggleButton
+            checked={analyticsEnabled === 'yes'}
+            key="yes"
+            type="radio"
+            value="yes"
+            variant={analyticsEnabled === 'yes' ? 'dark' : 'outline-dark'}
+            onClick={() => {
+              setAnalyticsEnabled('yes');
+            }}
+          >
+            Sure, I'll Help
+          </ToggleButton>
+          <ToggleButton
+            checked={analyticsEnabled === 'no'}
+            key="no"
+            value="no"
+            type="radio"
+            variant={analyticsEnabled === 'no' ? 'dark' : 'outline-dark'}
+            onClick={() => {
+              setAnalyticsEnabled('no');
+            }}
+          >
+            No Thanks
+          </ToggleButton>
+        </ToggleButtonGroup>
+        <Button
+          className="ms-2"
+          variant="primary"
+          onClick={() => {
+            window.electron.ipcRenderer.config({
+              action: ConfigAction.Set,
+              key: ConfigKey.AnalyticsEnabled,
+              val: analyticsEnabled,
+            });
+          }}
+        >
+          <span className="ms-1 text-white">Start</span>
+        </Button>
+      </div>
+    );
+  } else {
+    mainDisplay = (
+      <div className="row flex-nowrap g-0">
+        <div className="col-auto">
+          <Nav />
+          {toasts.map((t) => (
+            <Toast {...t} />
+          ))}
+        </div>
+        <div className="col-10 bg-white ms-4">
+          <div className="row sticky-top sticky-nav bg-white-translucent">
+            <div>
+              <Header />
+              <span className="float-end">
+                {statusDisplay}
+                <DropdownButton
+                  size="sm"
+                  id="dropdown-basic-button"
+                  title={netDropdownTitle}
+                  onSelect={netDropdownSelect}
+                  className="ms-2 float-end"
+                  variant="light"
+                  align="end"
+                >
+                  <Dropdown.Item eventKey={Net.Localhost} href="#">
+                    {Net.Localhost}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.Dev} href="#">
+                    {Net.Dev}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.Test} href="#">
+                    {Net.Test}
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
+                    {Net.MainnetBeta}
+                  </Dropdown.Item>
+                </DropdownButton>
+              </span>
+            </div>
           </div>
-          <div className="col-10 bg-white ms-4">
-            <div className="row sticky-top sticky-nav bg-white-translucent">
-              <div>
-                <Header />
-                <span className="float-end">
-                  {statusDisplay}
-                  <DropdownButton
-                    size="sm"
-                    id="dropdown-basic-button"
-                    title={netDropdownTitle}
-                    onSelect={netDropdownSelect}
-                    className="ms-2 float-end"
-                    variant="light"
-                    align="end"
-                  >
-                    <Dropdown.Item eventKey={Net.Localhost} href="#">
-                      {Net.Localhost}
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey={Net.Dev} href="#">
-                      {Net.Dev}
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey={Net.Test} href="#">
-                      {Net.Test}
-                    </Dropdown.Item>
-                    <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
-                      {Net.MainnetBeta}
-                    </Dropdown.Item>
-                  </DropdownButton>
-                </span>
-              </div>
-            </div>
-            <div className="row flex-nowrap">
-              <Route exact path="/">
-                <Accounts />
-              </Route>
-              <Route path="/validator">
-                <Validator />
-              </Route>
-              <Route path="/anchor">
-                <Anchor />
-              </Route>
-            </div>
+          <div className="row flex-nowrap">
+            <Route exact path="/">
+              <Accounts />
+            </Route>
+            <Route path="/validator">
+              <Validator />
+            </Route>
+            <Route path="/anchor">
+              <Anchor />
+            </Route>
           </div>
         </div>
-      </Switch>
+      </div>
+    );
+  }
+
+  return (
+    <Router>
+      <Switch>{mainDisplay}</Switch>
     </Router>
   );
 }

@@ -23,6 +23,7 @@ import {
 } from './programChanges';
 import { RESOURCES_PATH } from './const';
 import { db, initDB } from './db';
+import wbConfig from './config';
 
 export default class AppUpdater {
   constructor() {
@@ -73,6 +74,9 @@ ipcMain.on(
           break;
         case 'unsubscribe-program-changes':
           await unsubscribeProgramChanges(msg);
+          break;
+        case 'config':
+          res = await wbConfig(msg);
           break;
         default:
       }
