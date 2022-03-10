@@ -11,9 +11,11 @@ const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
 const analytics = (event: string, metadata: any) => {
+  const cfgValues = store.getState().config.values;
   if (
     process.env.NODE_ENV !== 'development' &&
-    store.getState().config.values[ConfigKey.AnalyticsEnabled]
+    ConfigKey.AnalyticsEnabled in cfgValues &&
+    cfgValues[ConfigKey.AnalyticsEnabled] === 'true'
   ) {
     amplitude.getInstance().logEvent(event, metadata);
   }

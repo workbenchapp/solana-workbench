@@ -27,7 +27,7 @@ import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, ToggleButton, ToggleButtonGroup } from 'react-bootstrap';
+import { Button, Form } from 'react-bootstrap';
 
 declare global {
   interface Window {
@@ -115,7 +115,7 @@ export default function App() {
   const config = useSelector((state: RootState) => state.config);
   const { net } = validator;
 
-  const [analyticsEnabled, setAnalyticsEnabled] = useState('yes');
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -191,7 +191,8 @@ export default function App() {
       <div className="container">
         <div className="mt-2">
           <h3>Will you help us out?</h3>
-          Workbench collects usage analytics. You can audit this code on{' '}
+          Workbench collects telemetry data to improve your experience. You can
+          audit this code on{' '}
           <a
             href="https://github.com/workbenchapp/solana-workbench"
             target="_blank"
@@ -210,45 +211,29 @@ export default function App() {
           </ul>
           We do not collect addresses or private keys.
         </div>
-        <ToggleButtonGroup type="radio" name="options" defaultValue={1}>
-          <ToggleButton
-            checked={analyticsEnabled === 'yes'}
-            key="yes"
-            type="radio"
-            value="yes"
-            variant={analyticsEnabled === 'yes' ? 'dark' : 'outline-dark'}
+        <Form>
+          <Form.Check
+            type="switch"
+            className="d-inline-block"
+            id="analytics-ok-switch"
+            label="Yes, enable telemetry"
+            checked={analyticsEnabled}
+            onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
+          />
+          <Button
+            className="ms-2"
+            variant="primary"
             onClick={() => {
-              setAnalyticsEnabled('yes');
+              window.electron.ipcRenderer.config({
+                action: ConfigAction.Set,
+                key: ConfigKey.AnalyticsEnabled,
+                val: analyticsEnabled ? 'true' : 'false',
+              });
             }}
           >
-            Sure, I'll Help
-          </ToggleButton>
-          <ToggleButton
-            checked={analyticsEnabled === 'no'}
-            key="no"
-            value="no"
-            type="radio"
-            variant={analyticsEnabled === 'no' ? 'dark' : 'outline-dark'}
-            onClick={() => {
-              setAnalyticsEnabled('no');
-            }}
-          >
-            No Thanks
-          </ToggleButton>
-        </ToggleButtonGroup>
-        <Button
-          className="ms-2"
-          variant="primary"
-          onClick={() => {
-            window.electron.ipcRenderer.config({
-              action: ConfigAction.Set,
-              key: ConfigKey.AnalyticsEnabled,
-              val: analyticsEnabled,
-            });
-          }}
-        >
-          <span className="ms-1 text-white">Start</span>
-        </Button>
+            <span className="ms-1 text-white">OK</span>
+          </Button>
+        </Form>
       </div>
     );
   } else {
