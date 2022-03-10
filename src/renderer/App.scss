@@ -336,3 +336,9 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
     background-color: $white;
   }
 }
+
+.form-check-input {
+  &:focus {
+    box-shadow: none;
+  }
+}
