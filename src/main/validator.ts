@@ -14,7 +14,7 @@ const DOCKER_IMAGE =
     ? 'nathanleclaire/solana:v1.9.2'
     : 'solanalabs/solana:v1.9.2';
 let DOCKER_PATH = 'docker';
-if (process.platform !== 'win32') {
+if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
 }
 
