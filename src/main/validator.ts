@@ -12,9 +12,9 @@ import { logger } from './logger';
 const DOCKER_IMAGE =
   process.arch === 'arm64'
     ? 'nathanleclaire/solana:v1.9.2'
-    : 'solanalabs/solana:v1.9.2';
+    : 'solanalabs/solana:v1.9.11';
 let DOCKER_PATH = 'docker';
-if (process.platform !== 'win32') {
+if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
 }
 
