@@ -148,6 +148,23 @@ const Accounts = () => {
     );
   }
 
+  let programChanges = <></>;
+  if (net === Net.Localhost) {
+    programChanges = (
+      <ProgramChangeView
+        accounts={listedAccounts}
+        attemptAccountAdd={attemptAccountAdd}
+      />
+    );
+  } else {
+    programChanges = (
+      <div className="text-secondary">
+        Live view is currently experimental and only supported for localhost.
+        You can track some accounts using &quot;Add Account&quot;.
+      </div>
+    );
+  }
+
   let display = <></>;
   if (validator.running) {
     display = (
@@ -214,10 +231,7 @@ const Accounts = () => {
             {selectedAccountInfo ? (
               <AccountView account={selectedAccountInfo} />
             ) : (
-              <ProgramChangeView
-                accounts={listedAccounts}
-                attemptAccountAdd={attemptAccountAdd}
-              />
+              programChanges
             )}
           </div>
         </div>
