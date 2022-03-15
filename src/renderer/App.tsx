@@ -19,9 +19,10 @@ import {
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
+import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
-import { ConfigAction, ConfigKey, Net } from '../types/types';
+import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
 import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
@@ -113,9 +114,17 @@ export default function App() {
   const { toasts } = useSelector((state: RootState) => state.toast);
   const validator = useSelector((state: RootState) => state.validator);
   const config = useSelector((state: RootState) => state.config);
-  const { net } = validator;
 
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+  const { net } = validator;
+
+  useEffect(() => {
+    window.electron.ipcRenderer.validatorState({ net });
+  }, [validator]);
+
+  useInterval(() => {
+    window.electron.ipcRenderer.validatorState({ net });
+  }, 5000);
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -125,10 +134,7 @@ export default function App() {
       }
       switch (method) {
         case 'validator-state':
-          dispatch(validatorActions.setRunning(res.running));
-          if (res.running) {
-            dispatch(validatorActions.setWaitingForRun(false));
-          }
+          dispatch(validatorActions.setState(res.status));
           break;
         case 'config':
           dispatch(
@@ -142,9 +148,6 @@ export default function App() {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
-    window.electron.ipcRenderer.validatorState({
-      net: Net.Localhost,
-    });
     window.electron.ipcRenderer.config({
       action: ConfigAction.Get,
     });
@@ -159,16 +162,9 @@ export default function App() {
     if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
   };
 
-  const netDropdownTitle = (
-    <>
-      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
-      <span>{net}</span>
-    </>
-  );
-
   let statusDisplay = <></>;
 
-  if (validator.running) {
+  if (validator.status === NetStatus.Running) {
     statusDisplay = (
       <span className="badge bg-light text-dark p-2">
         <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
@@ -179,10 +175,19 @@ export default function App() {
     statusDisplay = (
       <span className="badge bg-light text-dark p-2">
         <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
-        Unavailable
+        {validator.status}
       </span>
     );
   }
+
+
+  const netDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
+      <span>{net}</span>
+      {statusDisplay}
+    </>
+  );
 
   let mainDisplay = <></>;
 
@@ -250,7 +255,6 @@ export default function App() {
             <div>
               <Header />
               <span className="float-end">
-                {statusDisplay}
                 <DropdownButton
                   size="sm"
                   id="dropdown-basic-button"

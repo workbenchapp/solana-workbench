@@ -7,6 +7,12 @@ export enum Net {
   Test = 'testnet',
   MainnetBeta = 'mainnet-beta',
 }
+export enum NetStatus {
+  Unknown = 'unknown',
+  Running = 'running',
+  Unavailable = 'unavailable',
+  Starting = 'starting',
+}
 
 export const ACCOUNTS_NONE_KEY = 'none';
 export const RANDOMART_W_CH = 17;
@@ -153,9 +159,7 @@ export interface ChangeBatchSize {
 
 export interface ValidatorState {
   net: Net;
-  running: boolean;
-  waitingForRun: boolean;
-  loading: boolean;
+  status: NetStatus;
 }
 
 export interface AccountsState {

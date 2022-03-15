@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, validatorActions } from 'renderer/slices/mainSlice';
-import { Net, ValidatorState } from 'types/types';
+import { Net, NetStatus, ValidatorState } from 'types/types';
 import { debounce } from 'underscore';
 
 const Validator = () => {
@@ -19,14 +19,12 @@ const Validator = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    window.electron.ipcRenderer.validatorState({
-      net: Net.Localhost,
-    });
+    window.electron.ipcRenderer.validatorState({ net: Net.Localhost });
   }, []);
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorState({ net: Net.Localhost });
-    if (validator.running) {
+    if (validator.status === NetStatus.Running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value || '',
       });
@@ -56,10 +54,10 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="row">
-      {!validator.running && !validator.waitingForRun ? (
+      {!(validator.status === NetStatus.Running) && !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
-            dispatch(validatorActions.setWaitingForRun(true));
+            dispatch(validatorActions.setState(NetStatus.Starting));
             window.electron.ipcRenderer.runValidator();
           }}
           className="mt-2"
@@ -67,7 +65,7 @@ const Validator = () => {
         >
           Run
         </Button>
-      ) : validator.waitingForRun ? (
+      ) : validator.status === NetStatus.Starting ? (
         <div>
           <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
           <small className="text-muted">
@@ -82,7 +80,7 @@ const Validator = () => {
               placeholder="Filter logs"
               aria-label="Amount"
               onKeyDown={debounce(() => {
-                if (validator.running) {
+                if (validator.status === NetStatus.Running) {
                   window.electron.ipcRenderer.validatorLogs({
                     filter: filterRef.current.value || '',
                   });
