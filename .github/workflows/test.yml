@@ -21,7 +21,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm install
+          npm install || (cd release/app && npm install) && npm install 
 
       - name: npm test
         env:
