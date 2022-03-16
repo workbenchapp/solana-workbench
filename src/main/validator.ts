@@ -11,7 +11,7 @@ import { logger } from './logger';
 
 const DOCKER_IMAGE =
   process.arch === 'arm64'
-    ? 'nathanleclaire/solana:v1.9.2'
+    ? 'cryptoworkbench/solana'
     : 'solanalabs/solana:v1.9.11';
 let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
@@ -52,14 +52,20 @@ const runValidator = async () => {
       `${DOCKER_PATH} run \
         --name solana-test-validator \
         -d \
+        -v /test-ledger \
         --init \
-        -p 8899:8899 \
-        -p 8900:8900 \
+        -p 8899:8899/tcp \
+        -p 8900:8900/tcp \
+        -p 9900:9900/tcp \
+        -p 10000:10000/tcp \
+        -p 10000-10011:10000-10011/udp \
         --log-driver local \
         --ulimit nofile=1000000 \
         ${DOCKER_IMAGE} \
         solana-test-validator \
-        --limit-ledger-size 50000000`
+        --log \
+        --dynamic-port-range 10000-10010 \
+        --gossip-port 10011`
     );
 
     return;
