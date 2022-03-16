@@ -105,11 +105,11 @@ const AccountListItem = (props: {
                 initializing && 'input-no-max'
               }`}
               handleOutsideClick={() => {
-                let pubKey = addAcctRef.current.value;
-                if (pubKey === '') {
-                  pubKey = ACCOUNTS_NONE_KEY;
+                let pk = addAcctRef.current.value;
+                if (pk === '') {
+                  pk = ACCOUNTS_NONE_KEY;
                 }
-                attemptAccountAdd(pubKey, initializing);
+                attemptAccountAdd(pk, initializing);
               }}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
@@ -168,10 +168,6 @@ const AccountListItem = (props: {
       </div>
     </div>
   );
-};
-
-AccountListItem.defaultProps = {
-  queriedAccount: undefined,
 };
 
 export default AccountListItem;

@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
-import { ValidatorNetworkInfoResponse } from '../../types/types';
-
 import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
+import { RootState } from 'renderer/slices/mainSlice';
+import { ValidatorNetworkInfoResponse } from '../../types/types';
 
 const ValidatorNetworkInfo = () => {
   const validator = useSelector((state: RootState) => state.validator);
@@ -23,14 +22,14 @@ const ValidatorNetworkInfo = () => {
   ];
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
-    version: "unknown",
-    nodes: []
+    version: 'unknown',
+    nodes: [],
   });
 
   useEffect(() => {
     const { net } = validator;
     window.electron.ipcRenderer.fetchValidatorNetworkInfo({
-      net: net,
+      net,
     });
   }, [validator]);
 
@@ -40,7 +39,6 @@ const ValidatorNetworkInfo = () => {
 
       switch (method) {
         case 'get-validator-network-info':
-          console.log('ValidatorNetworkInfo', { res });
           if (res) {
             setData(res);
           }
@@ -54,18 +52,17 @@ const ValidatorNetworkInfo = () => {
     };
   }, []);
 
-
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status
   return (
     <div className="col">
       <div className="row">
-        <span className='column'>Current Network: {validator.net}</span>
-        <span className='column'>Current Version: {data.version}</span>
+        <span className="column">Current Network: {validator.net}</span>
+        <span className="column">Current Version: {data.version}</span>
       </div>
       <div className="row">
         <BootstrapTable
-          keyField='pubkey'
+          keyField="pubkey"
           data={data.nodes}
           columns={columns}
           pagination={paginationFactory({

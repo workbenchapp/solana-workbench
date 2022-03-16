@@ -21,14 +21,15 @@ import {
 import { useEffect, useState } from 'react';
 import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
+import analytics from 'common/analytics';
+import { Button, Form } from 'react-bootstrap';
+
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
 import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
-import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, Form } from 'react-bootstrap';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
@@ -146,7 +147,7 @@ export default function App() {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method != 'program-changes') {
+      if (method !== 'program-changes') {
         console.log(resp);
       }
       switch (method) {
