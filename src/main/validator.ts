@@ -1,6 +1,6 @@
 import * as sol from '@solana/web3.js';
 import {
-  Net,
+  NetStatus,
   ValidatorLogsRequest,
   ValidatorState,
   ValidatorStateRequest,
@@ -22,26 +22,24 @@ const validatorState = async (
   msg: ValidatorStateRequest
 ): Promise<ValidatorState> => {
   const { net } = msg;
+
   let solConn: sol.Connection;
 
   // Connect to cluster
   const ret = {
-    running: false,
+    status: NetStatus.Unknown,
   } as ValidatorState;
-  if (net !== Net.Localhost) {
-    ret.running = true;
-    return ret;
-  }
   try {
     solConn = new sol.Connection(netToURL(net));
     await solConn.getEpochInfo();
   } catch (error) {
     const err = error as NodeJS.ErrnoException;
     if (err.code === 'ECONNREFUSED') {
+      ret.status = NetStatus.Unavailable;
       return ret;
     }
   }
-  ret.running = true;
+  ret.status = NetStatus.Running;
   return ret;
 };
 

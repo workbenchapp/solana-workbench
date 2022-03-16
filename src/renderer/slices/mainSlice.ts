@@ -9,14 +9,13 @@ import {
   TOAST_BOTTOM_OFFSET,
   ToastProps,
   Net,
+  NetStatus,
   ConfigState,
 } from 'types/types';
 
 const validatorState: ValidatorState = {
   net: Net.Localhost,
-  running: false,
-  waitingForRun: false,
-  loading: false,
+  status: NetStatus.Unknown,
 };
 
 const toastState: ToastState = {
@@ -48,14 +47,8 @@ export const validatorSlice = createSlice({
     setNet: (state, action: PayloadAction<Net>) => {
       state.net = action.payload;
     },
-    setRunning: (state, action: PayloadAction<boolean>) => {
-      state.running = action.payload;
-    },
-    setWaitingForRun: (state, action: PayloadAction<boolean>) => {
-      state.waitingForRun = action.payload;
-    },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.loading = action.payload;
+    setState: (state, action: PayloadAction<NetStatus>) => {
+      state.status = action.payload;
     },
   },
 });
