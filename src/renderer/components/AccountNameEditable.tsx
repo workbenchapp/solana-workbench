@@ -32,7 +32,6 @@ const AccountNameEditable = (props: {
           humanName: ref.current.value,
         });
       }}
-      // eslint-disable-next-line react/jsx-props-no-spreading
       {...innerProps}
     />
   );

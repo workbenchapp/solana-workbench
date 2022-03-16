@@ -12,7 +12,6 @@ const CopyIcon = (props: { writeValue: string }) => {
   const renderCopyTooltip = (id: string) => {
     return (ttProps: any) => {
       return (
-        // eslint-disable-next-line react/jsx-props-no-spreading
         <Tooltip id={id} {...ttProps}>
           <div>{copyTooltipText}</div>
         </Tooltip>
