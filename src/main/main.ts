@@ -34,6 +34,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+const MAX_STRING_LOG_LENGTH = 32;
 
 ipcMain.on(
   'main',
@@ -80,7 +81,11 @@ ipcMain.on(
           break;
         default:
       }
-      logger.info('OK', { method, ...res });
+      let loggedRes = res;
+      if (typeof loggedRes === 'string') {
+        loggedRes = { res: `${loggedRes.slice(0, MAX_STRING_LOG_LENGTH)}...` };
+      }
+      logger.info('OK', { method, ...loggedRes });
       event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;
