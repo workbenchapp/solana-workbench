@@ -23,12 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          ECHO "==> FIRST YARN"
-          yarn || true
-          ECHO "==> INSTALLING NATIVE DEPS"
-          (cd release/app && npm install @solana/web3.js)
-          ECHO "==> MAIN YARN"
-          DEBUG=electron-rebuild yarn
+          npm install --legacy-peer-deps && (cd release/app && npm install)
 
       - name: Publish releases
         env:
