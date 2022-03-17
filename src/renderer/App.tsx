@@ -132,7 +132,6 @@ export default function App() {
   const validator = useSelector((state: RootState) => state.validator);
   const config = useSelector((state: RootState) => state.config);
 
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
   const { net } = validator;
 
   useEffect(() => {
@@ -212,53 +211,7 @@ export default function App() {
 
   if (!config.loading && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     mainDisplay = (
-      <div className="container">
-        <div className="mt-2">
-          <h3>Will you help us out?</h3>
-          Workbench collects telemetry data to improve your experience. You can
-          audit this code on{' '}
-          <a
-            href="https://github.com/workbenchapp/solana-workbench"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Github
-          </a>
-          . You can opt out below.
-        </div>
-        <div className="mt-2 mb-2">
-          <h5>What We Collect</h5>
-          <ul>
-            <li>Which features are popular</li>
-            <li>System properties like OS version</li>
-            <li>How often people are using Workbench</li>
-          </ul>
-          We do not collect addresses or private keys.
-        </div>
-        <Form>
-          <Form.Check
-            type="switch"
-            className="d-inline-block"
-            id="analytics-ok-switch"
-            label="Yes, enable telemetry"
-            checked={analyticsEnabled}
-            onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
-          />
-          <Button
-            className="ms-2"
-            variant="primary"
-            onClick={() => {
-              window.electron.ipcRenderer.config({
-                action: ConfigAction.Set,
-                key: ConfigKey.AnalyticsEnabled,
-                val: analyticsEnabled ? 'true' : 'false',
-              });
-            }}
-          >
-            <span className="ms-1 text-white">OK</span>
-          </Button>
-        </Form>
-      </div>
+      <AnalyticsBanner />
     );
   } else {
     mainDisplay = (
@@ -322,5 +275,59 @@ export default function App() {
     <Router>
       <Switch>{mainDisplay}</Switch>
     </Router>
+  );
+}
+
+const AnalyticsBanner = () => {
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
+
+  return (
+    <div className="container">
+    <div className="mt-2">
+      <h3>Will you help us out?</h3>
+      Workbench collects telemetry data to improve your experience. You can
+      audit this code on{' '}
+      <a
+        href="https://github.com/workbenchapp/solana-workbench"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Github
+      </a>
+      . You can opt out below.
+    </div>
+    <div className="mt-2 mb-2">
+      <h5>What We Collect</h5>
+      <ul>
+        <li>Which features are popular</li>
+        <li>System properties like OS version</li>
+        <li>How often people are using Workbench</li>
+      </ul>
+      We do not collect addresses or private keys.
+    </div>
+    <Form>
+      <Form.Check
+        type="switch"
+        className="d-inline-block"
+        id="analytics-ok-switch"
+        label="Yes, enable telemetry"
+        checked={analyticsEnabled}
+        onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
+      />
+      <Button
+        className="ms-2"
+        variant="primary"
+        onClick={() => {
+          window.electron.ipcRenderer.config({
+            action: ConfigAction.Set,
+            key: ConfigKey.AnalyticsEnabled,
+            val: analyticsEnabled ? 'true' : 'false',
+          });
+        }}
+      >
+        <span className="ms-1 text-white">OK</span>
+      </Button>
+    </Form>
+  </div>
   );
 }
