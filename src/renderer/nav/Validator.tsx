@@ -54,7 +54,8 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="row">
-      {!(validator.status === NetStatus.Running) && !(validator.status === NetStatus.Starting) ? (
+      {!(validator.status === NetStatus.Running) &&
+      !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             dispatch(validatorActions.setState(NetStatus.Starting));
