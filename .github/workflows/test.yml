@@ -27,6 +27,7 @@ jobs:
       - name: Install native modules
         run: |
           cd ./release/app
+          npm install sqlite3
           npm install
 
       - name: Install regular modules
