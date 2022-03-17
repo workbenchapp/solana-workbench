@@ -19,7 +19,10 @@ $solgreen: #14f195;
 $light: #eff2ef;
 $dark: #242423;
 
-@import '../../node_modules/bootstrap/scss/bootstrap';
+// see https://bootswatch.com/
+@import '~bootswatch/dist/sandstone/variables';
+@import '~bootstrap/scss/bootstrap';
+@import '~bootswatch/dist/sandstone/bootswatch';
 
 @mixin inline-code() {
   font-family: $font-family-code;

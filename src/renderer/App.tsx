@@ -2,19 +2,18 @@ import {
   MemoryRouter as Router,
   Switch,
   Route,
-  NavLink,
-  useLocation,
+  NavLink
 } from 'react-router-dom';
 import './App.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-import Tooltip from 'react-bootstrap/Tooltip';
+
+import Container from 'react-bootstrap/Container';
+import Navbar from 'react-bootstrap/Navbar';
+import Nav from 'react-bootstrap/Nav';
+
 import {
-  faBook,
-  faTh,
-  faAnchor,
   faNetworkWired,
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
@@ -28,7 +27,7 @@ import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Form, Row } from 'react-bootstrap';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
@@ -37,93 +36,94 @@ declare global {
   }
 }
 
-const Nav = () => {
-  const renderTooltip = (id: string, title: string) => {
-    return (props: any) => {
-      return (
-        <Tooltip id={id} {...props}>
-          {title}
-        </Tooltip>
-      );
-    };
-  };
-  return (
-    <div className="sticky-top sticky-nav">
-      <OverlayTrigger
-        placement="right"
-        delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('accounts', 'Accounts')}
-      >
-        <NavLink
-          className="nav-link nav-icon"
-          activeClassName="selected-nav-icon"
-          exact
-          to="/"
-        >
-          <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="2x" icon={faTh} />
-          </div>
-        </NavLink>
-      </OverlayTrigger>
-      <OverlayTrigger
-        placement="right"
-        delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('logs', 'Validator')}
-      >
-        <NavLink
-          className="nav-link nav-icon"
-          activeClassName="selected-nav-icon"
-          exact
-          to="/validator"
-        >
-          <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="2x" icon={faBook} />
-          </div>
-        </NavLink>
-      </OverlayTrigger>
-      <OverlayTrigger
-        placement="right"
-        delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('anchor', 'Anchor')}
-      >
-        <NavLink
-          className="nav-link nav-icon"
-          activeClassName="selected-nav-icon"
-          to="/anchor"
-        >
-          <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="2x" icon={faAnchor} />
-          </div>
-        </NavLink>
-      </OverlayTrigger>
-      <OverlayTrigger
-        placement="right"
-        delay={{ show: 250, hide: 0 }}
-        overlay={renderTooltip('version', 'Version')}
-      >
-        <NavLink
-          className="nav-link nav-icon"
-          activeClassName="selected-nav-icon"
-          to="/validatornetworkinfo"
-        >
-          <div style={{ cursor: 'pointer' }}>
-            <FontAwesomeIcon size="2x" icon={faNetworkWired} />
-          </div>
-        </NavLink>
-      </OverlayTrigger>
-    </div>
-  );
-};
+const NetworkSelector = () => {
+  const validator = useSelector((state: RootState) => state.validator);
+  const { net } = validator;
+  const dispatch = useDispatch();
 
-const Header = () => {
-  const location = useLocation();
-  const routes: Record<string, string> = {
-    '/': 'Accounts',
-    '/validator': 'Validator',
-    '/anchor': 'Anchor',
-    '/validatornetworkinfo': 'ValidatorNetworkInfo'
+  const netDropdownSelect = (eventKey: string | null) => {
+    analytics('selectNet', { prevNet: net, newNet: eventKey });
+    if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
   };
-  return <strong>{routes[location.pathname]}</strong>;
+
+  let statusDisplay = <></>;
+
+  if (validator.status === NetStatus.Running) {
+    statusDisplay = (
+      <span className="badge bg-light text-dark p-2">
+        <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
+        Available
+      </span>
+    );
+  } else {
+    statusDisplay = (
+      <span className="badge bg-light text-dark p-2">
+        <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
+        {validator.status}
+      </span>
+    );
+  }
+
+
+  const netDropdownTitle = (
+    <>
+      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
+      <span>{net}</span>
+      {statusDisplay}
+    </>
+  );
+
+  return (
+    <DropdownButton
+    size="sm"
+    id="dropdown-basic-button"
+    title={netDropdownTitle}
+    onSelect={netDropdownSelect}
+    className="ms-2 float-end"
+    variant="light"
+    align="end"
+  >
+    <Dropdown.Item eventKey={Net.Localhost} href="#">
+      {Net.Localhost}
+    </Dropdown.Item>
+    <Dropdown.Item eventKey={Net.Dev} href="#">
+      {Net.Dev}
+    </Dropdown.Item>
+    <Dropdown.Item eventKey={Net.Test} href="#">
+      {Net.Test}
+    </Dropdown.Item>
+    <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
+      {Net.MainnetBeta}
+    </Dropdown.Item>
+  </DropdownButton>
+  );
+}
+
+const OurNav = () => {
+  // Note: NavLink is not compatible with react-router-dom's NavLink, so just add the styling
+  return (
+<Navbar sticky="top" bg="dark" expand="sm">
+  <Container fluid>
+    <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
+    <Navbar.Toggle aria-controls="navbarScroll" />
+    <Navbar.Collapse id="navbarScroll">
+      <Nav
+        className="me-auto my-2 my-lg-0"
+        style={{ maxHeight: '100px' }}
+        navbarScroll
+      >
+        <NavLink className="nav-link" activeClassName="active" to="/">Accounts</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/validator">Validator</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/anchor">Anchor</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/validatornetworkinfo">NetworkInfo</NavLink>
+      </Nav>
+      <Form className="d-flex">
+      <NetworkSelector />
+      </Form>
+    </Navbar.Collapse>
+  </Container>
+</Navbar>
+  );
 };
 
 export default function App() {
@@ -175,37 +175,7 @@ export default function App() {
     };
   }, []);
 
-  const netDropdownSelect = (eventKey: string | null) => {
-    analytics('selectNet', { prevNet: net, newNet: eventKey });
-    if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
-  };
 
-  let statusDisplay = <></>;
-
-  if (validator.status === NetStatus.Running) {
-    statusDisplay = (
-      <span className="badge bg-light text-dark p-2">
-        <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
-        Available
-      </span>
-    );
-  } else {
-    statusDisplay = (
-      <span className="badge bg-light text-dark p-2">
-        <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
-        {validator.status}
-      </span>
-    );
-  }
-
-
-  const netDropdownTitle = (
-    <>
-      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
-      <span>{net}</span>
-      {statusDisplay}
-    </>
-  );
 
   let mainDisplay = <></>;
 
@@ -215,59 +185,26 @@ export default function App() {
     );
   } else {
     mainDisplay = (
-      <div className="row flex-nowrap g-0">
-        <div className="col-auto">
-          <Nav />
+      <Container fluid>
+        <OurNav />
           {toasts.map((t) => (
             <Toast {...t} />
           ))}
-        </div>
-        <div className="col-10 bg-white ms-4">
-          <div className="row sticky-top sticky-nav bg-white-translucent">
-            <div>
-              <Header />
-              <span className="float-end">
-                <DropdownButton
-                  size="sm"
-                  id="dropdown-basic-button"
-                  title={netDropdownTitle}
-                  onSelect={netDropdownSelect}
-                  className="ms-2 float-end"
-                  variant="light"
-                  align="end"
-                >
-                  <Dropdown.Item eventKey={Net.Localhost} href="#">
-                    {Net.Localhost}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.Dev} href="#">
-                    {Net.Dev}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.Test} href="#">
-                    {Net.Test}
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={Net.MainnetBeta} href="#">
-                    {Net.MainnetBeta}
-                  </Dropdown.Item>
-                </DropdownButton>
-              </span>
-            </div>
-          </div>
-          <div className="row flex-nowrap">
-            <Route exact path="/">
-              <Accounts />
-            </Route>
-            <Route path="/validator">
-              <Validator />
-            </Route>
-            <Route path="/anchor">
-              <Anchor />
-            </Route>
-            <Route path="/validatornetworkinfo">
-              <ValidatorNetworkInfo />
-            </Route>
-          </div>
-        </div>
-      </div>
+        <Row>
+          <Route exact path="/">
+            <Accounts />
+          </Route>
+          <Route path="/validator">
+            <Validator />
+          </Route>
+          <Route path="/anchor">
+            <Anchor />
+          </Route>
+          <Route path="/validatornetworkinfo">
+            <ValidatorNetworkInfo />
+          </Route>
+        </Row>
+        </Container>
     );
   }
 
