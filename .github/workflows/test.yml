@@ -21,8 +21,7 @@ jobs:
 
       - name: npm install
         run: |
-          npm install || true
-          (cd release/app && npm install)
+          npm install node-pre-gyp rebuild
           npm install 
 
       - name: npm test
