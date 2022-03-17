@@ -17,6 +17,8 @@ import {
   updateAccountName,
 } from './accounts';
 import fetchAnchorIdl from './anchor';
+import fetchValidatorNetworkInfo from './validatorNetworkInfo';
+
 import {
   subscribeProgramChanges,
   unsubscribeProgramChanges,
@@ -34,6 +36,7 @@ export default class AppUpdater {
 }
 
 let mainWindow: BrowserWindow | null = null;
+const MAX_STRING_LOG_LENGTH = 32;
 
 ipcMain.on(
   'main',
@@ -78,9 +81,16 @@ ipcMain.on(
         case 'config':
           res = await wbConfig(msg);
           break;
+        case 'get-validator-network-info':
+          res = await fetchValidatorNetworkInfo(msg);
+          break;
         default:
       }
-      logger.info('OK', { method, ...res });
+      let loggedRes = res;
+      if (typeof loggedRes === 'string') {
+        loggedRes = { res: `${loggedRes.slice(0, MAX_STRING_LOG_LENGTH)}...` };
+      }
+      logger.info('OK', { method, ...loggedRes });
       event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;
