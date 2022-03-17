@@ -22,7 +22,7 @@ jobs:
       - name: npm install
         run: |
           npm install -g npm@6
-          npm install typescript ts-node tslib @types/node
+          npm install typescript ts-node tslib @types/node electron-rebuild
           (cd ./release/app && npm install)
           npm install 
 
