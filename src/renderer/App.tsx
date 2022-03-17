@@ -14,6 +14,9 @@ import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
 
 import {
+  faBook,
+  faTh,
+  faAnchor,
   faNetworkWired,
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
@@ -99,10 +102,10 @@ const NetworkSelector = () => {
   );
 }
 
-const OurNav = () => {
+const WBNav = () => {
   // Note: NavLink is not compatible with react-router-dom's NavLink, so just add the styling
   return (
-<Navbar sticky="top" bg="dark" expand="sm">
+<Navbar sticky="top" bg="light" expand="sm">
   <Container fluid>
     <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
     <Navbar.Toggle aria-controls="navbarScroll" />
@@ -112,10 +115,10 @@ const OurNav = () => {
         style={{ maxHeight: '100px' }}
         navbarScroll
       >
-        <NavLink className="nav-link" activeClassName="active" to="/">Accounts</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/validator">Validator</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/anchor">Anchor</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/validatornetworkinfo">NetworkInfo</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/"><FontAwesomeIcon size="1x" icon={faTh} /> Accounts</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/validator"><FontAwesomeIcon size="1x" icon={faBook} /> Validator</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/anchor"><FontAwesomeIcon size="1x" icon={faAnchor} /> Anchor</NavLink>
+        <NavLink className="nav-link" activeClassName="active" to="/validatornetworkinfo"><FontAwesomeIcon size="1x" icon={faNetworkWired} /> NetworkInfo</NavLink>
       </Nav>
       <Form className="d-flex">
       <NetworkSelector />
@@ -186,7 +189,7 @@ export default function App() {
   } else {
     mainDisplay = (
       <Container fluid>
-        <OurNav />
+        <WBNav />
           {toasts.map((t) => (
             <Toast {...t} />
           ))}
