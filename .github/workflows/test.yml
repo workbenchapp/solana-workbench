@@ -26,6 +26,7 @@ jobs:
       - name: Install native modules
         run: |
           cd ./release/app
+          npm install --save-dev node-pre-gyp
           DEBUG=electron-rebuild npm install
 
       - name: Install regular modules
