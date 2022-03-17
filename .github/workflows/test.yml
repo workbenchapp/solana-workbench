@@ -17,7 +17,7 @@ jobs:
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v2
         with:
-          node-version: 16
+          node-version: 14
 
       - name: Install intial npm deps
         run: |
@@ -27,7 +27,6 @@ jobs:
       - name: Install native modules
         run: |
           cd ./release/app
-          npm install sqlite3
           npm install
 
       - name: Install regular modules
