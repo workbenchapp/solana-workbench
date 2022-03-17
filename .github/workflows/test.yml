@@ -19,12 +19,21 @@ jobs:
         with:
           node-version: 16
 
-      - name: npm install
+      - name: Install intial npm deps
         run: |
           npm install -g npm@6
           npm install typescript ts-node tslib @types/node electron-rebuild electron@^15.3.0
-          (cd ./release/app && npm --version && npm update && npm install)
-          npm install 
+          
+      - name: Install native modules
+        run: |
+          cd ./release/app
+          npm install
+
+      - name: Install regular modules
+        run: |
+          pwd
+          cd ../../
+          npm install
 
       - name: npm test
         env:
