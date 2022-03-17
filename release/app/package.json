@@ -15,12 +15,14 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "license": "MIT",
-  "dependencies": {
-    "@solana/web3.js": "^1.30.2",
-    "sqlite3": "^5.0.2",
+  "devDependencies": {
     "typescript": "^4.6.2",
     "ts-node": "^10.7.0",
     "tslib": "^2.3.1",
     "@types/node": "^17.0.21"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.30.2",
+    "sqlite3": "^5.0.2"
   }
 }
