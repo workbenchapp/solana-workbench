@@ -27,14 +27,13 @@ jobs:
       - name: Install native modules
         run: |
           cd ./release/app
-          npm install --save-dev node-pre-gyp
-          DEBUG=electron-rebuild npm install
+          DEBUG=electron-rebuild npm install --no-optional 
 
       - name: Install regular modules
         run: |
           pwd
           cd ../../
-          npm install
+          npm install --no-optional
 
       - name: npm test
         env:
