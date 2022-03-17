@@ -23,7 +23,7 @@ jobs:
         run: |
           npm install -g npm@6
           npm install typescript ts-node tslib @types/node electron-rebuild electron@^15.3.0
-          (cd ./release/app && npm install @solana/web3.js sqlite3 && npm install)
+          (cd ./release/app && npm --version && npm update && npm install)
           npm install 
 
       - name: npm test
