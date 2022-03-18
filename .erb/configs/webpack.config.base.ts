@@ -6,7 +6,7 @@ import webpack from 'webpack';
 import webpackPaths from './webpack.paths';
 import { dependencies as externals } from '../../release/app/package.json';
 
-const configuration: webpack.Configuration = {
+export default {
   externals: [...Object.keys(externals || {})],
 
   stats: 'errors-only',
@@ -18,10 +18,6 @@ const configuration: webpack.Configuration = {
         exclude: /node_modules/,
         use: {
           loader: 'ts-loader',
-          options: {
-            // Remove this line to enable type checking in webpack builds
-            transpileOnly: true,
-          },
         },
       },
     ],
@@ -49,5 +45,3 @@ const configuration: webpack.Configuration = {
     }),
   ],
 };
-
-export default configuration;
