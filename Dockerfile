@@ -20,6 +20,7 @@ WORKDIR /app/
 # and now the source
 #COPY ["package.json", "package-lock.json*", ".erb", "./"]
 COPY . .
+RUN rm -rf node_modules release/app/node_modules /app/src/node_modules
 RUN source /root/.profile && source $HOME/.nvm/nvm.sh \
     && npm install --legacy-peer-deps
 
