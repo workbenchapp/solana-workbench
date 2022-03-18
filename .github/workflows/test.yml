@@ -15,25 +15,13 @@ jobs:
         uses: actions/checkout@v1
 
       - name: Install Node.js, NPM and Yarn
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v1
         with:
-          node-version: 16
+          node-version: 16.14.0
 
-      - name: Install intial npm deps
+      - name: npm install
         run: |
-          npm install typescript ts-node tslib @types/node electron-rebuild electron@^15.3.0 node-gyp
-          npm rebuild node-gyp
-          
-      - name: Install native modules
-        run: |
-          cd ./release/app
-          DEBUG=electron-rebuild npm install --no-optional 
-
-      - name: Install regular modules
-        run: |
-          pwd
-          cd ../../
-          npm install --no-optional
+          npm install
 
       - name: npm test
         env:
