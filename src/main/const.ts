@@ -11,16 +11,20 @@ const RESOURCES_PATH = app.isPackaged
   : path.join(__dirname, '..', '..', 'assets');
 const WORKBENCH_DIR_NAME = '.solana-workbench';
 const WORKBENCH_DIR_PATH = path.join(os.homedir(), WORKBENCH_DIR_NAME);
-const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const KEY_FILE_NAME = 'wbkey.json';
+const KEYPAIR_DIR_PATH = path.join(WORKBENCH_DIR_PATH, 'keys');
 const KEY_PATH = path.join(KEYPAIR_DIR_PATH, KEY_FILE_NAME);
+const DB_PATH = path.join(WORKBENCH_DIR_PATH, 'db');
+const ACCOUNTS_DIR_PATH = path.join(DB_PATH, 'accounts');
+const CONFIG_FILE_PATH = path.join(DB_PATH, 'config.json');
 const execAsync = util.promisify(exec);
 
 if (!fs.existsSync(WORKBENCH_DIR_PATH)) {
   fs.mkdirSync(WORKBENCH_DIR_PATH);
-}
-if (!fs.existsSync(KEYPAIR_DIR_PATH)) {
+  fs.mkdirSync(DB_PATH);
+  fs.mkdirSync(ACCOUNTS_DIR_PATH);
   fs.mkdirSync(KEYPAIR_DIR_PATH);
+  fs.writeFileSync(CONFIG_FILE_PATH, '{}');
 }
 
 export {
@@ -31,5 +35,8 @@ export {
   WORKBENCH_DIR_NAME,
   KEYPAIR_DIR_PATH,
   KEY_FILE_NAME,
+  DB_PATH,
+  ACCOUNTS_DIR_PATH,
+  CONFIG_FILE_PATH,
   execAsync,
 };

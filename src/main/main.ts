@@ -24,7 +24,6 @@ import {
   unsubscribeProgramChanges,
 } from './programChanges';
 import { RESOURCES_PATH } from './const';
-import { db, initDB } from './db';
 import wbConfig from './config';
 
 export default class AppUpdater {
@@ -61,7 +60,7 @@ ipcMain.on(
           res = await fetchAnchorIdl(msg);
           break;
         case 'update-account-name':
-          res = await updateAccountName(msg);
+          await updateAccountName(msg);
           break;
         case 'import-account':
           await importAccount(msg);
@@ -70,7 +69,7 @@ ipcMain.on(
           res = await getAccount(msg);
           break;
         case 'delete-account':
-          res = await deleteAccount(msg);
+          await deleteAccount(msg);
           break;
         case 'subscribe-program-changes':
           await subscribeProgramChanges(event, msg);
@@ -135,7 +134,6 @@ const createWindow = async () => {
   if (isDevelopment) {
     await installExtensions();
   }
-  await initDB();
   await initLogging();
 
   const getAssetPath = (...paths: string[]): string => {
@@ -189,8 +187,6 @@ const createWindow = async () => {
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
-  db.close();
-
   if (process.platform !== 'darwin') {
     app.quit();
   }

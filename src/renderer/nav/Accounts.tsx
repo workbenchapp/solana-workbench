@@ -137,7 +137,9 @@ const Accounts = () => {
   let initView = (
     <>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      <small className="me-2">Generating seed wallets...</small>
+      <small className="me-2">
+        Generating seed wallets. This can take up to 30 seconds.
+      </small>
     </>
   );
 
@@ -162,8 +164,9 @@ const Accounts = () => {
               </span>
               <button
                 type="button"
-                className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
-                  }`}
+                className={`ms-2 btn rounded btn-block btn-sm no-box-shadow ${
+                  addBtnClicked ? 'btn-primary-darker' : 'btn-primary'
+                }`}
                 onMouseDown={(
                   e: React.MouseEvent<HTMLButtonElement, MouseEvent>
                 ): void => {
@@ -190,16 +193,18 @@ const Accounts = () => {
           <div>
             <ul className="nav">
               <li
-                className={`${selectedAccount
+                className={`${
+                  selectedAccount
                     ? 'border-bottom active'
                     : 'opacity-25 cursor-not-allowed'
-                  } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
+                } ms-3 me-3 pt-1 pb-1 border-3 nav-item text-secondary nav-link-tab`}
               >
                 <small>Account</small>
               </li>
               <li
-                className={`${selectedAccountInfo ? '' : 'border-bottom active'
-                  } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
+                className={`${
+                  selectedAccountInfo ? '' : 'border-bottom active'
+                } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
                 onClick={() => {
                   dispatch(accountsActions.setSelected(''));
                 }}
