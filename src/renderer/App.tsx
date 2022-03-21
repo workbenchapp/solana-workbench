@@ -121,7 +121,7 @@ const Header = () => {
     '/': 'Accounts',
     '/validator': 'Validator',
     '/anchor': 'Anchor',
-    '/validatornetworkinfo': 'ValidatorNetworkInfo'
+    '/validatornetworkinfo': 'ValidatorNetworkInfo',
   };
   return <strong>{routes[location.pathname]}</strong>;
 };
@@ -199,7 +199,6 @@ export default function App() {
     );
   }
 
-
   const netDropdownTitle = (
     <>
       <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
@@ -210,7 +209,11 @@ export default function App() {
 
   let mainDisplay = <></>;
 
-  if (!config.loading && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+  console.log('check', {
+    notConfigLoading: !config.loading,
+    keyExists: !(`${ConfigKey.AnalyticsEnabled}` in config.values),
+  });
+  if (!(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     mainDisplay = (
       <div className="container">
         <div className="mt-2">
@@ -261,6 +264,7 @@ export default function App() {
       </div>
     );
   } else {
+    console.log('Rendering alternative page...', { config });
     mainDisplay = (
       <div className="row flex-nowrap g-0">
         <div className="col-auto">

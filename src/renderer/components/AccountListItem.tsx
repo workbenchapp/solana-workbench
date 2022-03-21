@@ -146,6 +146,7 @@ const AccountListItem = (props: {
                       e.preventDefault();
                       e.stopPropagation();
                       window.electron.ipcRenderer.deleteAccount({
+                        net,
                         pubKey: account.pubKey,
                       });
                       dispatch(accountsActions.rm(account.pubKey));
