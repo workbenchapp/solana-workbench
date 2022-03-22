@@ -193,7 +193,7 @@ export default function App() {
           {toasts.map((t) => (
             <Toast {...t} />
           ))}
-        <Row>
+        <Row className="mt-3">
           <Route exact path="/">
             <Accounts />
           </Route>
