@@ -1,30 +1,48 @@
-
 import * as sol from '@solana/web3.js';
 import { netToURL } from '../common/strings';
-import { NodeInfo, ValidatorNetworkInfoRequest, ValidatorNetworkInfoResponse } from '../types/types';
+import {
+  VCount,
+  ValidatorNetworkInfoResponse,
+  ValidatorNetworkInfoRequest,
+} from '../types/types';
 
+interface VersionCount {
+  [key: string]: number;
+}
 const fetchValidatorNetworkInfo = async (msg: ValidatorNetworkInfoRequest) => {
   const url = netToURL(msg.net);
   const solConn = new sol.Connection(url);
   const contactInfo = await solConn.getClusterNodes();
   const nodeVersion = await solConn.getVersion();
 
-  const nodeInfos: NodeInfo[] = contactInfo.map(
-    (info: sol.ContactInfo) => {
-      const newInfo: NodeInfo = {
-        pubkey: info.pubkey,
-        version: info.version,
-        rpc: info.rpc,
-        gossip: info.gossip,
-      };
+  const frequencyCount: VersionCount = {};
 
-      return newInfo;
+  contactInfo.map((info: sol.ContactInfo) => {
+    let version = 'none';
+    if (info.version) {
+      version = info.version;
+    }
+
+    if (frequencyCount[version]) {
+      frequencyCount[version] += 1;
+    } else {
+      frequencyCount[version] = 1;
+    }
+    return undefined;
+  });
+  const versions: VCount[] = [];
+  Object.entries(frequencyCount).forEach(([version, count]) => {
+    versions.push({
+      version,
+      count,
     });
+  });
 
-  let response: ValidatorNetworkInfoResponse = {
-    nodes: nodeInfos,
+  const response: ValidatorNetworkInfoResponse = {
+    nodes: contactInfo,
     version: nodeVersion['solana-core'],
-  }
+    versionCount: versions,
+  };
 
   return response;
 };
