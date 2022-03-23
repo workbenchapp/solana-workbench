@@ -50,6 +50,6 @@ function LogView() {
       )}
     </div>
   );
-};
+}
 
 export default LogView;
