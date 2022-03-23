@@ -9,12 +9,12 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 
-import analytics from '../../common/analytics';
-import AccountListView from '../components/AccountListView';
-import AccountView from '../components/AccountView';
-import InlinePK from '../components/InlinePK';
+import AccountListView from 'renderer/components/AccountListView';
+import AccountView from 'renderer/components/AccountView';
+import InlinePK from 'renderer/components/InlinePK';
+import LogView from '../components/LogView';
 import ProgramChangeView from '../components/ProgramChangeView';
-import { accountsActions, RootState, toastActions } from '../slices/mainSlice';
+
 import {
   AccountsState,
   ACCOUNTS_NONE_KEY,
@@ -23,6 +23,9 @@ import {
   NetStatus,
   WBAccount,
 } from '../../types/types';
+
+const LIVE_TAB_CHANGES = 'changes';
+const LIVE_TAB_TXN_LOGS = 'logs';
 
 function Accounts() {
   const dispatch = useDispatch();
@@ -33,6 +36,8 @@ function Accounts() {
   const { net } = validator;
   const { rootKey, selectedAccount, listedAccounts } = accounts;
   const [addBtnClicked, setAddBtnClicked] = useState<boolean>(false);
+  const [selectedLiveTab, setSelectedLiveTab] =
+    useState<string>(LIVE_TAB_CHANGES);
 
   const attemptAccountAdd = (pubKey: string, initializing: boolean) => {
     if (initializing && pubKey === ACCOUNTS_NONE_KEY) {
@@ -148,6 +153,16 @@ function Accounts() {
     );
   }
 
+  let selectedLiveComponent = <LogView />;
+  if (selectedLiveTab === LIVE_TAB_CHANGES) {
+    selectedLiveComponent = (
+      <ProgramChangeView
+        accounts={listedAccounts}
+        attemptAccountAdd={attemptAccountAdd}
+      />
+    );
+  }
+
   let display = <></>;
   if (validator.status === NetStatus.Running) {
     display = (
@@ -200,13 +215,29 @@ function Accounts() {
               </li>
               <li
                 className={`${
-                  selectedAccountInfo ? '' : 'border-bottom active'
+                  !selectedAccountInfo && selectedLiveTab === LIVE_TAB_TXN_LOGS
+                    ? 'border-bottom active'
+                    : ''
                 } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
                 onClick={() => {
                   dispatch(accountsActions.setSelected(''));
+                  setSelectedLiveTab(LIVE_TAB_TXN_LOGS);
                 }}
               >
-                <small>Live</small>
+                <small>Logs</small>
+              </li>
+              <li
+                className={`${
+                  !selectedAccountInfo && selectedLiveTab === LIVE_TAB_CHANGES
+                    ? 'border-bottom active'
+                    : ''
+                } ms-3 me-3 pt-1 pb-1 border-3 cursor-pointer nav-item text-secondary nav-link-tab`}
+                onClick={() => {
+                  dispatch(accountsActions.setSelected(''));
+                  setSelectedLiveTab(LIVE_TAB_CHANGES);
+                }}
+              >
+                <small>Program Changes</small>
               </li>
             </ul>
           </div>
@@ -214,10 +245,7 @@ function Accounts() {
             {selectedAccountInfo ? (
               <AccountView account={selectedAccountInfo} />
             ) : (
-              <ProgramChangeView
-                accounts={listedAccounts}
-                attemptAccountAdd={attemptAccountAdd}
-              />
+              selectedLiveComponent
             )}
           </div>
         </div>

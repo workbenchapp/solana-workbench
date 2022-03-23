@@ -23,6 +23,10 @@ import {
   subscribeProgramChanges,
   unsubscribeProgramChanges,
 } from './programChanges';
+import {
+  subscribeTransactionLogs,
+  unsubscribeTransactionLogs,
+} from './transactionLogs';
 import { RESOURCES_PATH } from './const';
 import wbConfig from './config';
 
@@ -82,6 +86,12 @@ ipcMain.on(
           break;
         case 'get-validator-network-info':
           res = await fetchValidatorNetworkInfo(msg);
+          break;
+        case 'subscribe-transaction-logs':
+          await subscribeTransactionLogs(event, msg);
+          break;
+        case 'unsubscribe-transaction-logs':
+          await unsubscribeTransactionLogs(event, msg);
           break;
         default:
       }
