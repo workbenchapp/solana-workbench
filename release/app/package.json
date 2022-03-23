@@ -15,7 +15,5 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "license": "MIT",
-  "dependencies": {
-    "@solana/web3.js": "^1.31.0"
-  }
+  "dependencies": {}
 }
