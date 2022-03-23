@@ -83,7 +83,6 @@ export type ValidatorNetworkInfoRequest = {
   net: Net;
 };
 
-
 export type ImportAccountResponse = {
   net: Net;
 };
@@ -208,14 +207,14 @@ export interface ConfigState {
   values: ConfigMap;
 }
 export type vCount = {
-  version: string
-  count: number
-}
+  version: string;
+  count: number;
+};
 export type ValidatorNetworkInfoResponse = {
-  version: string
-  nodes: sol.ContactInfo[]
-  versionCount: vCount[]
-}
+  version: string;
+  nodes: sol.ContactInfo[];
+  versionCount: vCount[];
+};
 // https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
 export type NodeInfo = {
   pubkey: string; // - Node public key, as base-58 encoded string

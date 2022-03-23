@@ -21,14 +21,14 @@ import {
 import { useEffect, useState } from 'react';
 import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
+import analytics from 'common/analytics';
+import { Button, Form } from 'react-bootstrap';
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
 import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
-import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, Form } from 'react-bootstrap';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
@@ -37,9 +37,9 @@ declare global {
   }
 }
 
-const Nav = () => {
+function Nav() {
   const renderTooltip = (id: string, title: string) => {
-    return (props: any) => {
+    return function (props: any) {
       return (
         <Tooltip id={id} {...props}>
           {title}
@@ -113,9 +113,9 @@ const Nav = () => {
       </OverlayTrigger>
     </div>
   );
-};
+}
 
-const Header = () => {
+function Header() {
   const location = useLocation();
   const routes: Record<string, string> = {
     '/': 'Accounts',
@@ -124,7 +124,7 @@ const Header = () => {
     '/validatornetworkinfo': 'ValidatorNetworkInfo',
   };
   return <strong>{routes[location.pathname]}</strong>;
-};
+}
 
 export default function App() {
   const dispatch = useDispatch();

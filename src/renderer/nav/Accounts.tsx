@@ -12,9 +12,6 @@ import { NavLink } from 'react-router-dom';
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
-import LogView from '../components/LogView';
-import ProgramChangeView from '../components/ProgramChangeView';
-
 import {
   accountsActions,
   RootState,
@@ -28,11 +25,13 @@ import {
   NetStatus,
   WBAccount,
 } from 'types/types';
+import LogView from '../components/LogView';
+import ProgramChangeView from '../components/ProgramChangeView';
 
 const LIVE_TAB_CHANGES = 'changes';
 const LIVE_TAB_TXN_LOGS = 'logs';
 
-const Accounts = () => {
+function Accounts() {
   const dispatch = useDispatch();
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
@@ -265,6 +264,6 @@ const Accounts = () => {
   }
 
   return <>{display}</>;
-};
+}
 
 export default Accounts;

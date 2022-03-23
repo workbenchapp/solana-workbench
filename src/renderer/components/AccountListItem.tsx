@@ -13,11 +13,11 @@ import Editable from './Editable';
 import InlinePK from './InlinePK';
 import RandomArt from './RandomArt';
 
-const AccountListItem = (props: {
+function AccountListItem(props: {
   initializing: boolean;
   account: WBAccount;
   attemptAccountAdd: (pk: string, b: boolean) => void;
-}) => {
+}) {
   const { initializing, account, attemptAccountAdd } = props;
   const dispatch = useDispatch();
   const { selectedAccount, hoveredAccount, editedAccount } = useSelector(
@@ -167,7 +167,7 @@ const AccountListItem = (props: {
       </div>
     </div>
   );
-};
+}
 
 AccountListItem.defaultProps = {
   queriedAccount: undefined,

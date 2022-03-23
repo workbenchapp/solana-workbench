@@ -5,14 +5,14 @@ import { useState } from 'react';
 import { ImportedAccountMap } from 'types/types';
 import InlinePK from './InlinePK';
 
-const ProgramChange = (props: {
+function ProgramChange(props: {
   pubKey: string;
   count: number;
   solAmount: number;
   maxDelta: number;
   attemptAccountAdd: (pk: string, b: boolean) => void;
   importedAccounts: ImportedAccountMap;
-}) => {
+}) {
   const {
     count,
     pubKey,
@@ -72,6 +72,6 @@ const ProgramChange = (props: {
       </td>
     </>
   );
-};
+}
 
 export default ProgramChange;

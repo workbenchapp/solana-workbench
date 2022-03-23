@@ -10,7 +10,7 @@ import { RootState, validatorActions } from 'renderer/slices/mainSlice';
 import { Net, NetStatus, ValidatorState } from 'types/types';
 import { debounce } from 'underscore';
 
-const Validator = () => {
+function Validator() {
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const validator: ValidatorState = useSelector(
@@ -54,7 +54,8 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="row">
-      {!(validator.status === NetStatus.Running) && !(validator.status === NetStatus.Starting) ? (
+      {!(validator.status === NetStatus.Running) &&
+      !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             dispatch(validatorActions.setState(NetStatus.Starting));
@@ -95,6 +96,6 @@ const Validator = () => {
       )}
     </div>
   );
-};
+}
 
 export default Validator;

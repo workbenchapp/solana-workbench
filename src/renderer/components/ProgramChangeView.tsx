@@ -18,10 +18,10 @@ import {
 import Editable from './Editable';
 import ProgramChange from './ProgramChange';
 
-const ProgramChangeView = (props: {
+function ProgramChangeView(props: {
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-}) => {
+}) {
   const dispatch = useDispatch();
   const { accounts, attemptAccountAdd } = props;
   const { net } = useSelector((state: RootState) => state.validator);
@@ -269,6 +269,6 @@ const ProgramChangeView = (props: {
       </div>
     </div>
   );
-};
+}
 
 export default ProgramChangeView;

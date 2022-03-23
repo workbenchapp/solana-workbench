@@ -1,27 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
-import Container from 'react-bootstrap/Container'
-import { Row, Col } from 'react-bootstrap'
-import { VictoryPie } from 'victory'
+import Container from 'react-bootstrap/Container';
+import { Row, Col } from 'react-bootstrap';
+import { VictoryPie } from 'victory';
 
 import { RootState } from 'renderer/slices/mainSlice';
 import { ValidatorNetworkInfoResponse } from '../../types/types';
 
-const ValidatorNetworkInfo = () => {
+function ValidatorNetworkInfo() {
   const validator = useSelector((state: RootState) => state.validator);
   const { net } = validator;
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
-    version: "unknown",
+    version: 'unknown',
     nodes: [],
     versionCount: [],
   });
 
   useEffect(() => {
-    //const { net } = validator;
+    // const { net } = validator;
     window.electron.ipcRenderer.fetchValidatorNetworkInfo({
-      net: net,
+      net,
     });
   }, [net]);
 
@@ -45,36 +45,35 @@ const ValidatorNetworkInfo = () => {
     };
   }, []);
 
-
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status
   return (
     <Container fluid>
-    <Row>
+      <Row>
         <Col>
-            Current Network:
-            {net}
+          Current Network:
+          {net}
         </Col>
         <Col>
-            Current Version:
-            {data.version}
+          Current Version:
+          {data.version}
         </Col>
-    </Row>
-    <Row>
+      </Row>
+      <Row>
         <VictoryPie
-            // https://formidable.com/open-source/victory/docs/victory-pie
-            data={data.versionCount}
-            colorScale="heatmap"
-            height={200}
-            labelRadius={55}
-            style={{ labels: { fontSize: 4 } }}
-            // labels={({ datum }) => datum.version}
-            x={(d) => d.version}
-            y={(d) => d.count}
+          // https://formidable.com/open-source/victory/docs/victory-pie
+          data={data.versionCount}
+          colorScale="heatmap"
+          height={200}
+          labelRadius={55}
+          style={{ labels: { fontSize: 4 } }}
+          // labels={({ datum }) => datum.version}
+          x={(d) => d.version}
+          y={(d) => d.count}
         />
-    </Row>
-</Container>
+      </Row>
+    </Container>
   );
-};
+}
 
 export default ValidatorNetworkInfo;
