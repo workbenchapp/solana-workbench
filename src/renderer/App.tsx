@@ -4,6 +4,8 @@ import {
   Route,
   NavLink
 } from 'react-router-dom';
+import PropTypes from 'prop-types'
+
 import './App.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import DropdownButton from 'react-bootstrap/DropdownButton';
@@ -12,6 +14,9 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import Container from 'react-bootstrap/Container';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import Tooltip from 'react-bootstrap/Tooltip'
+import { SizeProp } from '@fortawesome/fontawesome-svg-core'
 
 import {
   faBook,
@@ -49,24 +54,18 @@ const NetworkSelector = () => {
     if (eventKey) dispatch(validatorActions.setNet(eventKey as Net));
   };
 
-  let statusDisplay = <></>;
-
+  let statusText = validator.status as string
+  let statusClass = 'text-danger'
   if (validator.status === NetStatus.Running) {
-    statusDisplay = (
-      <span className="badge bg-light text-dark p-2">
-        <FontAwesomeIcon className="sol-green me-1" icon={faCircle} />
-        Available
-      </span>
-    );
-  } else {
-    statusDisplay = (
-      <span className="badge bg-light text-dark p-2">
-        <FontAwesomeIcon className="text-danger me-1" icon={faCircle} />
-        {validator.status}
-      </span>
-    );
+      statusText = 'Available'
+      statusClass = 'sol-green'
   }
-
+  const statusDisplay = (
+      <span className="badge p-2">
+          <FontAwesomeIcon className={statusClass} icon={faCircle} />
+          {statusText}
+      </span>
+  )
 
   const netDropdownTitle = (
     <>
@@ -83,7 +82,6 @@ const NetworkSelector = () => {
     title={netDropdownTitle}
     onSelect={netDropdownSelect}
     className="ms-2 float-end"
-    variant="light"
     align="end"
   >
     <Dropdown.Item eventKey={Net.Localhost} href="#">
@@ -102,32 +100,131 @@ const NetworkSelector = () => {
   );
 }
 
-const WBNav = () => {
-  // Note: NavLink is not compatible with react-router-dom's NavLink, so just add the styling
+function TooltipNavItem({
+  to = '/',
+  title = 'nav',
+  tooltipMessage = 'nav tooltip',
+  eventKey = 'default',
+  icon = faBook,
+  iconsize = '1x',
+}) {
   return (
-<Navbar sticky="top" bg="light" expand="sm">
-  <Container fluid>
-    <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
-    <Navbar.Toggle aria-controls="navbarScroll" />
-    <Navbar.Collapse id="navbarScroll">
-      <Nav
-        className="me-auto my-2 my-lg-0"
-        style={{ maxHeight: '100px' }}
-        navbarScroll
+      <OverlayTrigger
+          key={`${eventKey}-right`}
+          placement="right"
+          overlay={<Tooltip id="tooltip-right">{tooltipMessage}</Tooltip>}
       >
-        <NavLink className="nav-link" activeClassName="active" to="/"><FontAwesomeIcon size="1x" icon={faTh} /> Accounts</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/validator"><FontAwesomeIcon size="1x" icon={faBook} /> Validator</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/anchor"><FontAwesomeIcon size="1x" icon={faAnchor} /> Anchor</NavLink>
-        <NavLink className="nav-link" activeClassName="active" to="/validatornetworkinfo"><FontAwesomeIcon size="1x" icon={faNetworkWired} /> NetworkInfo</NavLink>
-      </Nav>
-      <Form className="d-flex">
-      <NetworkSelector />
-      </Form>
-    </Navbar.Collapse>
-  </Container>
-</Navbar>
-  );
-};
+          <NavLink /*eventKey={eventKey}*/ to={to} className="nav-link">
+              <FontAwesomeIcon size={iconsize as SizeProp} icon={icon} /> {title}
+          </NavLink>
+      </OverlayTrigger>
+  )
+} // TODO: work out how propTypes work with fontAwesome
+TooltipNavItem.propTypes = {
+  to: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  tooltipMessage: PropTypes.string.isRequired,
+  eventKey: PropTypes.string.isRequired,
+  icon: PropTypes.element.isRequired,
+  iconsize: PropTypes.string.isRequired,
+}
+// TODO: work out TooltipNavItem.defaults
+
+function Sidebar() {
+  return (
+      <Navbar className="l-navbar" bg="light" expand="sm">
+          <nav className="nav">
+              <TooltipNavItem
+                  to="/"
+                  title=""
+                  tooltipMessage="Changes"
+                  eventKey="changes"
+                  icon={faTh}
+                  iconsize="2x"
+              />
+              <TooltipNavItem
+                  to="/validator"
+                  title=""
+                  tooltipMessage="Validator"
+                  eventKey="validator"
+                  icon={faBook}
+                  iconsize="2x"
+              />
+              <TooltipNavItem
+                  to="/anchor"
+                  title=""
+                  tooltipMessage="Anchor"
+                  eventKey="anchor"
+                  icon={faAnchor}
+                  iconsize="2x"
+              />
+              <TooltipNavItem
+                  to="/validatornetworkinfo"
+                  title=""
+                  tooltipMessage="Network Info"
+                  eventKey="validatornetworkinfo"
+                  icon={faNetworkWired}
+                  iconsize="2x"
+              />
+          </nav>
+      </Navbar>
+  )
+}
+
+function Topbar() {
+  return (
+      <Navbar sticky="top" bg="primary" variant="dark" expand="sm">
+          <Container fluid>
+              <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
+              <Navbar.Toggle aria-controls="navbarScroll" />
+              <Navbar.Collapse id="navbarScroll">
+                  <Nav
+                      className="me-auto my-2 my-lg-0"
+                      style={{ maxHeight: '100px' }}
+                      navbarScroll
+                  >
+                      {/* <TooltipNavItem
+                          to="/"
+                          title="Changes"
+                          tooltipMessage="Changes"
+                          eventKey="changes"
+                          icon={faTh}
+                          iconsize="xl"
+                      />
+                      <TooltipNavItem
+                          to="/validator"
+                          title="Validator"
+                          tooltipMessage="Validator"
+                          eventKey="validator"
+                          icon={faBook}
+                          iconsize="xl"
+                      />
+                      <TooltipNavItem
+                          to="/anchor"
+                          title="Anchor"
+                          tooltipMessage="Anchor"
+                          eventKey="anchor"
+                          icon={faAnchor}
+                          iconsize="xl"
+                      />
+                      <TooltipNavItem
+                          to="/validatornetworkinfo"
+                          title="Network Info"
+                          tooltipMessage="Network Info"
+                          eventKey="validatornetworkinfo"
+                          icon={faNetworkWired}
+                          iconsize="xl"
+                      /> */}
+                  </Nav>
+                  <Form className="d-flex">
+                      <NetworkSelector />
+                  </Form>
+              </Navbar.Collapse>
+          </Container>
+      </Navbar>
+  )
+}
+
 
 export default function App() {
   const dispatch = useDispatch();
@@ -188,11 +285,13 @@ export default function App() {
     );
   } else {
     mainDisplay = (
-      <Container fluid>
-        <WBNav />
+      <div className="vh-100">
+          <Topbar />
+          <Sidebar />
           {toasts.map((t) => (
             <Toast {...t} />
           ))}
+        <Container >
         <Row className="mt-3">
           <Route exact path="/">
             <Accounts />
@@ -208,6 +307,7 @@ export default function App() {
           </Route>
         </Row>
         </Container>
+        </div>
     );
   }
 
