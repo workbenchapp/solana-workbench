@@ -1,8 +1,9 @@
-import analytics from 'common/analytics';
 import { useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { accountsActions, RootState } from 'renderer/slices/mainSlice';
-import { WBAccount } from 'types/types';
+
+import { accountsActions, RootState } from '../slices/mainSlice';
+import analytics from '../../common/analytics';
+import { WBAccount } from '../../types/types';
 import Editable from './Editable';
 
 const AccountNameEditable = (props: {

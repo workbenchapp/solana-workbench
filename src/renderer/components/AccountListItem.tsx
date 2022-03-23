@@ -2,12 +2,13 @@
 /* eslint-disable jsx-a11y/click-events-have-key-events */
 import { faEllipsisH, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import analytics from 'common/analytics';
 import React, { useRef } from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import { accountsActions, RootState } from 'renderer/slices/mainSlice';
-import { ACCOUNTS_NONE_KEY, WBAccount } from 'types/types';
+
+import analytics from '../../common/analytics';
+import { accountsActions, RootState } from '../slices/mainSlice';
+import { ACCOUNTS_NONE_KEY, WBAccount } from '../../types/types';
 import AccountNameEditable from './AccountNameEditable';
 import Editable from './Editable';
 import InlinePK from './InlinePK';

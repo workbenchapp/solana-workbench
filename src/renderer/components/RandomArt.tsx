@@ -1,4 +1,4 @@
-import { RANDOMART_H_CH, RANDOMART_W_CH } from 'types/types';
+import { RANDOMART_H_CH, RANDOMART_W_CH } from '../../types/types';
 
 const RandomArt = (props: { art: string; className?: string }) => {
   let { art } = props;

@@ -5,19 +5,16 @@
 /* eslint-disable no-case-declarations */
 import { faKey, faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import analytics from 'common/analytics';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
-import AccountListView from 'renderer/components/AccountListView';
-import AccountView from 'renderer/components/AccountView';
-import InlinePK from 'renderer/components/InlinePK';
-import ProgramChangeView from 'renderer/components/ProgramChangeView';
-import {
-  accountsActions,
-  RootState,
-  toastActions,
-} from 'renderer/slices/mainSlice';
+
+import analytics from '../../common/analytics';
+import AccountListView from '../components/AccountListView';
+import AccountView from '../components/AccountView';
+import InlinePK from '../components/InlinePK';
+import ProgramChangeView from '../components/ProgramChangeView';
+import { accountsActions, RootState, toastActions } from '../slices/mainSlice';
 import {
   AccountsState,
   ACCOUNTS_NONE_KEY,
@@ -25,7 +22,7 @@ import {
   Net,
   NetStatus,
   WBAccount,
-} from 'types/types';
+} from '../../types/types';
 
 const Accounts = () => {
   const dispatch = useDispatch();

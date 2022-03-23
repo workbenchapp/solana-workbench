@@ -1,8 +1,8 @@
 import { faArrowLeft, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { truncateSolAmount } from 'common/strings';
 import { useState } from 'react';
-import { ImportedAccountMap } from 'types/types';
+import { truncateSolAmount } from '../../common/strings';
+import { ImportedAccountMap } from '../../types/types';
 import InlinePK from './InlinePK';
 
 const ProgramChange = (props: {

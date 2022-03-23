@@ -19,11 +19,11 @@ import {
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
-import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
-import analytics from 'common/analytics';
 import { Button, Form } from 'react-bootstrap';
 
+import useInterval from '../common/hooks';
+import analytics from '../common/analytics';
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
 import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
 import Toast from './components/Toast';

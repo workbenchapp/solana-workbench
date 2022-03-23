@@ -1,10 +1,11 @@
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import analytics from 'common/analytics';
-import { explorerURL, truncateSolAmount } from 'common/strings';
 import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
-import { WBAccount } from 'types/types';
+
+import analytics from '../../common/analytics';
+import { explorerURL, truncateSolAmount } from '../../common/strings';
+import { RootState } from '../slices/mainSlice';
+import { WBAccount } from '../../types/types';
 import InlinePK from './InlinePK';
 import RandomArt from './RandomArt';
 

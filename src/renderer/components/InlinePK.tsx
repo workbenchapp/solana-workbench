@@ -1,4 +1,4 @@
-import { prettifyPubkey } from 'common/strings';
+import { prettifyPubkey } from '../../common/strings';
 import CopyIcon from './CopyIcon';
 
 const InlinePK = (props: { pk: string; className?: string }) => {

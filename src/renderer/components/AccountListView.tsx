@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
-import { AccountsState, ACCOUNTS_NONE_KEY, WBAccount } from 'types/types';
+
+import { RootState } from '../slices/mainSlice';
+import { AccountsState, ACCOUNTS_NONE_KEY, WBAccount } from '../../types/types';
 import AccountListItem from './AccountListItem';
 
 const AccountListView = (props: {

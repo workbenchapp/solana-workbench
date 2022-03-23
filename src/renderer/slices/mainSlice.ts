@@ -11,7 +11,7 @@ import {
   Net,
   NetStatus,
   ConfigState,
-} from 'types/types';
+} from '../../types/types';
 
 const validatorState: ValidatorState = {
   net: Net.Localhost,
