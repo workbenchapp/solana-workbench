@@ -12,7 +12,7 @@ import { NavLink } from 'react-router-dom';
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
-import LogView from 'renderer/components/LogView';
+import LogView from '../components/LogView';
 import ProgramChangeView from '../components/ProgramChangeView';
 
 import {
