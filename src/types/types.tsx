@@ -201,10 +201,17 @@ export interface ConfigState {
   values: ConfigMap;
 }
 
+export type VCount = {
+  version: string;
+  count: number;
+};
+
 export type ValidatorNetworkInfoResponse = {
   version: string;
-  nodes: NodeInfo[];
+  nodes: sol.ContactInfo[];
+  versionCount: VCount[];
 };
+
 // https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
 export type NodeInfo = {
   pubkey: string; // - Node public key, as base-58 encoded string

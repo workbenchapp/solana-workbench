@@ -24,7 +24,7 @@ import {
   WBAccount,
 } from '../../types/types';
 
-const Accounts = () => {
+function Accounts() {
   const dispatch = useDispatch();
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
@@ -234,6 +234,6 @@ const Accounts = () => {
   }
 
   return <>{display}</>;
-};
+}
 
 export default Accounts;

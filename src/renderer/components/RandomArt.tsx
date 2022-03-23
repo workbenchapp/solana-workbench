@@ -1,6 +1,6 @@
 import { RANDOMART_H_CH, RANDOMART_W_CH } from '../../types/types';
 
-const RandomArt = (props: { art: string; className?: string }) => {
+function RandomArt(props: { art: string; className?: string }) {
   let { art } = props;
   const { className } = props;
   if (art === '') {
@@ -11,7 +11,7 @@ const RandomArt = (props: { art: string; className?: string }) => {
       <code>{art}</code>
     </pre>
   );
-};
+}
 
 RandomArt.defaultProps = {
   className: '',

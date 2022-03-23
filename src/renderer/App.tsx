@@ -38,9 +38,9 @@ declare global {
   }
 }
 
-const Nav = () => {
+function Nav() {
   const renderTooltip = (id: string, title: string) => {
-    return (props: any) => {
+    return function (props: any) {
       return (
         <Tooltip id={id} {...props}>
           {title}
@@ -114,9 +114,9 @@ const Nav = () => {
       </OverlayTrigger>
     </div>
   );
-};
+}
 
-const Header = () => {
+function Header() {
   const location = useLocation();
   const routes: Record<string, string> = {
     '/': 'Accounts',
@@ -125,7 +125,7 @@ const Header = () => {
     '/validatornetworkinfo': 'ValidatorNetworkInfo',
   };
   return <strong>{routes[location.pathname]}</strong>;
-};
+}
 
 export default function App() {
   const dispatch = useDispatch();

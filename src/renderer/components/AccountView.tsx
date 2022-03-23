@@ -9,7 +9,7 @@ import { WBAccount } from '../../types/types';
 import InlinePK from './InlinePK';
 import RandomArt from './RandomArt';
 
-const AccountView = (props: { account: WBAccount }) => {
+function AccountView(props: { account: WBAccount }) {
   const { account } = props;
   const { net } = useSelector((state: RootState) => state.validator);
   return (
@@ -111,6 +111,6 @@ const AccountView = (props: { account: WBAccount }) => {
       </div>
     </>
   );
-};
+}
 
 export default AccountView;

@@ -6,14 +6,14 @@ import analytics from '../../common/analytics';
 import { WBAccount } from '../../types/types';
 import Editable from './Editable';
 
-const AccountNameEditable = (props: {
+function AccountNameEditable(props: {
   account: WBAccount;
   innerProps: {
     placeholder: string;
     outerSelected: boolean | undefined;
     outerHovered: boolean | undefined;
   };
-}) => {
+}) {
   const { account, innerProps } = props;
   const { net } = useSelector((state: RootState) => state.validator);
   const dispatch = useDispatch();
@@ -36,6 +36,6 @@ const AccountNameEditable = (props: {
       {...innerProps}
     />
   );
-};
+}
 
 export default AccountNameEditable;

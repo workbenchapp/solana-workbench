@@ -10,13 +10,13 @@ import {
   TOAST_WIDTH,
 } from '../../types/types';
 
-const Toast = (props: {
+function Toast(props: {
   msg: string;
   variant?: string;
   bottom?: number;
   hideAfter?: number;
   toastKey?: string | undefined;
-}) => {
+}) {
   const dispatch = useDispatch();
   const { toastKey, msg, variant, bottom, hideAfter } = props;
   const [left, setRefLeft] = useState(-300);
@@ -85,7 +85,7 @@ const Toast = (props: {
       </div>
     </div>
   );
-};
+}
 
 Toast.defaultProps = {
   variant: 'success-lighter',
