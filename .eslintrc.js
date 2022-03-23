@@ -1,8 +1,8 @@
 module.exports = {
   extends: [
-    'erb',
+    // 'erb',
     'plugin:react/recommended',
-    'airbnb',
+    // 'airbnb',
     'prettier',
     'prettier/prettier',
     'plugin:prettier/recommended',
