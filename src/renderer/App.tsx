@@ -121,7 +121,7 @@ const Header = () => {
     '/': 'Accounts',
     '/validator': 'Validator',
     '/anchor': 'Anchor',
-    '/validatornetworkinfo': 'ValidatorNetworkInfo'
+    '/validatornetworkinfo': 'ValidatorNetworkInfo',
   };
   return <strong>{routes[location.pathname]}</strong>;
 };
@@ -198,7 +198,6 @@ export default function App() {
       </span>
     );
   }
-
 
   const netDropdownTitle = (
     <>
