@@ -162,8 +162,6 @@ export default function App() {
             })
           );
           break;
-        case 'get-validator-network-info':
-          break;
         default:
       }
     };

@@ -16,7 +16,6 @@ import {
   updateAccountName,
 } from './accounts';
 import fetchAnchorIdl from './anchor';
-import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
 import {
   subscribeProgramChanges,
@@ -82,9 +81,6 @@ ipcMain.on(
           break;
         case 'config':
           res = await wbConfig(msg);
-          break;
-        case 'get-validator-network-info':
-          res = await fetchValidatorNetworkInfo(msg);
           break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
