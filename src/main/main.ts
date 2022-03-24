@@ -1,4 +1,3 @@
-/* eslint global-require: off, no-console: off, promise/always-return: off */
 import 'core-js/stable';
 import 'regenerator-runtime/runtime';
 import path from 'path';
