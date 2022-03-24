@@ -80,10 +80,6 @@ export type ImportAccountRequest = {
   pubKey: string;
 };
 
-export type ValidatorNetworkInfoRequest = {
-  net: Net;
-};
-
 export type ImportAccountResponse = {
   net: Net;
 };

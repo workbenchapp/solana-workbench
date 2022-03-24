@@ -3,18 +3,14 @@ import { useSelector } from 'react-redux';
 import Container from 'react-bootstrap/Container';
 import { Row, Col } from 'react-bootstrap';
 import { VictoryPie } from 'victory';
+import * as sol from '@solana/web3.js';
 import { RootState } from '../slices/mainSlice';
 
-import * as sol from '@solana/web3.js';
 import { netToURL } from '../../common/strings';
-import {
-  VCount,
-  ValidatorNetworkInfoRequest,
-  ValidatorNetworkInfoResponse,
-} from '../../types/types';
+import { VCount, ValidatorNetworkInfoResponse } from '../../types/types';
 
 interface VersionCount {
-  [key: string]: number
+  [key: string]: number;
 }
 
 const fetchValidatorNetworkInfo = async (url: string) => {
@@ -22,45 +18,44 @@ const fetchValidatorNetworkInfo = async (url: string) => {
   const contactInfo = await solConn.getClusterNodes();
   const nodeVersion = await solConn.getVersion();
 
-  const frequencyCount: VersionCount = {}
+  const frequencyCount: VersionCount = {};
 
   contactInfo.map((info: sol.ContactInfo) => {
-    let version = 'none'
+    let version = 'none';
     if (info.version) {
-      version = info.version
+      version = info.version;
     }
 
     if (frequencyCount[version]) {
-      frequencyCount[version] += 1
+      frequencyCount[version] += 1;
     } else {
-      frequencyCount[version] = 1
+      frequencyCount[version] = 1;
     }
-    return undefined
-  })
-  const versions: VCount[] = []
+    return undefined;
+  });
+  const versions: VCount[] = [];
   Object.entries(frequencyCount).forEach(([version, count]) => {
     versions.push({
       version,
       count,
-    })
-  })
+    });
+  });
 
   const response: ValidatorNetworkInfoResponse = {
     nodes: contactInfo,
     version: nodeVersion['solana-core'],
     versionCount: versions,
-  }
-
+  };
 
   return response;
 };
 
-//export default fetchValidatorNetworkInfo;
+// export default fetchValidatorNetworkInfo;
 
 function ValidatorNetworkInfo() {
   const validator = useSelector((state: RootState) => state.validator);
   const { net } = validator;
-  const url = netToURL(net)
+  const url = netToURL(net);
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
     version: 'unknown',
@@ -70,8 +65,10 @@ function ValidatorNetworkInfo() {
 
   useEffect(() => {
     // TODO: set a spinner while waiting for response
-    fetchValidatorNetworkInfo(url).then((d) => setData(d))
-  }, [net])
+    fetchValidatorNetworkInfo(url).then((d) => {
+      setData(d);
+    });
+  }, [url]);
 
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status
