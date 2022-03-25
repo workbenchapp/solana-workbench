@@ -1,7 +1,7 @@
-import { prettifyPubkey } from 'common/strings';
+import { prettifyPubkey } from '../../common/strings';
 import CopyIcon from './CopyIcon';
 
-const InlinePK = (props: { pk: string; className?: string }) => {
+function InlinePK(props: { pk: string; className?: string }) {
   const { pk, className } = props;
   return (
     <span className={className}>
@@ -9,7 +9,7 @@ const InlinePK = (props: { pk: string; className?: string }) => {
       <CopyIcon writeValue={pk} />
     </span>
   );
-};
+}
 
 InlinePK.defaultProps = {
   className: '',

@@ -2,21 +2,21 @@ import { faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { toastActions } from 'renderer/slices/mainSlice';
+import { toastActions } from '../slices/mainSlice';
 import {
   TOAST_HEIGHT,
   TOAST_HIDE_MS,
   TOAST_PAUSE_MS,
   TOAST_WIDTH,
-} from 'types/types';
+} from '../../types/types';
 
-const Toast = (props: {
+function Toast(props: {
   msg: string;
   variant?: string;
   bottom?: number;
   hideAfter?: number;
   toastKey?: string | undefined;
-}) => {
+}) {
   const dispatch = useDispatch();
   const { toastKey, msg, variant, bottom, hideAfter } = props;
   const [left, setRefLeft] = useState(-300);
@@ -85,7 +85,7 @@ const Toast = (props: {
       </div>
     </div>
   );
-};
+}
 
 Toast.defaultProps = {
   variant: 'success-lighter',

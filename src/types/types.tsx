@@ -49,6 +49,7 @@ export type WBAccount = {
   hexDump?: string;
   exists?: boolean;
   executable?: boolean;
+  importedAt?: string;
 };
 
 export type ValidatorStateRequest = {
@@ -82,7 +83,6 @@ export type ImportAccountRequest = {
 export type ValidatorNetworkInfoRequest = {
   net: Net;
 };
-
 
 export type ImportAccountResponse = {
   net: Net;
@@ -200,7 +200,7 @@ export interface ProgramChangesState {
 }
 
 export interface ConfigMap {
-  [key: string]: string;
+  [key: string]: string | undefined;
 }
 
 export interface ConfigState {
@@ -208,11 +208,17 @@ export interface ConfigState {
   values: ConfigMap;
 }
 
+export type VCount = {
+  version: string;
+  count: number;
+};
 
 export type ValidatorNetworkInfoResponse = {
   version: string;
-  nodes: NodeInfo[];
+  nodes: sol.ContactInfo[];
+  versionCount: VCount[];
 };
+
 // https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
 export type NodeInfo = {
   pubkey: string; // - Node public key, as base-58 encoded string

@@ -1,38 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
+import Container from 'react-bootstrap/Container';
+import { Row, Col } from 'react-bootstrap';
+import { VictoryPie } from 'victory';
+import { RootState } from '../slices/mainSlice';
 import { ValidatorNetworkInfoResponse } from '../../types/types';
 
-import 'react-bootstrap-table-next/dist/react-bootstrap-table2.min.css';
-import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
-import BootstrapTable from 'react-bootstrap-table-next';
-import paginationFactory from 'react-bootstrap-table2-paginator';
-
-const ValidatorNetworkInfo = () => {
+function ValidatorNetworkInfo() {
   const validator = useSelector((state: RootState) => state.validator);
-
-  const columns = [
-    {
-      text: 'Pub Key',
-      dataField: 'pubkey',
-    },
-    {
-      text: 'Version',
-      dataField: 'version',
-    },
-  ];
+  const { net } = validator;
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
-    version: "unknown",
-    nodes: []
+    version: 'unknown',
+    nodes: [],
+    versionCount: [],
   });
 
   useEffect(() => {
-    const { net } = validator;
+    // const { net } = validator;
     window.electron.ipcRenderer.fetchValidatorNetworkInfo({
-      net: net,
+      net,
     });
-  }, [validator]);
+  }, [net]);
 
   useEffect(() => {
     const listener = (resp: any) => {
@@ -40,7 +29,6 @@ const ValidatorNetworkInfo = () => {
 
       switch (method) {
         case 'get-validator-network-info':
-          console.log('ValidatorNetworkInfo', { res });
           if (res) {
             setData(res);
           }
@@ -54,27 +42,35 @@ const ValidatorNetworkInfo = () => {
     };
   }, []);
 
-
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status
   return (
-    <div className="col">
-      <div className="row">
-        <span className='column'>Current Network: {validator.net}</span>
-        <span className='column'>Current Version: {data.version}</span>
-      </div>
-      <div className="row">
-        <BootstrapTable
-          keyField='pubkey'
-          data={data.nodes}
-          columns={columns}
-          pagination={paginationFactory({
-            paginationSize: 25,
-          })}
+    <Container fluid>
+      <Row>
+        <Col>
+          Current Network:
+          {net}
+        </Col>
+        <Col>
+          Current Version:
+          {data.version}
+        </Col>
+      </Row>
+      <Row>
+        <VictoryPie
+          // https://formidable.com/open-source/victory/docs/victory-pie
+          data={data.versionCount}
+          colorScale="heatmap"
+          height={200}
+          labelRadius={55}
+          style={{ labels: { fontSize: 4 } }}
+          // labels={({ datum }) => datum.version}
+          x={(d) => d.version}
+          y={(d) => d.count}
         />
-      </div>
-    </div>
+      </Row>
+    </Container>
   );
-};
+}
 
 export default ValidatorNetworkInfo;

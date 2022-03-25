@@ -19,16 +19,17 @@ import {
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
-import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
+import { Button, Form } from 'react-bootstrap';
+
+import useInterval from '../common/hooks';
+import analytics from '../common/analytics';
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
 import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
-import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, Form } from 'react-bootstrap';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
@@ -37,9 +38,9 @@ declare global {
   }
 }
 
-const Nav = () => {
+function Nav() {
   const renderTooltip = (id: string, title: string) => {
-    return (props: any) => {
+    return function (props: any) {
       return (
         <Tooltip id={id} {...props}>
           {title}
@@ -113,18 +114,18 @@ const Nav = () => {
       </OverlayTrigger>
     </div>
   );
-};
+}
 
-const Header = () => {
+function Header() {
   const location = useLocation();
   const routes: Record<string, string> = {
     '/': 'Accounts',
     '/validator': 'Validator',
     '/anchor': 'Anchor',
-    '/validatornetworkinfo': 'ValidatorNetworkInfo'
+    '/validatornetworkinfo': 'ValidatorNetworkInfo',
   };
   return <strong>{routes[location.pathname]}</strong>;
-};
+}
 
 export default function App() {
   const dispatch = useDispatch();
@@ -146,7 +147,7 @@ export default function App() {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method != 'program-changes') {
+      if (method !== 'program-changes') {
         console.log(resp);
       }
       switch (method) {
@@ -199,7 +200,6 @@ export default function App() {
     );
   }
 
-
   const netDropdownTitle = (
     <>
       <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
@@ -210,7 +210,11 @@ export default function App() {
 
   let mainDisplay = <></>;
 
-  if (!config.loading && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+  console.log('check', {
+    notConfigLoading: !config.loading,
+    keyExists: !(`${ConfigKey.AnalyticsEnabled}` in config.values),
+  });
+  if (!(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     mainDisplay = (
       <div className="container">
         <div className="mt-2">
@@ -261,6 +265,7 @@ export default function App() {
       </div>
     );
   } else {
+    console.log('Rendering alternative page...', { config });
     mainDisplay = (
       <div className="row flex-nowrap g-0">
         <div className="col-auto">

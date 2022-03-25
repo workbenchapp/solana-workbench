@@ -2,13 +2,14 @@
 /* eslint-disable no-console */
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import useInterval from 'common/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, validatorActions } from 'renderer/slices/mainSlice';
-import { Net, NetStatus, ValidatorState } from 'types/types';
 import { debounce } from 'underscore';
+
+import useInterval from '../../common/hooks';
+import { RootState, validatorActions } from '../slices/mainSlice';
+import { Net, NetStatus, ValidatorState } from '../../types/types';
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -54,7 +55,8 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="row">
-      {!(validator.status === NetStatus.Running) && !(validator.status === NetStatus.Starting) ? (
+      {!(validator.status === NetStatus.Running) &&
+      !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             dispatch(validatorActions.setState(NetStatus.Starting));

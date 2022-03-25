@@ -1,10 +1,9 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useEffect, useState } from 'react';
 import { FormControl, InputGroup } from 'react-bootstrap';
 import OutsideClickHandler from 'react-outside-click-handler';
 import { useDispatch } from 'react-redux';
-import { accountsActions } from 'renderer/slices/mainSlice';
+
+import { accountsActions } from '../slices/mainSlice';
 
 type EditableProps = {
   value: string;

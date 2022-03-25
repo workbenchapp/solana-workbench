@@ -1,11 +1,12 @@
 import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
-import { AccountsState, ACCOUNTS_NONE_KEY, WBAccount } from 'types/types';
+
+import { RootState } from '../slices/mainSlice';
+import { AccountsState, ACCOUNTS_NONE_KEY, WBAccount } from '../../types/types';
 import AccountListItem from './AccountListItem';
 
-const AccountListView = (props: {
+function AccountListView(props: {
   attemptAccountAdd: (pk: string, b: boolean) => void;
-}) => {
+}) {
   const { attemptAccountAdd } = props;
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
@@ -26,6 +27,6 @@ const AccountListView = (props: {
       })}
     </>
   );
-};
+}
 
 export default AccountListView;

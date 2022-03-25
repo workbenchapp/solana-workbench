@@ -1,14 +1,11 @@
-/* eslint-disable jsx-a11y/no-noninteractive-element-interactions */
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 /* eslint-disable no-console */
 /* eslint-disable no-case-declarations */
 import { faKey, faPlus, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import analytics from 'common/analytics';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
+
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
@@ -16,23 +13,18 @@ import LogView from '../components/LogView';
 import ProgramChangeView from '../components/ProgramChangeView';
 
 import {
-  accountsActions,
-  RootState,
-  toastActions,
-} from 'renderer/slices/mainSlice';
-import {
   AccountsState,
   ACCOUNTS_NONE_KEY,
   BASE58_PUBKEY_REGEX,
   Net,
   NetStatus,
   WBAccount,
-} from 'types/types';
+} from '../../types/types';
 
 const LIVE_TAB_CHANGES = 'changes';
 const LIVE_TAB_TXN_LOGS = 'logs';
 
-const Accounts = () => {
+function Accounts() {
   const dispatch = useDispatch();
   const accounts: AccountsState = useSelector(
     (state: RootState) => state.accounts
@@ -144,7 +136,9 @@ const Accounts = () => {
   let initView = (
     <>
       <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
-      <small className="me-2">Generating seed wallets...</small>
+      <small className="me-2">
+        Generating seed wallets. This can take up to 30 seconds.
+      </small>
     </>
   );
 
@@ -265,6 +259,6 @@ const Accounts = () => {
   }
 
   return <>{display}</>;
-};
+}
 
 export default Accounts;
