@@ -5,13 +5,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
+import {
+  accountsActions,
+  RootState,
+  toastActions,
+} from 'renderer/slices/mainSlice';
+import analytics from 'common/analytics';
 
 import AccountListView from 'renderer/components/AccountListView';
 import AccountView from 'renderer/components/AccountView';
 import InlinePK from 'renderer/components/InlinePK';
-import LogView from '../components/LogView';
-import ProgramChangeView from '../components/ProgramChangeView';
-
+import LogView from 'renderer/components/LogView';
+import ProgramChangeView from 'renderer/components/ProgramChangeView';
 import {
   AccountsState,
   ACCOUNTS_NONE_KEY,
@@ -19,7 +24,7 @@ import {
   Net,
   NetStatus,
   WBAccount,
-} from '../../types/types';
+} from 'types/types';
 
 const LIVE_TAB_CHANGES = 'changes';
 const LIVE_TAB_TXN_LOGS = 'logs';
@@ -118,6 +123,7 @@ function Accounts() {
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
