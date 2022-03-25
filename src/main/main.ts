@@ -203,6 +203,7 @@ app.on('window-all-closed', () => {
 
 app
   .whenReady()
+  // eslint-disable-next-line promise/always-return
   .then(() => {
     createWindow();
     app.on('activate', () => {

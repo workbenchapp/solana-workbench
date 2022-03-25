@@ -6,6 +6,7 @@ import { RESOURCES_PATH, WORKBENCH_DIR_PATH, WORKBENCH_VERSION } from './const';
 
 const MAX_LOG_FILE_BYTES = 5 * 1028 * 1028;
 
+// eslint-disable-next-line import/no-mutable-exports
 let logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });

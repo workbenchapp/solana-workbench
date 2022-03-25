@@ -138,7 +138,7 @@ export default function App() {
 
   useEffect(() => {
     window.electron.ipcRenderer.validatorState({ net });
-  }, [validator]);
+  }, [validator, net]);
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorState({ net });
@@ -175,6 +175,7 @@ export default function App() {
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const netDropdownSelect = (eventKey: string | null) => {
