@@ -23,14 +23,14 @@ func main() {
 	for _, accountFile := range accountFiles {
 		valArgs = append(valArgs, "--account", accountFile.Name())
 	}
-    if err != nil {
+    if err != nil && !os.IsNotExist(err) {
         panic(err)
     }
 	bpfPrograms, err := ioutil.ReadDir(path.Join(workbenchDir, "db", "programs"))
 	for _, bpfProgram := range bpfPrograms {
 		valArgs = append(valArgs, "--bpf-program", bpfProgram.Name())
 	}
-    if err != nil {
+    if err != nil && !os.IsNotExist(err) {
         panic(err)
     }
 	fmt.Println("solana-test-validator", strings.Join(valArgs, " "))
