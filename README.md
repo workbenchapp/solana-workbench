@@ -53,5 +53,3 @@ Now you're working with Workbench!
 ## building a release
 
 To get `npm run package` to run on M1 mac, Node version 16 was required.
-
-Test github actions
