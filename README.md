@@ -36,8 +36,8 @@ Detailed instructions:
   - `source $HOME/.cargo/env`
   - `sh -c "$(curl -sSfL https://release.solana.com/v1.9.9/install)"`
   - `cargo install --git https://github.com/project-serum/anchor avm --locked --force`
-  - `avm use latest` -- on Sven's linux box (needs libudev-dev)
-  - `warning: be sure to add `/home/sven/.avm/bin` to your PATH to be able to run the installed binaries`
+  - `avm use latest` -- needed on Linux (needs `libudev-dev`)
+  - Be sure to add `$HOME/.avm/bin` to your PATH to be able to run the installed binaries
 - XCode Command Line Tools (if on OSX)
 
 ## Run
