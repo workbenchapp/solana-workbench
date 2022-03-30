@@ -13,7 +13,7 @@ install the Node deps like so:
 
 ```
 $ npm install --legacy-peer-deps && \
-    (cd ./release/app/ && npm install --legacy-peer-deps) \
+    (cd ./release/app/ && npm install --legacy-peer-deps) && \
     npm install --legacy-peer-deps
 ```
 
