@@ -1,9 +1,28 @@
 ## Solana Workbench
 
-Work on Solana more easily in your local environment and gain access to lots
-of other fun tricks too.
+Solana Workbench is your one stop shop for local Solana development.
+
+Deploy local validators, airdrop tokens, and more with its GUI on OSX and Windows.
+Solana development may be like chewing glass today, but we’re on a mission to change
+that forever.
 
 ## Deps
+
+If you already have Node on your system (we recommend version 17), you can
+install the Node deps like so:
+
+```
+$ npm install --legacy-peer-deps && \
+    (cd ./release/app/ && npm install --legacy-peer-deps) \
+    npm install --legacy-peer-deps
+```
+
+In order to use Anchor functionality, the `anchor` CLI must be
+installed. To connect to a local test validator, you can either
+run one yourself on the CLI, or use the Docker functionality via
+the app.
+
+Detailed instructions:
 
 >> NOTE: see `bin/setup.sh`
 
@@ -20,14 +39,6 @@ of other fun tricks too.
   - `avm use latest` -- on Sven's linux box (needs libudev-dev)
   - `warning: be sure to add `/home/sven/.avm/bin` to your PATH to be able to run the installed binaries`
 - XCode Command Line Tools (if on OSX)
-
-
-Install modules, then native deps:
-
-```
-$ npm install --legacy-peer-deps &&
-  (cd release/app && npm install)
-```
 
 ## Run
 
