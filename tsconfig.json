@@ -28,6 +28,7 @@
     "release/app/node_modules",
     "release/build",
     "release/app/dist",
-    ".erb/dll"
+    ".erb/dll",
+    "solana"
   ]
 }
