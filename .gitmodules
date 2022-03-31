@@ -1,0 +1,5 @@
+[submodule "solana"]
+	path = solana
+	url = https://github.com/solana-labs/solana
+	ignore = dirty
+	shallow = 1
