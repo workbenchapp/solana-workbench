@@ -5,7 +5,7 @@ import { Dropdown, DropdownButton } from 'react-bootstrap';
 import ReactDOM from 'react-dom';
 import OutsideClickHandler from 'react-outside-click-handler';
 import { useDispatch, useSelector } from 'react-redux';
-import { RootState, toastActions } from 'renderer/slices/mainSlice';
+import { RootState, toastActions } from '../slices/mainSlice';
 import {
   BASE58_PUBKEY_REGEX,
   ImportedAccountMap,
@@ -14,14 +14,14 @@ import {
   ProgramChangesState,
   ProgramID,
   WBAccount,
-} from 'types/types';
+} from '../../types/types';
 import Editable from './Editable';
 import ProgramChange from './ProgramChange';
 
-const ProgramChangeView = (props: {
+function ProgramChangeView(props: {
   accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-}) => {
+}) {
   const dispatch = useDispatch();
   const { accounts, attemptAccountAdd } = props;
   const { net } = useSelector((state: RootState) => state.validator);
@@ -269,6 +269,6 @@ const ProgramChangeView = (props: {
       </div>
     </div>
   );
-};
+}
 
 export default ProgramChangeView;

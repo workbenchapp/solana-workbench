@@ -14,8 +14,8 @@ import {
   UpdateAccountRequest,
   WBAccount,
 } from '../types/types';
+import db from './db';
 import { logger } from './logger';
-import { db } from './db';
 import { KEY_PATH } from './const';
 
 const HEXDUMP_BYTES = 512;
@@ -37,10 +37,9 @@ const localKeypair = async (f: string): Promise<sol.Keypair> => {
   return sol.Keypair.fromSecretKey(data);
 };
 
-async function deleteAccount(msg: ImportAccountRequest): Promise<number> {
-  const { pubKey } = msg;
-  const res = await db.run('DELETE FROM account WHERE pubKey = ?', pubKey);
-  return res.changes || 0;
+function deleteAccount(msg: ImportAccountRequest) {
+  const { pubKey, net } = msg;
+  db.accounts.delete(pubKey, net);
 }
 
 async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
@@ -84,10 +83,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
   }
   const kp = await localKeypair(KEY_PATH);
   const solConn = new sol.Connection(netToURL(net));
-  const existingAccounts = await db.all(
-    'SELECT * FROM account WHERE net = ? ORDER BY created_at DESC, humanName ASC',
-    net
-  );
+  const existingAccounts = await db.accounts.all(net);
   logger.info('existingAccounts', { existingAccounts });
   if (existingAccounts?.length > 0) {
     const pubKeys = existingAccounts.map((a) => {
@@ -127,7 +123,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
         kp.publicKey,
         AIRDROP_AMOUNT * sol.LAMPORTS_PER_SOL
       ),
-      'processed'
+      'finalized'
     );
     const N_ACCOUNTS = 5;
     const txn = new sol.Transaction();
@@ -147,25 +143,24 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
       });
 
       createdAccounts.push(acc);
-      db.exec('');
     }
 
     const txnID = await sol.sendAndConfirmTransaction(
       solConn,
       txn,
       [kp, createdAccounts].flat(),
-      { commitment: 'processed' }
+      { commitment: 'finalized' }
     );
 
     logger.info('created accounts', { txnID });
 
-    const stmt = await db.prepare(
-      'INSERT INTO account (pubKey, net, humanName) VALUES (?, ?, ?)'
-    );
-    createdAccounts.forEach(async (acc, i) => {
-      await stmt.run([acc.publicKey.toString(), Net.Localhost, `Wallet ${i}`]);
+    createdAccounts.forEach((acc, i) => {
+      db.accounts.insert(
+        acc.publicKey.toString(),
+        Net.Localhost,
+        `Wallet ${i}`
+      );
     });
-    await stmt.finalize();
   }
 
   return {
@@ -185,12 +180,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
 
 async function updateAccountName(msg: UpdateAccountRequest) {
   const { net, pubKey, humanName } = msg;
-  const res = await db.run(
-    'UPDATE account SET humanName = ? WHERE pubKey = ? AND net = ?',
-    humanName,
-    pubKey,
-    net
-  );
+  const res = await db.accounts.updateHumanName(pubKey, net, humanName);
   return res;
 }
 
@@ -198,7 +188,7 @@ async function importAccount(
   msg: ImportAccountRequest
 ): Promise<ImportAccountResponse> {
   const { net, pubKey } = msg;
-  await db.run('INSERT INTO account (net, pubKey) VALUES (?, ?)', net, pubKey);
+  await db.accounts.insert(pubKey, net, '');
   return { net };
 }
 

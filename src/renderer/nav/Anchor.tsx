@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { FormControl, InputGroup } from 'react-bootstrap';
 
-const Anchor = () => {
+function Anchor() {
   const programIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const [idl, setIDL] = useState<any>({});
 
@@ -86,6 +86,6 @@ const Anchor = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Anchor;

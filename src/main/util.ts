@@ -1,7 +1,7 @@
-/* eslint import/prefer-default-export: off, import/no-mutable-exports: off */
 import { URL } from 'url';
 import path from 'path';
 
+// eslint-disable-next-line import/no-mutable-exports, import/prefer-default-export
 export let resolveHtmlPath: (htmlFileName: string) => string;
 
 if (process.env.NODE_ENV === 'development') {

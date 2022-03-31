@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from 'renderer/slices/mainSlice';
 
-const LogView = () => {
+function LogView() {
   const [logs, setLogs] = useState<string[]>([]);
   const validator = useSelector((state: RootState) => state.validator);
   const { net } = validator;
@@ -50,6 +50,6 @@ const LogView = () => {
       )}
     </div>
   );
-};
+}
 
 export default LogView;

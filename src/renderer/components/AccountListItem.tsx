@@ -1,23 +1,22 @@
-/* eslint-disable jsx-a11y/no-static-element-interactions */
-/* eslint-disable jsx-a11y/click-events-have-key-events */
 import { faEllipsisH, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import analytics from 'common/analytics';
 import React, { useRef } from 'react';
 import { Dropdown } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import { accountsActions, RootState } from 'renderer/slices/mainSlice';
-import { ACCOUNTS_NONE_KEY, WBAccount } from 'types/types';
+
+import analytics from '../../common/analytics';
+import { accountsActions, RootState } from '../slices/mainSlice';
+import { ACCOUNTS_NONE_KEY, WBAccount } from '../../types/types';
 import AccountNameEditable from './AccountNameEditable';
 import Editable from './Editable';
 import InlinePK from './InlinePK';
 import RandomArt from './RandomArt';
 
-const AccountListItem = (props: {
+function AccountListItem(props: {
   initializing: boolean;
   account: WBAccount;
   attemptAccountAdd: (pk: string, b: boolean) => void;
-}) => {
+}) {
   const { initializing, account, attemptAccountAdd } = props;
   const dispatch = useDispatch();
   const { selectedAccount, hoveredAccount, editedAccount } = useSelector(
@@ -105,11 +104,11 @@ const AccountListItem = (props: {
                 initializing && 'input-no-max'
               }`}
               handleOutsideClick={() => {
-                let pubKey = addAcctRef.current.value;
-                if (pubKey === '') {
-                  pubKey = ACCOUNTS_NONE_KEY;
+                let pk = addAcctRef.current.value;
+                if (pk === '') {
+                  pk = ACCOUNTS_NONE_KEY;
                 }
-                attemptAccountAdd(pubKey, initializing);
+                attemptAccountAdd(pk, initializing);
               }}
               clearAllOnSelect={initializing}
               placeholder="Paste in an account ID"
@@ -146,6 +145,7 @@ const AccountListItem = (props: {
                       e.preventDefault();
                       e.stopPropagation();
                       window.electron.ipcRenderer.deleteAccount({
+                        net,
                         pubKey: account.pubKey,
                       });
                       dispatch(accountsActions.rm(account.pubKey));
@@ -167,10 +167,6 @@ const AccountListItem = (props: {
       </div>
     </div>
   );
-};
-
-AccountListItem.defaultProps = {
-  queriedAccount: undefined,
-};
+}
 
 export default AccountListItem;

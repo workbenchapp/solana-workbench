@@ -1,6 +1,6 @@
 {
-  "name": "solana-workbench",
-  "productName": "solana-workbench",
+  "name": "solana-workbench-native-deps",
+  "productName": "solana-workbench-native-deps",
   "version": "0.2.1",
   "description": "Your one stop shop for Solana development",
   "main": "./dist/main/main.js",
@@ -15,8 +15,5 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "license": "MIT",
-  "dependencies": {
-    "@solana/web3.js": "^1.36.0",
-    "sqlite3": "^5.0.2"
-  }
+  "dependencies": {}
 }

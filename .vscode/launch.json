@@ -1,0 +1,41 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to Main",
+      "request": "attach",
+      "port": 9223,
+      "type": "chrome",
+      "program": "${workspaceFolder}/src/main/main.ts",
+      "outFiles": ["${workspaceFolder}/release/app/dist/"],
+      "timeout": 150000
+    },
+    {
+      "name": "Electron: doesn't work..Main",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceRoot}",
+      "args": [],
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/electron",
+      "windows": {
+        "runtimeExecutable": "${workspaceRoot}\\node_modules\\.bin\\electron.cmd"
+      },
+      // "preLaunchTask": "Start Webpack Dev",
+      "runtimeArgs": [
+        "--remote-debugging-port=9223",
+        "-r",
+        "@babel/register",
+        "./app/main.dev.babel.js"
+      ],
+      "env": {
+        "NODE_ENV": "development",
+        "HOT": "1",
+        "HIDE_DEV_TOOLS": "1"
+      },
+      "protocol": "inspector",
+      "sourceMaps": true,
+      "outFiles": [],
+      "timeout": 150000
+    }
+  ]
+}

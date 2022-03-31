@@ -10,18 +10,24 @@
     "pretty": true,
     "sourceMap": true,
     "baseUrl": "./src",
-    /* Additional Checks */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    /* Module Resolution Options */
     "moduleResolution": "node",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "outDir": "release/app/dist"
+    "outDir": "release/app/dist",
+    "skipLibCheck": true
   },
-  "exclude": ["test", "release/build", "release/app/dist", ".erb/dll"]
+  "exclude": [
+    "test",
+    "node_modules",
+    "release/app/node_modules",
+    "release/build",
+    "release/app/dist",
+    ".erb/dll"
+  ]
 }

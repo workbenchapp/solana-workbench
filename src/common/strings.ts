@@ -33,17 +33,17 @@ const prettifyPubkey = (pk = '') =>
     ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
     : '';
 
-const truncateSolAmount = ( solAmount: number | undefined ) => {
+const truncateSolAmount = (solAmount: number | undefined) => {
   if (solAmount === undefined) {
-    return ""
+    return '';
   }
   if (solAmount > 999) {
-    return solAmount.toFixed(0)
+    return solAmount.toFixed(0);
   }
   if (solAmount < 0.001) {
-    return solAmount.toPrecision(6) // This is probably redundant
+    return solAmount.toPrecision(6); // This is probably redundant
   }
-  return solAmount.toPrecision(9)
-}
+  return solAmount.toPrecision(9);
+};
 
 export { netToURL, prettifyPubkey, explorerURL, truncateSolAmount };

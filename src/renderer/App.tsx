@@ -26,16 +26,18 @@ import {
   faCircle,
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
-import useInterval from 'common/hooks';
 import { useSelector, useDispatch } from 'react-redux';
+import { Button, Form, Row } from 'react-bootstrap';
+
+import useInterval from '../common/hooks';
+import analytics from '../common/analytics';
 import { configActions, RootState, validatorActions } from './slices/mainSlice';
 import { ConfigAction, ConfigKey, Net, NetStatus } from '../types/types';
-import analytics from 'common/analytics';
 import Toast from './components/Toast';
 import Accounts from './nav/Accounts';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
-import { Button, Form, Row } from 'react-bootstrap';
+
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
 declare global {
@@ -225,7 +227,6 @@ function Topbar() {
   )
 }
 
-
 export default function App() {
   const dispatch = useDispatch();
   const { toasts } = useSelector((state: RootState) => state.toast);
@@ -236,7 +237,7 @@ export default function App() {
 
   useEffect(() => {
     window.electron.ipcRenderer.validatorState({ net });
-  }, [validator]);
+  }, [validator, net]);
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorState({ net });
@@ -245,7 +246,7 @@ export default function App() {
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
-      if (method != 'program-changes') {
+      if (method !== 'program-changes') {
         console.log(resp);
       }
       switch (method) {
@@ -273,17 +274,21 @@ export default function App() {
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-
 
   let mainDisplay = <></>;
 
-  if (!config.loading && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+  console.log('check', {
+    notConfigLoading: !config.loading,
+    keyExists: !(`${ConfigKey.AnalyticsEnabled}` in config.values),
+  });
+  if (!(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     mainDisplay = (
       <AnalyticsBanner />
     );
   } else {
+    console.log('Rendering alternative page...', { config });
     mainDisplay = (
       <div className="vh-100">
           <Topbar />

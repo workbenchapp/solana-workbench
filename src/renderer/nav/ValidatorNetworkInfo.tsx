@@ -1,14 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-
 import Container from 'react-bootstrap/Container';
 import { Row, Col } from 'react-bootstrap';
 import { VictoryPie } from 'victory';
-
-import { RootState } from 'renderer/slices/mainSlice';
+import { RootState } from '../slices/mainSlice';
 import { ValidatorNetworkInfoResponse } from '../../types/types';
 
-const ValidatorNetworkInfo = () => {
+function ValidatorNetworkInfo() {
   const validator = useSelector((state: RootState) => state.validator);
   const { net } = validator;
 
@@ -30,7 +28,6 @@ const ValidatorNetworkInfo = () => {
 
       switch (method) {
         case 'get-validator-network-info':
-          console.log('ValidatorNetworkInfo', { res });
           if (res) {
             setData(res);
           }
@@ -49,7 +46,10 @@ const ValidatorNetworkInfo = () => {
   return (
     <Container fluid>
       <Row>
-        <Col>Current Network: {net}</Col>
+        <Col>
+          Current Network:
+          {net}
+        </Col>
         <Col>
           Current Version:
           {data.version}
@@ -70,6 +70,6 @@ const ValidatorNetworkInfo = () => {
       </Row>
     </Container>
   );
-};
+}
 
 export default ValidatorNetworkInfo;

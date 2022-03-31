@@ -1,5 +1,5 @@
 import amplitude from 'amplitude-js';
-import { ConfigKey } from 'types/types';
+import { ConfigKey } from '../types/types';
 
 // TODO(nathanleclaire): Not the largest fan of this spaghetti-ish import
 // renderer is really supposed to import common not vice versa
