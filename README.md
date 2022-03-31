@@ -1,5 +1,5 @@
 ## Solana Workbench
-
+![](https://github.com/workbenchapp/solana-workbench-releases/raw/main/solworkbench.png?s=200)
 Solana Workbench is your one stop shop for local Solana development.
 
 Deploy local validators, airdrop tokens, and more with its GUI on OSX and Windows.
