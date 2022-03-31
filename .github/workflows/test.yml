@@ -13,6 +13,11 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v1
+      
+      - name: Update submodules
+        run: |
+          git submodule init
+          git submodule update
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v2
