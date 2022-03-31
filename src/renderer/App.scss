@@ -19,7 +19,16 @@ $solgreen: #14f195;
 $light: #eff2ef;
 $dark: #242423;
 
-@import '../../node_modules/bootstrap/scss/bootstrap';
+// see https://bootswatch.com/
+@import '~bootswatch/dist/lux/variables';
+@import '~bootstrap/scss/bootstrap';
+@import '~bootswatch/dist/lux/bootswatch';
+
+// TODO: When using lux bootswatch, the .navbar padding-top and padding-bottom is too massive
+.navbar {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
 
 @mixin inline-code() {
   font-family: $font-family-code;
@@ -52,52 +61,6 @@ $lightblue: lighten($blue-100, 7%);
 pre code {
   padding: 0px;
   background-color: white;
-  color: $dark;
-}
-
-.nav-link {
-  &-tab {
-    padding: 0rem 0.37rem;
-    color: $body-color;
-    font-weight: 600;
-    :hover {
-      text-decoration: underline;
-    }
-  }
-
-  &-icon {
-    border-left: solid white;
-    border-left-width: 2px;
-    text-align: center;
-  }
-}
-
-.nav-icon {
-  border: 2px white solid;
-}
-
-.nav .nav-icon > div > svg {
-  color: $text-muted;
-}
-
-.nav-icon > div > svg:hover {
-  color: $dark;
-}
-
-.svg-inline--fa {
-  color: $dark;
-}
-
-.selected-nav-icon {
-  border-left: solid $dark;
-  border-left-width: 2px;
-}
-
-.selected-nav-icon > div > svg {
-  color: $dark;
-}
-
-svg {
   color: $dark;
 }
 
@@ -342,3 +305,74 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
     box-shadow: none;
   }
 }
+
+// Sidebar start
+:root {
+  --header-height: 3rem;
+  --nav-width: 68px;
+  --first-color: #4723d9;
+  --first-color-light: darkgray;
+  --white-color: lightgray;
+  --body-font: 'Nunito', sans-serif;
+  --normal-font-size: 1rem;
+  --z-fixed: 100;
+}
+
+.l-navbar {
+  position: fixed;
+  top: 70px;
+  left: 0px;
+  width: 60px;
+  background-color: white !important; // TODO: figure this out
+  transition: 0.5s;
+  z-index: var(--z-fixed);
+}
+
+.l-navbar .nav {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.l-navbar .nav_logo,
+.l-navbar .nav-link {
+  display: grid;
+  grid-template-columns: max-content max-content;
+  align-items: center;
+  column-gap: 1rem;
+}
+
+.l-navbar .nav_logo {
+  margin-bottom: 2rem;
+}
+
+.l-navbar .nav_logo-icon {
+  font-size: 1.25rem;
+  color: var(--white-color);
+}
+
+.l-navbar .nav_logo-name {
+  color: var(--white-color);
+  font-weight: 700;
+}
+
+.l-navbar .nav-link {
+  position: relative;
+  color: var(--first-color-light);
+  margin-bottom: 1.5rem;
+  transition: 0.3s;
+}
+
+.l-navbar .nav-link:hover {
+  color: var(--white-color);
+}
+
+.l-navbar .nav_icon {
+  font-size: 1.25rem;
+}
+
+.l-navbar .nav-link.active {
+  color: black;
+}
+//sidebar stop

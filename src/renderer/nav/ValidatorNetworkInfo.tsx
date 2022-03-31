@@ -17,7 +17,6 @@ function ValidatorNetworkInfo() {
   });
 
   useEffect(() => {
-    // const { net } = validator;
     window.electron.ipcRenderer.fetchValidatorNetworkInfo({
       net,
     });
