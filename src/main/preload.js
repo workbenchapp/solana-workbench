@@ -45,12 +45,6 @@ contextBridge.exposeInMainWorld('electron', {
     onProgramLog(msg) {
       send('get-account', msg);
     },
-    subscribeProgramChanges(msg) {
-      send('subscribe-program-changes', msg);
-    },
-    unsubscribeProgramChanges(msg) {
-      send('unsubscribe-program-changes', msg);
-    },
     config(msg) {
       send('config', msg);
     },

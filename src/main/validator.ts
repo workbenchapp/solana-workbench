@@ -1,11 +1,4 @@
-import * as sol from '@solana/web3.js';
-import {
-  NetStatus,
-  ValidatorLogsRequest,
-  ValidatorState,
-  ValidatorStateRequest,
-} from '../types/types';
-import { netToURL } from '../common/strings';
+import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
@@ -17,31 +10,6 @@ let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
 }
-
-const validatorState = async (
-  msg: ValidatorStateRequest
-): Promise<ValidatorState> => {
-  const { net } = msg;
-
-  let solConn: sol.Connection;
-
-  // Connect to cluster
-  const ret = {
-    status: NetStatus.Unknown,
-  } as ValidatorState;
-  try {
-    solConn = new sol.Connection(netToURL(net));
-    await solConn.getEpochInfo();
-  } catch (error) {
-    const err = error as NodeJS.ErrnoException;
-    if (err.code === 'ECONNREFUSED') {
-      ret.status = NetStatus.Unavailable;
-      return ret;
-    }
-  }
-  ret.status = NetStatus.Running;
-  return ret;
-};
 
 const runValidator = async () => {
   try {
@@ -103,4 +71,4 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return stderr;
 };
 
-export { validatorState, runValidator, validatorLogs };
+export { runValidator, validatorLogs };

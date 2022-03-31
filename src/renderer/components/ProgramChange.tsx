@@ -1,28 +1,56 @@
-import { faArrowLeft, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { useEffect, useState, useCallback } from 'react';
+
+import { faStar } from '@fortawesome/free-solid-svg-icons';
+import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useState } from 'react';
-import { truncateSolAmount } from '../../common/strings';
-import { ImportedAccountMap } from '../../types/types';
+import Container from 'react-bootstrap/Container';
+import { useInterval } from '../hooks';
+
 import InlinePK from './InlinePK';
 
-function ProgramChange(props: {
+import { AccountInfo } from '../data/accounts/accountInfo';
+import { getAccount, truncateLamportAmount } from '../data/accounts/getAccount';
+import { Net } from '../data/ValidatorNetwork/validatorNetworkState';
+
+export function ProgramChange(props: {
+  net: Net;
   pubKey: string;
-  count: number;
-  solAmount: number;
-  maxDelta: number;
   attemptAccountAdd: (pk: string, b: boolean) => void;
-  importedAccounts: ImportedAccountMap;
+  pinned: boolean;
+  pinAccount: (pk: string, b: boolean) => void;
 }) {
-  const {
-    count,
-    pubKey,
-    attemptAccountAdd,
-    importedAccounts,
-    solAmount,
-    maxDelta,
-  } = props;
-  const imported = pubKey in importedAccounts;
-  const [importing, setImporting] = useState(false);
+  const { pubKey, net, attemptAccountAdd, pinned, pinAccount } = props;
+
+  const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
+
+  const updateAccount = useCallback(() => {
+    if (pubKey) {
+      getAccount(net, pubKey)
+        .then((res) => {
+          // eslint-disable-next-line promise/always-return
+          if (res) {
+            setChangeInfo(res);
+          }
+        })
+        /* eslint-disable no-console */
+        .catch(console.log);
+    } else {
+      setChangeInfo(undefined);
+    }
+  }, [net, pubKey]);
+
+  useEffect(() => {
+    updateAccount();
+  }, [net, pubKey, updateAccount]);
+
+  useInterval(() => {
+    updateAccount();
+  }, 666);
+
+  if (!change) {
+    return <Container key={pubKey}>Loading change for {pubKey}...</Container>;
+  }
+
   const formatSolAmount = (amt: number): string => {
     if (Math.abs(amt) < 0.01) {
       return '<0.01';
@@ -30,47 +58,35 @@ function ProgramChange(props: {
     return Math.abs(amt).toFixed(2);
   };
   return (
-    <>
+    <Container onClick={() => attemptAccountAdd(pubKey, false)}>
+      <td onClick={() => pinAccount(pubKey, pinned)}>
+        <FontAwesomeIcon
+          className="me-1"
+          icon={pinned ? faStar : faRegular.faStar}
+        />
+      </td>
+
       <td>
-        <span
-          className={`${
-            imported ? 'cursor-not-allowed' : 'cursor-pointer'
-          } pt-1 pb-1 ps-2 pe-2 icon rounded`}
-        >
-          <FontAwesomeIcon
-            onClick={() => {
-              if (!imported && !importing) {
-                setImporting(true);
-                attemptAccountAdd(pubKey, false);
-              }
-            }}
-            icon={faArrowLeft}
-            size="1x"
-          />
-        </span>
         <InlinePK pk={pubKey} />
       </td>
       <td>
         <span className="ms-2 rounded p-1">
           <small className="text-secondary">Max Δ</small>
-          <small className="ms-2">{formatSolAmount(maxDelta)}</small>
+          <small className="ms-2">{formatSolAmount(change.maxDelta)}</small>
         </span>
       </td>
       <td>
         <span className="ms-2 rounded p-1">
           <small className="text-secondary">SOL</small>
-          <small className="ms-2">{truncateSolAmount(solAmount)}</small>
+          <small className="ms-2">{truncateLamportAmount(change)}</small>
         </span>
       </td>
       <td>
-        <span className="ms-2 badge bg-secondary rounded-pill">{count}</span>
+        <span className="ms-2 badge bg-secondary rounded-pill">
+          {change.count}
+        </span>
       </td>
-      <td>
-        {importing && (
-          <FontAwesomeIcon className="ms-2 fa-spin" icon={faSpinner} />
-        )}
-      </td>
-    </>
+    </Container>
   );
 }
 

@@ -1,30 +1,23 @@
 /* eslint-disable no-nested-ternary */
-/* eslint-disable no-console */
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
-import { useDispatch, useSelector } from 'react-redux';
 import { debounce } from 'underscore';
 
-import useInterval from '../../common/hooks';
-import { RootState, validatorActions } from '../slices/mainSlice';
-import { Net, NetStatus, ValidatorState } from '../../types/types';
+import { useInterval, useAppSelector } from '../hooks';
+import {
+  Net,
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
-  const validator: ValidatorState = useSelector(
-    (state: RootState) => state.validator
-  );
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    window.electron.ipcRenderer.validatorState({ net: Net.Localhost });
-  }, []);
+  const validator = useAppSelector(selectValidatorNetworkState);
 
   useInterval(() => {
-    window.electron.ipcRenderer.validatorState({ net: Net.Localhost });
     if (validator.status === NetStatus.Running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value || '',
@@ -33,6 +26,7 @@ const Validator = () => {
   }, 5000);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener = (resp: any) => {
       const { method, res } = resp;
       switch (method) {
@@ -59,7 +53,6 @@ const Validator = () => {
       !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
-            dispatch(validatorActions.setState(NetStatus.Starting));
             window.electron.ipcRenderer.runValidator();
           }}
           className="mt-2"

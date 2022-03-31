@@ -7,7 +7,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
-import { runValidator, validatorState, validatorLogs } from './validator';
+import { runValidator, validatorLogs } from './validator';
 import {
   accounts,
   getAccount,
@@ -18,10 +18,6 @@ import {
 import fetchAnchorIdl from './anchor';
 import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
-import {
-  subscribeProgramChanges,
-  unsubscribeProgramChanges,
-} from './programChanges';
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
@@ -42,14 +38,12 @@ const MAX_STRING_LOG_LENGTH = 32;
 
 ipcMain.on(
   'main',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (event: Electron.IpcMainEvent, method: string, msg: any) => {
     logger.info('IPC event', { method, ...msg });
     let res = {};
     try {
       switch (method) {
-        case 'validator-state':
-          res = await validatorState(msg);
-          break;
         case 'run-validator':
           await runValidator();
           break;
@@ -73,12 +67,6 @@ ipcMain.on(
           break;
         case 'delete-account':
           await deleteAccount(msg);
-          break;
-        case 'subscribe-program-changes':
-          await subscribeProgramChanges(event, msg);
-          break;
-        case 'unsubscribe-program-changes':
-          await unsubscribeProgramChanges(msg);
           break;
         case 'config':
           res = await wbConfig(msg);
@@ -131,12 +119,15 @@ const installExtensions = async () => {
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
   const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload
-    )
-    .catch(console.log);
+  return (
+    installer
+      .default(
+        extensions.map((name) => installer[name]),
+        forceDownload
+      )
+      /* eslint-disable no-console */
+      .catch(console.log)
+  );
 };
 
 const createWindow = async () => {

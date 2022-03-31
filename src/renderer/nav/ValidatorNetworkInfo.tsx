@@ -1,45 +1,84 @@
 import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import Container from 'react-bootstrap/Container';
 import { Row, Col } from 'react-bootstrap';
 import { VictoryPie } from 'victory';
-import { RootState } from '../slices/mainSlice';
-import { ValidatorNetworkInfoResponse } from '../../types/types';
+
+import * as sol from '@solana/web3.js';
+
+import { useAppSelector } from '../hooks';
+import {
+  netToURL,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
+
+interface VersionCount {
+  [key: string]: number;
+}
+export type VCount = {
+  version: string;
+  count: number;
+};
+export type ValidatorNetworkInfoResponse = {
+  version: string;
+  nodes: sol.ContactInfo[];
+  versionCount: VCount[];
+};
+// https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
+const fetchValidatorNetworkInfo = async (url: string) => {
+  const solConn = new sol.Connection(url);
+  const contactInfo = await solConn.getClusterNodes();
+  // TODO: on success / failure update the ValidatorNetworkState..
+  const nodeVersion = await solConn.getVersion();
+
+  const frequencyCount: VersionCount = {};
+
+  contactInfo.map((info: sol.ContactInfo) => {
+    let version = 'none';
+    if (info.version) {
+      version = info.version;
+    }
+
+    if (frequencyCount[version]) {
+      frequencyCount[version] += 1;
+    } else {
+      frequencyCount[version] = 1;
+    }
+    return undefined;
+  });
+  const versions: VCount[] = [];
+  Object.entries(frequencyCount).forEach(([version, count]) => {
+    versions.push({
+      version,
+      count,
+    });
+  });
+
+  const response: ValidatorNetworkInfoResponse = {
+    nodes: contactInfo,
+    version: nodeVersion['solana-core'],
+    versionCount: versions,
+  };
+
+  return response;
+};
 
 function ValidatorNetworkInfo() {
-  const validator = useSelector((state: RootState) => state.validator);
+  const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
+  const url = netToURL(net);
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
     version: 'unknown',
     nodes: [],
     versionCount: [],
   });
-
   useEffect(() => {
-    window.electron.ipcRenderer.fetchValidatorNetworkInfo({
-      net,
-    });
-  }, [net]);
-
-  useEffect(() => {
-    const listener = (resp: any) => {
-      const { method, res } = resp;
-
-      switch (method) {
-        case 'get-validator-network-info':
-          if (res) {
-            setData(res);
-          }
-          break;
-        default:
-      }
-    };
-    window.electron.ipcRenderer.on('main', listener);
-    return () => {
-      window.electron.ipcRenderer.removeListener('main', listener);
-    };
-  }, []);
+    // TODO: set a spinner while waiting for response
+    fetchValidatorNetworkInfo(url)
+      .then((d) => setData(d))
+      /* eslint-disable no-console */
+      .catch(console.log);
+  }, [validator, url]);
 
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status

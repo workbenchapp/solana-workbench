@@ -1,5 +1,6 @@
 import * as sol from '@solana/web3.js';
 import fs from 'fs';
+
 import { netToURL } from '../common/strings';
 import {
   AccountsRequest,
@@ -17,7 +18,6 @@ import { logger } from './logger';
 import { KEY_PATH } from './const';
 
 const hexdump = require('hexdump-nodejs');
-const randomart = require('randomart');
 
 const HEXDUMP_BYTES = 512;
 const AIRDROP_AMOUNT = 100;
@@ -49,7 +49,6 @@ async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
   const resp: GetAccountResponse = {};
   try {
     const key = new sol.PublicKey(pubKey);
-    const art = randomart(key.toBytes());
     const solAccount = await solConn.getAccountInfo(key);
     let solAmount = 0;
     if (solAccount?.lamports)
@@ -60,7 +59,6 @@ async function getAccount(msg: GetAccountRequest): Promise<GetAccountResponse> {
         net,
         pubKey,
         solAmount,
-        art,
         hexDump,
         executable: solAccount.executable,
         exists: true,
@@ -95,11 +93,9 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
       (solAccount: sol.AccountInfo<Buffer> | null, i: number) => {
         const key = new sol.PublicKey(existingAccounts[i].pubKey);
         const { humanName } = existingAccounts[i];
-        const art = randomart(key.toBytes());
         const exists = false;
         const newAcc: WBAccount = {
           net,
-          art,
           humanName,
           exists,
           pubKey: key.toString(),
@@ -171,7 +167,7 @@ async function accounts(msg: AccountsRequest): Promise<AccountsResponse> {
       return {
         net,
         exists: true,
-        art: randomart(acc.publicKey.toBytes()),
+        art: '',
         pubKey: acc.publicKey.toString(),
         humanName: `Wallet ${i}`,
       };

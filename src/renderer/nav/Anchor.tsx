@@ -1,3 +1,5 @@
+/* eslint @typescript-eslint/no-explicit-any: off */
+
 import { useEffect, useRef, useState } from 'react';
 import { FormControl, InputGroup } from 'react-bootstrap';
 

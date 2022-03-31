@@ -14,14 +14,8 @@ export enum NetStatus {
   Starting = 'starting',
 }
 
-export const ACCOUNTS_NONE_KEY = 'none';
 export const RANDOMART_W_CH = 17;
 export const RANDOMART_H_CH = 10;
-export const TOAST_HEIGHT = 270;
-export const TOAST_WIDTH = TOAST_HEIGHT * (1.61 * 0.61);
-export const TOAST_BOTTOM_OFFSET = TOAST_HEIGHT / 3.8; // kinda random but looks good
-export const TOAST_HIDE_MS = 1200;
-export const TOAST_PAUSE_MS = 1000;
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 
@@ -31,30 +25,10 @@ export enum ProgramID {
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 }
 
-export enum ConfigKey {
-  AnalyticsEnabled = 'analytics_enabled',
-}
-
 export enum ConfigAction {
   Get = 'get',
   Set = 'set',
 }
-
-export type WBAccount = {
-  net: Net | undefined;
-  pubKey: string;
-  humanName?: string;
-  art?: string;
-  solAmount?: number;
-  hexDump?: string;
-  exists?: boolean;
-  executable?: boolean;
-  importedAt?: string;
-};
-
-export type ValidatorStateRequest = {
-  net: Net;
-};
 
 export type ValidatorLogsRequest = {
   filter: string;
@@ -88,22 +62,6 @@ export type ImportAccountResponse = {
   net: Net;
 };
 
-export type AccountsResponse = {
-  rootKey: string;
-  accounts: WBAccount[];
-};
-
-export type GetAccountResponse = {
-  account?: WBAccount | null;
-  err?: Error;
-};
-
-export type ProgramChangeResponse = {
-  changes: ProgramAccountChange[];
-  net: Net;
-  uniqueAccounts: number;
-};
-
 export type SubscribeProgramChangesRequest = {
   net: Net;
   programID: string;
@@ -129,18 +87,6 @@ export type WBConfigResponse = {
   values: ConfigMap;
 };
 
-export type ProgramAccountChange = {
-  pubKey: string;
-  net: Net;
-  info: sol.KeyedAccountInfo;
-  ctx: sol.Context;
-  solAmount: number; // solAmount is the lamports from info in SOL
-  count: number; // count tracks how often this account has been seen
-  solDelta: number; // difference between last change amount and this one
-  maxDelta: number; // maxDelta represents the max change in SOL seen during session
-  programID: string;
-};
-
 export interface ChangeSubscriptionMap {
   [net: string]: {
     [programID: string]: {
@@ -159,44 +105,6 @@ export interface LogSubscriptionMap {
 
 export interface ImportedAccountMap {
   [pubKey: string]: boolean;
-}
-
-export interface ChangeLookupMap {
-  [pubKey: string]: ProgramAccountChange;
-}
-
-export interface ChangeBatchSize {
-  [net: string]: number;
-}
-
-export interface ValidatorState {
-  net: Net;
-  status: NetStatus;
-}
-
-export interface AccountsState {
-  listedAccounts: WBAccount[];
-  selectedAccount: string | undefined;
-  hoveredAccount: string;
-  editedAccount: string;
-  rootKey: string;
-}
-
-export interface ToastProps {
-  msg: string;
-  variant?: string;
-  hideAfter?: number;
-  bottom?: number;
-  toastKey?: string;
-}
-
-export interface ToastState {
-  toasts: ToastProps[];
-}
-
-export interface ProgramChangesState {
-  changes: ProgramAccountChange[];
-  paused: boolean;
 }
 
 export interface ConfigMap {
