@@ -9,6 +9,7 @@ import {
 interface VersionCount {
   [key: string]: number;
 }
+
 const fetchValidatorNetworkInfo = async (msg: ValidatorNetworkInfoRequest) => {
   const url = netToURL(msg.net);
   const solConn = new sol.Connection(url);
