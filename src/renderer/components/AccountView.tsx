@@ -2,6 +2,7 @@ import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useSelector } from 'react-redux';
 
+import { TransferInfo } from '@solana/explorer/src/components/instruction/system/types';
 import analytics from '../../common/analytics';
 import { explorerURL, truncateSolAmount } from '../../common/strings';
 import { RootState } from '../slices/mainSlice';
@@ -12,6 +13,8 @@ import RandomArt from './RandomArt';
 function AccountView(props: { account: WBAccount }) {
   const { account } = props;
   const { net } = useSelector((state: RootState) => state.validator);
+  const tInfo: TransferInfo = { lamports: 0 };
+  console.log(tInfo);
   return (
     <>
       <div className="row">
