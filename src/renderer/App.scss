@@ -24,10 +24,20 @@ $dark: #242423;
 @import '~bootstrap/scss/bootstrap';
 @import '~bootswatch/dist/lux/bootswatch';
 
-// TODO: When using lux bootswatch, the .navbar padding-top and padding-bottom is too massive
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+th,
+.btn,
 .navbar {
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
+  text-transform: none;
+}
+
+.btn {
+  border-radius: 0.25rem;
 }
 
 @mixin inline-code() {
@@ -53,6 +63,9 @@ $lightblue: lighten($blue-100, 7%);
   &-primary-darker {
     color: $white;
     background-color: $blue-600;
+  }
+  &-sm {
+    padding: 0.1rem 0.5rem;
   }
 }
 
@@ -320,12 +333,12 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
 
 .l-navbar {
   position: fixed;
-  top: 70px;
   left: 0px;
   width: 60px;
   background-color: white !important; // TODO: figure this out
   transition: 0.5s;
   z-index: var(--z-fixed);
+  padding: 0rem 0rem;
 }
 
 .l-navbar .nav {
@@ -340,7 +353,7 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
   display: grid;
   grid-template-columns: max-content max-content;
   align-items: center;
-  column-gap: 1rem;
+  column-gap: 0.2rem;
 }
 
 .l-navbar .nav_logo {
@@ -360,7 +373,8 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
 .l-navbar .nav-link {
   position: relative;
   color: var(--first-color-light);
-  margin-bottom: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 0rem 0rem 0rem 0.8rem;
   transition: 0.3s;
 }
 
@@ -375,4 +389,3 @@ $top-nav-height: 47px; // hack -- def better way to compute somehow
 .l-navbar .nav-link.active {
   color: black;
 }
-//sidebar stop

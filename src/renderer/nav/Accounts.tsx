@@ -25,6 +25,7 @@ import {
   NetStatus,
   WBAccount,
 } from 'types/types';
+import { Row } from 'react-bootstrap';
 
 const LIVE_TAB_CHANGES = 'changes';
 const LIVE_TAB_TXN_LOGS = 'logs';
@@ -169,9 +170,9 @@ function Accounts() {
   let display = <></>;
   if (validator.status === NetStatus.Running) {
     display = (
-      <>
-        <div className="col-auto">
-          <div className="sticky-top sticky-account-list">
+      <Row>
+        <div className="col-7">
+          <div className="sticky-account-list">
             <div className="mb-3">
               <FontAwesomeIcon icon={faKey} />
               <span className="ms-1">
@@ -204,7 +205,7 @@ function Accounts() {
             )}
           </div>
         </div>
-        <div className="col">
+        <div className="col-5">
           <div>
             <ul className="nav">
               <li
@@ -252,7 +253,7 @@ function Accounts() {
             )}
           </div>
         </div>
-      </>
+      </Row>
     );
   } else {
     display = (

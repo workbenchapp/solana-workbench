@@ -27,7 +27,7 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Button, Form, Row } from 'react-bootstrap';
+import { Button, Col, Form, Row } from 'react-bootstrap';
 
 import useInterval from '../common/hooks';
 import analytics from '../common/analytics';
@@ -134,7 +134,7 @@ TooltipNavItem.propTypes = {
 
 function Sidebar() {
   return (
-    <Navbar className="l-navbar" bg="light" expand="sm">
+    <Navbar className="l-navbar" expand="sm">
       <nav className="nav">
         <TooltipNavItem
           to="/"
@@ -175,55 +175,9 @@ function Sidebar() {
 
 function Topbar() {
   return (
-    <Navbar sticky="top" bg="primary" variant="dark" expand="sm">
-      <Container fluid>
-        <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
-        <Navbar.Toggle aria-controls="navbarScroll" />
-        <Navbar.Collapse id="navbarScroll">
-          <Nav
-            className="me-auto my-2 my-lg-0"
-            style={{ maxHeight: '100px' }}
-            navbarScroll
-          >
-            {/* <TooltipNavItem
-                          to="/"
-                          title="Changes"
-                          tooltipMessage="Changes"
-                          eventKey="changes"
-                          icon={faTh}
-                          iconsize="xl"
-                      />
-                      <TooltipNavItem
-                          to="/validator"
-                          title="Validator"
-                          tooltipMessage="Validator"
-                          eventKey="validator"
-                          icon={faBook}
-                          iconsize="xl"
-                      />
-                      <TooltipNavItem
-                          to="/anchor"
-                          title="Anchor"
-                          tooltipMessage="Anchor"
-                          eventKey="anchor"
-                          icon={faAnchor}
-                          iconsize="xl"
-                      />
-                      <TooltipNavItem
-                          to="/validatornetworkinfo"
-                          title="Network Info"
-                          tooltipMessage="Network Info"
-                          eventKey="validatornetworkinfo"
-                          icon={faNetworkWired}
-                          iconsize="xl"
-                      /> */}
-          </Nav>
-          <Form className="d-flex">
-            <NetworkSelector />
-          </Form>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <Form className="m-2">
+      <NetworkSelector />
+    </Form>
   );
 }
 
@@ -333,23 +287,20 @@ export default function App() {
 
   let mainDisplay = <></>;
 
-  console.log('check', {
-    notConfigLoading: !config.loading,
-    keyExists: !(`${ConfigKey.AnalyticsEnabled}` in config.values),
-  });
   if (!(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     mainDisplay = <AnalyticsBanner />;
   } else {
-    console.log('Rendering alternative page...', { config });
     mainDisplay = (
       <div className="vh-100">
         <Topbar />
-        <Sidebar />
-        {toasts.map((t) => (
-          <Toast {...t} />
-        ))}
-        <Container>
-          <Row className="mt-3">
+        <Row>
+          <Col xs="1">
+            <Sidebar />
+            {toasts.map((t) => (
+              <Toast {...t} />
+            ))}
+          </Col>
+          <Col>
             <Route exact path="/">
               <Accounts />
             </Route>
@@ -362,8 +313,8 @@ export default function App() {
             <Route path="/validatornetworkinfo">
               <ValidatorNetworkInfo />
             </Route>
-          </Row>
-        </Container>
+          </Col>
+        </Row>
       </div>
     );
   }
