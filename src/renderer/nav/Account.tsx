@@ -5,8 +5,9 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 
 import { toast } from 'react-toastify';
 
+import TransactionView from 'renderer/components/TransactionView';
+import ProgramChangeView from 'renderer/components/ProgramChangeView';
 import AccountView from '../components/AccountView';
-import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
 import { useAppSelector } from '../hooks';
 import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -48,14 +49,12 @@ function Account() {
               <AccountView pubKey={selectedAccount} />
             </Row>
             <Row className="border flex-fill">
-              transaction or program details
+              <TransactionView />
             </Row>
           </Stack>
         </Col>
       </Row>
       <Row className="border almost-vh-20">
-        ? console like thing - maybe this is where we emulate the solana/anchor
-        cli?
         <LogView />
       </Row>
     </Stack>

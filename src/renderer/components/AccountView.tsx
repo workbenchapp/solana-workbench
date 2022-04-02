@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import { explorerURL } from 'common/strings';
 import { useInterval, useAppSelector } from '../hooks';
 
 import analytics from '../common/analytics';
@@ -14,28 +15,11 @@ import {
   renderData,
   getAccount,
 } from '../data/accounts/getAccount';
-import {
-  Net,
-  netToURL,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
-
-const explorerURL = (net: Net, address: string) => {
-  switch (net) {
-    case Net.Test:
-    case Net.Dev:
-      return `https://explorer.solana.com/address/${address}?cluster=${net}`;
-    case Net.Localhost:
-      return `https://explorer.solana.com/address/${address}/ \
-  ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
-    default:
-      return `https://explorer.solana.com/address/${address}`;
-  }
-};
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -131,7 +115,10 @@ function AccountView(props: { pubKey: string | undefined }) {
                           onClick={() =>
                             analytics('clickExplorerLink', { net })
                           }
-                          href={explorerURL(net, account.accountId.toString())}
+                          href={explorerURL(
+                            net,
+                            `/address/${account.accountId.toString()}`
+                          )}
                           target="_blank"
                           className="sol-link"
                           rel="noreferrer"

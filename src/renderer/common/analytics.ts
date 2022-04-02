@@ -10,6 +10,8 @@ amplitude.getInstance().init(AMPLITUDE_KEY);
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const Analytics = (event: string, metadata: any) => {
+  // TODO: Fix complaints about hook call
+  return;
   const storedConfig = useAppSelector(selectConfigState);
   if (storedConfig) {
     if (

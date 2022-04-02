@@ -38,7 +38,6 @@ export async function getAccount(
   const key = new sol.PublicKey(pubKey);
   const solAccount = await solConn.getAccountInfo(key);
 
-  // console.log('getAccountInfo cache miss', solAccount);
   if (solAccount) {
     const response: AccountInfo = {
       accountId: key,
@@ -95,7 +94,5 @@ export const renderData = (account: AccountInfo | undefined) => {
 
 // TODO: this should look up a persistent key: string map
 export const getHumanName = (key: AccountInfo | sol.PublicKey) => {
-  /* eslint-disable no-console */
-  console.log(key);
   return '';
 };

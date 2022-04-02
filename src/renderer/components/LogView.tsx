@@ -68,11 +68,6 @@ function LogView() {
 
   return (
     <div>
-      <div className="mb-2">
-        <small>
-          <strong>Stream validator transaction logs ({commitmentLevel})</strong>
-        </small>
-      </div>
       {logs.length > 0 ? (
         <pre>
           <code>{logs.join('\n')}</code>

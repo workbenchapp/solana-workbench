@@ -15,16 +15,17 @@ const netToURL = (net: Net): string => {
   return '';
 };
 
-const explorerURL = (net: Net, address: string) => {
+const explorerURL = (net: Net, endpoint: string) => {
   switch (net) {
     case Net.Test:
     case Net.Dev:
-      return `https://explorer.solana.com/address/${address}?cluster=${net}`;
+      return `https://explorer.solana.com${endpoint}?cluster=${net}`;
     case Net.Localhost:
-      return `https://explorer.solana.com/address/${address}/ \
-  ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
+      return `https://explorer.solana.com${endpoint}?cluster=custom&customUrl=${encodeURIComponent(
+        netToURL(net)
+      )}`;
     default:
-      return `https://explorer.solana.com/address/${address}`;
+      return `https://explorer.solana.com${endpoint}`;
   }
 };
 
