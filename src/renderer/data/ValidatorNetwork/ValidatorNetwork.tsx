@@ -84,7 +84,7 @@ function ValidatorNetwork() {
   return (
     <DropdownButton
       size="sm"
-      id="dropdown-basic-button"
+      id="l-navbar-dropdown"
       title={netDropdownTitle}
       onSelect={netDropdownSelect}
       className="ms-2 float-end"
