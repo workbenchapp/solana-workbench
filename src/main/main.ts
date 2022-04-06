@@ -7,27 +7,23 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
-import { runValidator, validatorState, validatorLogs } from './validator';
-import {
-  accounts,
-  getAccount,
-  importAccount,
-  deleteAccount,
-  updateAccountName,
-} from './accounts';
+import { runValidator, validatorLogs } from './validator';
+// import {
+//   accounts,
+//   getAccount,
+//   importAccount,
+//   deleteAccount,
+//   updateAccountName,
+// } from './accounts';
 import fetchAnchorIdl from './anchor';
-import fetchValidatorNetworkInfo from './validatorNetworkInfo';
+// import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
-import {
-  subscribeProgramChanges,
-  unsubscribeProgramChanges,
-} from './programChanges';
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
-import wbConfig from './config';
+// import wbConfig from './config';
 
 export default class AppUpdater {
   constructor() {
@@ -42,50 +38,42 @@ const MAX_STRING_LOG_LENGTH = 32;
 
 ipcMain.on(
   'main',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (event: Electron.IpcMainEvent, method: string, msg: any) => {
     logger.info('IPC event', { method, ...msg });
     let res = {};
     try {
       switch (method) {
-        case 'validator-state':
-          res = await validatorState(msg);
-          break;
         case 'run-validator':
           await runValidator();
           break;
-        case 'accounts':
-          res = await accounts(msg);
-          break;
+        // case 'accounts':
+        //   res = await accounts(msg);
+        //   break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
         case 'fetch-anchor-idl':
           res = await fetchAnchorIdl(msg);
           break;
-        case 'update-account-name':
-          await updateAccountName(msg);
-          break;
-        case 'import-account':
-          await importAccount(msg);
-          break;
-        case 'get-account':
-          res = await getAccount(msg);
-          break;
-        case 'delete-account':
-          await deleteAccount(msg);
-          break;
-        case 'subscribe-program-changes':
-          await subscribeProgramChanges(event, msg);
-          break;
-        case 'unsubscribe-program-changes':
-          await unsubscribeProgramChanges(msg);
-          break;
-        case 'config':
-          res = await wbConfig(msg);
-          break;
-        case 'get-validator-network-info':
-          res = await fetchValidatorNetworkInfo(msg);
-          break;
+        // case 'update-account-name':
+        //   await updateAccountName(msg);
+        //   break;
+        // case 'import-account':
+        //   await importAccount(msg);
+        //   break;
+        // case 'get-account':
+        //   res = await getAccount(msg);
+        //   break;
+        // case 'delete-account':
+        //   await deleteAccount(msg);
+        //   break;
+        // case 'config':
+        //   res = await wbConfig(msg);
+        //   break;
+        // case 'get-validator-network-info':
+        //   res = await fetchValidatorNetworkInfo(msg);
+        //   break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
           break;
@@ -131,12 +119,15 @@ const installExtensions = async () => {
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
   const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-  return installer
-    .default(
-      extensions.map((name) => installer[name]),
-      forceDownload
-    )
-    .catch(console.log);
+  return (
+    installer
+      .default(
+        extensions.map((name) => installer[name]),
+        forceDownload
+      )
+      /* eslint-disable no-console */
+      .catch(console.log)
+  );
 };
 
 const createWindow = async () => {

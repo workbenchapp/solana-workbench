@@ -1,18 +1,45 @@
 import { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom';
-import { useSelector } from 'react-redux';
-import { RootState } from 'renderer/slices/mainSlice';
+import * as sol from '@solana/web3.js';
+import { useAppSelector } from '../hooks';
+import {
+  netToURL,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
+
+export interface LogSubscriptionMap {
+  [net: string]: {
+    subscriptionID: number;
+    solConn: sol.Connection;
+  };
+}
+
+// TODO: make this selectable - Return information at the selected commitment level
+//      [possible values: processed, confirmed, finalized]
+//      cli default seems to be finalized
+
+const commitmentLevel = 'processed';
+
+const logSubscriptions: LogSubscriptionMap = {};
 
 function LogView() {
   const [logs, setLogs] = useState<string[]>([]);
-  const validator = useSelector((state: RootState) => state.validator);
+  const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
 
   useEffect(() => {
-    const listener = (logsResp: any) => {
-      ReactDOM.unstable_batchedUpdates(() => {
+    setLogs([]);
+
+    const solConn = new sol.Connection(netToURL(net));
+    const subscriptionID = solConn.onLogs(
+      'all',
+      (logsInfo) => {
         setLogs((prevLogs: string[]) => {
-          const newLogs = [...logsResp.logs.reverse(), ...prevLogs];
+          const newLogs = [
+            logsInfo.signature,
+            logsInfo.err?.toString() || 'Ok',
+            ...logsInfo.logs.reverse(),
+            ...prevLogs,
+          ];
 
           // utter pseudo-science -- determine max log lines from window size
           const MAX_DISPLAYED_LOG_LINES = window.innerHeight / 22;
@@ -21,24 +48,31 @@ function LogView() {
           }
           return newLogs;
         });
-      });
-    };
-    setLogs([]);
-    window.electron.ipcRenderer.on('transaction-logs', listener);
-    window.electron.ipcRenderer.subscribeTransactionLogs({
-      net,
-    });
+      },
+      commitmentLevel
+    );
+    logSubscriptions[net] = { subscriptionID, solConn };
 
     return () => {
-      window.electron.ipcRenderer.removeAllListeners('transaction-logs');
-      window.electron.ipcRenderer.unsubscribeTransactionLogs({
-        net,
-      });
+      const sub = logSubscriptions[net];
+      sub.solConn
+        .removeOnLogsListener(sub.subscriptionID)
+        // eslint-disable-next-line promise/always-return
+        .then(() => {
+          delete logSubscriptions[net];
+        })
+        /* eslint-disable-next-line no-console */
+        .catch(console.log);
     };
   }, [net]);
 
   return (
     <div>
+      <div className="mb-2">
+        <small>
+          <strong>Stream validator transaction logs ({commitmentLevel})</strong>
+        </small>
+      </div>
       {logs.length > 0 ? (
         <pre>
           <code>{logs.join('\n')}</code>

@@ -6,6 +6,7 @@ import { netToURL } from '../common/strings';
 const logSubscriptions: LogSubscriptionMap = {};
 const subscribeTransactionLogs = async (
   event: Electron.IpcMainEvent,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   msg: any
 ) => {
   const solConn = new sol.Connection(netToURL(msg.net));
@@ -21,6 +22,7 @@ const subscribeTransactionLogs = async (
 
 const unsubscribeTransactionLogs = async (
   _event: Electron.IpcMainEvent,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   msg: any
 ) => {
   const sub = logSubscriptions[msg.net];

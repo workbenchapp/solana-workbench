@@ -1,9 +1,13 @@
+/* eslint-disable jsx-a11y/no-static-element-interactions */
+/* eslint-disable jsx-a11y/click-events-have-key-events */
 import React, { useEffect, useState } from 'react';
 import { FormControl, InputGroup } from 'react-bootstrap';
 import OutsideClickHandler from 'react-outside-click-handler';
 import { useDispatch } from 'react-redux';
-
-import { accountsActions } from '../slices/mainSlice';
+import {
+  setSelected,
+  setHovered,
+} from '../data/SelectedAccountsList/selectedAccountsState';
 
 type EditableProps = {
   value: string;
@@ -18,8 +22,11 @@ type EditableProps = {
   onClick?: () => void;
   handleOutsideClick?: () => void;
   editingStopped?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPaste?: (e: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onKeyDown?: (e: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onBlur?: (e: any) => void;
   effect?: React.EffectCallback;
 };
@@ -87,8 +94,8 @@ const Editable = React.forwardRef<HTMLInputElement, EditableProps>(
           onClick={(e) => {
             e.stopPropagation();
             setEditing(true);
-            dispatch(accountsActions.setSelected(''));
-            dispatch(accountsActions.setHovered(''));
+            dispatch(setSelected(''));
+            dispatch(setHovered(''));
             if (onClick) onClick();
           }}
         >

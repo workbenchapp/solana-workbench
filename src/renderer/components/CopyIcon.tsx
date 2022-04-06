@@ -1,6 +1,6 @@
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 function CopyIcon(props: { writeValue: string }) {
@@ -9,15 +9,16 @@ function CopyIcon(props: { writeValue: string }) {
     'Copy'
   );
 
-  const renderCopyTooltip = (id: string) => {
-    return function (ttProps: any) {
+  const renderCopyTooltip = (id: string) =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function (ttProps: any) {
       return (
+        // eslint-disable-next-line react/jsx-props-no-spreading
         <Tooltip id={id} {...ttProps}>
           <div>{copyTooltipText}</div>
         </Tooltip>
       );
     };
-  };
 
   return (
     <OverlayTrigger

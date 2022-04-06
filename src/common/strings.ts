@@ -1,4 +1,4 @@
-import { ACCOUNTS_NONE_KEY, Net } from '../types/types';
+import { Net } from '../types/types';
 
 const netToURL = (net: Net): string => {
   switch (net) {
@@ -28,11 +28,6 @@ const explorerURL = (net: Net, address: string) => {
   }
 };
 
-const prettifyPubkey = (pk = '') =>
-  pk !== ACCOUNTS_NONE_KEY
-    ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
-    : '';
-
 const truncateSolAmount = (solAmount: number | undefined) => {
   if (solAmount === undefined) {
     return '';
@@ -46,4 +41,4 @@ const truncateSolAmount = (solAmount: number | undefined) => {
   return solAmount.toPrecision(9);
 };
 
-export { netToURL, prettifyPubkey, explorerURL, truncateSolAmount };
+export { netToURL, explorerURL, truncateSolAmount };

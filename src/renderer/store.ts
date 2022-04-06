@@ -1,6 +1,37 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { mainReducer } from './slices/mainSlice';
+import throttle from 'lodash/throttle';
 
-export default configureStore({
-  reducer: mainReducer,
+// https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
+// eslint-disable-next-line import/no-cycle
+import ValidatorReducer from './data/ValidatorNetwork/validatorNetworkState';
+// https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
+// eslint-disable-next-line import/no-cycle
+import SelectedAccountsListReducer from './data/SelectedAccountsList/selectedAccountsState';
+// https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
+// eslint-disable-next-line import/no-cycle
+import ConfigReducer from './data/Config/configState';
+
+import { saveState } from './data/localstorage';
+
+const store = configureStore({
+  reducer: {
+    validatornetwork: ValidatorReducer,
+    selectedaccounts: SelectedAccountsListReducer,
+    config: ConfigReducer,
+  },
 });
+
+// TODO: this is a really bad way to save a subset of redux - as its triggered any time anything changes
+// I think middleware is supposed to do it better
+store.subscribe(
+  throttle(() => {
+    saveState('selectedaccounts', store.getState().selectedaccounts);
+    saveState('config', store.getState().config);
+  }, 1000)
+);
+
+// Infer the `RootState` and `AppDispatch` types from the store itself
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
+export default store;

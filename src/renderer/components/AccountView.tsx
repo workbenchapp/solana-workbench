@@ -1,24 +1,78 @@
+import { useState } from 'react';
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useSelector } from 'react-redux';
+import Container from 'react-bootstrap/Container';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import { useInterval, useAppSelector } from '../hooks';
 
-import analytics from '../../common/analytics';
-import { explorerURL, truncateSolAmount } from '../../common/strings';
-import { RootState } from '../slices/mainSlice';
-import { WBAccount } from '../../types/types';
+import analytics from '../common/analytics';
+import { AccountInfo } from '../data/accounts/accountInfo';
+import {
+  truncateLamportAmount,
+  getHumanName,
+  renderData,
+  getAccount,
+} from '../data/accounts/getAccount';
+import {
+  Net,
+  netToURL,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 import InlinePK from './InlinePK';
-import RandomArt from './RandomArt';
 
-function AccountView(props: { account: WBAccount }) {
-  const { account } = props;
-  const { net } = useSelector((state: RootState) => state.validator);
+import TransferSolButton from './TransferSolButton';
+import AirDropSolButton from './AirDropSolButton';
+
+const explorerURL = (net: Net, address: string) => {
+  switch (net) {
+    case Net.Test:
+    case Net.Dev:
+      return `https://explorer.solana.com/address/${address}?cluster=${net}`;
+    case Net.Localhost:
+      return `https://explorer.solana.com/address/${address}/ \
+  ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
+    default:
+      return `https://explorer.solana.com/address/${address}`;
+  }
+};
+
+function AccountView(props: { pubKey: string | undefined }) {
+  const { pubKey } = props;
+  const { net } = useAppSelector(selectValidatorNetworkState);
+
+  const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
+    undefined
+  );
+
+  useInterval(() => {
+    if (pubKey) {
+      getAccount(net, pubKey)
+        .then((a) => setSelectedAccountInfo(a))
+        /* eslint-disable no-console */
+        .catch(console.log);
+    } else {
+      setSelectedAccountInfo(undefined);
+    }
+  }, 666);
+
+  if (!account) {
+    return <>No account selected</>;
+  }
+  const humanName = getHumanName(account);
   return (
-    <>
+    <Container>
+      <ButtonToolbar aria-label="Toolbar with button groups">
+        <ButtonGroup size="sm" className="me-2" aria-label="First group">
+          <AirDropSolButton pubKey={pubKey} />
+          <TransferSolButton pubKey={pubKey} />
+        </ButtonGroup>
+      </ButtonToolbar>
       <div className="row">
         <div className="col-auto">
           <div>
             <h6 className="ms-1">
-              {account.humanName !== '' ? account.humanName : <div>&nbsp;</div>}
+              {humanName !== '' ? humanName : <div>&nbsp;</div>}
             </h6>
           </div>
         </div>
@@ -35,7 +89,7 @@ function AccountView(props: { account: WBAccount }) {
                     </td>
                     <td>
                       <small>
-                        <InlinePK pk={account.pubKey} />
+                        <InlinePK pk={account.accountId.toString()} />
                       </small>
                     </td>
                   </tr>
@@ -44,7 +98,7 @@ function AccountView(props: { account: WBAccount }) {
                       <small className="text-muted">SOL</small>
                     </td>
                     <td>
-                      <small>{truncateSolAmount(account.solAmount)}</small>
+                      <small>{truncateLamportAmount(account)}</small>
                     </td>
                   </tr>
                   <tr>
@@ -52,7 +106,7 @@ function AccountView(props: { account: WBAccount }) {
                       <small className="text-muted">Executable</small>
                     </td>
                     <td>
-                      {account.executable ? (
+                      {account.accountInfo.executable ? (
                         <div>
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
@@ -77,7 +131,7 @@ function AccountView(props: { account: WBAccount }) {
                           onClick={() =>
                             analytics('clickExplorerLink', { net })
                           }
-                          href={explorerURL(net, account.pubKey)}
+                          href={explorerURL(net, account.accountId.toString())}
                           target="_blank"
                           className="sol-link"
                           rel="noreferrer"
@@ -90,12 +144,6 @@ function AccountView(props: { account: WBAccount }) {
                 </tbody>
               </table>
             </div>
-            <div className="col-auto">
-              <RandomArt
-                className="randomart-lg text-secondary"
-                art={account.art || ''}
-              />
-            </div>
           </div>
           <div className="ms-1">
             <div>
@@ -103,13 +151,13 @@ function AccountView(props: { account: WBAccount }) {
             </div>
             <div>
               <pre className="exe-hexdump p-2 rounded">
-                <code>{account.hexDump}</code>
+                <code>{renderData(account)}</code>
               </pre>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </Container>
   );
 }
 

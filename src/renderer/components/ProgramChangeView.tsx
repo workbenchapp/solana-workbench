@@ -1,92 +1,97 @@
 import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
-import ReactDOM from 'react-dom';
+import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import Table from 'react-bootstrap/Table';
+import { toast } from 'react-toastify';
+
 import OutsideClickHandler from 'react-outside-click-handler';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState, toastActions } from '../slices/mainSlice';
-import {
-  BASE58_PUBKEY_REGEX,
-  ImportedAccountMap,
-  MAX_PROGRAM_CHANGES_DISPLAYED,
-  ProgramAccountChange,
-  ProgramChangesState,
-  ProgramID,
-  WBAccount,
-} from '../../types/types';
+
+import { useAppSelector, useAppDispatch } from '../hooks';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
+import { AccountInfo } from '../data/accounts/accountInfo';
+
 import Editable from './Editable';
-import ProgramChange from './ProgramChange';
+import { ProgramChange } from './ProgramChange';
+import {
+  unsubscribeProgramChanges,
+  subscribeProgramChanges,
+} from '../data/accounts/programChanges';
+import {
+  accountsActions,
+  selectAccountsListState,
+} from '../data/SelectedAccountsList/selectedAccountsState';
+
+export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
+export enum KnownProgramID {
+  SystemProgram = '11111111111111111111111111111111',
+  SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+  TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+}
+
+interface PinnedAccountMap {
+  [pubKey: string]: boolean;
+}
 
 function ProgramChangeView(props: {
-  accounts: WBAccount[];
   attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
 }) {
-  const dispatch = useDispatch();
-  const { accounts, attemptAccountAdd } = props;
-  const { net } = useSelector((state: RootState) => state.validator);
+  const dispatch = useAppDispatch();
+  const { attemptAccountAdd } = props;
+  const { net } = useAppSelector(selectValidatorNetworkState);
+
+  // TODO: I suspect It would be nicer to use a function need to try it..
+  const selectAccounts = useAppSelector(selectAccountsListState);
+  const { pinnedAccounts } = selectAccounts;
+
+  const pinAccount = (pubKey: string, pinned: boolean) => {
+    if (!pinned) {
+      getAccount(net, pubKey)
+        .then((res) => {
+          // eslint-disable-next-line promise/always-return
+          if (res) {
+            dispatch(accountsActions.unshift(res));
+          }
+        })
+        /* eslint-disable no-console */
+        .catch(console.log);
+    } else {
+      dispatch(accountsActions.rm(pubKey));
+    }
+  };
 
   // want to check paused before updating changes later,
   // so we include these together
-  const [changesState, setChangesState] = useState<ProgramChangesState>({
-    changes: [],
-    paused: false,
-  });
-  const { changes, paused } = changesState;
+  const [changes, setChangesState] = useState<AccountInfo[]>([]);
+  const [paused, setPausedState] = useState<boolean>(false);
 
-  const [uniqueAccounts, setUniqueAccounts] = useState(0);
+  const displayList: string[] = []; // list of Keys
+  const pinnedAccount: PinnedAccountMap = {};
+
+  pinnedAccounts.forEach((key: string) => {
+    displayList.push(key);
+    pinnedAccount[key] = true;
+  });
+  changes.forEach((c: AccountInfo) => {
+    if (!(c.pubKey in pinnedAccount)) {
+      displayList.push(c.pubKey);
+    }
+  });
+
+  const uniqueAccounts = displayList.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-  const [programID, setProgramID] = useState(ProgramID.SystemProgram);
-
-  const pausedTimeoutRef = useRef(0);
-
-  const importedAccounts: ImportedAccountMap = {};
-  accounts.forEach((a) => {
-    importedAccounts[a.pubKey] = true;
-  });
+  const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
 
   useEffect(() => {
-    const listener = (resp: any) => {
-      const { method, res } = resp;
-      switch (method) {
-        case 'subscribe-program-changes':
-          break;
-        case 'unsubscribe-program-changes':
-          break;
-        case 'program-changes':
-          ReactDOM.unstable_batchedUpdates(() => {
-            setChangesState((prevState) => {
-              if (!prevState.paused) {
-                setUniqueAccounts(res.uniqueAccounts);
-                return { ...prevState, changes: res.changes };
-              }
-              return prevState;
-            });
-          });
-          break;
-        default:
-      }
-    };
-    window.electron.ipcRenderer.on('main', listener);
+    subscribeProgramChanges(net, programID, setChangesState);
 
     return () => {
-      window.electron.ipcRenderer.removeListener('main', listener);
-    };
-  }, []);
-
-  useEffect(() => {
-    window.electron.ipcRenderer.subscribeProgramChanges({
-      net,
-      programID,
-    });
-
-    return () => {
-      window.electron.ipcRenderer.unsubscribeProgramChanges({
-        net,
-        programID,
-      });
+      unsubscribeProgramChanges(net, programID);
     };
   }, [net, programID]);
 
@@ -97,28 +102,6 @@ function ProgramChangeView(props: {
     </>
   );
 
-  const setPaused = (p: boolean) => {
-    setChangesState((prevState) => ({
-      ...prevState,
-      paused: p,
-    }));
-  };
-  const pause = () => {
-    if (pausedTimeoutRef.current === 0) {
-      pausedTimeoutRef.current = window.setTimeout(() => {
-        setPaused(true);
-        pausedTimeoutRef.current = 0;
-      }, 3000);
-    }
-  };
-  const unpause = () => {
-    if (pausedTimeoutRef.current !== 0) {
-      window.clearTimeout(pausedTimeoutRef.current);
-      pausedTimeoutRef.current = 0;
-    }
-    setPaused(false);
-  };
-
   return (
     <div>
       <div className="mb-2">
@@ -127,139 +110,120 @@ function ProgramChangeView(props: {
             <strong>Program Account Changes</strong>
           </small>
         </div>
-        <Dropdown>
-          <OutsideClickHandler
-            onOutsideClick={() => setFilterDropdownShow(false)}
-            display="inline"
-          >
-            <DropdownButton
-              size="sm"
-              id="dropdown-basic-button"
-              title={changeFilterDropdownTitle}
-              onSelect={(s: string | null) => {
-                setFilterDropdownShow(false);
-                if (s) setProgramID(s as ProgramID);
-              }}
-              onClick={() => {
-                if (!filterDropdownShow) {
-                  setFilterDropdownShow(true);
-                } else {
-                  setFilterDropdownShow(false);
-                }
-              }}
-              className="ms-2 d-inline"
-              variant="light"
-              show={filterDropdownShow}
-            >
-              <div className="ms-1 p-1 border-bottom border-light">
-                <small>
-                  <strong>Program ID</strong>
-                </small>
-              </div>
-              <Dropdown.Item eventKey="">
-                <small>System Program</small>
-              </Dropdown.Item>
-              <Dropdown.Item eventKey={ProgramID.TokenProgram}>
-                <small>Token Program</small>
-              </Dropdown.Item>
-              <Dropdown.Item eventKey={ProgramID.SerumDEXV3}>
-                <small>Serum DEX V3</small>
-              </Dropdown.Item>
-              <div className="p-2">
-                <Editable
-                  value="Custom"
-                  ref={filterProgramIDRef}
-                  onClick={() => {
-                    filterProgramIDRef.current.value = '';
+        <ButtonToolbar aria-label="Toolbar with button groups">
+          <ButtonGroup size="sm" className="me-2" aria-label="First group">
+            <Dropdown>
+              <OutsideClickHandler
+                onOutsideClick={() => setFilterDropdownShow(false)}
+                display="inline"
+              >
+                <DropdownButton
+                  size="sm"
+                  id="dropdown-basic-button"
+                  title={changeFilterDropdownTitle}
+                  onSelect={(s: string | null) => {
+                    setFilterDropdownShow(false);
+                    if (s) setProgramID(s as KnownProgramID);
                   }}
-                  placeholder="Paste Program ID"
-                  onKeyDown={(e) => {
-                    if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
-                      dispatch(
-                        toastActions.push({
-                          msg: 'Must paste in valid program ID',
-                          variant: 'warning',
-                        })
-                      );
-                      filterProgramIDRef.current.value = 'Custom';
-                      filterProgramIDRef.current.blur();
+                  onClick={() => {
+                    if (!filterDropdownShow) {
+                      setFilterDropdownShow(true);
+                    } else {
                       setFilterDropdownShow(false);
                     }
                   }}
-                  onPaste={(e) => {
-                    const pastedID = e.clipboardData.getData('Text');
-                    if (pastedID.match(BASE58_PUBKEY_REGEX)) {
-                      window.electron.ipcRenderer.unsubscribeProgramChanges({
-                        net,
-                        programID,
-                      });
-                      window.electron.ipcRenderer.subscribeProgramChanges({
-                        net,
-                        programID: pastedID,
-                      });
-                      setProgramID(pastedID);
-                    } else {
-                      dispatch(
-                        toastActions.push({
-                          // todo: full jsx access would be better (code)
-                          msg: `Invalid program ID: ${pastedID}`,
-                          variant: 'warning',
-                        })
-                      );
-                    }
-                    filterProgramIDRef.current.value = 'Custom';
-                    filterProgramIDRef.current.blur();
-                    setFilterDropdownShow(false);
-                  }}
-                />
-              </div>
-            </DropdownButton>
-          </OutsideClickHandler>
-        </Dropdown>
+                  className="ms-2 d-inline"
+                  variant="light"
+                  show={filterDropdownShow}
+                >
+                  <div className="ms-1 p-1 border-bottom border-light">
+                    <small>
+                      <strong>Program ID</strong>
+                    </small>
+                  </div>
+                  <Dropdown.Item eventKey="">
+                    <small>System Program</small>
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={KnownProgramID.TokenProgram}>
+                    <small>Token Program</small>
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={KnownProgramID.SerumDEXV3}>
+                    <small>Serum DEX V3</small>
+                  </Dropdown.Item>
+                  <div className="p-2">
+                    <Editable
+                      value="Custom"
+                      ref={filterProgramIDRef}
+                      onClick={() => {
+                        filterProgramIDRef.current.value = '';
+                      }}
+                      placeholder="Paste Program ID"
+                      onKeyDown={(e) => {
+                        if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
+                          toast.warn('Must paste in valid program ID');
+                          filterProgramIDRef.current.value = 'Custom';
+                          filterProgramIDRef.current.blur();
+                          setFilterDropdownShow(false);
+                        }
+                      }}
+                      onPaste={(e) => {
+                        const pastedID = e.clipboardData.getData('Text');
+                        if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                          unsubscribeProgramChanges(net, programID);
+                          subscribeProgramChanges(
+                            net,
+                            programID,
+                            setChangesState
+                          );
+                          setProgramID(pastedID);
+                        } else {
+                          toast.warn(`Invalid program ID: ${pastedID}`);
+                        }
+                        filterProgramIDRef.current.value = 'Custom';
+                        filterProgramIDRef.current.blur();
+                        setFilterDropdownShow(false);
+                      }}
+                    />
+                  </div>
+                </DropdownButton>
+              </OutsideClickHandler>
+            </Dropdown>
+            <Button disabled size="sm" onClick={() => setPausedState(!paused)}>
+              {paused ? 'unpause' : 'pause'}
+            </Button>
+          </ButtonGroup>
+        </ButtonToolbar>
         <span>
           <small className="ms-2 text-secondary">
-            {paused ? (
-              'Paused'
-            ) : (
-              <span>
-                <code className="me-2">{programID}</code>
-                {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
-              </span>
-            )}
+            <span>
+              <code className="me-2">{programID}</code>
+              {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
+            </span>
           </small>
         </span>
       </div>
-      <div
-        onMouseOver={pause}
-        onMouseLeave={unpause}
-        onFocus={pause}
-        onBlur={unpause}
-      >
-        {changes.length > 0 ? (
-          <table className="table table-sm">
+      <div>
+        {displayList.length > 0 ? (
+          <Table striped hover size="sm">
             <tbody>
-              {changes
+              {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
-                .map((change: ProgramAccountChange) => {
-                  const { pubKey } = change;
+                .map((pubKey: string) => {
                   return (
-                    <tr
-                      className={`${
-                        pubKey in importedAccounts ? 'opacity-25' : ''
-                      }`}
-                      key={pubKey}
-                    >
+                    <tr key={pubKey}>
                       <ProgramChange
                         key={pubKey}
+                        pubKey={pubKey}
+                        net={net}
+                        pinned={pinnedAccount[pubKey]}
+                        pinAccount={pinAccount}
                         attemptAccountAdd={attemptAccountAdd}
-                        importedAccounts={importedAccounts}
-                        {...change}
                       />
                     </tr>
                   );
                 })}
             </tbody>
-          </table>
+          </Table>
         ) : (
           <div>
             <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
