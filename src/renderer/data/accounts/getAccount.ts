@@ -1,10 +1,11 @@
 import * as sol from '@solana/web3.js';
-import hexdump from 'hexdump-nodejs';
 import { LRUCache } from 'typescript-lru-cache';
 
 import { AccountInfo } from './accountInfo';
 
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
+
+const hexdump = require('hexdump-nodejs');
 
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 

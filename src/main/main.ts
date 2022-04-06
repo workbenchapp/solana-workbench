@@ -8,22 +8,22 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-import {
-  accounts,
-  getAccount,
-  importAccount,
-  deleteAccount,
-  updateAccountName,
-} from './accounts';
+// import {
+//   accounts,
+//   getAccount,
+//   importAccount,
+//   deleteAccount,
+//   updateAccountName,
+// } from './accounts';
 import fetchAnchorIdl from './anchor';
-import fetchValidatorNetworkInfo from './validatorNetworkInfo';
+// import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
-import wbConfig from './config';
+// import wbConfig from './config';
 
 export default class AppUpdater {
   constructor() {
@@ -47,33 +47,33 @@ ipcMain.on(
         case 'run-validator':
           await runValidator();
           break;
-        case 'accounts':
-          res = await accounts(msg);
-          break;
+        // case 'accounts':
+        //   res = await accounts(msg);
+        //   break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
         case 'fetch-anchor-idl':
           res = await fetchAnchorIdl(msg);
           break;
-        case 'update-account-name':
-          await updateAccountName(msg);
-          break;
-        case 'import-account':
-          await importAccount(msg);
-          break;
-        case 'get-account':
-          res = await getAccount(msg);
-          break;
-        case 'delete-account':
-          await deleteAccount(msg);
-          break;
-        case 'config':
-          res = await wbConfig(msg);
-          break;
-        case 'get-validator-network-info':
-          res = await fetchValidatorNetworkInfo(msg);
-          break;
+        // case 'update-account-name':
+        //   await updateAccountName(msg);
+        //   break;
+        // case 'import-account':
+        //   await importAccount(msg);
+        //   break;
+        // case 'get-account':
+        //   res = await getAccount(msg);
+        //   break;
+        // case 'delete-account':
+        //   await deleteAccount(msg);
+        //   break;
+        // case 'config':
+        //   res = await wbConfig(msg);
+        //   break;
+        // case 'get-validator-network-info':
+        //   res = await fetchValidatorNetworkInfo(msg);
+        //   break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
           break;
