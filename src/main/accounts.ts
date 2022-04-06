@@ -1,7 +1,5 @@
 import * as sol from '@solana/web3.js';
 import fs from 'fs';
-import hexdump from 'hexdump-nodejs';
-import randomart from 'randomart';
 import { netToURL } from '../common/strings';
 import {
   AccountsRequest,
@@ -17,6 +15,9 @@ import {
 import db from './db';
 import { logger } from './logger';
 import { KEY_PATH } from './const';
+
+const hexdump = require('hexdump-nodejs');
+const randomart = require('randomart');
 
 const HEXDUMP_BYTES = 512;
 const AIRDROP_AMOUNT = 100;
