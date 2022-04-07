@@ -14,8 +14,6 @@ export enum NetStatus {
   Starting = 'starting',
 }
 
-export const RANDOMART_W_CH = 17;
-export const RANDOMART_H_CH = 10;
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 

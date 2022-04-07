@@ -150,7 +150,7 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "0.5.4",
-    "@solana/web3.js": "^1.31.0",
+    "@solana/web3.js": "^1.37.1",
     "@teamsupercell/typings-for-css-modules-loader": "^2.5.1",
     "@testing-library/jest-dom": "^5.16.1",
     "@testing-library/react": "^12.1.2",
