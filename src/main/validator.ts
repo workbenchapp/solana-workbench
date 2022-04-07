@@ -31,6 +31,7 @@ const runValidator = async () => {
         --ulimit nofile=1000000 \
         ${DOCKER_IMAGE} \
         solana-test-validator \
+        --dynamic-port-range 10000-10011 \
         --ledger test-ledger \
         --no-bpf-jit \
         --log`
