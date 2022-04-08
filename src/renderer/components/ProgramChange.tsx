@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import * as sol from '@solana/web3.js';
 
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
@@ -24,18 +25,31 @@ export function ProgramChange(props: {
   const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
 
   const updateAccount = useCallback(() => {
+    let ok = false;
     if (pubKey) {
       getAccount(net, pubKey)
         .then((res) => {
           // eslint-disable-next-line promise/always-return
           if (res) {
             setChangeInfo(res);
+            ok = true;
           }
         })
         /* eslint-disable no-console */
         .catch(console.log);
-    } else {
-      setChangeInfo(undefined);
+    }
+    if (!ok) {
+      const offChainAccount: AccountInfo = {
+        net,
+        pubKey,
+        accountId: new sol.PublicKey(pubKey),
+        accountInfo: sol.AccountInfo < Buffer > {},
+        solDelta: 0,
+        count: 0,
+        maxDelta: 0,
+        programID: '',
+      };
+      setChangeInfo(offChainAccount);
     }
   }, [net, pubKey]);
 

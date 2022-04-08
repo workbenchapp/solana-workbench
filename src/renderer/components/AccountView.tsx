@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import * as sol from '@solana/web3.js';
 import { useInterval, useAppSelector } from '../hooks';
 
 import analytics from '../common/analytics';
@@ -37,28 +38,64 @@ const explorerURL = (net: Net, address: string) => {
   }
 };
 
-function AccountView(props: { pubKey: string | undefined }) {
+function AccountView(props: { pubKey: string }) {
   const { pubKey } = props;
   const { net } = useAppSelector(selectValidatorNetworkState);
 
-  const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
-    undefined
-  );
+  if (!pubKey) {
+    pubKey = '12341234123412341234';
+  }
 
-  useInterval(() => {
+  const [account, setSelectedAccountInfo] = useState<AccountInfo>({
+    net,
+    pubKey,
+    accountId: new sol.PublicKey(pubKey),
+    accountInfo: sol.AccountInfo < Buffer > {},
+    solDelta: 0,
+    count: 0,
+    maxDelta: 0,
+    programID: '',
+  });
+
+  const updateAccount = useCallback(() => {
+    let ok = false;
     if (pubKey) {
       getAccount(net, pubKey)
-        .then((a) => setSelectedAccountInfo(a))
+        .then((res) => {
+          // eslint-disable-next-line promise/always-return
+          if (res) {
+            setSelectedAccountInfo(res);
+            ok = true;
+          }
+        })
         /* eslint-disable no-console */
         .catch(console.log);
-    } else {
-      setSelectedAccountInfo(undefined);
     }
-  }, 666);
+    if (!ok) {
+      const offChainAccount: AccountInfo = {
+        net,
+        pubKey,
+        accountId: new sol.PublicKey(pubKey),
+        accountInfo: sol.AccountInfo < Buffer > {},
+        solDelta: 0,
+        count: 0,
+        maxDelta: 0,
+        programID: '',
+      };
+      setSelectedAccountInfo(offChainAccount);
+    }
+  }, [net, pubKey]);
 
-  if (!account) {
-    return <>No account selected</>;
-  }
+  useEffect(() => {
+    updateAccount();
+  }, [net, pubKey, updateAccount]);
+
+  useInterval(() => {
+    updateAccount();
+  }, 666);
+  // if (!account) {
+  //   return <>No account selected</>;
+  // }
   const humanName = getHumanName(account);
   return (
     <Container>
@@ -89,7 +126,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td>
                       <small>
-                        <InlinePK pk={account.accountId.toString()} />
+                        <InlinePK pk={account?.accountId?.toString()} />
                       </small>
                     </td>
                   </tr>

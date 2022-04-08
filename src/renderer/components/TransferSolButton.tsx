@@ -6,10 +6,16 @@ import Form from 'react-bootstrap/Form';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 
-import { transferSol } from '../data/accounts/account';
+import * as web3 from '@solana/web3.js';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
+import { sendSolFromSelectedWallet } from '../data/accounts/account';
+
+// TODO: rename to SendSol (from selected wallet/account)
 function TransferSolPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
+  const { connection } = useConnection();
+  const selectedWallet = useWallet();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
@@ -17,12 +23,11 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
   }
 
   const [sol, setSol] = useState<string>('0.01');
-  const [fromKey, setFromKey] = useState<string>(pubKeyVal);
   const [toKey, setToKey] = useState<string>('');
 
   return (
     <Popover id="popover-basic">
-      <Popover.Header as="h3">Transfer SOL</Popover.Header>
+      <Popover.Header as="h3">Send SOL</Popover.Header>
       <Popover.Body>
         <Form>
           <Form.Group as={Row} className="mb-3" controlId="formSOLAmount">
@@ -42,7 +47,6 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
             </Col>
           </Form.Group>
 
-          {/* TODO: add a switch to&from button */}
           <Form.Group as={Row} className="mb-3" controlId="formFromAccount">
             {/* TODO: these can only be accounts we know the private key for ... */}
             {/* TODO: should be able to edit, paste and select from list populated from accountList */}
@@ -51,10 +55,10 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
             </Form.Label>
             <Col sm={9}>
               <Form.Control
-                type="text"
-                placeholder="Select Account to take the SOL from"
-                value={fromKey}
-                onChange={(e) => setFromKey(e.target.value)}
+                type="disabled"
+                placeholder="SOL comes from SelectedWallet"
+                value={selectedWallet.publicKey?.toString()}
+                // onChange={(e) => setFromKey(e.target.value)}
               />
               <Form.Text className="text-muted" />
             </Col>
@@ -90,11 +94,30 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(transferSol(fromKey, toKey, sol), {
-                    pending: 'Transfer submitted',
-                    success: 'Transfer succeeded 👌',
-                    error: 'Transfer failed 🤯',
-                  });
+                  // const fromPk = new web3.PublicKey(fromKey);
+                  const toPk = new web3.PublicKey(toKey);
+
+                  toast.promise(
+                    sendSolFromSelectedWallet(
+                      connection,
+                      selectedWallet,
+                      toPk,
+                      sol
+                    ),
+                    {
+                      pending: 'Transfer submitted',
+                      success: 'Transfer succeeded 👌',
+                      // error: 'Transfer failed 🤯',
+                      error: {
+                        render({ data }) {
+                          // eslint-disable-next-line no-console
+                          console.log('eror', data);
+                          // When the promise reject, data will contains the error
+                          return 'error';
+                        },
+                      },
+                    }
+                  );
                 }}
               >
                 Submit Transfer
@@ -117,7 +140,7 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
       overlay={TransferSolPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success">Transfer SOL</Button>
+      <Button variant="success">Send SOL</Button>
     </OverlayTrigger>
   );
 }

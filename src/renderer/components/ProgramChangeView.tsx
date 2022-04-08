@@ -9,6 +9,7 @@ import { toast } from 'react-toastify';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useAppSelector, useAppDispatch } from '../hooks';
 import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
@@ -32,7 +33,7 @@ export enum KnownProgramID {
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 }
 
-interface PinnedAccountMap {
+interface AccountMap {
   [pubKey: string]: boolean;
 }
 
@@ -69,17 +70,30 @@ function ProgramChangeView(props: {
   const [paused, setPausedState] = useState<boolean>(false);
 
   const displayList: string[] = []; // list of Keys
-  const pinnedAccount: PinnedAccountMap = {};
+  const displayededAccounts: AccountMap = {};
+  const pinnedAccount: AccountMap = {};
 
   pinnedAccounts.forEach((key: string) => {
     displayList.push(key);
+    displayededAccounts[key] = true;
     pinnedAccount[key] = true;
   });
   changes.forEach((c: AccountInfo) => {
-    if (!(c.pubKey in pinnedAccount)) {
+    if (!(c.pubKey in displayededAccounts)) {
       displayList.push(c.pubKey);
+      displayededAccounts[c.pubKey] = true;
     }
   });
+  // Add the solana wallet's account to the monitored list (if its not already watched.)
+  const { publicKey } = useWallet();
+  if (publicKey) {
+    const pk = publicKey.toString();
+    if (!(pk in displayededAccounts)) {
+      displayList.unshift(pk);
+      displayededAccounts[pk] = true;
+      pinnedAccount[pk] = true;
+    }
+  }
 
   const uniqueAccounts = displayList.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);

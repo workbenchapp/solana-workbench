@@ -25,10 +25,30 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
+import { FC, useMemo } from 'react';
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
+import {
+  LedgerWalletAdapter,
+  PhantomWalletAdapter,
+  SlopeWalletAdapter,
+  TorusWalletAdapter,
+} from '@solana/wallet-adapter-wallets';
+import {
+  WalletModalProvider,
+  WalletMultiButton,
+} from '@solana/wallet-adapter-react-ui';
+import { LocalStorageWalletAdapter } from './wallet-adapter/localstorage';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
+import {
+  netToURL,
+  selectValidatorNetworkState,
+} from './data/ValidatorNetwork/validatorNetworkState';
 
 import { useAppDispatch, useAppSelector } from './hooks';
 import {
@@ -38,9 +58,13 @@ import {
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
+// Default styles that can be overridden by your app
+require('@solana/wallet-adapter-react-ui/styles.css');
+
 // So we can electron
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     electron?: any;
   }
 }
@@ -172,6 +196,7 @@ function Topbar() {
           >
             <TopbarNavItems />
           </Nav>
+          <WalletMultiButton />
           <Form className="d-flex">
             <ValidatorNetwork />
           </Form>
@@ -242,26 +267,54 @@ function AnalyticsBanner() {
   );
 }
 
-function GlobalContainer() {
-  // Note: NavLink is not compatible with react-router-dom's NavLink, so just add the styling
+export const GlobalContainer: FC = () => {
+  // function GlobalContainer() {
+  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
+  // const network = WalletAdapterNetwork.Devnet;
+
+  const validator = useAppSelector(selectValidatorNetworkState);
+  const { net } = validator;
+
+  // You can also provide a custom RPC endpoint.
+  const endpoint = useMemo(() => netToURL(net), [net]);
+
+  // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading --
+  // Only the wallets you configure here will be compiled into your application, and only the dependencies
+  // of wallets that your users connect to will be loaded.
+  const wallets = useMemo(
+    () => [
+      new PhantomWalletAdapter(),
+      new SlopeWalletAdapter(),
+      // new SolflareWalletAdapter({ network }),
+      new TorusWalletAdapter(),
+      new LedgerWalletAdapter(),
+      // new SolletWalletAdapter({ network }),
+      // new SolletExtensionWalletAdapter({ network }),
+      new LocalStorageWalletAdapter({ endpoint }),
+    ],
+    [endpoint]
+  );
+
   return (
     <div className="vh-100">
-      <Topbar />
-      <Sidebar />
-      <Container fluid className="page-content mt-3">
-        <Outlet />
-      </Container>
+      <ConnectionProvider endpoint={endpoint}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <Topbar />
+            <Sidebar />
+            <Container fluid className="page-content mt-3">
+              <Outlet />
+            </Container>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
     </div>
   );
-}
+};
 
 function App() {
   const storedConfig = useAppSelector(selectConfigState);
-  console.log(storedConfig);
   const analyticsConfigSet = `${ConfigKey.AnalyticsEnabled}` in storedConfig;
-  console.log('check', {
-    keyExists: analyticsConfigSet,
-  });
   if (!analyticsConfigSet) {
     return <AnalyticsBanner />;
   }

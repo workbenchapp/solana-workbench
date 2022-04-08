@@ -96,6 +96,7 @@ export const renderData = (account: AccountInfo | undefined) => {
 // TODO: this should look up a persistent key: string map
 export const getHumanName = (key: AccountInfo | sol.PublicKey) => {
   /* eslint-disable no-console */
-  console.log(key);
+  //    console.log(key);
+
   return '';
 };

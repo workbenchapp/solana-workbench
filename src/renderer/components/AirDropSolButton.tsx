@@ -6,15 +6,15 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-import { useAppSelector } from '../hooks';
 
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+import * as web3 from '@solana/web3.js';
+import { useConnection } from '@solana/wallet-adapter-react';
 
 import { airdropSol } from '../data/accounts/account';
 
 function AirDropPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { connection } = useConnection();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
@@ -65,7 +65,8 @@ function AirDropPopover(props: { pubKey: string | undefined }) {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(airdropSol(net, toKey, sol), {
+                  const pk = new web3.PublicKey(toKey);
+                  toast.promise(airdropSol(connection, pk, sol), {
                     pending: 'Airdrop submitted',
                     success: 'Airdrop succeeded 👌',
                     error: 'Airdrop failed 🤯',

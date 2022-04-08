@@ -26,9 +26,9 @@ export const configSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setConfigValue: (
       state,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       action: PayloadAction<{ key: string; value: any }>
     ) => {
       state[action.payload.key] = action.payload.value;

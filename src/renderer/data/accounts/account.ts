@@ -1,33 +1,46 @@
 import * as web3 from '@solana/web3.js';
-// import { struct, u32, ns64 } from '@solana/buffer-layout';
-// import { Buffer } from 'buffer';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
-export async function airdropSol(net: Net, toKey: string, solAmount: string) {
-  const to = new web3.PublicKey(toKey);
-  const sols = parseFloat(solAmount);
-
-  const connection = new web3.Connection(netToURL(net));
-
-  const airdropSignature = await connection.requestAirdrop(
-    to,
-    sols * web3.LAMPORTS_PER_SOL
-  );
-
-  await connection.confirmTransaction(airdropSignature);
-}
-
-export async function transferSol(
-  fromKey: string,
-  toKey: string,
+export async function airdropSol(
+  connection: web3.Connection,
+  toKey: web3.PublicKey,
   solAmount: string
 ) {
-  /* eslint-disable no-console */
-  console.log(
-    `TODO(need to store private keys safely first): transfer ${solAmount} from ${fromKey} to ${toKey}`
+  const lamports = web3.LAMPORTS_PER_SOL * parseFloat(solAmount);
+
+  let signature: web3.TransactionSignature = '';
+  signature = await connection.requestAirdrop(toKey, lamports);
+  await connection.confirmTransaction(signature, 'finalized');
+}
+
+export async function sendSolFromSelectedWallet(
+  connection: web3.Connection,
+  fromKey: WalletContextState,
+  toKey: web3.PublicKey,
+  solAmount: string
+) {
+  const { publicKey, sendTransaction } = fromKey;
+  if (!publicKey) {
+    throw Error('no wallet selected');
+  }
+
+  const lamports = web3.LAMPORTS_PER_SOL * parseFloat(solAmount);
+
+  let signature: web3.TransactionSignature = '';
+
+  const transaction = new web3.Transaction().add(
+    web3.SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: toKey,
+      lamports,
+    })
   );
-  return new Promise((resolve) => setTimeout(resolve, 2000));
+
+  signature = await sendTransaction(transaction, connection);
+
+  await connection.confirmTransaction(signature, 'finalized');
 }
 
 async function createNewAccount(net: Net) {
