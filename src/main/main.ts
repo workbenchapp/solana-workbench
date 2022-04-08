@@ -33,6 +33,59 @@ export default class AppUpdater {
   }
 }
 
+const process = require('process');
+const { Metadata, credentials } = require('@grpc/grpc-js');
+const { NodeSDK } = require('@opentelemetry/sdk-node');
+const {
+  getNodeAutoInstrumentations,
+} = require('@opentelemetry/auto-instrumentations-node');
+const { Resource } = require('@opentelemetry/resources');
+const {
+  SemanticResourceAttributes,
+} = require('@opentelemetry/semantic-conventions');
+const {
+  OTLPTraceExporter,
+} = require('@opentelemetry/exporter-trace-otlp-grpc');
+
+const metadata = new Metadata();
+metadata.set('x-honeycomb-team', 'KEY');
+
+// The Trace Exporter exports the data to Honeycomb and uses
+// the previously-configured metadata and the Honeycomb endpoint.
+const traceExporter = new OTLPTraceExporter({
+  url: 'grpc://api.honeycomb.io:443/',
+  credentials: credentials.createSsl(),
+  metadata,
+});
+
+// The service name is REQUIRED! It is a resource attribute,
+// which means that it will be present on all observability data that your service generates.
+//
+// Your service name will be used as the Service Dataset in Honeycomb, which is where data is stored.
+const sdk = new NodeSDK({
+  resource: new Resource({
+    [SemanticResourceAttributes.SERVICE_NAME]: 'workbench-electron',
+  }),
+  traceExporter,
+
+  // Instrumentations allow you to add auto-instrumentation packages
+  instrumentations: [getNodeAutoInstrumentations()],
+});
+
+sdk
+  .start()
+  .then(() => console.log('Tracing initialized'))
+  .catch((error: Error) => console.log('Error initializing tracing', error));
+
+process.on('SIGTERM', () => {
+  // eslint-disable-next-line promise/catch-or-return
+  sdk
+    .shutdown()
+    .then(() => console.log('Tracing terminated'))
+    .catch((error: Error) => console.log('Error terminating tracing', error))
+    .finally(() => process.exit(0));
+});
+
 let mainWindow: BrowserWindow | null = null;
 const MAX_STRING_LOG_LENGTH = 32;
 
