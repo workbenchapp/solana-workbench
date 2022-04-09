@@ -1,6 +1,6 @@
 import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 function CopyIcon(props: { writeValue: string }) {
