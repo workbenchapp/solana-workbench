@@ -88,6 +88,10 @@ th,
 
 .icon {
   &-interactive {
+    // next two lines copied from bootstrap
+    // p-1 and rounded classes
+    border-radius: 0.25rem !important;
+    padding: 0.25rem !important;
     &:hover {
       background-color: $gray-200;
     }

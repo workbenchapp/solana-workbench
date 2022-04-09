@@ -36,7 +36,7 @@ function CopyIcon(props: { writeValue: string }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           _
         ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
-        className="p-1 icon icon-interactive rounded ms-1"
+        className="icon-interactive ms-1"
       >
         <FontAwesomeIcon className="cursor-pointer" icon={faCopy} />
       </span>
