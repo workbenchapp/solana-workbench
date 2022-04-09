@@ -248,7 +248,7 @@ function GlobalContainer() {
     <div className="vh-100">
       <Topbar />
       <Sidebar />
-      <Container fluid className="pageContent mt-3">
+      <Container fluid className="page-content mt-3">
         <Outlet />
       </Container>
     </div>
