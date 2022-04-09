@@ -9,6 +9,44 @@
 @import '~bootstrap/scss/bootstrap';
 @import '~bootswatch/dist/lux/bootswatch';
 
+$solgreen: #14f195;
+
+:root {
+  --header-height: 3rem;
+  --nav-width: 68px;
+  --first-color: #4723d9;
+  --first-color-light: darkgray;
+  --white-color: lightgray;
+  --body-font: 'Nunito', sans-serif;
+  --normal-font-size: 1rem;
+  --z-fixed: 100;
+}
+
+.text {
+  &-solgreen {
+      color: $solgreen;
+  }
+}
+
+@mixin inline-code() {
+  font-family: $font-family-code;
+  padding: 0.2em 0.4em;
+  border-radius: 6px;
+  background-color: $gray-200;
+  font-weight: 500;
+  color: $body-color;
+  border: 1px solid $gray-400;
+}
+
+code {
+  @include inline-code;
+}
+
+pre code {
+  background-color: $white;
+  border: none;
+}
+
 h1,
 h2,
 h3,
@@ -38,17 +76,6 @@ th,
   }
 }
 
-:root {
-  --header-height: 3rem;
-  --nav-width: 68px;
-  --first-color: #4723d9;
-  --first-color-light: darkgray;
-  --white-color: lightgray;
-  --body-font: 'Nunito', sans-serif;
-  --normal-font-size: 1rem;
-  --z-fixed: 100;
-}
-
 .page-content {
   position: fixed;
   top: 60px;
@@ -57,6 +84,15 @@ th,
   padding-right: 100px;
   scroll-behavior: auto;
   overflow: scroll;
+}
+
+.icon {
+  &-interactive {
+    &:hover {
+      background-color: $gray-200;
+    }
+    cursor: pointer;
+  }
 }
 
 .almost-vh-100 {

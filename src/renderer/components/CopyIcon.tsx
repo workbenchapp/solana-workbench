@@ -26,23 +26,19 @@ function CopyIcon(props: { writeValue: string }) {
       delay={{ show: 250, hide: 0 }}
       overlay={renderCopyTooltip('rootKey')}
     >
-      <span className="p-1 icon rounded">
-        <FontAwesomeIcon
-          className="cursor-pointer"
-          icon={faCopy}
-          onClick={(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            e: React.MouseEvent<SVGSVGElement, MouseEvent>
-          ) => {
-            e.stopPropagation();
-            setCopyTooltipText('Copied!');
-            navigator.clipboard.writeText(writeValue);
-          }}
-          onMouseLeave={(
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            _: React.MouseEvent<SVGSVGElement, MouseEvent> | undefined
-          ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
-        />
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          setCopyTooltipText('Copied!');
+          navigator.clipboard.writeText(writeValue);
+        }}
+        onMouseLeave={(
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          _
+        ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
+        className="p-1 icon icon-interactive rounded ms-1"
+      >
+        <FontAwesomeIcon className="cursor-pointer" icon={faCopy} />
       </span>
     </OverlayTrigger>
   );

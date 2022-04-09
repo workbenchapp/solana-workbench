@@ -64,11 +64,11 @@ function ValidatorNetwork() {
   let statusClass = 'text-danger';
   if (validator.status === NetStatus.Running) {
     statusText = 'Available';
-    statusClass = 'text-success';
+    statusClass = 'text-solgreen';
   }
   const statusDisplay = (
     <span className="badge p-2">
-      <FontAwesomeIcon className={statusClass} icon={faCircle} />
+      <FontAwesomeIcon className={`me-1 ${statusClass}`} icon={faCircle} />
       {statusText}
     </span>
   );
