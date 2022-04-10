@@ -60,10 +60,9 @@ export function ProgramChange(props: {
   return (
     <Container onClick={() => attemptAccountAdd(pubKey, false)}>
       <td onClick={() => pinAccount(pubKey, pinned)}>
-        <FontAwesomeIcon
-          className="me-1"
-          icon={pinned ? faStar : faRegular.faStar}
-        />
+        <span className="icon icon-interactive">
+          <FontAwesomeIcon icon={pinned ? faStar : faRegular.faStar} />
+        </span>
       </td>
 
       <td>

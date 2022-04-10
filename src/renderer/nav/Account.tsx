@@ -71,21 +71,21 @@ function Account() {
       </ButtonToolbar>
 
       <Row className="flex-fill">
-        <Col className="add-border">
+        <Col className="border">
           <ProgramChangeView attemptAccountAdd={attemptAccountAdd} />
         </Col>
-        <Col className="add-border">
+        <Col className="border">
           <Stack className=" almost-vh-100">
-            <Row className="add-border flex-fill">
+            <Row className="border flex-fill">
               <AccountView pubKey={selectedAccountInfo} />
             </Row>
-            <Row className="add-border flex-fill">
+            <Row className="border flex-fill">
               transaction or program details
             </Row>
           </Stack>
         </Col>
       </Row>
-      <Row className="add-border almost-vh-20">
+      <Row className="border almost-vh-20">
         ? console like thing - maybe this is where we emulate the solana/anchor
         cli?
         <LogView />
