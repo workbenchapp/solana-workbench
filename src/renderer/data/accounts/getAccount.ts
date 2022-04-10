@@ -18,13 +18,25 @@ const HEXDUMP_BYTES = 512;
 //       Also use that to decide if we need to do a validator is available check or not - if we're watching changes, then we already know...
 
 const cache = new LRUCache<string, AccountInfo>({
-  maxSize: 100,
-  entryExpirationTimeInMS: 1000,
+  maxSize: 500,
+  entryExpirationTimeInMS: 60000,
 });
+
+export const getAllAccounts = (): AccountInfo[] => {
+  const list: AccountInfo[] = [];
+  for (const v of cache.values()) {
+    list.push(v);
+  }
+  return list;
+};
 
 export const updateCache = (account: AccountInfo) => {
   cache.set(`${account.net}_${account.pubKey}`, account);
 };
+
+export function peekAccount(net: Net, pubKey: string): AccountInfo | null {
+  return cache.peek(`${net}_${pubKey}`);
+}
 
 export async function getAccount(
   net: Net,

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-
+import Container from 'react-bootstrap/Container';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -9,7 +9,11 @@ import { useAppDispatch, useInterval, useAppSelector } from '../hooks';
 import InlinePK from './InlinePK';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
-import { getAccount, truncateLamportAmount } from '../data/accounts/getAccount';
+import {
+  getAccount,
+  truncateLamportAmount,
+  truncateSolAmount,
+} from '../data/accounts/getAccount';
 import {
   Net,
   NetStatus,
@@ -56,18 +60,26 @@ export function ProgramChange(props: {
     updateAccount();
   }, 666);
 
-  const formatSolAmount = (amt: number): string => {
-    if (Math.abs(amt) < 0.01) {
-      return '<0.01';
-    }
-    return Math.abs(amt).toFixed(2);
-  };
+  // if (!change) {
+  //   return <Container key={pubKey}>Loading change for {pubKey}...</Container>;
+  // }
+  //
+  // return (
+  //   <tr key={pubKey} onClick={() => pinAccount(pubKey, false)}>
+  //     <td onClick={() => pinAccount(pubKey, pinned)}>
+  //       <FontAwesomeIcon
+  //         className="me-1"
+  //         icon={pinned ? faStar : faRegular.faStar}
+  //       />
+  //     </td>
+  //   </tr>
+  // );
 
   const showCount = change?.count || 0;
   const showSOL = change
     ? truncateLamportAmount(change)
     : `no account on ${net}`;
-  const showChange = change ? formatSolAmount(change.maxDelta) : 0;
+  const showChange = change ? truncateSolAmount(change.maxDelta) : 0;
 
   return (
     <tr
@@ -84,13 +96,11 @@ export function ProgramChange(props: {
       </td>
       <td>
         <span className="ms-2 rounded p-1">
-          <small className="text-secondary">Max Δ</small>
           <small className="ms-2">{showChange}</small>
         </span>
       </td>
       <td>
         <span className="ms-2 rounded p-1">
-          <small className="text-secondary">{change ? 'SOL' : ''}</small>
           <small className="ms-2">{showSOL}</small>
         </span>
       </td>

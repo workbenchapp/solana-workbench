@@ -1,4 +1,11 @@
-import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import {
+  faFilter,
+  faSpinner,
+  faSortDesc,
+  faUnsorted,
+} from '@fortawesome/free-solid-svg-icons';
+import * as faRegular from '@fortawesome/free-regular-svg-icons';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
@@ -62,6 +69,8 @@ function ProgramChangeView() {
   };
 
   const [changes, setChangesState] = useState<AccountInfo[]>([]);
+  // const [paused, setPausedState] = useState<boolean>(false);
+  const [sortColumn, setSortColumn] = useState<number>(2);
 
   const displayList: string[] = []; // list of Keys
   const pinnedAccount: PinnedAccountMap = {};
@@ -70,6 +79,7 @@ function ProgramChangeView() {
     displayList.push(key);
     pinnedAccount[key] = true;
   });
+
   changes.forEach((c: AccountInfo) => {
     if (!(c.pubKey in pinnedAccount)) {
       displayList.push(c.pubKey);
@@ -87,12 +97,23 @@ function ProgramChangeView() {
     if (status !== NetStatus.Running) {
       return () => {};
     }
-    subscribeProgramChanges(net, programID, setChangesState);
+    function sortFunction(a: AccountInfo, b: AccountInfo) {
+      switch (sortColumn) {
+        case 4: // count
+          return b.count - a.count;
+        case 3: // SOL
+          return b.accountInfo.lamports - a.accountInfo.lamports;
+        case 2: // Max Delta
+        default:
+          return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+      }
+    }
+    subscribeProgramChanges(net, programID, setChangesState, sortFunction);
 
     return () => {
       unsubscribeProgramChanges(net, programID);
     };
-  }, [net, programID, status]);
+  }, [net, programID, status, sortColumn]);
 
   if (status !== NetStatus.Running) {
     return <div>network not available</div>;
@@ -259,6 +280,34 @@ function ProgramChangeView() {
         {displayList.length > 0 ? (
           <Table hover size="sm">
             <tbody>
+              <tr>
+                <th>
+                  {' '}
+                  <FontAwesomeIcon className="me-1" icon={faRegular.faStar} />
+                </th>
+                <th>Address</th>
+                <th onClick={() => setSortColumn(2)}>
+                  Max Δ{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={sortColumn === 2 ? faSortDesc : faUnsorted}
+                  />
+                </th>
+                <th onClick={() => setSortColumn(3)}>
+                  SOL{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={sortColumn === 3 ? faSortDesc : faUnsorted}
+                  />
+                </th>
+                <th onClick={() => setSortColumn(4)}>
+                  Count{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={sortColumn === 4 ? faSortDesc : faUnsorted}
+                  />
+                </th>
+              </tr>
               {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
                 .map((pubKey: string) => {

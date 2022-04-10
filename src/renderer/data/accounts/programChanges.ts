@@ -2,7 +2,7 @@ import * as sol from '@solana/web3.js';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
 import { AccountInfo } from './accountInfo';
-import { updateCache } from './getAccount';
+import { peekAccount, getAllAccounts, updateCache } from './getAccount';
 
 const logger = window.electron.log;
 
@@ -36,7 +36,8 @@ const changeSubscriptions: ChangeSubscriptionMap = {};
 export const subscribeProgramChanges = async (
   net: Net,
   programID: string,
-  setChangesState: (accounts: AccountInfo[]) => void
+  setChangesState: (accounts: AccountInfo[]) => void,
+  sortFunction: (a: AccountInfo, b: AccountInfo) => number
 ) => {
   let programIDPubkey: sol.PublicKey;
   if (programID === sol.SystemProgram.programId.toString()) {
@@ -45,8 +46,6 @@ export const subscribeProgramChanges = async (
     programIDPubkey = new sol.PublicKey(programID);
   }
   let batchLen = 0;
-  // TODO: need to expire entries from it - otherwise, if you leave it running for too long, we blow up.
-  const changeLookupMap: ChangeLookupMap = {};
 
   if (
     !(net in changeSubscriptions) ||
@@ -61,10 +60,10 @@ export const subscribeProgramChanges = async (
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
         let [count, maxDelta, solDelta, prevSolAmount] = [1, 0, 0, 0];
 
-        if (pubKey in changeLookupMap) {
-          ({ count, maxDelta } = changeLookupMap[pubKey]);
-          prevSolAmount =
-            changeLookupMap[pubKey].accountInfo.lamports / sol.LAMPORTS_PER_SOL;
+        const account = peekAccount(net, pubKey);
+        if (account) {
+          ({ count, maxDelta } = account);
+          prevSolAmount = account.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
           solDelta = solAmount - prevSolAmount;
           if (Math.abs(solDelta) > Math.abs(maxDelta)) {
             maxDelta = solDelta;
@@ -85,17 +84,15 @@ export const subscribeProgramChanges = async (
           maxDelta,
           programID,
         };
-        changeLookupMap[pubKey] = programAccountChange;
         batchLen += 1;
 
         updateCache(programAccountChange);
 
         if (batchLen === PROGRAM_CHANGE_MAX_BATCH_SIZES[net]) {
-          // TODO: this kind of sort should really be in the view, not subscription
-          const sortedChanges = Object.values(changeLookupMap);
-          sortedChanges.sort(
-            (a, b) => Math.abs(b.maxDelta) - Math.abs(a.maxDelta)
-          );
+          const sortedChanges = getAllAccounts();
+          if (sortFunction) {
+            sortedChanges.sort((a, b) => sortFunction(a, b));
+          }
 
           if (setChangesState) {
             setChangesState(sortedChanges);
