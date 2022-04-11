@@ -40,6 +40,19 @@ Detailed instructions:
   - Be sure to add `$HOME/.avm/bin` to your PATH to be able to run the installed binaries
 - XCode Command Line Tools (if on OSX)
 
+### Windows (native)
+
+without anchor tooling for now
+
+- [NVM for Windows](https://github.com/coreybutler/nvm-windows)
+- Node (latest version): `nvm install v16.14.0`
+- as Administratory `nvm use 16.14.2`
+- Yarn: `corepack enable`
+- `npm install --legacy-peer-deps`
+- `cd ./release/app/`
+- `npm install --legacy-peer-deps`
+
+
 ## Run
 
 to run:
