@@ -71,6 +71,7 @@ function ProgramChangeView() {
   const [changes, setChangesState] = useState<AccountInfo[]>([]);
   // const [paused, setPausedState] = useState<boolean>(false);
   const [sortColumn, setSortColumn] = useState<number>(2);
+  const [validatorSlot, setValidatorSlot] = useState<number>(0);
 
   const displayList: string[] = []; // list of Keys
   const pinnedAccount: PinnedAccountMap = {};
@@ -108,7 +109,13 @@ function ProgramChangeView() {
           return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
       }
     }
-    subscribeProgramChanges(net, programID, setChangesState, sortFunction);
+    subscribeProgramChanges(
+      net,
+      programID,
+      setChangesState,
+      sortFunction,
+      setValidatorSlot
+    );
 
     return () => {
       unsubscribeProgramChanges(net, programID);
@@ -129,6 +136,12 @@ function ProgramChangeView() {
   return (
     <div>
       <div className="mb-2">
+        <div className="mb-2">
+          <small>
+            <strong>Program Account Changes</strong>:
+            <small>(Validator Slot {validatorSlot})</small>
+          </small>
+        </div>
         <ButtonToolbar aria-label="Toolbar with button groups">
           <ButtonGroup size="sm" className="me-2" aria-label="First group">
             <Dropdown>
@@ -192,7 +205,9 @@ function ProgramChangeView() {
                           subscribeProgramChanges(
                             net,
                             programID,
-                            setChangesState
+                            setChangesState,
+                            undefined,
+                            setValidatorSlot
                           );
                           setProgramID(pastedID);
                         } else {

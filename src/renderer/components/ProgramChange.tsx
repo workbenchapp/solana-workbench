@@ -60,21 +60,6 @@ export function ProgramChange(props: {
     updateAccount();
   }, 666);
 
-  // if (!change) {
-  //   return <Container key={pubKey}>Loading change for {pubKey}...</Container>;
-  // }
-  //
-  // return (
-  //   <tr key={pubKey} onClick={() => pinAccount(pubKey, false)}>
-  //     <td onClick={() => pinAccount(pubKey, pinned)}>
-  //       <FontAwesomeIcon
-  //         className="me-1"
-  //         icon={pinned ? faStar : faRegular.faStar}
-  //       />
-  //     </td>
-  //   </tr>
-  // );
-
   const showCount = change?.count || 0;
   const showSOL = change
     ? truncateLamportAmount(change)

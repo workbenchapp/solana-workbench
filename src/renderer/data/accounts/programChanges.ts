@@ -37,7 +37,8 @@ export const subscribeProgramChanges = async (
   net: Net,
   programID: string,
   setChangesState: (accounts: AccountInfo[]) => void,
-  sortFunction: (a: AccountInfo, b: AccountInfo) => number
+  sortFunction: (a: AccountInfo, b: AccountInfo) => number,
+  setValidatorSlot: (slot: number) => void
 ) => {
   let programIDPubkey: sol.PublicKey;
   if (programID === sol.SystemProgram.programId.toString()) {
@@ -54,7 +55,10 @@ export const subscribeProgramChanges = async (
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onProgramAccountChange(
       programIDPubkey,
-      (info: sol.KeyedAccountInfo /* , ctx: sol.Context */) => {
+      (info: sol.KeyedAccountInfo, ctx: sol.Context) => {
+        if (setValidatorSlot) {
+          setValidatorSlot(ctx.slot);
+        }
         const pubKey = info.accountId.toString();
         logger.silly('programChange', pubKey);
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
