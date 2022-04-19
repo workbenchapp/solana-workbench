@@ -27,7 +27,6 @@ import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
 import { ConfigAction } from 'types/types';
 import { useEffect, useState } from 'react';
-import { select } from 'underscore';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
@@ -39,7 +38,6 @@ import {
   selectConfigState,
   ConfigKey,
   setConfig,
-  ConfigValues,
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
@@ -262,14 +260,11 @@ function App() {
   const config = useAppSelector(selectConfigState);
   const dispatch = useAppDispatch();
 
-  console.log({ config });
-
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;
       switch (method) {
         case 'config':
-          console.log({ configRes: res });
           dispatch(
             setConfig({
               values: res.values,
@@ -287,7 +282,7 @@ function App() {
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, []);
+  }, [dispatch]);
 
   if (config.loading) {
     return <></>;
