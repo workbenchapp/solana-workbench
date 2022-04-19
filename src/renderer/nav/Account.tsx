@@ -48,14 +48,6 @@ function Account() {
     <Stack className="almost-vh-100">
       <ButtonToolbar aria-label="Toolbar with button groups">
         <ButtonGroup size="sm" className="me-2" aria-label="First group">
-          <Button size="sm" disabled>
-            Connect to Wallet
-            {/* ala solana-keygen recover 'prompt://?key=0/0' -o file.json */}
-          </Button>
-          <Button size="sm" disabled>
-            Import account
-            {/** can be just a public key, or both? */}
-          </Button>
           <Button
             onClick={() => {
               toast.promise(createNewAccount(net), {

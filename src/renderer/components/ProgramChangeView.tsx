@@ -63,10 +63,7 @@ function ProgramChangeView(props: {
     }
   };
 
-  // want to check paused before updating changes later,
-  // so we include these together
   const [changes, setChangesState] = useState<AccountInfo[]>([]);
-  const [paused, setPausedState] = useState<boolean>(false);
 
   const displayList: string[] = []; // list of Keys
   const pinnedAccount: PinnedAccountMap = {};
@@ -188,9 +185,6 @@ function ProgramChangeView(props: {
                 </DropdownButton>
               </OutsideClickHandler>
             </Dropdown>
-            <Button disabled size="sm" onClick={() => setPausedState(!paused)}>
-              {paused ? 'unpause' : 'pause'}
-            </Button>
           </ButtonGroup>
         </ButtonToolbar>
         <span>
