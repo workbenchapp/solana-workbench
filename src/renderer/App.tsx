@@ -188,7 +188,7 @@ function Topbar() {
 
 function AnalyticsBanner() {
   const dispatch = useAppDispatch();
-  const [analyticsEnabled, setAnalyticsEnabled] = useState(false);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
 
   return (
     <Container>
@@ -270,7 +270,12 @@ function App() {
       switch (method) {
         case 'config':
           console.log({ configRes: res });
-          dispatch(setConfig(res.values));
+          dispatch(
+            setConfig({
+              values: res.values,
+              loading: false,
+            })
+          );
           break;
         default:
       }
