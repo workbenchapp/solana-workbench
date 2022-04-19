@@ -45,9 +45,9 @@ contextBridge.exposeInMainWorld('electron', {
     // onProgramLog(msg) {
     //   send('get-account', msg);
     // },
-    // config(msg) {
-    //   send('config', msg);
-    // },
+    config(msg) {
+      send('config', msg);
+    },
     // subscribeTransactionLogs(msg) {
     //   send('subscribe-transaction-logs', msg);
     // },
