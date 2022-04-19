@@ -36,11 +36,8 @@ interface PinnedAccountMap {
   [pubKey: string]: boolean;
 }
 
-function ProgramChangeView(props: {
-  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-}) {
+function ProgramChangeView() {
   const dispatch = useAppDispatch();
-  const { attemptAccountAdd } = props;
   const { net } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: I suspect It would be nicer to use a function need to try it..
@@ -198,22 +195,20 @@ function ProgramChangeView(props: {
       </div>
       <div>
         {displayList.length > 0 ? (
-          <Table striped hover size="sm">
+          <Table hover size="sm">
             <tbody>
               {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
                 .map((pubKey: string) => {
                   return (
-                    <tr key={pubKey}>
-                      <ProgramChange
-                        key={pubKey}
-                        pubKey={pubKey}
-                        net={net}
-                        pinned={pinnedAccount[pubKey]}
-                        pinAccount={pinAccount}
-                        attemptAccountAdd={attemptAccountAdd}
-                      />
-                    </tr>
+                    <ProgramChange
+                      selected={pubKey === selectAccounts.selectedAccount}
+                      key={pubKey}
+                      pubKey={pubKey}
+                      net={net}
+                      pinned={pinnedAccount[pubKey]}
+                      pinAccount={pinAccount}
+                    />
                   );
                 })}
             </tbody>

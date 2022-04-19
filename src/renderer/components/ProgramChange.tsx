@@ -4,7 +4,8 @@ import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
-import { useInterval } from '../hooks';
+import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
+import { useAppDispatch, useInterval } from '../hooks';
 
 import InlinePK from './InlinePK';
 
@@ -15,12 +16,12 @@ import { Net } from '../data/ValidatorNetwork/validatorNetworkState';
 export function ProgramChange(props: {
   net: Net;
   pubKey: string;
-  attemptAccountAdd: (pk: string, b: boolean) => void;
   pinned: boolean;
   pinAccount: (pk: string, b: boolean) => void;
+  selected: boolean;
 }) {
-  const { pubKey, net, attemptAccountAdd, pinned, pinAccount } = props;
-
+  const dispatch = useAppDispatch();
+  const { pubKey, selected, net, pinned, pinAccount } = props;
   const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
 
   const updateAccount = useCallback(() => {
@@ -58,13 +59,15 @@ export function ProgramChange(props: {
     return Math.abs(amt).toFixed(2);
   };
   return (
-    <Container onClick={() => attemptAccountAdd(pubKey, false)}>
+    <tr
+      onClick={() => dispatch(setSelected(pubKey))}
+      className={selected ? 'bg-lightblue' : ''}
+    >
       <td onClick={() => pinAccount(pubKey, pinned)}>
         <span className="icon icon-interactive">
           <FontAwesomeIcon icon={pinned ? faStar : faRegular.faStar} />
         </span>
       </td>
-
       <td>
         <InlinePK pk={pubKey} />
       </td>
@@ -85,7 +88,7 @@ export function ProgramChange(props: {
           {change.count}
         </span>
       </td>
-    </Container>
+    </tr>
   );
 }
 

@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import Stack from 'react-bootstrap/Stack';
 import { Button, Col, Row } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -10,38 +8,16 @@ import { toast } from 'react-toastify';
 import AccountView from '../components/AccountView';
 import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
-import { useAppSelector, useAppDispatch } from '../hooks';
+import { useAppSelector } from '../hooks';
 import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
-import {
-  accountsActions,
-  selectAccountsListState,
-} from '../data/SelectedAccountsList/selectedAccountsState';
-import { getAccount } from '../data/accounts/getAccount';
+import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAccountsState';
 import createNewAccount from '../data/accounts/account';
 
 function Account() {
-  const dispatch = useAppDispatch();
   const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
   const accounts = useAppSelector(selectAccountsListState);
   const { selectedAccount } = accounts;
-  const [selectedAccountInfo, setSelectedAccountInfo] = useState<
-    string | undefined
-  >(selectedAccount);
-
-  const attemptAccountAdd = (pubKey: string) => {
-    dispatch(accountsActions.setSelected(pubKey));
-    getAccount(net, pubKey)
-      .then((res) => {
-        // eslint-disable-next-line promise/always-return
-        if (res) {
-          // only add the account if it exists
-          setSelectedAccountInfo(pubKey);
-        }
-      })
-      /* eslint-disable no-console */
-      .catch(console.log);
-  };
 
   // TODO: the borders should eventually be resizable
   return (
@@ -64,12 +40,12 @@ function Account() {
 
       <Row className="flex-fill">
         <Col className="border">
-          <ProgramChangeView attemptAccountAdd={attemptAccountAdd} />
+          <ProgramChangeView />
         </Col>
         <Col className="border">
           <Stack className=" almost-vh-100">
             <Row className="border flex-fill">
-              <AccountView pubKey={selectedAccountInfo} />
+              <AccountView pubKey={selectedAccount} />
             </Row>
             <Row className="border flex-fill">
               transaction or program details
