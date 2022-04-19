@@ -176,3 +176,9 @@ th,
   border-radius: 0rem;
   box-shadow: none;
 }
+
+.bg {
+  &-lightblue {
+    background-color: $blue-100;
+  }
+}

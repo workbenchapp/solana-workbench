@@ -1,7 +1,7 @@
 import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
+import { Dropdown, DropdownButton } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
@@ -36,11 +36,8 @@ interface PinnedAccountMap {
   [pubKey: string]: boolean;
 }
 
-function ProgramChangeView(props: {
-  attemptAccountAdd: (pubKey: string, initializing: boolean) => void;
-}) {
+function ProgramChangeView() {
   const dispatch = useAppDispatch();
-  const { attemptAccountAdd } = props;
   const { net } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: I suspect It would be nicer to use a function need to try it..
@@ -63,10 +60,7 @@ function ProgramChangeView(props: {
     }
   };
 
-  // want to check paused before updating changes later,
-  // so we include these together
   const [changes, setChangesState] = useState<AccountInfo[]>([]);
-  const [paused, setPausedState] = useState<boolean>(false);
 
   const displayList: string[] = []; // list of Keys
   const pinnedAccount: PinnedAccountMap = {};
@@ -188,9 +182,6 @@ function ProgramChangeView(props: {
                 </DropdownButton>
               </OutsideClickHandler>
             </Dropdown>
-            <Button disabled size="sm" onClick={() => setPausedState(!paused)}>
-              {paused ? 'unpause' : 'pause'}
-            </Button>
           </ButtonGroup>
         </ButtonToolbar>
         <span>
@@ -204,22 +195,20 @@ function ProgramChangeView(props: {
       </div>
       <div>
         {displayList.length > 0 ? (
-          <Table striped hover size="sm">
+          <Table hover size="sm">
             <tbody>
               {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
                 .map((pubKey: string) => {
                   return (
-                    <tr key={pubKey}>
-                      <ProgramChange
-                        key={pubKey}
-                        pubKey={pubKey}
-                        net={net}
-                        pinned={pinnedAccount[pubKey]}
-                        pinAccount={pinAccount}
-                        attemptAccountAdd={attemptAccountAdd}
-                      />
-                    </tr>
+                    <ProgramChange
+                      selected={pubKey === selectAccounts.selectedAccount}
+                      key={pubKey}
+                      pubKey={pubKey}
+                      net={net}
+                      pinned={pinnedAccount[pubKey]}
+                      pinAccount={pinAccount}
+                    />
                   );
                 })}
             </tbody>
