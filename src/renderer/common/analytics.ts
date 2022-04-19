@@ -10,7 +10,6 @@ amplitude.getInstance().init(AMPLITUDE_KEY);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const analytics = (event: string, metadata: any) => {
   const storedConfig = store.getState().config.values;
-  console.log({ env: process.env.NODE_ENV, config: storedConfig });
   if (storedConfig) {
     if (process.env.NODE_ENV !== 'development') {
       if (
