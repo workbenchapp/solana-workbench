@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { stat } from 'fs';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
 // eslint-disable-next-line import/no-cycle
