@@ -25,7 +25,7 @@ const analytics = (event: string, metadata: any) => {
   }
 };
 
-analytics('openApp', {}); // TODO: disabled this one as it crashes sometimes
+analytics('openApp', {});
 setInterval(() => {
   analytics('heartbeat', {});
 }, AMPLITUDE_HEARTBEAT_INTERVAL);

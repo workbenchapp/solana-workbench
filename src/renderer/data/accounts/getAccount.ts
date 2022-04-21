@@ -96,6 +96,5 @@ export const renderData = (account: AccountInfo | undefined) => {
 // TODO: this should look up a persistent key: string map
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const getHumanName = (_key: AccountInfo | sol.PublicKey) => {
-  /* eslint-disable no-console */
   return '';
 };
