@@ -15,6 +15,7 @@ import { runValidator, validatorLogs } from './validator';
 //   deleteAccount,
 //   updateAccountName,
 // } from './accounts';
+import wbConfig from './config';
 import fetchAnchorIdl from './anchor';
 // import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
@@ -68,9 +69,9 @@ ipcMain.on(
         // case 'delete-account':
         //   await deleteAccount(msg);
         //   break;
-        // case 'config':
-        //   res = await wbConfig(msg);
-        //   break;
+        case 'config':
+          res = await wbConfig(msg);
+          break;
         // case 'get-validator-network-info':
         //   res = await fetchValidatorNetworkInfo(msg);
         //   break;

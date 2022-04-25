@@ -44,6 +44,9 @@ function ValidatorNetwork() {
       .catch(console.log);
   }, [dispatch, net, validator]);
 
+  const effect = () => {};
+  useEffect(effect, []);
+
   useInterval(() => {
     validatorState(net)
       .then((state) => {

@@ -25,6 +25,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
+import { ConfigAction } from 'types/types';
+import { useEffect, useState } from 'react';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
@@ -35,6 +37,7 @@ import {
   setConfigValue,
   selectConfigState,
   ConfigKey,
+  setConfig,
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
@@ -183,7 +186,7 @@ function Topbar() {
 
 function AnalyticsBanner() {
   const dispatch = useAppDispatch();
-  // const storedConfig = useAppSelector(selectConfigState);
+  const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
 
   return (
     <Container>
@@ -215,24 +218,22 @@ function AnalyticsBanner() {
           className="d-inline-block"
           id="analytics-ok-switch"
           label="Yes, enable telemetry"
-          // checked={analyticsEnabled}
-          // onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
+          checked={analyticsEnabled}
+          onClick={() => setAnalyticsEnabled(!analyticsEnabled)}
         />
         <Button
           className="ms-2"
           variant="primary"
           type="button"
           onClick={() => {
-            document.body.click();
-
             dispatch(
               setConfigValue({ key: ConfigKey.AnalyticsEnabled, value: false })
             );
-            //   window.electron.ipcRenderer.config({
-            //     action: ConfigAction.Set,
-            //     key: ConfigKey.AnalyticsEnabled,
-            //     val: analyticsEnabled ? 'true' : 'false',
-            //   });
+            window.electron.ipcRenderer.config({
+              action: ConfigAction.Set,
+              key: ConfigKey.AnalyticsEnabled,
+              val: analyticsEnabled ? 'true' : 'false',
+            });
           }}
         >
           <span className="ms-1 text-white">OK</span>
@@ -256,13 +257,37 @@ function GlobalContainer() {
 }
 
 function App() {
-  const storedConfig = useAppSelector(selectConfigState);
-  console.log(storedConfig);
-  const analyticsConfigSet = `${ConfigKey.AnalyticsEnabled}` in storedConfig;
-  console.log('check', {
-    keyExists: analyticsConfigSet,
-  });
-  if (!analyticsConfigSet) {
+  const config = useAppSelector(selectConfigState);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const listener = (resp: any) => {
+      const { method, res } = resp;
+      switch (method) {
+        case 'config':
+          dispatch(
+            setConfig({
+              values: res.values,
+              loading: false,
+            })
+          );
+          break;
+        default:
+      }
+    };
+    window.electron.ipcRenderer.on('main', listener);
+    window.electron.ipcRenderer.config({
+      action: ConfigAction.Get,
+    });
+    return () => {
+      window.electron.ipcRenderer.removeListener('main', listener);
+    };
+  }, [dispatch]);
+
+  if (config.loading) {
+    return <></>;
+  }
+  if (config.values && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     return <AnalyticsBanner />;
   }
   return (
