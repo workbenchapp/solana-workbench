@@ -24,6 +24,8 @@ import InlinePK from './InlinePK';
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
 
+const logger = window.electron.log;
+
 const explorerURL = (net: Net, address: string) => {
   switch (net) {
     case Net.Test:
@@ -49,7 +51,7 @@ function AccountView(props: { pubKey: string | undefined }) {
     if (pubKey) {
       getAccount(net, pubKey)
         .then((a) => setSelectedAccountInfo(a))
-        .catch(window.electron.log.info);
+        .catch(logger.info);
     } else {
       setSelectedAccountInfo(undefined);
     }

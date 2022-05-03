@@ -12,6 +12,7 @@ export interface LogSubscriptionMap {
     solConn: sol.Connection;
   };
 }
+const logger = window.electron.log;
 
 // TODO: make this selectable - Return information at the selected commitment level
 //      [possible values: processed, confirmed, finalized]
@@ -60,7 +61,7 @@ function LogView() {
         .then(() => {
           delete logSubscriptions[net];
         })
-        .catch(window.electron.log.info);
+        .catch(logger.info);
     };
   }, [net]);
 

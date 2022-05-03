@@ -4,6 +4,8 @@ import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { updateCache } from './getAccount';
 
+const logger = window.electron.log;
+
 export interface ProgramChangesState {
   changes: AccountInfo[];
   paused: boolean;
@@ -55,7 +57,7 @@ export const subscribeProgramChanges = async (
       programIDPubkey,
       (info: sol.KeyedAccountInfo /* , ctx: sol.Context */) => {
         const pubKey = info.accountId.toString();
-        window.electron.log.silly('programChange', pubKey);
+        logger.silly('programChange', pubKey);
         const solAmount = info.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
         let [count, maxDelta, solDelta, prevSolAmount] = [1, 0, 0, 0];
 
@@ -69,7 +71,7 @@ export const subscribeProgramChanges = async (
           }
           count += 1;
         } else {
-          window.electron.log.silly('new pubKey in programChange', pubKey);
+          logger.silly('new pubKey in programChange', pubKey);
         }
 
         const programAccountChange: AccountInfo = {

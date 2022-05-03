@@ -12,6 +12,8 @@ import { AccountInfo } from '../data/accounts/accountInfo';
 import { getAccount, truncateLamportAmount } from '../data/accounts/getAccount';
 import { Net } from '../data/ValidatorNetwork/validatorNetworkState';
 
+const logger = window.electron.log;
+
 export function ProgramChange(props: {
   net: Net;
   pubKey: string;
@@ -32,7 +34,7 @@ export function ProgramChange(props: {
             setChangeInfo(res);
           }
         })
-        .catch(window.electron.log.info);
+        .catch(logger.info);
     } else {
       setChangeInfo(undefined);
     }

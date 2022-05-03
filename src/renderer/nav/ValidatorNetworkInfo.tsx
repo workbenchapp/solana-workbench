@@ -11,6 +11,8 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
+const logger = window.electron.log;
+
 interface VersionCount {
   [key: string]: number;
 }
@@ -76,7 +78,7 @@ function ValidatorNetworkInfo() {
     // TODO: set a spinner while waiting for response
     fetchValidatorNetworkInfo(url)
       .then((d) => setData(d))
-      .catch(window.electron.log.info);
+      .catch(logger.info);
   }, [validator, url]);
 
   // TODO: maybe show te version spread as a histogram and feature info ala

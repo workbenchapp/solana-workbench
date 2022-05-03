@@ -28,6 +28,8 @@ import {
   selectAccountsListState,
 } from '../data/SelectedAccountsList/selectedAccountsState';
 
+const logger = window.electron.log;
+
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
   SystemProgram = '11111111111111111111111111111111',
@@ -56,7 +58,7 @@ function ProgramChangeView() {
             dispatch(accountsActions.unshift(res));
           }
         })
-        .catch(window.electron.log.info);
+        .catch(logger.info);
     } else {
       dispatch(accountsActions.rm(pubKey));
     }

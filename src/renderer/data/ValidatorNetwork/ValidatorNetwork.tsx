@@ -17,6 +17,8 @@ import {
   selectValidatorNetworkState,
 } from './validatorNetworkState';
 
+const logger = window.electron.log;
+
 const validatorState = async (net: Net): Promise<NetStatus> => {
   let solConn: sol.Connection;
 
@@ -40,7 +42,7 @@ function ValidatorNetwork() {
       .then((state) => {
         return dispatch(setState(state));
       })
-      .catch(window.electron.log.info);
+      .catch(logger.info);
   }, [dispatch, net, validator]);
 
   const effect = () => {};
