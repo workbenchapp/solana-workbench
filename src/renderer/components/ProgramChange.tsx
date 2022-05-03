@@ -48,16 +48,19 @@ export function ProgramChange(props: {
     updateAccount();
   }, 666);
 
-  if (!change) {
-    return <Container key={pubKey}>Loading change for {pubKey}...</Container>;
-  }
-
   const formatSolAmount = (amt: number): string => {
     if (Math.abs(amt) < 0.01) {
       return '<0.01';
     }
     return Math.abs(amt).toFixed(2);
   };
+
+  const showCount = change?.count || 0;
+  const showSOL = change
+    ? truncateLamportAmount(change)
+    : `no account on ${net}`;
+  const showChange = change ? formatSolAmount(change.maxDelta) : 0;
+
   return (
     <tr
       onClick={() => dispatch(setSelected(pubKey))}
@@ -74,18 +77,18 @@ export function ProgramChange(props: {
       <td>
         <span className="ms-2 rounded p-1">
           <small className="text-secondary">Max Δ</small>
-          <small className="ms-2">{formatSolAmount(change.maxDelta)}</small>
+          <small className="ms-2">{showChange}</small>
         </span>
       </td>
       <td>
         <span className="ms-2 rounded p-1">
-          <small className="text-secondary">SOL</small>
-          <small className="ms-2">{truncateLamportAmount(change)}</small>
+          <small className="text-secondary">{change ? 'SOL' : ''}</small>
+          <small className="ms-2">{showSOL}</small>
         </span>
       </td>
       <td>
         <span className="ms-2 badge bg-secondary rounded-pill">
-          {change.count}
+          {showCount}
         </span>
       </td>
     </tr>
