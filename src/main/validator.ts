@@ -1,4 +1,4 @@
-import { ValidatorLogsRequest } from '../types/types';
+import { Net, ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
@@ -43,33 +43,44 @@ const runValidator = async () => {
 };
 
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
-  const { filter } = msg;
+  const { filter, net } = msg;
   const MAX_TAIL_LINES = 10000;
   const MAX_DISPLAY_LINES = 30;
+
+  if (net !== Net.Localhost) {
+    return '';
+  }
 
   // TODO: doing this out of process might be a better fit
   const maxBuffer = 104857600; // 100MB
 
-  if (filter !== '') {
+  let output: string;
+
+  try {
+    if (filter !== '') {
+      const { stderr } = await execAsync(
+        `${DOCKER_PATH} logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
+        { maxBuffer }
+      );
+      const lines = stderr.split('\n').filter((s) => s.match(filter));
+      const matchingLines = lines
+        .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 0))
+        .join('\n');
+      logger.info('Filtered log lookup', {
+        matchLinesLen: matchingLines.length,
+        filterLinesLen: lines.length,
+      });
+      return matchingLines;
+    }
     const { stderr } = await execAsync(
-      `${DOCKER_PATH} logs --tail ${MAX_TAIL_LINES} solana-test-validator`,
+      `${DOCKER_PATH} logs --tail ${MAX_DISPLAY_LINES} solana-test-validator`,
       { maxBuffer }
     );
-    const lines = stderr.split('\n').filter((s) => s.match(filter));
-    const matchingLines = lines
-      .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 0))
-      .join('\n');
-    logger.info('Filtered log lookup', {
-      matchLinesLen: matchingLines.length,
-      filterLinesLen: lines.length,
-    });
-    return matchingLines;
+    return stderr;
+  } catch (error) {
+    output = error as string;
   }
-  const { stderr } = await execAsync(
-    `${DOCKER_PATH} logs --tail ${MAX_DISPLAY_LINES} solana-test-validator`,
-    { maxBuffer }
-  );
-  return stderr;
+  return { output };
 };
 
 export { runValidator, validatorLogs };
