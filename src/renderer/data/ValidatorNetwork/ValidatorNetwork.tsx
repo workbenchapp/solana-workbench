@@ -52,7 +52,9 @@ function ValidatorNetwork() {
       .then((state) => {
         return dispatch(setState(state));
       })
-      .catch(console.log);
+      .catch((err) => {
+        /* it would be nice to have a debug optional log for this */
+      });
   }, 5000);
 
   const netDropdownSelect = (eventKey: string | null) => {

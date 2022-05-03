@@ -23,8 +23,7 @@ const logSubscriptions: LogSubscriptionMap = {};
 
 function LogView() {
   const [logs, setLogs] = useState<string[]>([]);
-  const validator = useAppSelector(selectValidatorNetworkState);
-  const { net } = validator;
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
   useEffect(() => {
     setLogs([]);

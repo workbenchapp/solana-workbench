@@ -10,7 +10,10 @@ import { toast } from 'react-toastify';
 import OutsideClickHandler from 'react-outside-click-handler';
 
 import { useAppSelector, useAppDispatch } from '../hooks';
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+import {
+  selectValidatorNetworkState,
+  NetStatus,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
@@ -38,7 +41,7 @@ interface PinnedAccountMap {
 
 function ProgramChangeView() {
   const dispatch = useAppDispatch();
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: I suspect It would be nicer to use a function need to try it..
   const selectAccounts = useAppSelector(selectAccountsListState);
@@ -82,12 +85,19 @@ function ProgramChangeView() {
   const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
 
   useEffect(() => {
+    if (status !== NetStatus.Running) {
+      return () => {};
+    }
     subscribeProgramChanges(net, programID, setChangesState);
 
     return () => {
       unsubscribeProgramChanges(net, programID);
     };
-  }, [net, programID]);
+  }, [net, programID, status]);
+
+  if (status !== NetStatus.Running) {
+    return <div>network not available</div>;
+  }
 
   const changeFilterDropdownTitle = (
     <>
