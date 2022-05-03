@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Container from 'react-bootstrap/Container';
 import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
 import { useAppDispatch, useInterval } from '../hooks';
 
