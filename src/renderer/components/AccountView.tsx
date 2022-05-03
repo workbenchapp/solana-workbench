@@ -49,8 +49,7 @@ function AccountView(props: { pubKey: string | undefined }) {
     if (pubKey) {
       getAccount(net, pubKey)
         .then((a) => setSelectedAccountInfo(a))
-        /* eslint-disable no-console */
-        .catch(console.log);
+        .catch(window.electron.log.info);
     } else {
       setSelectedAccountInfo(undefined);
     }

@@ -28,7 +28,7 @@ export async function getAccount(
   net: Net,
   pubKey: string
 ): Promise<AccountInfo | undefined> {
-  // logger.info("getAccount", {pubKey});
+  window.electron.log.silly('getAccount', { pubKey });
   const cachedResponse = cache.peek(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
@@ -38,7 +38,7 @@ export async function getAccount(
   const key = new sol.PublicKey(pubKey);
   const solAccount = await solConn.getAccountInfo(key);
 
-  // console.log('getAccountInfo cache miss', solAccount);
+  window.electron.log.silly('getAccountInfo cache miss', solAccount);
   if (solAccount) {
     const response: AccountInfo = {
       accountId: key,

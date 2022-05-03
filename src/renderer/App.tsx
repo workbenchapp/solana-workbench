@@ -260,6 +260,8 @@ function App() {
   const config = useAppSelector(selectConfigState);
   const dispatch = useAppDispatch();
 
+  Object.assign(console, window.electron.log.functions);
+
   useEffect(() => {
     const listener = (resp: any) => {
       const { method, res } = resp;

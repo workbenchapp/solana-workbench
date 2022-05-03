@@ -19,8 +19,7 @@ const analytics = (event: string, metadata: any) => {
         amplitude.getInstance().logEvent(event, metadata);
       }
     } else {
-      // eslint-disable-next-line no-console
-      console.log('analytics event', event);
+      window.electron.log.info('analytics event', event);
     }
   }
 };

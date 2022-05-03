@@ -56,8 +56,7 @@ function ProgramChangeView() {
             dispatch(accountsActions.unshift(res));
           }
         })
-        /* eslint-disable no-console */
-        .catch(console.log);
+        .catch(window.electron.log.info);
     } else {
       dispatch(accountsActions.rm(pubKey));
     }

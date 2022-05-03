@@ -60,8 +60,7 @@ function LogView() {
         .then(() => {
           delete logSubscriptions[net];
         })
-        /* eslint-disable-next-line no-console */
-        .catch(console.log);
+        .catch(window.electron.log.info);
     };
   }, [net]);
 

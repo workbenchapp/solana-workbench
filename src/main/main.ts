@@ -121,15 +121,12 @@ const installExtensions = async () => {
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
   const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-  return (
-    installer
-      .default(
-        extensions.map((name) => installer[name]),
-        forceDownload
-      )
-      /* eslint-disable no-console */
-      .catch(console.log)
-  );
+  return installer
+    .default(
+      extensions.map((name) => installer[name]),
+      forceDownload
+    )
+    .catch(log.info);
 };
 
 const createWindow = async () => {
@@ -205,4 +202,4 @@ app
       if (mainWindow === null) createWindow();
     });
   })
-  .catch(console.log);
+  .catch(log.catchErrors);

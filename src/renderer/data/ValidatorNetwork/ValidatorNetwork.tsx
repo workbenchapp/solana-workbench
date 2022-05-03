@@ -40,8 +40,7 @@ function ValidatorNetwork() {
       .then((state) => {
         return dispatch(setState(state));
       })
-      /* eslint-disable no-console */
-      .catch(console.log);
+      .catch(window.electron.log.info);
   }, [dispatch, net, validator]);
 
   const effect = () => {};

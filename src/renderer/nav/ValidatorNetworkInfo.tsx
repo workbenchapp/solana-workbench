@@ -76,8 +76,7 @@ function ValidatorNetworkInfo() {
     // TODO: set a spinner while waiting for response
     fetchValidatorNetworkInfo(url)
       .then((d) => setData(d))
-      /* eslint-disable no-console */
-      .catch(console.log);
+      .catch(window.electron.log.info);
   }, [validator, url]);
 
   // TODO: maybe show te version spread as a histogram and feature info ala

@@ -23,8 +23,7 @@ export async function transferSol(
   toKey: string,
   solAmount: string
 ) {
-  /* eslint-disable no-console */
-  console.log(
+  window.electron.log.info(
     `TODO(need to store private keys safely first): transfer ${solAmount} from ${fromKey} to ${toKey}`
   );
   return new Promise((resolve) => setTimeout(resolve, 2000));

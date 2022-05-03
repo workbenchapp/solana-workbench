@@ -32,8 +32,7 @@ export function ProgramChange(props: {
             setChangeInfo(res);
           }
         })
-        /* eslint-disable no-console */
-        .catch(console.log);
+        .catch(window.electron.log.info);
     } else {
       setChangeInfo(undefined);
     }
