@@ -54,7 +54,7 @@ function ValidatorNetwork() {
         return dispatch(setState(state));
       })
       .catch((err) => {
-        /* it would be nice to have a debug optional log for this */
+        logger.debug(err);
       });
   }, 5000);
 
