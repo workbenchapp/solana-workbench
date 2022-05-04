@@ -16,6 +16,7 @@ import {
 } from '../data/accounts/getAccount';
 import {
   Net,
+  NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -41,13 +42,16 @@ const explorerURL = (net: Net, address: string) => {
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
   );
 
   useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
     if (pubKey) {
       getAccount(net, pubKey)
         .then((a) => setSelectedAccountInfo(a))
