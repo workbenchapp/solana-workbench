@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
@@ -23,6 +23,12 @@ function AirDropPopover(props: { pubKey: string | undefined }) {
 
   const [sol, setSol] = useState<string>('0.01');
   const [toKey, setToKey] = useState<string>(pubKeyVal);
+
+  useEffect(() => {
+    if (pubKeyVal) {
+      setToKey(pubKeyVal);
+    }
+  }, [pubKeyVal]);
 
   return (
     <Popover id="popover-basic">
