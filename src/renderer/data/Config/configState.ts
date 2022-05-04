@@ -34,6 +34,7 @@ export const configSlice = createSlice({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setConfigValue: (
       state,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       action: PayloadAction<{ key: string; value: any }>
     ) => {
       if (state.values) {

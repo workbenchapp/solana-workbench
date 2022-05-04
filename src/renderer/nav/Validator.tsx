@@ -7,7 +7,6 @@ import { debounce } from 'underscore';
 
 import { useInterval, useAppSelector } from '../hooks';
 import {
-  Net,
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
