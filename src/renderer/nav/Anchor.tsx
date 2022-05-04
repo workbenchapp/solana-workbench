@@ -42,6 +42,13 @@ function Anchor() {
           </InputGroup>
         </div>
       </div>
+      {idl?.error ? (
+        <div className="row">
+          <small>{idl.error?.message}</small>
+        </div>
+      ) : (
+        ''
+      )}
       <div className="row">
         {idl.instructions ? (
           idl.instructions.map((instruction: any) => {

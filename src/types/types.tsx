@@ -30,6 +30,7 @@ export enum ConfigAction {
 
 export type ValidatorLogsRequest = {
   filter: string;
+  net: Net;
 };
 
 export type GetAccountRequest = {
