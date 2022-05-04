@@ -14,7 +14,7 @@ if (process.platform === 'darwin') {
 
 const runValidator = async () => {
   if (!shell.which(DOCKER_PATH)) {
-    console.log('Docker executable not found.');
+    logger.info('Docker executable not found.');
     return;
   }
 
@@ -23,7 +23,7 @@ const runValidator = async () => {
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
-    console.log(e);
+    logger.error(e);
     // TODO: check for image, pull if not present
     await execAsync(
       `${DOCKER_PATH} run \
@@ -79,7 +79,7 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
       const matchingLines = lines
         .slice(Math.max(lines.length - MAX_DISPLAY_LINES, 0))
         .join('\n');
-      logger.info('Filtered log lookup', {
+      logger.debug('Filtered log lookup', {
         matchLinesLen: matchingLines.length,
         filterLinesLen: lines.length,
       });
@@ -91,7 +91,7 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
     );
     return stderr;
   } catch (error) {
-    console.log('catch', error as string);
+    logger.error('catch', error as string);
     return error as string;
   }
 

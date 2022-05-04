@@ -1,5 +1,6 @@
 import { FetchAnchorIDLRequest } from '../types/types';
 import { execAsync, RESOURCES_PATH } from './const';
+import { logger } from './logger';
 
 const fetchAnchorIdl = async (msg: FetchAnchorIDLRequest) => {
   // Anchor doesn't seem to accept a flag for where Anchor.toml is (???)
@@ -11,7 +12,7 @@ const fetchAnchorIdl = async (msg: FetchAnchorIDLRequest) => {
     process.chdir(cwd);
     return JSON.parse(stdout);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return {
       error,
     };
