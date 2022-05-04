@@ -83,11 +83,13 @@ const Validator = () => {
               }, 300)}
             />
           </InputGroup>
-          <pre className="mt-2 pre-scrollable">
-            <code>{validatorLogs}</code>
-          </pre>
         </>
       )}
+      <pre className="mt-2 pre-scrollable">
+        <code>
+          {validatorLogs.output ? validatorLogs.output?.message : validatorLogs}
+        </code>
+      </pre>
     </div>
   );
 };

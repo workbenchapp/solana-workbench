@@ -15,6 +15,7 @@ const runValidator = async () => {
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
+    console.log(e);
     // TODO: check for image, pull if not present
     await execAsync(
       `${DOCKER_PATH} run \
