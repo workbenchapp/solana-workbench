@@ -31,7 +31,7 @@ function LogView() {
     setLogs([]);
 
     if (status !== NetStatus.Running) {
-      return;
+      return () => {};
     }
 
     const solConn = new sol.Connection(netToURL(net));
@@ -68,7 +68,7 @@ function LogView() {
         })
         .catch(logger.info);
     };
-  }, [net]);
+  }, [net, status]);
 
   return (
     <div>
