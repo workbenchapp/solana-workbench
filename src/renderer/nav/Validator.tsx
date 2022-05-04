@@ -21,6 +21,7 @@ const Validator = () => {
     if (validator.status === NetStatus.Running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value || '',
+        net: validator.net,
       });
     }
   }, 5000);
@@ -39,12 +40,12 @@ const Validator = () => {
     window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.validatorLogs({
       filter: '',
-      net: Net.Localhost,
+      net: validator.net,
     });
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, []);
+  }, [validator.net]);
 
   // TODO(nathanleclaire): Don't nest ternary
   return (
@@ -78,6 +79,7 @@ const Validator = () => {
                 if (validator.status === NetStatus.Running) {
                   window.electron.ipcRenderer.validatorLogs({
                     filter: filterRef.current.value || '',
+                    net: validator.net,
                   });
                 }
               }, 300)}
@@ -86,9 +88,7 @@ const Validator = () => {
         </>
       )}
       <pre className="mt-2 pre-scrollable">
-        <code>
-          {validatorLogs.output ? validatorLogs.output?.message : validatorLogs}
-        </code>
+        <code>{validatorLogs}</code>
       </pre>
     </div>
   );

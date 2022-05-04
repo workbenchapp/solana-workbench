@@ -1,3 +1,4 @@
+import * as shell from 'shelljs';
 import { Net, ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
@@ -12,6 +13,13 @@ if (process.platform === 'darwin') {
 }
 
 const runValidator = async () => {
+  if (!shell.which(DOCKER_PATH)) {
+    console.log('Docker executable not found.');
+    return;
+  }
+
+  // TODO: and now test if there's a Docker daemon up
+
   try {
     await execAsync(`${DOCKER_PATH} inspect solana-test-validator`);
   } catch (e) {
@@ -49,13 +57,17 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const MAX_DISPLAY_LINES = 30;
 
   if (net !== Net.Localhost) {
-    return '';
+    return `Cannot show validator container output from ${net}`;
   }
 
   // TODO: doing this out of process might be a better fit
   const maxBuffer = 104857600; // 100MB
 
-  let output: string;
+  if (!shell.which(DOCKER_PATH)) {
+    return 'Docker executable not found.';
+  }
+
+  // TODO: and now test if there's a Docker daemon up
 
   try {
     if (filter !== '') {
@@ -79,9 +91,11 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
     );
     return stderr;
   } catch (error) {
-    output = error as string;
+    console.log('catch', error as string);
+    return error as string;
   }
-  return { output };
+
+  return '';
 };
 
 export { runValidator, validatorLogs };
