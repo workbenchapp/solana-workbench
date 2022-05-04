@@ -99,11 +99,6 @@ function ProgramChangeView() {
   return (
     <div>
       <div className="mb-2">
-        <div className="mb-2">
-          <small>
-            <strong>Program Account Changes</strong>
-          </small>
-        </div>
         <ButtonToolbar aria-label="Toolbar with button groups">
           <ButtonGroup size="sm" className="me-2" aria-label="First group">
             <Dropdown>
