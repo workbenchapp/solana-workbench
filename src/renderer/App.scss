@@ -80,10 +80,8 @@ th,
   position: fixed;
   top: 25px;
   left: 70px;
-  // height: calc(100% - 130px);
   padding-right: 100px;
   scroll-behavior: auto;
-  //overflow: scroll;
   bottom: 15px;
 }
 
@@ -182,6 +180,13 @@ th,
   &-lightblue {
     background-color: $blue-100;
   }
+}
+
+.border-top {
+  border-top: 1px solid #eceeef !important;
+}
+.border-left {
+  border-left: 1px solid #eceeef;
 }
 
 .vscroll {

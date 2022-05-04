@@ -39,21 +39,21 @@ function Account() {
       </ButtonToolbar>
 
       <Row className="flex-fill almost-vh-80">
-        <Col className="border col-md-6 almost-vh-100 vscroll">
+        <Col className="col-md-6 almost-vh-100 vscroll">
           <ProgramChangeView />
         </Col>
-        <Col className="border col-md-6 almost-vh-100 vscroll">
-          <Stack className=" almost-vh-100">
-            <Row className="border flex-fill">
+        <Col className="border-left col-md-6 almost-vh-100 vscroll">
+          <Stack className="almost-vh-100">
+            <Row className="flex-fill">
               <AccountView pubKey={selectedAccount} />
             </Row>
-            <Row className="border flex-fill">
+            <Row className="border-top flex-fill">
               transaction or program details
             </Row>
           </Stack>
         </Col>
       </Row>
-      <Row className="border almost-vh-20">
+      <Row className="border-top almost-vh-20">
         ? console like thing - maybe this is where we emulate the solana/anchor
         cli?
         <LogView />
