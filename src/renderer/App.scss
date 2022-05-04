@@ -80,10 +80,11 @@ th,
   position: fixed;
   top: 25px;
   left: 70px;
-  height: calc(100% - 130px);
+  // height: calc(100% - 130px);
   padding-right: 100px;
   scroll-behavior: auto;
-  overflow: scroll;
+  //overflow: scroll;
+  bottom: 15px;
 }
 
 .icon {

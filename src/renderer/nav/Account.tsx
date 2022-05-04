@@ -39,10 +39,10 @@ function Account() {
       </ButtonToolbar>
 
       <Row className="flex-fill">
-        <Col className="border">
+        <Col className="border col-md-6">
           <ProgramChangeView />
         </Col>
-        <Col className="border">
+        <Col className="border col-md-6">
           <Stack className=" almost-vh-100">
             <Row className="border flex-fill">
               <AccountView pubKey={selectedAccount} />
