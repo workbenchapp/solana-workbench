@@ -42,7 +42,7 @@ function LogView() {
           ];
 
           // utter pseudo-science -- determine max log lines from window size
-          const MAX_DISPLAYED_LOG_LINES = window.innerHeight / 22;
+          const MAX_DISPLAYED_LOG_LINES = (3 * window.innerHeight) / 22;
           if (newLogs.length > MAX_DISPLAYED_LOG_LINES) {
             return newLogs.slice(0, MAX_DISPLAYED_LOG_LINES);
           }
@@ -68,20 +68,15 @@ function LogView() {
 
   return (
     <div>
-      <div className="mb-2">
-        <small>
-          <strong>Stream validator transaction logs ({commitmentLevel})</strong>
-        </small>
-      </div>
-      {logs.length > 0 ? (
-        <pre>
-          <code>{logs.join('\n')}</code>
-        </pre>
-      ) : (
-        <p className="text-secondary">
-          Logs will appear here once transactions are processed.
-        </p>
-      )}
+      <textarea
+        readOnly
+        className="vscroll almost-vh-100 w-100"
+        value={
+          logs.length > 0
+            ? logs.join('\n')
+            : 'Logs will appear here once transactions are processed.'
+        }
+      />
     </div>
   );
 }

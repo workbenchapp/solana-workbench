@@ -22,24 +22,28 @@ function Account() {
   // TODO: the borders should eventually be resizable
   return (
     <Stack className="almost-vh-100">
-      <ButtonToolbar aria-label="Toolbar with button groups">
-        <ButtonGroup size="sm" className="me-2" aria-label="First group">
-          <Button
-            onClick={() => {
-              toast.promise(createNewAccount(net), {
-                pending: 'Account being created',
-                success: 'Account created 👌',
-                error: 'Account creation failed 🤯',
-              });
-            }}
-          >
-            Create Account
-          </Button>
-        </ButtonGroup>
-      </ButtonToolbar>
-
       <Row className="flex-fill almost-vh-80">
         <Col className="col-md-6 almost-vh-100 vscroll">
+          <ButtonToolbar aria-label="Toolbar with button groups">
+            <ButtonGroup size="sm" className="me-2" aria-label="First group">
+              <div className="mb-2">
+                <strong>Program Account Changes</strong>
+              </div>
+            </ButtonGroup>
+            <ButtonGroup size="sm" className="me-2" aria-label="First group">
+              <Button
+                onClick={() => {
+                  toast.promise(createNewAccount(net), {
+                    pending: 'Account being created',
+                    success: 'Account created 👌',
+                    error: 'Account creation failed 🤯',
+                  });
+                }}
+              >
+                Create Account
+              </Button>
+            </ButtonGroup>
+          </ButtonToolbar>
           <ProgramChangeView />
         </Col>
         <Col className="border-left col-md-6 almost-vh-100 vscroll">
@@ -54,8 +58,6 @@ function Account() {
         </Col>
       </Row>
       <Row className="border-top almost-vh-20">
-        ? console like thing - maybe this is where we emulate the solana/anchor
-        cli?
         <LogView />
       </Row>
     </Stack>
