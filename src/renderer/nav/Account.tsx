@@ -38,11 +38,11 @@ function Account() {
         </ButtonGroup>
       </ButtonToolbar>
 
-      <Row className="flex-fill">
-        <Col className="border col-md-6">
+      <Row className="flex-fill almost-vh-80">
+        <Col className="border col-md-6 almost-vh-100 vscroll">
           <ProgramChangeView />
         </Col>
-        <Col className="border col-md-6">
+        <Col className="border col-md-6 almost-vh-100 vscroll">
           <Stack className=" almost-vh-100">
             <Row className="border flex-fill">
               <AccountView pubKey={selectedAccount} />
