@@ -16,6 +16,7 @@ import {
 } from '../data/accounts/getAccount';
 import {
   Net,
+  NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -23,6 +24,8 @@ import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
+
+const logger = window.electron.log;
 
 const explorerURL = (net: Net, address: string) => {
   switch (net) {
@@ -39,18 +42,20 @@ const explorerURL = (net: Net, address: string) => {
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
   );
 
   useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
     if (pubKey) {
       getAccount(net, pubKey)
         .then((a) => setSelectedAccountInfo(a))
-        /* eslint-disable no-console */
-        .catch(console.log);
+        .catch(logger.info);
     } else {
       setSelectedAccountInfo(undefined);
     }

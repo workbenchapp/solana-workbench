@@ -4,6 +4,8 @@ import * as web3 from '@solana/web3.js';
 
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
+const logger = window.electron.log;
+
 export async function airdropSol(net: Net, toKey: string, solAmount: string) {
   const to = new web3.PublicKey(toKey);
   const sols = parseFloat(solAmount);
@@ -23,8 +25,7 @@ export async function transferSol(
   toKey: string,
   solAmount: string
 ) {
-  /* eslint-disable no-console */
-  console.log(
+  logger.info(
     `TODO(need to store private keys safely first): transfer ${solAmount} from ${fromKey} to ${toKey}`
   );
   return new Promise((resolve) => setTimeout(resolve, 2000));
@@ -34,7 +35,6 @@ async function createNewAccount(net: Net) {
   const keypair = web3.Keypair.generate();
   const payer = web3.Keypair.generate();
 
-  // web3.clusterApiUrl(net)
   const connection = new web3.Connection(netToURL(net));
 
   const airdropSignature = await connection.requestAirdrop(

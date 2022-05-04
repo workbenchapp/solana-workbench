@@ -4,6 +4,7 @@ import { ConfigKey } from '../data/Config/configState';
 
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
+const logger = window.electron.log;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 
@@ -19,8 +20,7 @@ const analytics = (event: string, metadata: any) => {
         amplitude.getInstance().logEvent(event, metadata);
       }
     } else {
-      // eslint-disable-next-line no-console
-      console.log('analytics event', event);
+      logger.info('analytics event', event);
     }
   }
 };

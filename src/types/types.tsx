@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import * as sol from '@solana/web3.js';
 
 export enum Net {

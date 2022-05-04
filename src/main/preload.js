@@ -1,10 +1,16 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const log = require('electron-log');
+
+// TODO: make this a setting...
+log.transports.console.level = 'info';
+log.transports.ipc.level = 'debug';
 
 const send = (method, msg) => {
   ipcRenderer.send('main', method, msg);
 };
 
 contextBridge.exposeInMainWorld('electron', {
+  log: log.functions,
   ipcRenderer: {
     runValidator() {
       send('run-validator', {});

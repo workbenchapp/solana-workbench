@@ -5,6 +5,8 @@ import { AccountInfo } from './accountInfo';
 
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
+const logger = window.electron.log;
+
 const hexdump = require('hexdump-nodejs');
 
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
@@ -28,7 +30,7 @@ export async function getAccount(
   net: Net,
   pubKey: string
 ): Promise<AccountInfo | undefined> {
-  // logger.info("getAccount", {pubKey});
+  logger.silly('getAccount', { pubKey });
   const cachedResponse = cache.peek(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
@@ -38,7 +40,7 @@ export async function getAccount(
   const key = new sol.PublicKey(pubKey);
   const solAccount = await solConn.getAccountInfo(key);
 
-  // console.log('getAccountInfo cache miss', solAccount);
+  logger.silly('getAccountInfo cache miss', solAccount);
   if (solAccount) {
     const response: AccountInfo = {
       accountId: key,

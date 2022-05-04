@@ -14,8 +14,7 @@ import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAc
 import createNewAccount from '../data/accounts/account';
 
 function Account() {
-  const validator = useAppSelector(selectValidatorNetworkState);
-  const { net } = validator;
+  const { net } = useAppSelector(selectValidatorNetworkState);
   const accounts = useAppSelector(selectAccountsListState);
   const { selectedAccount } = accounts;
 

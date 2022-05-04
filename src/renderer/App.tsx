@@ -41,6 +41,8 @@ import {
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
+const logger = window.electron.log;
+
 // So we can electron
 declare global {
   interface Window {
@@ -259,6 +261,8 @@ function GlobalContainer() {
 function App() {
   const config = useAppSelector(selectConfigState);
   const dispatch = useAppDispatch();
+
+  Object.assign(console, logger.functions);
 
   useEffect(() => {
     const listener = (resp: any) => {

@@ -10,7 +10,10 @@ import { toast } from 'react-toastify';
 import OutsideClickHandler from 'react-outside-click-handler';
 
 import { useAppSelector, useAppDispatch } from '../hooks';
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+import {
+  selectValidatorNetworkState,
+  NetStatus,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
@@ -25,6 +28,8 @@ import {
   selectAccountsListState,
 } from '../data/SelectedAccountsList/selectedAccountsState';
 
+const logger = window.electron.log;
+
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
   SystemProgram = '11111111111111111111111111111111',
@@ -38,7 +43,7 @@ interface PinnedAccountMap {
 
 function ProgramChangeView() {
   const dispatch = useAppDispatch();
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: I suspect It would be nicer to use a function need to try it..
   const selectAccounts = useAppSelector(selectAccountsListState);
@@ -53,8 +58,7 @@ function ProgramChangeView() {
             dispatch(accountsActions.unshift(res));
           }
         })
-        /* eslint-disable no-console */
-        .catch(console.log);
+        .catch(logger.info);
     } else {
       dispatch(accountsActions.rm(pubKey));
     }
@@ -82,12 +86,19 @@ function ProgramChangeView() {
   const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
 
   useEffect(() => {
+    if (status !== NetStatus.Running) {
+      return () => {};
+    }
     subscribeProgramChanges(net, programID, setChangesState);
 
     return () => {
       unsubscribeProgramChanges(net, programID);
     };
-  }, [net, programID]);
+  }, [net, programID, status]);
+
+  if (status !== NetStatus.Running) {
+    return <div>network not available</div>;
+  }
 
   const changeFilterDropdownTitle = (
     <>

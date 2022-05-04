@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
 import { useAppSelector } from '../hooks';
 import {
+  NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -12,6 +13,7 @@ export interface LogSubscriptionMap {
     solConn: sol.Connection;
   };
 }
+const logger = window.electron.log;
 
 // TODO: make this selectable - Return information at the selected commitment level
 //      [possible values: processed, confirmed, finalized]
@@ -23,11 +25,14 @@ const logSubscriptions: LogSubscriptionMap = {};
 
 function LogView() {
   const [logs, setLogs] = useState<string[]>([]);
-  const validator = useAppSelector(selectValidatorNetworkState);
-  const { net } = validator;
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   useEffect(() => {
     setLogs([]);
+
+    if (status !== NetStatus.Running) {
+      return () => {};
+    }
 
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onLogs(
@@ -61,10 +66,9 @@ function LogView() {
         .then(() => {
           delete logSubscriptions[net];
         })
-        /* eslint-disable-next-line no-console */
-        .catch(console.log);
+        .catch(logger.info);
     };
-  }, [net]);
+  }, [net, status]);
 
   return (
     <div>
