@@ -93,11 +93,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td>
                       <small>
-                        {account ? (
-                          <InlinePK pk={account.accountId.toString()} />
-                        ) : (
-                          'No'
-                        )}
+                        {pubKey ? <InlinePK pk={pubKey} /> : 'None selected'}
                       </small>
                     </td>
                   </tr>
