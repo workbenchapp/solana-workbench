@@ -1,7 +1,7 @@
 {
   "name": "solana-workbench-native-deps",
   "productName": "solana-workbench-native-deps",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Your one stop shop for Solana development",
   "main": "./dist/main/main.js",
   "author": {
