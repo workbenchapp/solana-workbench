@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
 import { useAppSelector } from '../hooks';
 import {
+  NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -24,10 +25,14 @@ const logSubscriptions: LogSubscriptionMap = {};
 
 function LogView() {
   const [logs, setLogs] = useState<string[]>([]);
-  const { net } = useAppSelector(selectValidatorNetworkState);
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   useEffect(() => {
     setLogs([]);
+
+    if (status !== NetStatus.Running) {
+      return;
+    }
 
     const solConn = new sol.Connection(netToURL(net));
     const subscriptionID = solConn.onLogs(

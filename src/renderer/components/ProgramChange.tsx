@@ -4,13 +4,17 @@ import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppDispatch, useInterval } from '../hooks';
+import { useAppDispatch, useInterval, useAppSelector } from '../hooks';
 
 import InlinePK from './InlinePK';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { getAccount, truncateLamportAmount } from '../data/accounts/getAccount';
-import { Net } from '../data/ValidatorNetwork/validatorNetworkState';
+import {
+  Net,
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 
 const logger = window.electron.log;
 
@@ -24,8 +28,12 @@ export function ProgramChange(props: {
   const dispatch = useAppDispatch();
   const { pubKey, selected, net, pinned, pinAccount } = props;
   const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
+  const { status } = useAppSelector(selectValidatorNetworkState);
 
   const updateAccount = useCallback(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
     if (pubKey) {
       getAccount(net, pubKey)
         .then((res) => {
@@ -38,7 +46,7 @@ export function ProgramChange(props: {
     } else {
       setChangeInfo(undefined);
     }
-  }, [net, pubKey]);
+  }, [net, status, pubKey]);
 
   useEffect(() => {
     updateAccount();

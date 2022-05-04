@@ -35,7 +35,6 @@ async function createNewAccount(net: Net) {
   const keypair = web3.Keypair.generate();
   const payer = web3.Keypair.generate();
 
-  // web3.clusterApiUrl(net)
   const connection = new web3.Connection(netToURL(net));
 
   const airdropSignature = await connection.requestAirdrop(
