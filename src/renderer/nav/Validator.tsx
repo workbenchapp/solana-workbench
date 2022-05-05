@@ -7,7 +7,6 @@ import { debounce } from 'underscore';
 
 import { useInterval, useAppSelector } from '../hooks';
 import {
-  Net,
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -21,6 +20,7 @@ const Validator = () => {
     if (validator.status === NetStatus.Running) {
       window.electron.ipcRenderer.validatorLogs({
         filter: filterRef.current.value || '',
+        net: validator.net,
       });
     }
   }, 5000);
@@ -39,12 +39,12 @@ const Validator = () => {
     window.electron.ipcRenderer.on('main', listener);
     window.electron.ipcRenderer.validatorLogs({
       filter: '',
-      net: Net.Localhost,
+      net: validator.net,
     });
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, []);
+  }, [validator.net]);
 
   // TODO(nathanleclaire): Don't nest ternary
   return (
@@ -78,16 +78,17 @@ const Validator = () => {
                 if (validator.status === NetStatus.Running) {
                   window.electron.ipcRenderer.validatorLogs({
                     filter: filterRef.current.value || '',
+                    net: validator.net,
                   });
                 }
               }, 300)}
             />
           </InputGroup>
-          <pre className="mt-2 pre-scrollable">
-            <code>{validatorLogs}</code>
-          </pre>
         </>
       )}
+      <pre className="mt-2 pre-scrollable">
+        <code>{validatorLogs}</code>
+      </pre>
     </div>
   );
 };

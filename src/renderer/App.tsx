@@ -46,6 +46,7 @@ const logger = window.electron.log;
 // So we can electron
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     electron?: any;
   }
 }
@@ -265,6 +266,7 @@ function App() {
   Object.assign(console, logger.functions);
 
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener = (resp: any) => {
       const { method, res } = resp;
       switch (method) {
