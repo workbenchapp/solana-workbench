@@ -61,10 +61,9 @@ function AccountView(props: { pubKey: string | undefined }) {
     }
   }, 666);
 
-  if (!account) {
-    return <>No account selected</>;
-  }
-  const humanName = getHumanName(account);
+  const humanName = account
+    ? getHumanName(account)
+    : 'No on-chain account selected';
   return (
     <Container>
       <ButtonToolbar aria-label="Toolbar with button groups">
@@ -94,7 +93,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td>
                       <small>
-                        <InlinePK pk={account.accountId.toString()} />
+                        {pubKey ? <InlinePK pk={pubKey} /> : 'None selected'}
                       </small>
                     </td>
                   </tr>
@@ -103,7 +102,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                       <small className="text-muted">SOL</small>
                     </td>
                     <td>
-                      <small>{truncateLamportAmount(account)}</small>
+                      <small>
+                        {account ? truncateLamportAmount(account) : 0}
+                      </small>
                     </td>
                   </tr>
                   <tr>
@@ -111,7 +112,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                       <small className="text-muted">Executable</small>
                     </td>
                     <td>
-                      {account.accountInfo.executable ? (
+                      {account?.accountInfo.executable ? (
                         <div>
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
@@ -132,17 +133,24 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td>
                       <small>
-                        <a
-                          onClick={() =>
-                            analytics('clickExplorerLink', { net })
-                          }
-                          href={explorerURL(net, account.accountId.toString())}
-                          target="_blank"
-                          className="sol-link"
-                          rel="noreferrer"
-                        >
-                          Link
-                        </a>
+                        {account ? (
+                          <a
+                            onClick={() =>
+                              analytics('clickExplorerLink', { net })
+                            }
+                            href={explorerURL(
+                              net,
+                              account.accountId.toString()
+                            )}
+                            target="_blank"
+                            className="sol-link"
+                            rel="noreferrer"
+                          >
+                            Link
+                          </a>
+                        ) : (
+                          'No onchain account'
+                        )}
                       </small>
                     </td>
                   </tr>

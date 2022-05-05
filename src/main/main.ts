@@ -56,7 +56,7 @@ ipcMain.on(
           break;
         case 'fetch-anchor-idl':
           res = await fetchAnchorIdl(msg);
-          console.log(`fetchIDL(${msg}: (${res})`);
+          logger.debug(`fetchIDL(${msg}: (${res})`);
           break;
         // case 'update-account-name':
         //   await updateAccountName(msg);
