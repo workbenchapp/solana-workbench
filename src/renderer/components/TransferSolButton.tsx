@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Button from 'react-bootstrap/Button';
@@ -19,6 +19,12 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
   const [sol, setSol] = useState<string>('0.01');
   const [fromKey, setFromKey] = useState<string>(pubKeyVal);
   const [toKey, setToKey] = useState<string>('');
+
+  useEffect(() => {
+    if (pubKeyVal) {
+      setFromKey(pubKeyVal);
+    }
+  }, [pubKeyVal]);
 
   return (
     <Popover id="popover-basic">
