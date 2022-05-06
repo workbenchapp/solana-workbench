@@ -37,14 +37,16 @@ const Validator = () => {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
-    window.electron.ipcRenderer.validatorLogs({
-      filter: '',
-      net: validator.net,
-    });
+    if (validator.status === NetStatus.Running) {
+      window.electron.ipcRenderer.validatorLogs({
+        filter: '',
+        net: validator.net,
+      });
+    }
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
-  }, [validator.net]);
+  }, [validator.net, validator.status]);
 
   // TODO(nathanleclaire): Don't nest ternary
   return (
