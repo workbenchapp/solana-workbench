@@ -6,7 +6,7 @@ Deploy local validators, airdrop tokens, and more with its GUI on OSX and Window
 Solana development may be like chewing glass today, but we’re on a mission to change
 that forever.
 
-## Deps
+## Build dependencies
 
 If you already have Node on your system (we recommend version 17), you can
 install the Node deps like so:
@@ -24,7 +24,7 @@ the app.
 
 Detailed instructions:
 
->> NOTE: see `bin/setup.sh`
+>> NOTE: use `bin/setup.sh` for both Linux and OSX (but don't forget to add XCode cmdline tools for OSX) - it basically does the following
 
 - [Nvm](https://github.com/nvm-sh/nvm): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`
 - Node (latest version): `nvm install v16.14.0`
@@ -38,7 +38,19 @@ Detailed instructions:
   - `cargo install --git https://github.com/project-serum/anchor avm --locked --force`
   - `avm use latest` -- needed on Linux (needs `libudev-dev`)
   - Be sure to add `$HOME/.avm/bin` to your PATH to be able to run the installed binaries
+
+### Linux
+
+to build the rust based tools (`solana` and `anchor` cli's), you will also need to install some native build tools and libraries
+
+```
+sudo apt install build-essential libssl-dev pkg-config
+```
+
+### OSX
+
 - XCode Command Line Tools (if on OSX)
+- on OSX some path stuffing around, so solana and anchor binaries are in the path (for development)
 
 ### Windows (native)
 
@@ -46,7 +58,7 @@ without anchor tooling for now
 
 - [NVM for Windows](https://github.com/coreybutler/nvm-windows)
 - Node (latest version): `nvm install v16.14.0`
-- as Administratory `nvm use 16.14.2`
+- as Administrator `nvm use 16.14.2`
 - Yarn: `corepack enable`
 - `npm install --legacy-peer-deps`
 - `cd ./release/app/`
@@ -65,4 +77,23 @@ Now you're working with Workbench!
 
 ## building a release
 
-To get `npm run package` to run on M1 mac, Node version 16 was required.
+On each platform (OSX, Windows, Linux), run:
+
+```
+git clone https://github.com/workbenchapp/solana-workbench new-release-dir
+cd new-release-dir
+npm install --legacy-peer-deps
+cd ./release/app/
+npm install --legacy-peer-deps
+cd ../..
+npm install --legacy-peer-deps
+npm run package
+```
+
+>> TODO: add the signing steps for each platform.
+
+then copy the appimage/dmg/exe to a staging dir, and run
+
+```
+
+```
