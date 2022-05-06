@@ -1,60 +1,25 @@
-import { useEffect, useState, useCallback } from 'react';
-
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppDispatch, useInterval, useAppSelector } from '../hooks';
+import { useAppDispatch } from '../hooks';
 
 import InlinePK from './InlinePK';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
-import { getAccount, truncateLamportAmount } from '../data/accounts/getAccount';
-import {
-  Net,
-  NetStatus,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
-
-const logger = window.electron.log;
+import { truncateLamportAmount } from '../data/accounts/getAccount';
+import { Net } from '../data/ValidatorNetwork/validatorNetworkState';
 
 export function ProgramChange(props: {
   net: Net;
-  pubKey: string;
   pinned: boolean;
   pinAccount: (pk: string, b: boolean) => void;
   selected: boolean;
+  change: AccountInfo;
 }) {
   const dispatch = useAppDispatch();
-  const { pubKey, selected, net, pinned, pinAccount } = props;
-  const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
-  const { status } = useAppSelector(selectValidatorNetworkState);
-
-  const updateAccount = useCallback(() => {
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    if (pubKey) {
-      getAccount(net, pubKey)
-        .then((res) => {
-          // eslint-disable-next-line promise/always-return
-          if (res) {
-            setChangeInfo(res);
-          }
-        })
-        .catch(logger.info);
-    } else {
-      setChangeInfo(undefined);
-    }
-  }, [net, status, pubKey]);
-
-  useEffect(() => {
-    updateAccount();
-  }, [net, pubKey, updateAccount]);
-
-  useInterval(() => {
-    updateAccount();
-  }, 666);
+  const { selected, net, pinned, pinAccount, change } = props;
+  const { pubKey } = change;
 
   const formatSolAmount = (amt: number): string => {
     if (Math.abs(amt) < 0.01) {

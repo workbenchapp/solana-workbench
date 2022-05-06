@@ -62,21 +62,20 @@ function ProgramChangeView() {
   };
 
   const [changes, setChangesState] = useState<AccountInfo[]>([]);
-
-  const displayList: string[] = []; // list of Keys
   const pinnedAccount: PinnedAccountMap = {};
 
   pinnedAccounts.forEach((key: string) => {
-    displayList.push(key);
     pinnedAccount[key] = true;
   });
-  changes.forEach((c: AccountInfo) => {
-    if (!(c.pubKey in pinnedAccount)) {
-      displayList.push(c.pubKey);
+
+  changes.sort((a): number => {
+    if (pinnedAccount[a.pubKey]) {
+      return -1;
     }
+    return 0;
   });
 
-  const uniqueAccounts = displayList.length;
+  const uniqueAccounts = changes.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
@@ -256,17 +255,18 @@ function ProgramChangeView() {
         </span>
       </div>
       <div>
-        {displayList.length > 0 ? (
+        {changes.length > 0 ? (
           <Table hover size="sm">
             <tbody>
-              {displayList
+              {changes
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
-                .map((pubKey: string) => {
+                .map((change: AccountInfo) => {
+                  const { pubKey } = change;
                   return (
                     <ProgramChange
+                      change={change}
                       selected={pubKey === selectAccounts.selectedAccount}
                       key={pubKey}
-                      pubKey={pubKey}
                       net={net}
                       pinned={pinnedAccount[pubKey]}
                       pinAccount={pinAccount}
