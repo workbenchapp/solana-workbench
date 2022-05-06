@@ -31,68 +31,9 @@ export async function transferSol(
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
 
-async function createNewAccount(net: Net) {
+function createNewAccount() {
   const keypair = web3.Keypair.generate();
-  const payer = web3.Keypair.generate();
-
-  const connection = new web3.Connection(netToURL(net));
-
-  const airdropSignature = await connection.requestAirdrop(
-    payer.publicKey,
-    web3.LAMPORTS_PER_SOL
-  );
-
-  await connection.confirmTransaction(airdropSignature);
-
-  // const allocateTransaction = new web3.Transaction({
-  //     feePayer: payer.publicKey,
-  // })
-  // const keys = [
-  //     { pubkey: keypair.publicKey, isSigner: true, isWritable: true },
-  // ]
-  // const params = { space: 100 }
-
-  // const allocateStruct = {
-  //     index: 8,
-  //     layout: struct([u32('instruction'), ns64('space')]),
-  // }
-
-  // const data = Buffer.alloc(allocateStruct.layout.span)
-  // const layoutFields = { instruction: allocateStruct.index, ...params }
-  // allocateStruct.layout.encode(layoutFields, data)
-
-  // allocateTransaction.add(
-  //     new web3.TransactionInstruction({
-  //         keys,
-  //         programId: web3.SystemProgram.programId,
-  //         data,
-  //     })
-  // )
-
-  // await web3.sendAndConfirmTransaction(connection, allocateTransaction, [
-  //     payer,
-  //     keypair,
-  // ])
-  const instructions = web3.SystemProgram.transfer({
-    fromPubkey: payer.publicKey,
-    toPubkey: keypair.publicKey,
-    lamports: web3.LAMPORTS_PER_SOL / 2,
-  });
-
-  const transaction = new web3.Transaction().add(instructions);
-
-  const signers = [
-    {
-      publicKey: payer.publicKey,
-      secretKey: payer.secretKey,
-    },
-  ];
-
-  /* const confirmation = */ await web3.sendAndConfirmTransaction(
-    connection,
-    transaction,
-    signers
-  );
+  return keypair;
 }
 
 export default createNewAccount;

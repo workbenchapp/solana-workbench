@@ -1,20 +1,28 @@
 import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
+import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
+import Popover from 'react-bootstrap/Popover';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import { Keypair } from '@solana/web3.js';
+import {
+  setSelected,
+  accountsActions,
+  selectAccountsListState,
+} from 'renderer/data/SelectedAccountsList/selectedAccountsState';
 import { useAppSelector, useAppDispatch } from '../hooks';
 import {
   selectValidatorNetworkState,
   NetStatus,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
+import { BASE58_PUBKEY_REGEX } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
 import Editable from './Editable';
@@ -23,12 +31,8 @@ import {
   unsubscribeProgramChanges,
   subscribeProgramChanges,
 } from '../data/accounts/programChanges';
-import {
-  accountsActions,
-  selectAccountsListState,
-} from '../data/SelectedAccountsList/selectedAccountsState';
-
-const logger = window.electron.log;
+import createNewAccount from '../data/accounts/account';
+import WatchAccountButton from './WatchAccountButton';
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -51,14 +55,7 @@ function ProgramChangeView() {
 
   const pinAccount = (pubKey: string, pinned: boolean) => {
     if (!pinned) {
-      getAccount(net, pubKey)
-        .then((res) => {
-          // eslint-disable-next-line promise/always-return
-          if (res) {
-            dispatch(accountsActions.unshift(res));
-          }
-        })
-        .catch(logger.info);
+      dispatch(accountsActions.unshift(pubKey));
     } else {
       dispatch(accountsActions.rm(pubKey));
     }
@@ -84,6 +81,7 @@ function ProgramChangeView() {
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
+  const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -189,10 +187,67 @@ function ProgramChangeView() {
               </OutsideClickHandler>
             </Dropdown>
           </ButtonGroup>
+          <ButtonGroup size="sm" className="me-2" aria-label="First group">
+            <OverlayTrigger
+              // trigger="click"
+              placement="right"
+              show={anchorEl !== undefined}
+              overlay={
+                <Popover className="mb-6" id="popover-basic">
+                  <Popover.Header as="h3">
+                    New Account
+                    <Button
+                      onClick={() => {
+                        setAnchorEl(undefined);
+                      }}
+                    >
+                      X
+                    </Button>
+                  </Popover.Header>
+                  <Popover.Body>
+                    <div>New Account Keypair created.</div>
+                    <div>
+                      Public Key:{' '}
+                      <pre>
+                        <code>{anchorEl?.publicKey.toString()}</code>
+                      </pre>
+                    </div>
+                    <div>
+                      Private key below. Keep it in a <pre>.json</pre> file somewhere safe.
+                    </div>
+                    <textarea
+                      className="vscroll almost-vh-100 w-100"
+                      readOnly
+                      value={`[${anchorEl?.secretKey.toString()}]`}
+                    />
+                    <b>
+                      NOTE: This account does not exist on chain until you
+                      Airdrop or transfer SOL to it.
+                    </b>
+                  </Popover.Body>
+                </Popover>
+              }
+            >
+              <Button
+                onClick={() => {
+                  const newAccount = createNewAccount();
+                  pinAccount(newAccount.publicKey.toString(), false);
+                  dispatch(setSelected(newAccount.publicKey.toString()));
+                  // or do we save it to the backend? and defer getting it back to 0.4.0..
+                  setAnchorEl(newAccount);
+                }}
+              >
+                Create Account
+              </Button>
+            </OverlayTrigger>
+
+            <WatchAccountButton pinAccount={pinAccount} />
+          </ButtonGroup>
         </ButtonToolbar>
         <span>
           <small className="ms-2 text-secondary">
             <span>
+              Program:
               <code className="me-2">{programID}</code>
               {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
             </span>
