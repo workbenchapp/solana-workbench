@@ -213,9 +213,7 @@ function ProgramChangeView() {
                       </pre>
                     </div>
                     <div>
-                      Please save the Private key somewhere safe (can be saved
-                      to a new-id.json file that the solana commandline tool
-                      uses):
+                      Private key below. Keep it in a <pre>.json</pre> file somewhere safe.
                     </div>
                     <textarea
                       className="vscroll almost-vh-100 w-100"
@@ -223,8 +221,8 @@ function ProgramChangeView() {
                       value={`[${anchorEl?.secretKey.toString()}]`}
                     />
                     <b>
-                      NOTE: this account does not exist on chain until you
-                      Airdrop of transfer SOL to it
+                      NOTE: This account does not exist on chain until you
+                      Airdrop or transfer SOL to it.
                     </b>
                   </Popover.Body>
                 </Popover>
