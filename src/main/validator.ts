@@ -5,8 +5,8 @@ import { logger } from './logger';
 
 const DOCKER_IMAGE =
   process.arch === 'arm64'
-    ? 'cryptoworkbench/solana'
-    : 'solanalabs/solana:v1.9.11';
+    ? 'cryptoworkbench/solana:v1.9.20'
+    : 'solanalabs/solana:v1.9.20';
 let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
