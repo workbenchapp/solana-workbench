@@ -23,13 +23,16 @@ const runValidator = async () => {
     const { stdout } = await execAsync(
       `${DOCKER_PATH} inspect solana-test-validator`
     );
-    const running = JSON.parse(stdout)[0].State.Running;
-    if (!running) {
-      logger.error("Container exists, but isn't running. Container logs:");
+    const inspectOutput = JSON.parse(stdout)[0];
+    const running = inspectOutput.State.Running;
+    const exitCode = inspectOutput.State.ExitCode;
+    if (!running && exitCode !== 0) {
+      // eslint-disable-next-line no-console
       console.log(
         await execAsync(`${DOCKER_PATH} logs --tail 100 solana-test-validator`)
       );
-      logger.error('Recreating solana-test-validator...');
+      logger.error('Removing solana-test-validator...');
+      // eslint-disable-next-line no-console
       console.log(await execAsync(`${DOCKER_PATH} rm solana-test-validator`));
       throw new Error("Container exists, but isn't running.");
     }
