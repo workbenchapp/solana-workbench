@@ -31,8 +31,7 @@ import {
   selectAccountsListState,
 } from '../data/SelectedAccountsList/selectedAccountsState';
 import createNewAccount from '../data/accounts/account';
-
-const logger = window.electron.log;
+import WatchAccountButton from './WatchAccountButton';
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -55,14 +54,7 @@ function ProgramChangeView() {
 
   const pinAccount = (pubKey: string, pinned: boolean) => {
     if (!pinned) {
-      getAccount(net, pubKey)
-        .then((res) => {
-          // eslint-disable-next-line promise/always-return
-          if (res) {
-            dispatch(accountsActions.unshift(res));
-          }
-        })
-        .catch(logger.info);
+      dispatch(accountsActions.unshift(pubKey));
     } else {
       dispatch(accountsActions.rm(pubKey));
     }

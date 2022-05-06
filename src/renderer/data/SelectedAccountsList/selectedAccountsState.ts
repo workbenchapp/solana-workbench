@@ -4,7 +4,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // eslint-disable-next-line import/no-cycle
 import { RootState } from '../../store';
 import { loadState } from '../localstorage';
-import { AccountInfo } from '../accounts/accountInfo';
 
 export interface SelectedAccountsList {
   pinnedAccounts: string[]; // list of pubKeys (TODO: should really add net...)
@@ -59,8 +58,8 @@ export const selectedAccountsListSlice = createSlice({
     shift: (state) => {
       state.pinnedAccounts.shift();
     },
-    unshift: (state, action: PayloadAction<AccountInfo>) => {
-      state.pinnedAccounts.unshift(action.payload.pubKey);
+    unshift: (state, action: PayloadAction<string>) => {
+      state.pinnedAccounts.unshift(action.payload);
     },
     rm: (state, action: PayloadAction<string>) => {
       state.pinnedAccounts = state.pinnedAccounts.filter(
