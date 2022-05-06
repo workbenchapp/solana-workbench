@@ -1,8 +1,8 @@
 FROM rust:slim-buster
 
 RUN rustup toolchain install nightly && rustup default nightly && rustup component add rustfmt
-RUN apt-get update && apt-get install -y git pkg-config libudev-dev make libclang-dev clang
-ENV SOLANA_VERSION v1.8.16
+RUN apt-get update && apt-get install -y git pkg-config libudev-dev make libclang-dev clang cmake
+ENV SOLANA_VERSION v1.9.20
 RUN git clone -b $SOLANA_VERSION --depth 1 https://github.com/solana-labs/solana
 WORKDIR solana
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
