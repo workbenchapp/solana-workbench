@@ -213,7 +213,8 @@ function ProgramChangeView() {
                       </pre>
                     </div>
                     <div>
-                      Private key below. Keep it in a <pre>.json</pre> file somewhere safe.
+                      Private Key: (keep this in a <code>.json</code> file
+                      somewhere safe)
                     </div>
                     <textarea
                       className="vscroll almost-vh-100 w-100"
