@@ -59,7 +59,9 @@ const runValidator = async () => {
         --no-bpf-jit \
         --log`
     );
+    return;
   }
+  await execAsync(`${DOCKER_PATH} start solana-test-validator`);
 };
 
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
