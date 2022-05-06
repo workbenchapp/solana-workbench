@@ -12,6 +12,11 @@ import OutsideClickHandler from 'react-outside-click-handler';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import { Keypair } from '@solana/web3.js';
+import {
+  setSelected,
+  accountsActions,
+  selectAccountsListState,
+} from 'renderer/data/SelectedAccountsList/selectedAccountsState';
 import { useAppSelector, useAppDispatch } from '../hooks';
 import {
   selectValidatorNetworkState,
@@ -26,10 +31,6 @@ import {
   unsubscribeProgramChanges,
   subscribeProgramChanges,
 } from '../data/accounts/programChanges';
-import {
-  accountsActions,
-  selectAccountsListState,
-} from '../data/SelectedAccountsList/selectedAccountsState';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
 
@@ -233,7 +234,7 @@ function ProgramChangeView() {
                 onClick={() => {
                   const newAccount = createNewAccount();
                   pinAccount(newAccount.publicKey.toString(), false);
-                  // and now add a popup that tells the user to save the private key for later....
+                  dispatch(setSelected(newAccount.publicKey.toString()));
                   // or do we save it to the backend? and defer getting it back to 0.4.0..
                   setAnchorEl(newAccount);
                 }}
