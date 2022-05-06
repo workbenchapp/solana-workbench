@@ -41,10 +41,10 @@ Detailed instructions:
 
 ### Linux
 
-to build the rust based tools (`solana` and `anchor` cli's), you will also need to install some native build tools and libraries
+to build the rust based tools (`solana` and `anchor` cli's), you will also need to install some native build tools and libraries. (See the Dockerfile for more)
 
 ```
-sudo apt install build-essential libssl-dev pkg-config
+sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-config
 ```
 
 ### OSX
