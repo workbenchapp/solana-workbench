@@ -6,9 +6,12 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
+import Popover from 'react-bootstrap/Popover';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import { Keypair } from '@solana/web3.js';
 import { useAppSelector, useAppDispatch } from '../hooks';
 import {
   selectValidatorNetworkState,
@@ -84,6 +87,7 @@ function ProgramChangeView() {
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
+  const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -188,6 +192,64 @@ function ProgramChangeView() {
                 </DropdownButton>
               </OutsideClickHandler>
             </Dropdown>
+          </ButtonGroup>
+          <ButtonGroup size="sm" className="me-2" aria-label="First group">
+            <OverlayTrigger
+              // trigger="click"
+              placement="right"
+              show={anchorEl !== undefined}
+              overlay={
+                <Popover className="mb-6" id="popover-basic">
+                  <Popover.Header as="h3">
+                    New Account
+                    <Button
+                      onClick={() => {
+                        setAnchorEl(undefined);
+                      }}
+                    >
+                      X
+                    </Button>
+                  </Popover.Header>
+                  <Popover.Body>
+                    <div>New Account Keypair created.</div>
+                    <div>
+                      Public Key:{' '}
+                      <pre>
+                        <code>{anchorEl?.publicKey.toString()}</code>
+                      </pre>
+                    </div>
+                    <div>
+                      Please save the Private key somewhere safe (can be saved
+                      to a new-id.json file that the solana commandline tool
+                      uses):
+                    </div>
+                    <textarea
+                      className="vscroll almost-vh-100 w-100"
+                      readOnly
+                      value={`[${anchorEl?.secretKey.toString()}]`}
+                    />
+                    <b>
+                      NOTE: this account doesn't exist on chain until you
+                      Airdrop of transfer SOL to it
+                    </b>
+                  </Popover.Body>
+                </Popover>
+              }
+            >
+              <Button
+                onClick={() => {
+                  const newAccount = createNewAccount();
+                  pinAccount(newAccount.publicKey.toString(), false);
+                  // and now add a popup that tells the user to save the private key for later....
+                  // or do we save it to the backend? and defer getting it back to 0.4.0..
+                  setAnchorEl(newAccount);
+                }}
+              >
+                Create Account
+              </Button>
+            </OverlayTrigger>
+
+            <WatchAccountButton pinAccount={pinAccount} />
           </ButtonGroup>
         </ButtonToolbar>
         <span>

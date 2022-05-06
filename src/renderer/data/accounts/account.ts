@@ -31,7 +31,12 @@ export async function transferSol(
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
 
-async function createNewAccount(net: Net) {
+function createNewAccount() {
+  const keypair = web3.Keypair.generate();
+  return keypair;
+}
+
+async function createNewAccountWithMagic(net: Net) {
   const keypair = web3.Keypair.generate();
   const payer = web3.Keypair.generate();
 
