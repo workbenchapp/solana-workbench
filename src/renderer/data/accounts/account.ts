@@ -49,35 +49,6 @@ async function createNewAccountWithMagic(net: Net) {
 
   await connection.confirmTransaction(airdropSignature);
 
-  // const allocateTransaction = new web3.Transaction({
-  //     feePayer: payer.publicKey,
-  // })
-  // const keys = [
-  //     { pubkey: keypair.publicKey, isSigner: true, isWritable: true },
-  // ]
-  // const params = { space: 100 }
-
-  // const allocateStruct = {
-  //     index: 8,
-  //     layout: struct([u32('instruction'), ns64('space')]),
-  // }
-
-  // const data = Buffer.alloc(allocateStruct.layout.span)
-  // const layoutFields = { instruction: allocateStruct.index, ...params }
-  // allocateStruct.layout.encode(layoutFields, data)
-
-  // allocateTransaction.add(
-  //     new web3.TransactionInstruction({
-  //         keys,
-  //         programId: web3.SystemProgram.programId,
-  //         data,
-  //     })
-  // )
-
-  // await web3.sendAndConfirmTransaction(connection, allocateTransaction, [
-  //     payer,
-  //     keypair,
-  // ])
   const instructions = web3.SystemProgram.transfer({
     fromPubkey: payer.publicKey,
     toPubkey: keypair.publicKey,

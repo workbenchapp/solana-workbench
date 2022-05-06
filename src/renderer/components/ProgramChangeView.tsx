@@ -1,7 +1,7 @@
 import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton } from 'react-bootstrap';
+import { Dropdown, DropdownButton, Button, Col, Row } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
@@ -30,6 +30,7 @@ import {
   accountsActions,
   selectAccountsListState,
 } from '../data/SelectedAccountsList/selectedAccountsState';
+import createNewAccount from '../data/accounts/account';
 
 const logger = window.electron.log;
 
@@ -255,6 +256,7 @@ function ProgramChangeView() {
         <span>
           <small className="ms-2 text-secondary">
             <span>
+              Program:
               <code className="me-2">{programID}</code>
               {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
             </span>
