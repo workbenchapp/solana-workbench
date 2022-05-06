@@ -5,12 +5,6 @@ import Popover from 'react-bootstrap/Popover';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Row, Col } from 'react-bootstrap';
-import { toast } from 'react-toastify';
-import { useAppSelector } from '../hooks';
-
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
-
-import { airdropSol } from '../data/accounts/account';
 
 function WatchAcountPopover(props: {
   pinAccount: (pk: string, b: boolean) => void;

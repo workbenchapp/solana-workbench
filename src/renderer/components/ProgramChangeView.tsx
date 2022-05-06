@@ -1,7 +1,7 @@
 import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton, Button, Col, Row } from 'react-bootstrap';
+import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
@@ -17,7 +17,7 @@ import {
   selectValidatorNetworkState,
   NetStatus,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { BASE58_PUBKEY_REGEX, getAccount } from '../data/accounts/getAccount';
+import { BASE58_PUBKEY_REGEX } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
 import Editable from './Editable';
@@ -222,7 +222,7 @@ function ProgramChangeView() {
                       value={`[${anchorEl?.secretKey.toString()}]`}
                     />
                     <b>
-                      NOTE: this account doesn't exist on chain until you
+                      NOTE: this account does not exist on chain until you
                       Airdrop of transfer SOL to it
                     </b>
                   </Popover.Body>

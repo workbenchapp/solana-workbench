@@ -36,39 +36,4 @@ function createNewAccount() {
   return keypair;
 }
 
-async function createNewAccountWithMagic(net: Net) {
-  const keypair = web3.Keypair.generate();
-  const payer = web3.Keypair.generate();
-
-  const connection = new web3.Connection(netToURL(net));
-
-  const airdropSignature = await connection.requestAirdrop(
-    payer.publicKey,
-    web3.LAMPORTS_PER_SOL
-  );
-
-  await connection.confirmTransaction(airdropSignature);
-
-  const instructions = web3.SystemProgram.transfer({
-    fromPubkey: payer.publicKey,
-    toPubkey: keypair.publicKey,
-    lamports: web3.LAMPORTS_PER_SOL / 2,
-  });
-
-  const transaction = new web3.Transaction().add(instructions);
-
-  const signers = [
-    {
-      publicKey: payer.publicKey,
-      secretKey: payer.secretKey,
-    },
-  ];
-
-  /* const confirmation = */ await web3.sendAndConfirmTransaction(
-    connection,
-    transaction,
-    signers
-  );
-}
-
 export default createNewAccount;
