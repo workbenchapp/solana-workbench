@@ -270,8 +270,8 @@
     "winston": "^3.3.3"
   },
   "devEngines": {
-    "node": ">=16.14.0",
-    "npm": ">=7.x"
+    "node": ">=16.15.0",
+    "npm": ">=8.x"
   },
   "browserslist": [],
   "prettier": {

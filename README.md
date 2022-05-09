@@ -27,7 +27,7 @@ Detailed instructions:
 >> NOTE: use `bin/setup.sh` for both Linux and OSX (but don't forget to add XCode cmdline tools for OSX) - it basically does the following
 
 - [Nvm](https://github.com/nvm-sh/nvm): `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash`
-- Node (latest version): `nvm install v16.14.0`
+- Node (latest version): `nvm install 16.15.0` and `nvm use 16.15.0`
 - Docker: `curl -o- https://get.docker.com | bash`
 - Yarn: `corepack enable`
 - Anchor CLI must be available in PATH to use Anchor stuff
@@ -57,8 +57,8 @@ sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-con
 without anchor tooling for now
 
 - [NVM for Windows](https://github.com/coreybutler/nvm-windows)
-- Node (latest version): `nvm install v16.14.0`
-- as Administrator `nvm use 16.14.2`
+- Node (latest version): `nvm install 16.15.0`
+- as Administrator `nvm use 16.15.0`
 - Yarn: `corepack enable`
 - `npm install --legacy-peer-deps`
 - `cd ./release/app/`
