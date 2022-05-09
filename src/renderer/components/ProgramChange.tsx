@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-import Container from 'react-bootstrap/Container';
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';

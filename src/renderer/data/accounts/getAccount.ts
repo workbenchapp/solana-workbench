@@ -24,6 +24,7 @@ const cache = new LRUCache<string, AccountInfo>({
 
 export const getAllAccounts = (): AccountInfo[] => {
   const list: AccountInfo[] = [];
+  // eslint-disable-next-line no-restricted-syntax
   for (const v of cache.values()) {
     list.push(v);
   }

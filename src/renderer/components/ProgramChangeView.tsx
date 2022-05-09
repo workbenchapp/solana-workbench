@@ -128,6 +128,7 @@ function ProgramChangeView() {
     return () => {
       unsubscribeProgramChanges(net, programID);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [net, programID, status, sortColumn]);
 
   if (status !== NetStatus.Running) {
