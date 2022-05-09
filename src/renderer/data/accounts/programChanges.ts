@@ -67,11 +67,14 @@ export const subscribeProgramChanges = async (
         const account = peekAccount(net, pubKey);
         if (account) {
           ({ count, maxDelta } = account);
-          prevSolAmount = account.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
-          solDelta = solAmount - prevSolAmount;
-          if (Math.abs(solDelta) > Math.abs(maxDelta)) {
-            maxDelta = solDelta;
+          if (account.accountInfo) {
+            prevSolAmount = account.accountInfo.lamports / sol.LAMPORTS_PER_SOL;
+            solDelta = solAmount - prevSolAmount;
+            if (Math.abs(solDelta) > Math.abs(maxDelta)) {
+              maxDelta = solDelta;
+            }
           }
+
           count += 1;
         } else {
           logger.silly('new pubKey in programChange', pubKey);
