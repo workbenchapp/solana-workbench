@@ -112,7 +112,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                       <small className="text-muted">Executable</small>
                     </td>
                     <td>
-                      {account?.accountInfo.executable ? (
+                      {account?.accountInfo?.executable ? (
                         <div>
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"

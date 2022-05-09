@@ -81,6 +81,22 @@ function ProgramChangeView() {
     pinnedAccount[key] = true;
   });
 
+  function sortFunctionDUP(a: AccountInfo, b: AccountInfo) {
+    switch (sortColumn) {
+      case 4: // count
+        return b.count - a.count;
+      case 3: // SOL
+        if (!b.accountInfo || !a.accountInfo) {
+          return 0;
+        }
+        return b.accountInfo.lamports - a.accountInfo.lamports;
+      case 2: // Max Delta
+      default:
+        return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+    }
+  }
+  changes.sort((a, b) => sortFunctionDUP(a, b));
+
   changes.forEach((c: AccountInfo) => {
     if (!(c.pubKey in pinnedAccount)) {
       displayList.push(c.pubKey);
@@ -99,15 +115,7 @@ function ProgramChangeView() {
       return () => {};
     }
     function sortFunction(a: AccountInfo, b: AccountInfo) {
-      switch (sortColumn) {
-        case 4: // count
-          return b.count - a.count;
-        case 3: // SOL
-          return b.accountInfo.lamports - a.accountInfo.lamports;
-        case 2: // Max Delta
-        default:
-          return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
-      }
+      return sortFunctionDUP(a, b);
     }
     subscribeProgramChanges(
       net,
@@ -315,7 +323,7 @@ function ProgramChangeView() {
                     icon={sortColumn === 3 ? faSortDesc : faUnsorted}
                   />
                 </th>
-                <th onClick={() => setSortColumn(4)}>
+                <th /* onClick={() => setSortColumn(4)} */>
                   Count{' '}
                   <FontAwesomeIcon
                     className="me-1"

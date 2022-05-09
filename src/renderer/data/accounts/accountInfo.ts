@@ -7,7 +7,7 @@ export const ACCOUNTS_NONE_KEY = 'none';
 // TO store Net in the getAccount object, we also need to abstract that into a UID
 // An expanded sol.KeyedAccountInfo
 export interface AccountInfo {
-  accountInfo: sol.AccountInfo<Buffer>;
+  accountInfo: sol.AccountInfo<Buffer> | undefined;
   accountId: sol.PublicKey;
   pubKey: string;
   net?: Net;
