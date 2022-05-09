@@ -1,4 +1,5 @@
 import * as sol from '@solana/web3.js';
+import { MAX_PROGRAM_CHANGES_DISPLAYED } from 'types/types';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
 import { AccountInfo } from './accountInfo';
@@ -98,7 +99,9 @@ export const subscribeProgramChanges = async (
           );
 
           if (setChangesState) {
-            setChangesState(sortedChanges);
+            setChangesState(
+              sortedChanges.slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
+            );
           }
           batchLen = 0;
         }

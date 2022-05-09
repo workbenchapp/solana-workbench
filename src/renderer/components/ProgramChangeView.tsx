@@ -11,7 +11,7 @@ import Popover from 'react-bootstrap/Popover';
 import OutsideClickHandler from 'react-outside-click-handler';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, SystemProgram } from '@solana/web3.js';
 import {
   setSelected,
   accountsActions,
@@ -36,7 +36,6 @@ import WatchAccountButton from './WatchAccountButton';
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
-  SystemProgram = '11111111111111111111111111111111',
   SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 }
@@ -79,7 +78,9 @@ function ProgramChangeView() {
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-  const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
+  const [programID, setProgramID] = useState(
+    SystemProgram.programId.toString()
+  );
   const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
@@ -255,26 +256,55 @@ function ProgramChangeView() {
         </span>
       </div>
       <div>
-        {changes.length > 0 ? (
-          <Table hover size="sm">
-            <tbody>
-              {changes
-                .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
-                .map((change: AccountInfo) => {
-                  const { pubKey } = change;
+        {pinnedAccounts.length > 0 && (
+          <div>
+            <h5>Pinned Accounts</h5>
+            <Table hover size="sm">
+              <tbody>
+                {pinnedAccounts.map((pubKey: string) => {
                   return (
                     <ProgramChange
-                      change={change}
+                      change={undefined}
                       selected={pubKey === selectAccounts.selectedAccount}
                       key={pubKey}
                       net={net}
-                      pinned={pinnedAccount[pubKey]}
+                      pubKey={pubKey}
+                      pinned
                       pinAccount={pinAccount}
                     />
                   );
                 })}
-            </tbody>
-          </Table>
+              </tbody>
+            </Table>
+          </div>
+        )}
+        {changes.length > 0 ? (
+          <div>
+            <h5>Account Changes</h5>
+            <Table hover size="sm">
+              <tbody>
+                {changes
+                  .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
+                  .filter((change: AccountInfo) => {
+                    return !(change.pubKey in pinnedAccount);
+                  })
+                  .map((change: AccountInfo) => {
+                    const { pubKey } = change;
+                    return (
+                      <ProgramChange
+                        change={change}
+                        selected={pubKey === selectAccounts.selectedAccount}
+                        key={pubKey}
+                        net={net}
+                        pubKey={pubKey}
+                        pinned={false}
+                        pinAccount={pinAccount}
+                      />
+                    );
+                  })}
+              </tbody>
+            </Table>
+          </div>
         ) : (
           <div>
             <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />
