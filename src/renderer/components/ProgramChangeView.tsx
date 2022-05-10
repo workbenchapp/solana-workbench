@@ -133,9 +133,11 @@ function ProgramChangeView() {
     if (status !== NetStatus.Running) {
       return () => {};
     }
+    setDisplayList([]);
     subscribeProgramChanges(net, programID, setValidatorSlot);
 
     return () => {
+      setDisplayList([]);
       unsubscribeProgramChanges(net, programID);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

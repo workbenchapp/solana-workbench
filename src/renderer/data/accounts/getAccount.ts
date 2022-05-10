@@ -145,10 +145,12 @@ export function GetTopAccounts(
   const keys: AccountInfo[] = [];
   // eslint-disable-next-line no-restricted-syntax
   for (const key of cache.keys()) {
-    // eslint-disable-next-line no-await-in-loop
-    const account = cache.peek(key);
-    if (account && account.accountInfo && account.accountInfo?.lamports > 0) {
-      keys.push(account);
+    if (key.startsWith(net)) {
+      // eslint-disable-next-line no-await-in-loop
+      const account = cache.peek(key);
+      if (account && account.accountInfo && account.accountInfo?.lamports > 0) {
+        keys.push(account);
+      }
     }
   }
   // logger.info('sorting cached accounts', keys.length);
