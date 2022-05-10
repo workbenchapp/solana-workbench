@@ -57,6 +57,7 @@ export async function getAccount(
   const solAccount = await solConn.getAccountInfo(key);
 
   logger.silly('getAccountInfo cache miss', pubKey, solAccount);
+  // TODO: these should not be made individually, instead, toss them on a list, and make getMultipleAccounts call once every 333mS or something
   //  if (solAccount) {
   const response: AccountInfo = {
     accountId: key,
