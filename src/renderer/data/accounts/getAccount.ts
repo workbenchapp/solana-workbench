@@ -46,7 +46,7 @@ export async function getAccount(
   net: Net,
   pubKey: string
 ): Promise<AccountInfo | undefined> {
-  logger.silly('getAccount', { pubKey });
+  // logger.silly('getAccount', { pubKey });
   const cachedResponse = cache.get(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
@@ -116,3 +116,49 @@ export const renderData = (account: AccountInfo | undefined) => {
 export const getHumanName = (_key: AccountInfo | sol.PublicKey) => {
   return '';
 };
+
+export function getAccountNoWait(
+  net: Net,
+  pubKey: string
+): AccountInfo | undefined {
+  // logger.silly('getAccount', { pubKey });
+  const cachedResponse = cache.peek(`${net}_${pubKey}`);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+  return undefined;
+}
+
+// Please note, yes, this is the shittest way to do sorting, but that's not the primary bottleneck
+export function GetTopAccounts(
+  net: Net,
+  count: number,
+  sortFunction: (a: AccountInfo, b: AccountInfo) => number
+): string[] {
+  const top: string[] = [];
+
+  // top.push('9u5DkG65FkxkjzP84JyuhfA7PhZB2SVxMKev4yVLjAd7');
+  // 8FjV5PXabcMVuWnCtwrwiaSZHEix6FNrR48AU1zWbxjZ
+
+  // logger.info('cached size', cache.size);
+
+  const keys: AccountInfo[] = [];
+  // eslint-disable-next-line no-restricted-syntax
+  for (const key of cache.keys()) {
+    // eslint-disable-next-line no-await-in-loop
+    const account = cache.peek(key);
+    if (account && account.accountInfo && account.accountInfo?.lamports > 0) {
+      keys.push(account);
+    }
+  }
+  // logger.info('sorting cached accounts', keys.length);
+  keys.sort(sortFunction);
+  // eslint-disable-next-line no-restricted-syntax
+  for (const account of keys.slice(0, count - 1)) {
+    // logger.info('push', account.pubKey);
+
+    top.push(account.pubKey);
+  }
+
+  return top;
+}

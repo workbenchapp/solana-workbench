@@ -24,12 +24,15 @@ import {
   accountsActions,
   selectAccountsListState,
 } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppSelector, useAppDispatch } from '../hooks';
+import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 import {
   selectValidatorNetworkState,
   NetStatus,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { BASE58_PUBKEY_REGEX } from '../data/accounts/getAccount';
+import {
+  BASE58_PUBKEY_REGEX,
+  GetTopAccounts,
+} from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
 import Editable from './Editable';
@@ -40,6 +43,8 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
+
+const logger = window.electron.log;
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -68,18 +73,11 @@ function ProgramChangeView() {
     }
   };
 
-  const [changes, setChangesState] = useState<AccountInfo[]>([]);
+  const [displayList, setDisplayList] = useState<string[]>([]);
   // const [paused, setPausedState] = useState<boolean>(false);
   const [sortColumn, setSortColumn] = useState<number>(2);
   const [validatorSlot, setValidatorSlot] = useState<number>(0);
-
-  const displayList: string[] = []; // list of Keys
-  const pinnedAccount: PinnedAccountMap = {};
-
-  pinnedAccounts.forEach((key: string) => {
-    displayList.push(key);
-    pinnedAccount[key] = true;
-  });
+  const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
 
   function sortFunctionDUP(a: AccountInfo, b: AccountInfo) {
     switch (sortColumn) {
@@ -95,13 +93,34 @@ function ProgramChangeView() {
         return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
     }
   }
-  changes.sort((a, b) => sortFunctionDUP(a, b));
 
-  changes.forEach((c: AccountInfo) => {
-    if (!(c.pubKey in pinnedAccount)) {
-      displayList.push(c.pubKey);
+  useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
     }
-  });
+    const pinMap: PinnedAccountMap = {};
+
+    const showKeys: string[] = []; // list of Keys
+    pinnedAccounts.forEach((key: string) => {
+      showKeys.push(key);
+      pinMap[key] = true;
+    });
+
+    const changes = GetTopAccounts(
+      net,
+      MAX_PROGRAM_CHANGES_DISPLAYED,
+      sortFunctionDUP
+    );
+
+    // logger.info('GetTopAccounts', changes);
+    changes.forEach((c: string) => {
+      if (!(c in pinnedAccount)) {
+        showKeys.push(c);
+      }
+    });
+    setPinnedAccount(pinMap);
+    setDisplayList(showKeys);
+  }, 666);
 
   const uniqueAccounts = displayList.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
@@ -114,22 +133,13 @@ function ProgramChangeView() {
     if (status !== NetStatus.Running) {
       return () => {};
     }
-    function sortFunction(a: AccountInfo, b: AccountInfo) {
-      return sortFunctionDUP(a, b);
-    }
-    subscribeProgramChanges(
-      net,
-      programID,
-      setChangesState,
-      sortFunction,
-      setValidatorSlot
-    );
+    subscribeProgramChanges(net, programID, setValidatorSlot);
 
     return () => {
       unsubscribeProgramChanges(net, programID);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [net, programID, status, sortColumn]);
+  }, [net, programID, status]);
 
   if (status !== NetStatus.Running) {
     return <div>network not available</div>;
@@ -214,8 +224,6 @@ function ProgramChangeView() {
                           subscribeProgramChanges(
                             net,
                             programID,
-                            setChangesState,
-                            undefined,
                             setValidatorSlot
                           );
                           setProgramID(pastedID);
@@ -324,7 +332,7 @@ function ProgramChangeView() {
                     icon={sortColumn === 3 ? faSortDesc : faUnsorted}
                   />
                 </th>
-                <th /* onClick={() => setSortColumn(4)} */>
+                <th onClick={() => setSortColumn(4)}>
                   Count{' '}
                   <FontAwesomeIcon
                     className="me-1"
