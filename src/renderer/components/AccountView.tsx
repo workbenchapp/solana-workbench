@@ -141,7 +141,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                   </tr>
                   <tr>
                     <td>
-                      <small className="text-muted">Pubkey</small>
+                      <small className="text-muted">Address</small>
                     </td>
                     <td>
                       <small>
@@ -149,6 +149,22 @@ function AccountView(props: { pubKey: string | undefined }) {
                       </small>
                     </td>
                   </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Assigned Program Id</small>
+                    </td>
+                    <td>
+                      <small>
+                        --{account?.programID}--
+                        {account ? (
+                          <InlinePK pk={account.programID} />
+                        ) : (
+                          'Not on chain'
+                        )}
+                      </small>
+                    </td>
+                  </tr>
+
                   <tr>
                     <td>
                       <small className="text-muted">SOL</small>
