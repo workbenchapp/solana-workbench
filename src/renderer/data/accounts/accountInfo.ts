@@ -7,7 +7,7 @@ export const ACCOUNTS_NONE_KEY = 'none';
 // TO store Net in the getAccount object, we also need to abstract that into a UID
 // An expanded sol.KeyedAccountInfo
 export interface AccountInfo {
-  accountInfo: sol.AccountInfo<Buffer> | null;
+  accountInfo: sol.AccountInfo<Buffer | sol.ParsedAccountData> | null;
   accountId: sol.PublicKey;
   pubKey: string;
   net?: Net;
@@ -17,5 +17,4 @@ export interface AccountInfo {
   count: number; // count tracks how often this account has been seen
   solDelta: number; // difference between last change amount and this one
   maxDelta: number; // maxDelta represents the max change in SOL seen during session
-  programID: string;
 }

@@ -1,5 +1,7 @@
 import * as sol from '@solana/web3.js';
 import hexdump from 'hexdump-nodejs';
+import * as metaplex from '@metaplex/js';
+
 import { LRUCache } from 'typescript-lru-cache';
 import { logger } from '@/common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
@@ -36,6 +38,10 @@ export function peekAccount(net: Net, pubKey: string): AccountInfo | null {
   return cache.peek(`${net}_${pubKey}`);
 }
 
+export function forceRequestAccount(net: Net, pubKey: string) {
+  cache.delete(`${net}_${pubKey}`);
+}
+
 // This will always use, and update the lastUsed time any account in the cache.
 // if you absoluetly need to current latest, don't use this function :)
 // it is written to avoid RPC requests if at all possible, and is used in conjunction with the programChanges subscriptions
@@ -51,26 +57,89 @@ export async function getAccount(
 
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
-  const solAccount = await solConn.getAccountInfo(key);
+  // const solAccount = await solConn.getAccountInfo(key);
+  const solAccount = await solConn.getParsedAccountInfo(key);
 
   logger.silly('getAccountInfo cache miss', pubKey, solAccount);
   // TODO: these should not be made individually, instead, toss them on a list, and make getMultipleAccounts call once every 333mS or something
   //  if (solAccount) {
   const response: AccountInfo = {
     accountId: key,
-    accountInfo: solAccount,
-    pubKey: key.toString(),
+    accountInfo: solAccount.value,
+    pubKey,
     net,
     count: 0,
     solDelta: 0,
     maxDelta: 0,
-    programID: '',
+    // programID: '', // solAccount?.owner?.toString(),
   };
   cache.set(`${net}_${pubKey}`, response);
   return response;
   // }
 
   // return undefined;
+}
+
+export type TokenAccountArray = Array<{
+  pubkey: sol.PublicKey;
+  account: sol.AccountInfo<sol.ParsedAccountData>;
+}>;
+
+const tokenAccountCache = new LRUCache<
+  string,
+  sol.RpcResponseAndContext<TokenAccountArray>
+>({
+  maxSize: 500,
+  entryExpirationTimeInMS: 60000,
+});
+
+export function forceRequestTokenAccount(net: Net, pubKey: string) {
+  cache.delete(`${net}_${pubKey}_getTokenAccounts`);
+}
+
+export async function getTokenAccounts(
+  net: Net,
+  pubKey: string
+): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
+  // logger.silly('getTokenAccounts', { pubKey });
+  const cachedResponse = tokenAccountCache.peek(
+    `${net}_${pubKey}_getTokenAccounts`
+  );
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  const solConn = new sol.Connection(netToURL(net));
+  const key = new sol.PublicKey(pubKey);
+  const filter: sol.TokenAccountsFilter = {
+    programId: new sol.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+  };
+  const tokenAccounts = await solConn.getParsedTokenAccountsByOwner(
+    key,
+    filter
+  );
+
+  logger.silly('getTokenAccounts cache miss', pubKey, tokenAccounts);
+
+  tokenAccountCache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
+  return tokenAccounts;
+}
+
+export async function getTokenMetadata(
+  net: Net,
+  tokenPublicKey: string
+): Promise<metaplex.programs.metadata.Metadata> {
+  const conn = new metaplex.Connection(netToURL(net), 'finalized');
+  // try {
+  const meta = await metaplex.programs.metadata.Metadata.findByMint(
+    conn,
+    tokenPublicKey
+  );
+  // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
+  return meta;
+  // } catch (e) {
+  //  logger.error('metadata load', e);
+  // }
 }
 
 export const truncateSolAmount = (solAmount: number | undefined) => {
@@ -106,7 +175,10 @@ export const renderData = (account: AccountInfo | undefined) => {
   if (account.accountInfo?.data === undefined) {
     return '';
   }
-  return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
+  if ('subarray' in account.accountInfo.data) {
+    return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
+  }
+  return JSON.stringify(account.accountInfo.data, null, 2);
 };
 
 // TODO: this should look up a persistent key: string map

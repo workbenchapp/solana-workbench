@@ -6,7 +6,13 @@ import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
+import { useAppSelector } from '../hooks';
+
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 
 function TransferSolPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -143,6 +149,7 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
 
 function TransferSolButton(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
+  const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
@@ -151,7 +158,11 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
       overlay={TransferSolPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success" size="sm">
+      <Button
+        size="sm"
+        disabled={pubKey === undefined || status !== NetStatus.Running}
+        variant="success"
+      >
         Transfer SOL
       </Button>
     </OverlayTrigger>

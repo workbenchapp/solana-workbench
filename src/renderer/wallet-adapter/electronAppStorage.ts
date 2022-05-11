@@ -164,6 +164,11 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
 
     this._readyState = WalletReadyState.Installed;
     this.emit('readyStateChange', this._readyState);
+
+    if (this._config.account) {
+      this._wallet = new ElectronAppStorageWalletProvider(this._config);
+      this._wallet.isConnected = true;
+    }
   }
 
   get publicKey(): sol.PublicKey | null {
