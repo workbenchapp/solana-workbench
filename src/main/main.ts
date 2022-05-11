@@ -18,6 +18,8 @@ import {
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
 
+import { Buffer } from 'buffer';
+
 export default class AppUpdater {
   constructor() {
     log.transports.file.level = 'info';
@@ -122,6 +124,9 @@ const createWindow = async () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // @ts-ignore
+  mainWindow.Buffer = Buffer;
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
   mainWindow.on('ready-to-show', () => {

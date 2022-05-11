@@ -18,6 +18,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import {
   faBook,
+  faCoins,
   faTh,
   faAnchor,
   faNetworkWired,
@@ -43,6 +44,7 @@ import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
+import TokenView from './nav/TokenView';
 
 import { useAppDispatch, useAppSelector } from './hooks';
 import {
@@ -116,6 +118,14 @@ function Sidebar() {
           iconsize="2x"
         />
         <TooltipNavItem
+          to="/tokens"
+          title=""
+          tooltipMessage="Tokens"
+          eventKey="tokens"
+          icon={faCoins}
+          iconsize="2x"
+        />
+        <TooltipNavItem
           to="/validator"
           title=""
           tooltipMessage="Validator"
@@ -159,6 +169,14 @@ function TopbarNavItems() {
         iconsize="xl"
       />
       <TooltipNavItem
+        to="/tokens"
+        title="Tokens"
+        tooltipMessage="Tokens"
+        eventKey="tokens"
+        icon={faCoins}
+        iconsize="xl"
+      />
+      <TooltipNavItem
         to="/validator"
         title="Validator"
         tooltipMessage="Validator"
@@ -181,7 +199,7 @@ function TopbarNavItems() {
         eventKey="validatornetworkinfo"
         icon={faNetworkWired}
         iconsize="xl"
-      />{' '}
+      />
     </>
   );
 }
@@ -337,6 +355,7 @@ function App() {
         <Route path="/" element={<GlobalContainer />}>
           <Route index element={<Account />} />
           <Route path="account" element={<Account />} />
+          <Route path="tokens" element={<TokenView />} />
           <Route path="validator" element={<Validator />} />
           <Route path="anchor" element={<Anchor />} />
           <Route
