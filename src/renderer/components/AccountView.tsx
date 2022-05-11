@@ -11,6 +11,9 @@ import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import EdiText from 'react-editext';
+import Table from 'react-bootstrap/Table';
+import * as sol from '@solana/web3.js';
+import * as spltoken from '@solana/spl-token';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import analytics from '../common/analytics';
@@ -21,9 +24,12 @@ import {
 } from '../data/accounts/accountState';
 import {
   truncateLamportAmount,
+  truncateSolAmount,
   getHumanName,
   renderData,
   getAccount,
+  getTokenAccounts,
+  TokenAccountArray,
 } from '../data/accounts/getAccount';
 import {
   Net,
@@ -51,6 +57,18 @@ const explorerURL = (net: Net, address: string) => {
   }
 };
 
+function tryExpandingTokenState(
+  tAccount: sol.AccountInfo<sol.ParsedAccountData>
+) {
+  const accountState = tAccount.data.parsed.info as spltoken.Account;
+  return (
+    <div>
+      <InlinePK pk={accountState.mint} />: {accountState.tokenAmount.amount}{' '}
+      tokens
+    </div>
+  );
+}
+
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
@@ -61,6 +79,7 @@ function AccountView(props: { pubKey: string | undefined }) {
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
   );
+  const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
 
   useInterval(() => {
     if (status !== NetStatus.Running) {
@@ -69,6 +88,9 @@ function AccountView(props: { pubKey: string | undefined }) {
     if (pubKey) {
       getAccount(net, pubKey)
         .then((a) => setSelectedAccountInfo(a))
+        .catch(logger.info);
+      getTokenAccounts(net, pubKey)
+        .then((b) => setTokenAccounts(b?.value))
         .catch(logger.info);
     } else {
       setSelectedAccountInfo(undefined);
@@ -254,6 +276,54 @@ function AccountView(props: { pubKey: string | undefined }) {
               <pre className="exe-hexdump p-2 rounded">
                 <code>{renderData(account)}</code>
               </pre>
+            </div>
+          </div>
+          <div className="ms-1">
+            <div>
+              <small className="text-muted">
+                Token Accounts ({tokenAccounts.length})
+              </small>
+            </div>
+            <div>
+              <Table hover size="sm">
+                <tbody>
+                  {tokenAccounts.map(
+                    (tAccount: {
+                      pubkey: sol.PublicKey;
+                      account: sol.AccountInfo<sol.ParsedAccountData>;
+                    }) => {
+                      // TODO: extract to its own component
+                      return (
+                        <div>
+                          <div>
+                            <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
+                            {tAccount.account.data.program.toString()}:
+                          </div>
+                          <div>
+                            <div>
+                              {truncateSolAmount(
+                                tAccount.account.lamports / sol.LAMPORTS_PER_SOL
+                              )}{' '}
+                              SOL
+                            </div>
+                            <div>
+                              state: {tAccount.account.data.parsed.info.state}
+                            </div>
+                            <pre hidden className="exe-hexdump p-2 rounded">
+                              <code>
+                                {JSON.stringify(tAccount.account.data.parsed)}
+                              </code>
+                            </pre>
+                            <div>
+                              {tryExpandingTokenState(tAccount.account)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
+                </tbody>
+              </Table>
             </div>
           </div>
         </div>

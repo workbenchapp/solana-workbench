@@ -77,6 +77,39 @@ export async function getAccount(
   // return undefined;
 }
 
+export type TokenAccountArray = Array<{
+  pubkey: sol.PublicKey;
+  account: sol.AccountInfo<sol.ParsedAccountData>;
+}>;
+
+export async function getTokenAccounts(
+  net: Net,
+  pubKey: string
+): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
+  // logger.silly('getTokenAccounts', { pubKey });
+  // const cachedResponse = cache.peek(`${net}_${pubKey}_getTokenAccounts`);
+  // if (cachedResponse) {
+  //   return cachedResponse;
+  // }
+
+  const solConn = new sol.Connection(netToURL(net));
+  const key = new sol.PublicKey(pubKey);
+  const filter: sol.TokenAccountsFilter = {
+    programId: new sol.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
+  };
+  const tokenAccounts = await solConn.getParsedTokenAccountsByOwner(
+    key,
+    filter
+  );
+
+  logger.silly('getTokenAccounts cache miss', tokenAccounts);
+
+  // cache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
+  return tokenAccounts;
+
+  // return undefined;
+}
+
 export const truncateSolAmount = (solAmount: number | undefined) => {
   if (solAmount === undefined) {
     return '';

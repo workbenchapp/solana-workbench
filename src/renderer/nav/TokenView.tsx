@@ -12,6 +12,7 @@ import {
   mintTo,
   setAuthority,
   transfer,
+  AccountState,
 } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
@@ -40,7 +41,7 @@ function TokenView() {
   async function prepareFundingWallet() {
     if (!myWallet) {
       // TODO: i wonder if this is sharing a connection under the hood, or if we should be...
-      const solConn = new sol.Connection(netToURL(net), 'confirmed');
+      const solConn = new sol.Connection(netToURL(net), 'finalized');
 
       // Generate a new wallet keypair and airdrop SOL
       const fromWallet = sol.Keypair.generate();
@@ -61,7 +62,7 @@ function TokenView() {
 
     // Create a new token
     logger.info('createMint', myWallet);
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
     const mint = await createMint(
       solConn,
       myWallet, // Payer of the transaction
@@ -83,7 +84,7 @@ function TokenView() {
 
     // Get the token account of the fromWallet Solana address. If it does not exist, create it.
     logger.info('getOrCreateAssociatedTokenAccount');
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     try {
       const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
@@ -107,7 +108,7 @@ function TokenView() {
       return;
     }
     // Generate a new wallet to receive the newly minted token
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     const toWallet = sol.Keypair.generate();
     updateTokenReceiver(toWallet);
@@ -139,7 +140,7 @@ function TokenView() {
       logger.info('no tokenSender', tokenSender);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     // Minting 1 new token to the "fromTokenAccount" account we just returned/created.
     const signature = await mintTo(
@@ -160,7 +161,7 @@ function TokenView() {
       logger.info('no mintKey', mintKey);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     await setAuthority(
       solConn,
@@ -184,7 +185,7 @@ function TokenView() {
       logger.info('no ataReceiver', ataReceiver);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'confirmed');
+    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     const signature = await transfer(
       solConn,
@@ -211,7 +212,11 @@ function TokenView() {
           <Button
             disabled={myWallet !== undefined}
             onClick={() => {
-              prepareFundingWallet();
+              toast.promise(prepareFundingWallet(), {
+                pending: `Create new funding account submitted`,
+                success: `Create new funding account  succeeded 👌`,
+                error: `Create new funding account   failed 🤯`,
+              });
             }}
           >
             create and fund initiating account account
@@ -219,7 +224,11 @@ function TokenView() {
           <Button
             disabled={myWallet === undefined || mintKey !== undefined}
             onClick={() => {
-              createOurMint();
+              toast.promise(createOurMint(), {
+                pending: `Create mint account submitted`,
+                success: `Create mint account  succeeded 👌`,
+                error: `Create mint account   failed 🤯`,
+              });
             }}
           >
             initialize mint
@@ -231,7 +240,11 @@ function TokenView() {
               tokenSender !== undefined
             }
             onClick={() => {
-              ensuremyAta();
+              toast.promise(ensuremyAta(), {
+                pending: `Create funder ATA account submitted`,
+                success: `Create funder ATA account  succeeded 👌`,
+                error: `Create funder ATA account   failed 🤯`,
+              });
             }}
           >
             create initiating account ATA for this mint
@@ -243,7 +256,11 @@ function TokenView() {
               tokenReceiver !== undefined
             }
             onClick={() => {
-              ensureReceiverAta();
+              toast.promise(ensureReceiverAta(), {
+                pending: `Create receiver ATA account submitted`,
+                success: `Create receiver ATA account  succeeded 👌`,
+                error: `Create receiver ATA account   failed 🤯`,
+              });
             }}
           >
             create receiver account and ATA account
@@ -255,7 +272,11 @@ function TokenView() {
               tokenSender === undefined
             }
             onClick={() => {
-              mintToken();
+              toast.promise(mintToken(), {
+                pending: `Mint To ${myWallet?.publicKey.toString()} submitted`,
+                success: `Mint To ${myWallet?.publicKey.toString()} succeeded 👌`,
+                error: `Mint To ${myWallet?.publicKey.toString()}  failed 🤯`,
+              });
             }}
           >
             mint token to funder
@@ -267,7 +288,11 @@ function TokenView() {
               ataReceiver === undefined
             }
             onClick={() => {
-              transferTokenToReceiver();
+              toast.promise(transferTokenToReceiver(), {
+                pending: `Transfer token To ${ataReceiver?.toString()} submitted`,
+                success: `Transfer token To ${ataReceiver?.toString()} succeeded 👌`,
+                error: `Transfer token To ${ataReceiver?.toString()}  failed 🤯`,
+              });
             }}
           >
             send token to receiver
@@ -275,7 +300,11 @@ function TokenView() {
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
-              closeMint();
+              toast.promise(closeMint(), {
+                pending: `Close mint account submitted`,
+                success: `Close mint account  succeeded 👌`,
+                error: `Close mint account   failed 🤯`,
+              });
             }}
           >
             Set max supply (aka, close mint)
