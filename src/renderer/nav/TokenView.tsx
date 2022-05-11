@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Stack from 'react-bootstrap/Stack';
 import { Row, Col } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
@@ -12,7 +12,6 @@ import {
   mintTo,
   setAuthority,
   transfer,
-  AccountState,
 } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
@@ -151,6 +150,7 @@ function TokenView() {
       myWallet.publicKey, // Minting authority
       1 // Amount to mint
     );
+    logger.info('SIGNATURE', signature);
   }
   async function closeMint() {
     if (!myWallet) {
@@ -247,7 +247,7 @@ function TokenView() {
               });
             }}
           >
-            create initiating account ATA for this mint
+            create funder account ATA for this mint
           </Button>
           <Button
             disabled={

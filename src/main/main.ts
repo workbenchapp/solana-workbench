@@ -4,6 +4,7 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import { Buffer } from 'buffer';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
@@ -17,8 +18,6 @@ import {
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
-
-import { Buffer } from 'buffer';
 
 export default class AppUpdater {
   constructor() {
@@ -125,6 +124,7 @@ const createWindow = async () => {
     },
   });
 
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   mainWindow.Buffer = Buffer;
 
