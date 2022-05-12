@@ -5,9 +5,17 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
-
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { sendSolFromSelectedWallet } from '../data/accounts/account';
+import { useAppSelector } from '../hooks';
+
+import {
+  sendSolFromSelectedWallet,
+  transferSol,
+} from '../data/accounts/account';
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 
 function TransferSolPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -144,6 +152,7 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
 
 function TransferSolButton(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
+  const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
@@ -152,7 +161,12 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
       overlay={TransferSolPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success">Transfer SOL</Button>
+      <Button
+        disabled={pubKey === undefined || status !== NetStatus.Running}
+        variant="success"
+      >
+        Transfer SOL
+      </Button>
     </OverlayTrigger>
   );
 }

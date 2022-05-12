@@ -42,6 +42,7 @@ import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
+import { TokenMetaView } from './TokenView';
 
 const logger = window.electron.log;
 
@@ -57,33 +58,7 @@ const explorerURL = (net: Net, address: string) => {
       return `https://explorer.solana.com/address/${address}`;
   }
 };
-function tryExpandingTokenMeta(net: Net, mintKey: sol.PublicKey) {
-  let moreInfo = 'NONE';
-  try {
-    const meta = getTokenMetadata(net, mintKey.toString());
-    meta
-      .then((m) => {
-        logger.info('getTokenMetadata', m.data.data.symbol);
-        moreInfo = JSON.stringify(m.data);
-        return m;
-      })
-      .catch(logger.error);
-    // moreInfo = JSON.stringify(meta);
-    // moreInfo = 'what';
-  } catch (e) {
-    moreInfo = JSON.stringify(e);
-    logger.error('getTokenMetadata', e);
-  }
 
-  return (
-    <div>
-      <div>
-        mint: <InlinePK pk={mintKey.toString()} />
-      </div>
-      <div>{moreInfo}</div>{' '}
-    </div>
-  );
-}
 function tryExpandingTokenState(
   net: Net,
   tAccount: {
@@ -100,8 +75,7 @@ function tryExpandingTokenState(
         {accountState.tokenAmount.amount} tokens
       </div>
       <div>
-        token metaplex:
-        {tryExpandingTokenMeta(net, accountState.mint)}
+        <TokenMetaView mintKey={accountState.mint} />
       </div>
     </div>
   );

@@ -21,6 +21,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import AccountView from '../components/AccountView';
+import { TokenMetaView } from '../components/TokenView';
 
 // eslint-disable-next-line no-global-assign
 Buffer = require('buffer').Buffer;
@@ -369,6 +370,9 @@ function TokenPage() {
         <Col className="col-md-4 almost-vh-100 vscroll">
           Token Mint
           <AccountView pubKey={mintKey?.toString()} />
+          <div>
+            <TokenMetaView mintKey={mintKey ? mintKey.toString() : ''} />
+          </div>
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
           tokenReceiver:
