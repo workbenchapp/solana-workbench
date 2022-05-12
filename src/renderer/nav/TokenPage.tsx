@@ -27,7 +27,7 @@ Buffer = require('buffer').Buffer;
 
 const logger = window.electron.log;
 
-function TokenView() {
+function TokenPage() {
   const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
 
@@ -382,4 +382,4 @@ function TokenView() {
   );
 }
 
-export default TokenView;
+export default TokenPage;

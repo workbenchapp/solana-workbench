@@ -44,7 +44,7 @@ import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
-import TokenView from './nav/TokenView';
+import TokenPage from './nav/TokenPage';
 
 import { useAppDispatch, useAppSelector } from './hooks';
 import {
@@ -355,7 +355,7 @@ function App() {
         <Route path="/" element={<GlobalContainer />}>
           <Route index element={<Account />} />
           <Route path="account" element={<Account />} />
-          <Route path="tokens" element={<TokenView />} />
+          <Route path="tokens" element={<TokenPage />} />
           <Route path="validator" element={<Validator />} />
           <Route path="anchor" element={<Anchor />} />
           <Route
