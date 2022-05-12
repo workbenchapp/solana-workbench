@@ -30,6 +30,7 @@ import {
   getAccount,
   getTokenAccounts,
   TokenAccountArray,
+  getTokenMetadata,
 } from '../data/accounts/getAccount';
 import {
   Net,
@@ -56,15 +57,52 @@ const explorerURL = (net: Net, address: string) => {
       return `https://explorer.solana.com/address/${address}`;
   }
 };
+function tryExpandingTokenMeta(net: Net, mintKey: sol.PublicKey) {
+  let moreInfo = 'NONE';
+  try {
+    const meta = getTokenMetadata(net, mintKey.toString());
+    meta
+      .then((m) => {
+        logger.info('getTokenMetadata', m.data.data.symbol);
+        moreInfo = JSON.stringify(m.data);
+        return m;
+      })
+      .catch(logger.error);
+    // moreInfo = JSON.stringify(meta);
+    // moreInfo = 'what';
+  } catch (e) {
+    moreInfo = JSON.stringify(e);
+    logger.error('getTokenMetadata', e);
+  }
 
-function tryExpandingTokenState(
-  tAccount: sol.AccountInfo<sol.ParsedAccountData>
-) {
-  const accountState = tAccount.data.parsed.info as spltoken.Account;
   return (
     <div>
-      <InlinePK pk={accountState.mint} />: {accountState.tokenAmount.amount}{' '}
-      tokens
+      <div>
+        mint: <InlinePK pk={mintKey.toString()} />
+      </div>
+      <div>{moreInfo}</div>{' '}
+    </div>
+  );
+}
+function tryExpandingTokenState(
+  net: Net,
+  tAccount: {
+    pubkey: sol.PublicKey;
+    account: sol.AccountInfo<sol.ParsedAccountData>;
+  }
+) {
+  const accountState = tAccount.account.data.parsed.info as spltoken.Account;
+
+  return (
+    <div>
+      <div>
+        Mint: <InlinePK pk={accountState.mint} />:{' '}
+        {accountState.tokenAmount.amount} tokens
+      </div>
+      <div>
+        token metaplex:
+        {tryExpandingTokenMeta(net, accountState.mint)}
+      </div>
     </div>
   );
 }
@@ -296,7 +334,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                       return (
                         <div>
                           <div>
-                            <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
+                            ATA: <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
                             {tAccount.account.data.program.toString()}:
                           </div>
                           <div>
@@ -309,13 +347,14 @@ function AccountView(props: { pubKey: string | undefined }) {
                             <div>
                               state: {tAccount.account.data.parsed.info.state}
                             </div>
-                            <pre hidden className="exe-hexdump p-2 rounded">
+                            <pre className="exe-hexdump p-2 rounded">
                               <code>
                                 {JSON.stringify(tAccount.account.data.parsed)}
                               </code>
                             </pre>
                             <div>
-                              {tryExpandingTokenState(tAccount.account)}
+                              token state:
+                              {tryExpandingTokenState(net, tAccount)}
                             </div>
                           </div>
                         </div>

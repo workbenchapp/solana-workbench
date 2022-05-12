@@ -1,4 +1,6 @@
 import * as sol from '@solana/web3.js';
+import * as metaplex from '@metaplex/js';
+
 import { LRUCache } from 'typescript-lru-cache';
 
 import { AccountInfo } from './accountInfo';
@@ -106,8 +108,23 @@ export async function getTokenAccounts(
 
   // cache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
   return tokenAccounts;
+}
 
-  // return undefined;
+export async function getTokenMetadata(
+  net: Net,
+  tokenPublicKey: string
+): Promise<metaplex.programs.metadata.Metadata> {
+  const conn = new metaplex.Connection(netToURL(net), 'finalized');
+  // try {
+  const meta = await metaplex.programs.metadata.Metadata.findByMint(
+    conn,
+    tokenPublicKey
+  );
+  // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
+  return meta;
+  // } catch (e) {
+  //  logger.error('metadata load', e);
+  // }
 }
 
 export const truncateSolAmount = (solAmount: number | undefined) => {

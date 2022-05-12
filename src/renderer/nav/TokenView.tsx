@@ -4,6 +4,7 @@ import { Row, Col } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
+import * as metaplex from '@metaplex/js';
 
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
@@ -70,6 +71,40 @@ function TokenView() {
       0 // Location of the decimal place
     );
     updateMintKey(mint);
+  }
+  async function createOurMintMetadata() {
+    if (!myWallet) {
+      logger.info('no myWallet', myWallet);
+      return;
+    }
+    if (!mintKey) {
+      logger.info('no mintKey', mintKey);
+      return;
+    }
+
+    // Create a new token
+    logger.info('createOurMintMetadata', mintKey);
+    const conn = new metaplex.Connection(netToURL(net), 'finalized');
+    try {
+      const metadata = new metaplex.programs.metadata.MetadataDataData({
+        name: 'Worbench token',
+        symbol: 'WORKBENCH',
+        uri: 'https://github.com/workbenchapp/solana-workbench/',
+        sellerFeeBasisPoints: 10,
+        creators: null,
+      });
+
+      const meta = await metaplex.actions.createMetadata({
+        connection: conn,
+        wallet: new metaplex.NodeWallet(myWallet),
+        editionMint: mintKey,
+        metadataData: metadata,
+      });
+      logger.info('metadata', meta);
+      // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
+    } catch (e) {
+      logger.error('metadata create', e);
+    }
   }
   async function ensuremyAta() {
     if (!myWallet) {
@@ -232,6 +267,18 @@ function TokenView() {
             }}
           >
             initialize mint
+          </Button>
+          <Button
+            disabled={myWallet === undefined || mintKey === undefined}
+            onClick={() => {
+              toast.promise(createOurMintMetadata(), {
+                pending: `Add mint metadata submitted`,
+                success: `Add mint metadata  succeeded 👌`,
+                error: `Add mint metadata   failed 🤯`,
+              });
+            }}
+          >
+            add mint metadata
           </Button>
           <Button
             disabled={
