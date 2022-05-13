@@ -4,7 +4,6 @@ import {
   faEdit,
   faSave,
   faCancel,
-  faKey,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
@@ -16,7 +15,6 @@ import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
-import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   setAccountValues,
@@ -34,7 +32,6 @@ import {
 import {
   Net,
   NetStatus,
-  netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import InlinePK from './InlinePK';
@@ -45,21 +42,8 @@ import { TokenMetaView } from './TokenView';
 
 const logger = window.electron.log;
 
-const explorerURL = (net: Net, address: string) => {
-  switch (net) {
-    case Net.Test:
-    case Net.Dev:
-      return `https://explorer.solana.com/address/${address}?cluster=${net}`;
-    case Net.Localhost:
-      return `https://explorer.solana.com/address/${address}/ \
-  ?cluster=custom&customUrl=${encodeURIComponent(netToURL(net))}`;
-    default:
-      return `https://explorer.solana.com/address/${address}`;
-  }
-};
-
 function tryExpandingTokenState(
-  net: Net,
+  _net: Net,
   tAccount: {
     pubkey: sol.PublicKey;
     account: sol.AccountInfo<sol.ParsedAccountData>;
@@ -70,7 +54,7 @@ function tryExpandingTokenState(
   return (
     <div>
       <div>
-        Mint: <InlinePK pk={accountState.mint} />:{' '}
+        Mint: <InlinePK pk={accountState.mint.toString()} />:{' '}
         {accountState.tokenAmount.amount} tokens
       </div>
       <div>
@@ -227,53 +211,6 @@ function AccountView(props: { pubKey: string | undefined }) {
                           No
                         </small>
                       )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Private key known</small>
-                    </td>
-                    <td>
-                      {accountMeta?.privatekey ? (
-                        <div>
-                          <FontAwesomeIcon
-                            className="border-success rounded p-1 exe-icon"
-                            icon={faKey}
-                          />
-                          <small className="ms-1 mb-1">Yes</small>
-                        </div>
-                      ) : (
-                        <small className="fst-italic fw-light text-muted">
-                          No
-                        </small>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Explorer</small>
-                    </td>
-                    <td>
-                      <small>
-                        {account ? (
-                          <a
-                            onClick={() =>
-                              analytics('clickExplorerLink', { net })
-                            }
-                            href={explorerURL(
-                              net,
-                              account.accountId.toString()
-                            )}
-                            target="_blank"
-                            className="sol-link"
-                            rel="noreferrer"
-                          >
-                            Link
-                          </a>
-                        ) : (
-                          'No onchain account'
-                        )}
-                      </small>
                     </td>
                   </tr>
                 </tbody>

@@ -88,7 +88,7 @@ function TokenPage() {
     const conn = new metaplex.Connection(netToURL(net), 'finalized');
     try {
       const metadata = new metaplex.programs.metadata.MetadataDataData({
-        name: 'Worbench token',
+        name: 'Workbench token',
         symbol: 'WORKBENCH',
         uri: 'https://github.com/workbenchapp/solana-workbench/',
         sellerFeeBasisPoints: 10,
