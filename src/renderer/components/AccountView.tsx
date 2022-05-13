@@ -30,7 +30,6 @@ import {
   getAccount,
   getTokenAccounts,
   TokenAccountArray,
-  getTokenMetadata,
 } from '../data/accounts/getAccount';
 import {
   Net,

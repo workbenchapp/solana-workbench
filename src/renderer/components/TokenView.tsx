@@ -1,24 +1,11 @@
 import { useEffect, useState } from 'react';
-import * as sol from '@solana/web3.js';
-import * as spltoken from '@solana/spl-token';
 import * as metaplex from '@metaplex/js';
 
 import { useAppSelector } from '../hooks';
 
+import { getTokenMetadata } from '../data/accounts/getAccount';
 import {
-  truncateLamportAmount,
-  truncateSolAmount,
-  getHumanName,
-  renderData,
-  getAccount,
-  getTokenAccounts,
-  TokenAccountArray,
-  getTokenMetadata,
-} from '../data/accounts/getAccount';
-import {
-  Net,
   NetStatus,
-  netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import InlinePK from './InlinePK';
@@ -57,7 +44,7 @@ export function TokenMetaView(props: { mintKey: string; className?: string }) {
   }, [mintKey, net, status]);
 
   return (
-    <div>
+    <div className={className}>
       <div>
         Mint: <InlinePK pk={mintKey.toString()} />
       </div>
@@ -65,5 +52,8 @@ export function TokenMetaView(props: { mintKey: string; className?: string }) {
     </div>
   );
 }
+TokenMetaView.defaultProps = {
+  className: '',
+};
 
 export default TokenMetaView;
