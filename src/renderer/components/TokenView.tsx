@@ -43,12 +43,16 @@ export function TokenMetaView(props: { mintKey: string; className?: string }) {
     }
   }, [mintKey, net, status]);
 
+  // TODO: how do I find out the total number of tokens minted, vs how many could be minted
+  // TODO: or a list of all the ATA's that have tokens (or even more fun, ATA's for this mint that don't have tokens ...)
   return (
     <div className={className}>
       <div>
         Mint: <InlinePK pk={mintKey.toString()} />
+        <a href={metaInfo?.data.data.uri}>{metaInfo?.data.data.symbol}</a> (
+        {metaInfo?.data.data.name} )
       </div>
-      <div>Meta: {JSON.stringify(metaInfo)}</div>{' '}
+      <div>Meta: {JSON.stringify(metaInfo)}</div>
     </div>
   );
 }
