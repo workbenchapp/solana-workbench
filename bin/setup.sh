@@ -7,6 +7,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 # - Node (latest version): 
 nvm install v16.15.0
+nvm use v16.15.0
+
 # - Docker: 
 #curl -o- https://get.docker.com | bash
 # - Yarn:
