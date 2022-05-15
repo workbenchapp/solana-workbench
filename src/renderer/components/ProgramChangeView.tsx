@@ -39,6 +39,7 @@ export enum KnownProgramID {
   SystemProgram = '11111111111111111111111111111111',
   SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+  NameServiceProgram = 'namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX',
 }
 
 interface PinnedAccountMap {
@@ -147,6 +148,9 @@ function ProgramChangeView() {
                   </Dropdown.Item>
                   <Dropdown.Item eventKey={KnownProgramID.SerumDEXV3}>
                     <small>Serum DEX V3</small>
+                  </Dropdown.Item>
+                  <Dropdown.Item eventKey={KnownProgramID.NameServiceProgram}>
+                    <small>NameServiceProgram</small>
                   </Dropdown.Item>
                   <div className="p-2">
                     <Editable
