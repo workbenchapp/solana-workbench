@@ -43,6 +43,9 @@ Detailed instructions:
 
 to build the rust based tools (`solana` and `anchor` cli's), you will also need to install some native build tools and libraries. (See the Dockerfile for more)
 
+- Docker Desktop, or a working configured Docker setup
+
+
 ```
 sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-config
 ```
@@ -51,6 +54,7 @@ sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-con
 
 - XCode Command Line Tools (if on OSX)
 - on OSX some path stuffing around, so solana and anchor binaries are in the path (for development)
+- Docker Desktop, or a working configured Docker setup
 
 ### Windows (native)
 
@@ -63,6 +67,7 @@ without anchor tooling for now
 - `npm install --legacy-peer-deps`
 - `cd ./release/app/`
 - `npm install --legacy-peer-deps`
+- Docker Desktop, or a working configured Docker setup
 
 
 ## Run

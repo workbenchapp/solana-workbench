@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [[ $(grep debian /etc/os-release) ]]; then
+    echo "making sure the required dependencies are installed"
+    if [[ "$(id -u)" != "0" ]]; then
+        SUDO="sudo "
+    fi
+    ${SUDO} apt-get update
+    ${SUDO} apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-config
+fi
+
 # - [Nvm](https://github.com/nvm-sh/nvm): 
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
 export NVM_DIR="$HOME/.nvm"
