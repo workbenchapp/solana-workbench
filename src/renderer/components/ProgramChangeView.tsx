@@ -1,4 +1,11 @@
-import { faFilter, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import {
+  faFilter,
+  faSpinner,
+  faSortDesc,
+  faUnsorted,
+} from '@fortawesome/free-solid-svg-icons';
+import * as faRegular from '@fortawesome/free-regular-svg-icons';
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
@@ -17,12 +24,15 @@ import {
   accountsActions,
   selectAccountsListState,
 } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppSelector, useAppDispatch } from '../hooks';
+import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 import {
   selectValidatorNetworkState,
   NetStatus,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { BASE58_PUBKEY_REGEX } from '../data/accounts/getAccount';
+import {
+  BASE58_PUBKEY_REGEX,
+  GetTopAccounts,
+} from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
 import Editable from './Editable';
@@ -61,20 +71,60 @@ function ProgramChangeView() {
     }
   };
 
-  const [changes, setChangesState] = useState<AccountInfo[]>([]);
+  enum SortColumn {
+    Count,
+    Sol,
+    MaxDelta,
+  }
 
-  const displayList: string[] = []; // list of Keys
-  const pinnedAccount: PinnedAccountMap = {};
+  const [displayList, setDisplayList] = useState<string[]>([]);
+  // const [paused, setPausedState] = useState<boolean>(false);
+  const [sortColumn, setSortColumn] = useState<SortColumn>(SortColumn.MaxDelta);
+  const [validatorSlot, setValidatorSlot] = useState<number>(0);
+  const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
 
-  pinnedAccounts.forEach((key: string) => {
-    displayList.push(key);
-    pinnedAccount[key] = true;
-  });
-  changes.forEach((c: AccountInfo) => {
-    if (!(c.pubKey in pinnedAccount)) {
-      displayList.push(c.pubKey);
+  function sortFunction(a: AccountInfo, b: AccountInfo) {
+    switch (sortColumn) {
+      case SortColumn.Count:
+        return b.count - a.count;
+      case SortColumn.Sol:
+        if (!b.accountInfo || !a.accountInfo) {
+          return 0;
+        }
+        return b.accountInfo.lamports - a.accountInfo.lamports;
+      case SortColumn.MaxDelta:
+      default:
+        return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
     }
-  });
+  }
+
+  useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
+    const pinMap: PinnedAccountMap = {};
+
+    const showKeys: string[] = []; // list of Keys
+    pinnedAccounts.forEach((key: string) => {
+      showKeys.push(key);
+      pinMap[key] = true;
+    });
+
+    const changes = GetTopAccounts(
+      net,
+      MAX_PROGRAM_CHANGES_DISPLAYED,
+      sortFunction
+    );
+
+    // logger.info('GetTopAccounts', changes);
+    changes.forEach((c: string) => {
+      if (!(c in pinnedAccount)) {
+        showKeys.push(c);
+      }
+    });
+    setPinnedAccount(pinMap);
+    setDisplayList(showKeys);
+  }, 666);
 
   const uniqueAccounts = displayList.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
@@ -87,11 +137,14 @@ function ProgramChangeView() {
     if (status !== NetStatus.Running) {
       return () => {};
     }
-    subscribeProgramChanges(net, programID, setChangesState);
+    setDisplayList([]);
+    subscribeProgramChanges(net, programID, setValidatorSlot);
 
     return () => {
+      setDisplayList([]);
       unsubscribeProgramChanges(net, programID);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [net, programID, status]);
 
   if (status !== NetStatus.Running) {
@@ -108,6 +161,12 @@ function ProgramChangeView() {
   return (
     <div>
       <div className="mb-2">
+        <div className="mb-2">
+          <small>
+            <strong>Program Account Changes</strong>:
+            <small>(Validator Slot {validatorSlot})</small>
+          </small>
+        </div>
         <ButtonToolbar aria-label="Toolbar with button groups">
           <ButtonGroup size="sm" className="me-2" aria-label="First group">
             <Dropdown>
@@ -171,7 +230,7 @@ function ProgramChangeView() {
                           subscribeProgramChanges(
                             net,
                             programID,
-                            setChangesState
+                            setValidatorSlot
                           );
                           setProgramID(pastedID);
                         } else {
@@ -259,6 +318,42 @@ function ProgramChangeView() {
         {displayList.length > 0 ? (
           <Table hover size="sm">
             <tbody>
+              <tr>
+                <th>
+                  {' '}
+                  <FontAwesomeIcon className="me-1" icon={faRegular.faStar} />
+                </th>
+                <th>Address</th>
+                <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>
+                  Max Δ{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={
+                      sortColumn === SortColumn.MaxDelta
+                        ? faSortDesc
+                        : faUnsorted
+                    }
+                  />
+                </th>
+                <th onClick={() => setSortColumn(SortColumn.Sol)}>
+                  SOL{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={
+                      sortColumn === SortColumn.Sol ? faSortDesc : faUnsorted
+                    }
+                  />
+                </th>
+                <th onClick={() => setSortColumn(SortColumn.Count)}>
+                  Count{' '}
+                  <FontAwesomeIcon
+                    className="me-1"
+                    icon={
+                      sortColumn === SortColumn.Count ? faSortDesc : faUnsorted
+                    }
+                  />
+                </th>
+              </tr>
               {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
                 .map((pubKey: string) => {
