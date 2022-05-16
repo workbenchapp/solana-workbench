@@ -83,7 +83,7 @@ function ProgramChangeView() {
   const [validatorSlot, setValidatorSlot] = useState<number>(0);
   const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
 
-  function sortFunctionDUP(a: AccountInfo, b: AccountInfo) {
+  function sortFunction(a: AccountInfo, b: AccountInfo) {
     switch (sortColumn) {
       case SortColumn.Count:
         return b.count - a.count;
@@ -113,7 +113,7 @@ function ProgramChangeView() {
     const changes = GetTopAccounts(
       net,
       MAX_PROGRAM_CHANGES_DISPLAYED,
-      sortFunctionDUP
+      sortFunction
     );
 
     // logger.info('GetTopAccounts', changes);
