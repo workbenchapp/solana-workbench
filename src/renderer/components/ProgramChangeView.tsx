@@ -44,8 +44,6 @@ import {
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
 
-const logger = window.electron.log;
-
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
   SystemProgram = '11111111111111111111111111111111',
@@ -73,22 +71,28 @@ function ProgramChangeView() {
     }
   };
 
+  enum SortColumn {
+    Count,
+    Sol,
+    MaxDelta,
+  }
+
   const [displayList, setDisplayList] = useState<string[]>([]);
   // const [paused, setPausedState] = useState<boolean>(false);
-  const [sortColumn, setSortColumn] = useState<number>(2);
+  const [sortColumn, setSortColumn] = useState<SortColumn>(SortColumn.MaxDelta);
   const [validatorSlot, setValidatorSlot] = useState<number>(0);
   const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
 
   function sortFunctionDUP(a: AccountInfo, b: AccountInfo) {
     switch (sortColumn) {
-      case 4: // count
+      case SortColumn.Count:
         return b.count - a.count;
-      case 3: // SOL
+      case SortColumn.Sol:
         if (!b.accountInfo || !a.accountInfo) {
           return 0;
         }
         return b.accountInfo.lamports - a.accountInfo.lamports;
-      case 2: // Max Delta
+      case SortColumn.MaxDelta:
       default:
         return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
     }
@@ -320,25 +324,33 @@ function ProgramChangeView() {
                   <FontAwesomeIcon className="me-1" icon={faRegular.faStar} />
                 </th>
                 <th>Address</th>
-                <th onClick={() => setSortColumn(2)}>
+                <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>
                   Max Δ{' '}
                   <FontAwesomeIcon
                     className="me-1"
-                    icon={sortColumn === 2 ? faSortDesc : faUnsorted}
+                    icon={
+                      sortColumn === SortColumn.MaxDelta
+                        ? faSortDesc
+                        : faUnsorted
+                    }
                   />
                 </th>
-                <th onClick={() => setSortColumn(3)}>
+                <th onClick={() => setSortColumn(SortColumn.Sol)}>
                   SOL{' '}
                   <FontAwesomeIcon
                     className="me-1"
-                    icon={sortColumn === 3 ? faSortDesc : faUnsorted}
+                    icon={
+                      sortColumn === SortColumn.Sol ? faSortDesc : faUnsorted
+                    }
                   />
                 </th>
-                <th onClick={() => setSortColumn(4)}>
+                <th onClick={() => setSortColumn(SortColumn.Count)}>
                   Count{' '}
                   <FontAwesomeIcon
                     className="me-1"
-                    icon={sortColumn === 4 ? faSortDesc : faUnsorted}
+                    icon={
+                      sortColumn === SortColumn.Count ? faSortDesc : faUnsorted
+                    }
                   />
                 </th>
               </tr>
