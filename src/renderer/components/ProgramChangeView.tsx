@@ -19,6 +19,8 @@ import EdiText from 'react-editext';
 import OutsideClickHandler from 'react-outside-click-handler';
 
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+
+import { useWallet } from '@solana/wallet-adapter-react';
 import { Keypair } from '@solana/web3.js';
 import {
   setSelected,
@@ -44,6 +46,8 @@ import {
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
 import { setAccountValues } from '../data/accounts/accountState';
+
+const logger = window.electron.log;
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -83,6 +87,7 @@ function ProgramChangeView() {
   const [sortColumn, setSortColumn] = useState<SortColumn>(SortColumn.MaxDelta);
   const [validatorSlot, setValidatorSlot] = useState<number>(0);
   const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
+  const WalletAdapterState = useWallet();
 
   function sortFunction(a: AccountInfo, b: AccountInfo) {
     switch (sortColumn) {
@@ -106,9 +111,17 @@ function ProgramChangeView() {
     const pinMap: PinnedAccountMap = {};
 
     const showKeys: string[] = []; // list of Keys
-    pinnedAccounts.forEach((key: string) => {
+    // Add the solana wallet's account to the monitored list (if its not already watched.)
+    if (WalletAdapterState.publicKey) {
+      const key = WalletAdapterState.publicKey.toString();
       showKeys.push(key);
       pinMap[key] = true;
+    }
+    pinnedAccounts.forEach((key: string) => {
+      if (!(key in pinMap)) {
+        showKeys.push(key);
+        pinMap[key] = true;
+      }
     });
 
     const changes = GetTopAccounts(
@@ -118,9 +131,9 @@ function ProgramChangeView() {
     );
 
     // logger.info('GetTopAccounts', changes);
-    changes.forEach((c: string) => {
-      if (!(c in pinnedAccount)) {
-        showKeys.push(c);
+    changes.forEach((key: string) => {
+      if (!(key in pinMap)) {
+        showKeys.push(key);
       }
     });
     setPinnedAccount(pinMap);
