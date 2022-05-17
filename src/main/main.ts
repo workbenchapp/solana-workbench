@@ -4,27 +4,20 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
+import cfg from 'electron-cfg';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-// import {
-//   accounts,
-//   getAccount,
-//   importAccount,
-//   deleteAccount,
-//   updateAccountName,
-// } from './accounts';
+
 import wbConfig from './config';
 import fetchAnchorIdl from './anchor';
-// import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
-// import wbConfig from './config';
 
 export default class AppUpdater {
   constructor() {
@@ -48,9 +41,6 @@ ipcMain.on(
         case 'run-validator':
           await runValidator();
           break;
-        // case 'accounts':
-        //   res = await accounts(msg);
-        //   break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
@@ -58,24 +48,9 @@ ipcMain.on(
           res = await fetchAnchorIdl(msg);
           logger.debug(`fetchIDL(${msg}: (${res})`);
           break;
-        // case 'update-account-name':
-        //   await updateAccountName(msg);
-        //   break;
-        // case 'import-account':
-        //   await importAccount(msg);
-        //   break;
-        // case 'get-account':
-        //   res = await getAccount(msg);
-        //   break;
-        // case 'delete-account':
-        //   await deleteAccount(msg);
-        //   break;
         case 'config':
           res = await wbConfig(msg);
           break;
-        // case 'get-validator-network-info':
-        //   res = await fetchValidatorNetworkInfo(msg);
-        //   break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
           break;
@@ -139,6 +114,7 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
+  const winCfg = cfg.window();
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
@@ -147,7 +123,10 @@ const createWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
+    ...winCfg.options(),
   });
+  // gets written to .\AppData\Roaming\SolanaWorkbench\electron-cfg.json on windows
+  winCfg.assign(mainWindow);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
   mainWindow.on('ready-to-show', () => {
