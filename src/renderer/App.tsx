@@ -293,7 +293,7 @@ function App() {
   if (config.loading) {
     return <></>;
   }
-  if (config.values && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+  if (!config.values || !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     return <AnalyticsBanner />;
   }
   return (
