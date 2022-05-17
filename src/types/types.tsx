@@ -75,16 +75,6 @@ export type FetchAnchorIDLRequest = {
   programID: string;
 };
 
-export type WBConfigRequest = {
-  key: string;
-  val?: string;
-  action: string;
-};
-
-export type WBConfigResponse = {
-  values: ConfigMap;
-};
-
 export interface ChangeSubscriptionMap {
   [net: string]: {
     [programID: string]: {

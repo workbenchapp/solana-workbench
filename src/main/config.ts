@@ -1,12 +1,17 @@
 import cfg from 'electron-cfg';
-import {
-  ConfigAction,
-  ConfigMap,
-  WBConfigRequest,
-  WBConfigResponse,
-} from '../types/types';
+import { ConfigAction, ConfigMap } from '../types/types';
 
 import { logger } from './logger';
+
+export type WBConfigRequest = {
+  key: string;
+  val?: string;
+  action: string;
+};
+
+export type WBConfigResponse = {
+  values: ConfigMap;
+};
 
 async function wbConfig(msg: WBConfigRequest): Promise<WBConfigResponse> {
   const { action, key } = msg;
