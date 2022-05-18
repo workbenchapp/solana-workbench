@@ -1,8 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ConfigMap } from 'types/types';
+import { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
 // eslint-disable-next-line import/no-cycle
 import { RootState } from '../../store';
+
+const logger = window.electron.log;
 
 export enum ConfigKey {
   AnalyticsEnabled = 'analytics_enabled',
@@ -50,3 +55,28 @@ export const { setConfig, setConfigValue } = configSlice.actions;
 export const selectConfigState = (state: RootState) => state.config;
 
 export default configSlice.reducer;
+
+export function useConfigState() {
+  const config = useAppSelector(selectConfigState);
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    if (config.loading) {
+      window.promiseIpc
+        .send('CONFIG-GetAll')
+        .then((ret: ConfigMap) => {
+          logger.info(`CONFIG-GetAll => ConfigMap ${ret}`);
+          dispatch(
+            setConfig({
+              values: ret,
+              loading: false,
+            })
+          );
+          return `return ${ret}`;
+        })
+        .catch((e) => logger.error(e));
+    }
+  }, [dispatch]);
+
+  return config;
+}

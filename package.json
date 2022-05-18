@@ -248,6 +248,7 @@
     "electron-cfg": "^1.2.7",
     "electron-debug": "^3.2.0",
     "electron-log": "^4.4.6",
+    "electron-promise-ipc": "^2.2.4",
     "electron-updater": "^5.0.1",
     "hexdump-nodejs": "^0.1.0",
     "history": "^5.2.0",

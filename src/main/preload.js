@@ -1,6 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const log = require('electron-log');
-
+const promiseIpc = require('electron-promise-ipc');
 // TODO: make this a setting...
 log.transports.console.level = 'silly';
 log.transports.ipc.level = 'silly';
@@ -40,4 +40,11 @@ contextBridge.exposeInMainWorld('electron', {
       ipcRenderer.removeAllListeners(channel);
     },
   },
+});
+
+contextBridge.exposeInMainWorld('promiseIpc', {
+  send: (event, ...args) => promiseIpc.send(event, ...args),
+  on: (event, listener) => promiseIpc.on(event, listener),
+  off: (event, listener) => promiseIpc.off(event, listener),
+  removeAllListeners: (event) => promiseIpc.removeAllListeners(event),
 });

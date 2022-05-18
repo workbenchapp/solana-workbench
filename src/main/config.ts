@@ -1,7 +1,27 @@
 import cfg from 'electron-cfg';
+import promiseIpc from 'electron-promise-ipc';
+import type { IpcMainEvent, IpcRendererEvent } from 'electron';
 import { ConfigAction, ConfigMap } from '../types/types';
 
 import { logger } from './logger';
+
+declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
+
+promiseIpc.on('getSven', (count: unknown, event: IpcEvent | undefined) => {
+  logger.info(`main: called getSven${count}`);
+  return `asdf${event}`;
+});
+promiseIpc.on('CONFIG-GetAll', (event: IpcEvent | undefined) => {
+  logger.info('main: called CONFIG-GetAll', event);
+  return cfg.get('config');
+});
+promiseIpc.on(
+  'CONFIG-Set',
+  (key: unknown, val: unknown, event?: IpcEvent | undefined) => {
+    logger.info(`main: called CONFIG-Set, ${key}, ${val}, ${event}`);
+    return cfg.set(`config.${key}`, val);
+  }
+);
 
 export type WBConfigRequest = {
   key: string;

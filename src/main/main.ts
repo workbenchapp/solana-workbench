@@ -9,7 +9,6 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-
 import wbConfig from './config';
 import fetchAnchorIdl from './anchor';
 
