@@ -24,9 +24,6 @@ contextBridge.exposeInMainWorld('electron', {
     fetchAnchorIDL(msg) {
       send('fetch-anchor-idl', msg);
     },
-    config(msg) {
-      send('config', msg);
-    },
     on(method, func) {
       ipcRenderer.on(method, (event, ...args) => func(...args));
     },

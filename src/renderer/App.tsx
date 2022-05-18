@@ -46,6 +46,8 @@ declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     electron?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    promiseIpc?: any;
   }
 }
 
@@ -228,12 +230,10 @@ function AnalyticsBanner() {
           type="button"
           onClick={() => {
             dispatch(
-              setConfigValue({ key: ConfigKey.AnalyticsEnabled, value: false })
-            );
-            window.promiseIpc.send(
-              'CONFIG-Set',
-              ConfigKey.AnalyticsEnabled,
-              analyticsEnabled
+              setConfigValue({
+                key: ConfigKey.AnalyticsEnabled,
+                value: analyticsEnabled,
+              })
             );
           }}
         >

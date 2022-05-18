@@ -44,6 +44,9 @@ export const configSlice = createSlice({
     ) => {
       if (state.values) {
         state.values[action.payload.key] = action.payload.value;
+        window.promiseIpc
+          .send('CONFIG-Set', action.payload.key, action.payload.value)
+          .catch(logger.error);
       }
     },
   },
@@ -65,7 +68,6 @@ export function useConfigState() {
       window.promiseIpc
         .send('CONFIG-GetAll')
         .then((ret: ConfigMap) => {
-          logger.info(`CONFIG-GetAll => ConfigMap ${JSON.stringify(ret)}`);
           dispatch(
             setConfig({
               values: ret,
@@ -74,9 +76,9 @@ export function useConfigState() {
           );
           return `return ${ret}`;
         })
-        .catch((e) => logger.error(e));
+        .catch((e: Error) => logger.error(e));
     }
-  }, [dispatch, config.loading]);
+  }, [dispatch, config.loading, config.values]);
 
   return config;
 }
