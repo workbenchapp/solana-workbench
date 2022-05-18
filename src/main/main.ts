@@ -4,12 +4,11 @@ import path from 'path';
 import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
-import cfg from 'electron-cfg';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-import wbConfig from './config';
+import { initConfigPromises } from './config';
 import fetchAnchorIdl from './anchor';
 
 import {
@@ -29,6 +28,8 @@ export default class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 const MAX_STRING_LOG_LENGTH = 32;
 
+initConfigPromises();
+
 ipcMain.on(
   'main',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,9 +47,6 @@ ipcMain.on(
         case 'fetch-anchor-idl':
           res = await fetchAnchorIdl(msg);
           logger.debug(`fetchIDL(${msg}: (${res})`);
-          break;
-        case 'config':
-          res = await wbConfig(msg);
           break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
@@ -113,7 +111,6 @@ const createWindow = async () => {
     return path.join(RESOURCES_PATH, ...paths);
   };
 
-  const winCfg = cfg.window();
   mainWindow = new BrowserWindow({
     show: false,
     width: 1024,
@@ -122,10 +119,7 @@ const createWindow = async () => {
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
-    ...winCfg.options(),
   });
-  // gets written to .\AppData\Roaming\SolanaWorkbench\electron-cfg.json on windows
-  winCfg.assign(mainWindow);
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
   mainWindow.on('ready-to-show', () => {

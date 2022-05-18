@@ -1,51 +1,35 @@
 import cfg from 'electron-cfg';
 import promiseIpc from 'electron-promise-ipc';
 import type { IpcMainEvent, IpcRendererEvent } from 'electron';
-import { ConfigAction, ConfigMap } from '../types/types';
 
 import { logger } from './logger';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
-promiseIpc.on('getSven', (count: unknown, event: IpcEvent | undefined) => {
-  logger.info(`main: called getSven${count}`);
-  return `asdf${event}`;
-});
-promiseIpc.on('CONFIG-GetAll', (event: IpcEvent | undefined) => {
-  logger.info('main: called CONFIG-GetAll', event);
-  return cfg.get('config');
-});
-promiseIpc.on(
-  'CONFIG-Set',
-  (key: unknown, val: unknown, event?: IpcEvent | undefined) => {
-    logger.info(`main: called CONFIG-Set, ${key}, ${val}, ${event}`);
-    return cfg.set(`config.${key}`, val);
-  }
-);
+// NOTE: using the electron-cfg window size code can reault in the window shrinking every time the app restarts
+// Sven has seen it on windows with one 4k screen at 100%, the other at 200%
 
-export type WBConfigRequest = {
-  key: string;
-  val?: string;
-  action: string;
-};
-
-export type WBConfigResponse = {
-  values: ConfigMap;
-};
-
-async function wbConfig(msg: WBConfigRequest): Promise<WBConfigResponse> {
-  const { action, key } = msg;
-  if (action === ConfigAction.Set) {
-    const { val } = msg;
-    await cfg.set(`config.${key}`, val);
-  }
-  const values: ConfigMap = await cfg.get('config');
-  logger.info('config values', { values: JSON.stringify(values) });
-  return { values };
+// Need to import the file and call a function (from the main process) to get the IPC promise to exist.
+export function initConfigPromises() {
+  // gets written to .\AppData\Roaming\SolanaWorkbench\electron-cfg.json on windows
+  promiseIpc.on('CONFIG-GetAll', (event: IpcEvent | undefined) => {
+    logger.info('main: called CONFIG-GetAll', event);
+    const config = cfg.get('config');
+    if (!config) {
+      return {};
+    }
+    return config;
+  });
+  promiseIpc.on(
+    'CONFIG-Set',
+    (key: unknown, val: unknown, event?: IpcEvent | undefined) => {
+      logger.info(`main: called CONFIG-Set, ${key}, ${val}, ${event}`);
+      return cfg.set(`config.${key}`, val);
+    }
+  );
 }
 
-export default wbConfig;
-
+export default {};
 // TODO: https://github.com/sindresorhus/electron-store has schema, so am very likely to move to that
 
 /*

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ConfigMap } from 'types/types';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
@@ -65,7 +65,7 @@ export function useConfigState() {
       window.promiseIpc
         .send('CONFIG-GetAll')
         .then((ret: ConfigMap) => {
-          logger.info(`CONFIG-GetAll => ConfigMap ${ret}`);
+          logger.info(`CONFIG-GetAll => ConfigMap ${JSON.stringify(ret)}`);
           dispatch(
             setConfig({
               values: ret,
@@ -76,7 +76,7 @@ export function useConfigState() {
         })
         .catch((e) => logger.error(e));
     }
-  }, [dispatch]);
+  }, [dispatch, config.loading]);
 
   return config;
 }

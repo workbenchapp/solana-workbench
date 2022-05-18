@@ -25,20 +25,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
-import { ConfigMap } from 'types/types';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
-import { useAppDispatch, useAppSelector } from './hooks';
+import { useAppDispatch } from './hooks';
 import {
   useConfigState,
   setConfigValue,
-  selectConfigState,
   ConfigKey,
-  setConfig,
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
@@ -264,39 +261,6 @@ function App() {
   const config = useConfigState();
 
   Object.assign(console, logger.functions);
-
-  window.promiseIpc
-    .send('getSven', 12)
-    .then((ret: string) => {
-      logger.info(`render: SVENSVENSVEN ${ret}`);
-      return `return ${ret}`;
-    })
-    .catch((e) => logger.error(e));
-
-  // useEffect(() => {
-  //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //   const listener = (resp: any) => {
-  //     const { method, res } = resp;
-  //     switch (method) {
-  //       case 'config':
-  //         dispatch(
-  //           setConfig({
-  //             values: res.values,
-  //             loading: false,
-  //           })
-  //         );
-  //         break;
-  //       default:
-  //     }
-  //   };
-  //   window.electron.ipcRenderer.on('main', listener);
-  //   window.electron.ipcRenderer.config({
-  //     action: ConfigAction.Get,
-  //   });
-  //   return () => {
-  //     window.electron.ipcRenderer.removeListener('main', listener);
-  //   };
-  // }, [dispatch]);
 
   if (config.loading) {
     return <>Config Loading ...</>;
