@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef, useState } from 'react';
-import { faTerminal } from '@fortawesome/free-solid-svg-icons';
+import {
+  faTerminal,
+  faEdit,
+  faSave,
+  faCancel,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -104,26 +109,40 @@ function AccountView(props: { pubKey: string | undefined }) {
           <TransferSolButton pubKey={pubKey} />
         </ButtonGroup>
       </ButtonToolbar>
-      <div className="row">
-        <div className="col-auto">
-          <div>
-            <h6 className="ms-1">
-              <EdiText
-                submitOnEnter
-                type="text"
-                value={humanName}
-                onSave={handleHumanNameSave}
-              />
-            </h6>
-          </div>
-        </div>
-      </div>
+
       <div className="row">
         <div className="col">
           <div className="row">
-            <div className="col-auto">
+            <div className="col col-md-12  ">
               <table className="table table-borderless table-sm mb-0">
                 <tbody>
+                  <tr>
+                    <td className="col-md-4">
+                      <div className="align-center">
+                        <div>
+                          <small className="text-muted">Editable Alias</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="col-md-8">
+                      <small>
+                        <EdiText
+                          submitOnEnter
+                          cancelOnEscape
+                          buttonsAlign="after"
+                          type="text"
+                          value={humanName}
+                          onSave={handleHumanNameSave}
+                          hideIcons
+                          editButtonContent={<FontAwesomeIcon icon={faEdit} />}
+                          saveButtonContent={<FontAwesomeIcon icon={faSave} />}
+                          cancelButtonContent={
+                            <FontAwesomeIcon icon={faCancel} />
+                          }
+                        />
+                      </small>
+                    </td>
+                  </tr>
                   <tr>
                     <td>
                       <small className="text-muted">Pubkey</small>

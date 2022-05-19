@@ -192,3 +192,22 @@ th,
 .vscroll {
   overflow-y: auto; 
 }
+
+// EdiText - https://github.com/alioguzhan/react-editext#styling-with-styled-components
+div[editext='view-container'],
+div[editext='view'],
+div[editext='edit-container'] {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+div[editext='view'] {
+    width: calc(100% - 32px);
+}
+.align-center {
+  flex: 0 0 auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  height: 2.4em; /* TODO: this is a terrible hack for aligning the "Editable Alias" with the inline edit box height. */
+}
