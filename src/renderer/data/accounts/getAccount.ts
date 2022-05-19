@@ -4,6 +4,7 @@ import { LRUCache } from 'typescript-lru-cache';
 import { AccountInfo } from './accountInfo';
 
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
+import { AccountMetaValues } from './accountState';
 
 const logger = window.electron.log;
 
@@ -114,7 +115,10 @@ export const renderData = (account: AccountInfo | undefined) => {
 
 // TODO: this should look up a persistent key: string map
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const getHumanName = (_key: AccountInfo | sol.PublicKey) => {
+export const getHumanName = (meta: AccountMetaValues | undefined) => {
+  if (meta && meta.humanname) {
+    return meta.humanname;
+  }
   return '';
 };
 

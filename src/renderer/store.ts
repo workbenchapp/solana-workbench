@@ -10,6 +10,9 @@ import SelectedAccountsListReducer from './data/SelectedAccountsList/selectedAcc
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
 // eslint-disable-next-line import/no-cycle
 import ConfigReducer from './data/Config/configState';
+// https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
+// eslint-disable-next-line import/no-cycle
+import AccountReducer from './data/accounts/accountState';
 
 import { saveState } from './data/localstorage';
 
@@ -18,6 +21,7 @@ const store = configureStore({
     validatornetwork: ValidatorReducer,
     selectedaccounts: SelectedAccountsListReducer,
     config: ConfigReducer,
+    account: AccountReducer,
   },
 });
 
@@ -27,6 +31,7 @@ store.subscribe(
   throttle(() => {
     saveState('selectedaccounts', store.getState().selectedaccounts);
     saveState('config', store.getState().config);
+    saveState('account', store.getState().account);
   }, 1000)
 );
 

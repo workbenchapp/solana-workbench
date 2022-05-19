@@ -8,6 +8,8 @@ import { useInterval, useAppSelector } from '../hooks';
 
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
+import { useAccountMeta } from '../data/accounts/accountState';
+
 import {
   truncateLamportAmount,
   getHumanName,
@@ -24,6 +26,7 @@ import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
+import AccountNameEditable from './AccountNameEditable';
 
 const logger = window.electron.log;
 
@@ -43,6 +46,7 @@ const explorerURL = (net: Net, address: string) => {
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
+  // const accountMeta = useAccountMeta(pubKey);
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
@@ -61,9 +65,7 @@ function AccountView(props: { pubKey: string | undefined }) {
     }
   }, 666);
 
-  const humanName = account
-    ? getHumanName(account)
-    : 'No on-chain account selected';
+  // const humanName = getHumanName(accountMeta);
   return (
     <Container>
       <ButtonToolbar aria-label="Toolbar with button groups">
@@ -76,7 +78,7 @@ function AccountView(props: { pubKey: string | undefined }) {
         <div className="col-auto">
           <div>
             <h6 className="ms-1">
-              {humanName !== '' ? humanName : <div>&nbsp;</div>}
+              <AccountNameEditable pubKey={pubKey} />
             </h6>
           </div>
         </div>

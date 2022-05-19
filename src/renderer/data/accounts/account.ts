@@ -31,6 +31,7 @@ export async function transferSol(
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
 
+// TODO: replace this with a request to remote (cos in a few months, the private key should not be accessible in the client code.)
 function createNewAccount() {
   const keypair = web3.Keypair.generate();
   return keypair;
