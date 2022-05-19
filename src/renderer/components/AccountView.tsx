@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useState } from 'react';
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
-import { useInterval, useAppSelector } from '../hooks';
+import EdiText from 'react-editext';
+import {
+  useInterval,
+  useAppSelector,
+  useAppSelector,
+  useAppDispatch,
+} from '../hooks';
 
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
-import { useAccountMeta } from '../data/accounts/accountState';
-
+import {
+  setAccountValues,
+  useAccountMeta,
+} from '../data/accounts/accountState';
 import {
   truncateLamportAmount,
   getHumanName,
@@ -26,7 +34,6 @@ import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
-import AccountNameEditable from './AccountNameEditable';
 
 const logger = window.electron.log;
 
@@ -46,7 +53,9 @@ const explorerURL = (net: Net, address: string) => {
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
-  // const accountMeta = useAccountMeta(pubKey);
+  const dispatch = useAppDispatch();
+  const accountMeta = useAccountMeta(pubKey);
+  const [humanName, setHumanName] = useState<string>('');
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
@@ -65,6 +74,27 @@ function AccountView(props: { pubKey: string | undefined }) {
     }
   }, 666);
 
+  useEffect(() => {
+    const alias = getHumanName(accountMeta);
+    setHumanName(alias);
+    logger.info(`get human name for pubKey ${pubKey} == ${alias}`);
+  }, [pubKey, accountMeta]);
+
+  const handleHumanNameSave = (val: string) => {
+    if (!pubKey) {
+      return;
+    }
+    dispatch(
+      setAccountValues({
+        key: pubKey,
+        value: {
+          ...accountMeta,
+          humanname: val,
+        },
+      })
+    );
+  };
+
   // const humanName = getHumanName(accountMeta);
   return (
     <Container>
@@ -78,7 +108,12 @@ function AccountView(props: { pubKey: string | undefined }) {
         <div className="col-auto">
           <div>
             <h6 className="ms-1">
-              <AccountNameEditable pubKey={pubKey} />
+              <EdiText
+                submitOnEnter
+                type="text"
+                value={humanName}
+                onSave={handleHumanNameSave}
+              />
             </h6>
           </div>
         </div>

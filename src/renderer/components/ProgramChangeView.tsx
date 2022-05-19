@@ -14,6 +14,7 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
 import Popover from 'react-bootstrap/Popover';
+import EdiText from 'react-editext';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
@@ -208,23 +209,11 @@ function ProgramChangeView() {
                     <small>Serum DEX V3</small>
                   </Dropdown.Item>
                   <div className="p-2">
-                    <Editable
-                      value="Custom"
-                      ref={filterProgramIDRef}
-                      onClick={() => {
-                        filterProgramIDRef.current.value = '';
-                      }}
-                      placeholder="Paste Program ID"
-                      onKeyDown={(e) => {
-                        if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
-                          toast.warn('Must paste in valid program ID');
-                          filterProgramIDRef.current.value = 'Custom';
-                          filterProgramIDRef.current.blur();
-                          setFilterDropdownShow(false);
-                        }
-                      }}
-                      onPaste={(e) => {
-                        const pastedID = e.clipboardData.getData('Text');
+                    <EdiText
+                      type="text"
+                      value={programID}
+                      onSave={(val: string) => {
+                        const pastedID = val;
                         if (pastedID.match(BASE58_PUBKEY_REGEX)) {
                           unsubscribeProgramChanges(net, programID);
                           subscribeProgramChanges(
