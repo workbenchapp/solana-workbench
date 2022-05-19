@@ -8,23 +8,14 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-// import {
-//   accounts,
-//   getAccount,
-//   importAccount,
-//   deleteAccount,
-//   updateAccountName,
-// } from './accounts';
-import wbConfig from './config';
+import { initConfigPromises } from './config';
 import fetchAnchorIdl from './anchor';
-// import fetchValidatorNetworkInfo from './validatorNetworkInfo';
 
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { RESOURCES_PATH } from './const';
-// import wbConfig from './config';
 
 export default class AppUpdater {
   constructor() {
@@ -37,6 +28,8 @@ export default class AppUpdater {
 let mainWindow: BrowserWindow | null = null;
 const MAX_STRING_LOG_LENGTH = 32;
 
+initConfigPromises();
+
 ipcMain.on(
   'main',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,9 +41,6 @@ ipcMain.on(
         case 'run-validator':
           await runValidator();
           break;
-        // case 'accounts':
-        //   res = await accounts(msg);
-        //   break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
@@ -58,24 +48,6 @@ ipcMain.on(
           res = await fetchAnchorIdl(msg);
           logger.debug(`fetchIDL(${msg}: (${res})`);
           break;
-        // case 'update-account-name':
-        //   await updateAccountName(msg);
-        //   break;
-        // case 'import-account':
-        //   await importAccount(msg);
-        //   break;
-        // case 'get-account':
-        //   res = await getAccount(msg);
-        //   break;
-        // case 'delete-account':
-        //   await deleteAccount(msg);
-        //   break;
-        case 'config':
-          res = await wbConfig(msg);
-          break;
-        // case 'get-validator-network-info':
-        //   res = await fetchValidatorNetworkInfo(msg);
-        //   break;
         case 'subscribe-transaction-logs':
           await subscribeTransactionLogs(event, msg);
           break;

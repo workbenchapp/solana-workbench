@@ -25,19 +25,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
-import { ConfigAction } from 'types/types';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
-import { useAppDispatch, useAppSelector } from './hooks';
+import { useAppDispatch } from './hooks';
 import {
+  useConfigState,
   setConfigValue,
-  selectConfigState,
   ConfigKey,
-  setConfig,
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 
@@ -48,6 +46,8 @@ declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     electron?: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    promiseIpc?: any;
   }
 }
 
@@ -230,13 +230,11 @@ function AnalyticsBanner() {
           type="button"
           onClick={() => {
             dispatch(
-              setConfigValue({ key: ConfigKey.AnalyticsEnabled, value: false })
+              setConfigValue({
+                key: ConfigKey.AnalyticsEnabled,
+                value: analyticsEnabled,
+              })
             );
-            window.electron.ipcRenderer.config({
-              action: ConfigAction.Set,
-              key: ConfigKey.AnalyticsEnabled,
-              val: analyticsEnabled ? 'true' : 'false',
-            });
           }}
         >
           <span className="ms-1 text-white">OK</span>
@@ -260,40 +258,14 @@ function GlobalContainer() {
 }
 
 function App() {
-  const config = useAppSelector(selectConfigState);
-  const dispatch = useAppDispatch();
+  const config = useConfigState();
 
   Object.assign(console, logger.functions);
 
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const listener = (resp: any) => {
-      const { method, res } = resp;
-      switch (method) {
-        case 'config':
-          dispatch(
-            setConfig({
-              values: res.values,
-              loading: false,
-            })
-          );
-          break;
-        default:
-      }
-    };
-    window.electron.ipcRenderer.on('main', listener);
-    window.electron.ipcRenderer.config({
-      action: ConfigAction.Get,
-    });
-    return () => {
-      window.electron.ipcRenderer.removeListener('main', listener);
-    };
-  }, [dispatch]);
-
   if (config.loading) {
-    return <></>;
+    return <>Config Loading ...</>;
   }
-  if (config.values && !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
+  if (!config.values || !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     return <AnalyticsBanner />;
   }
   return (
