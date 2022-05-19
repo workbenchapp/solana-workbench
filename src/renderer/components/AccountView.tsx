@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   faTerminal,
   faEdit,
@@ -10,12 +10,7 @@ import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import EdiText from 'react-editext';
-import {
-  useInterval,
-  useAppSelector,
-  useAppSelector,
-  useAppDispatch,
-} from '../hooks';
+import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';

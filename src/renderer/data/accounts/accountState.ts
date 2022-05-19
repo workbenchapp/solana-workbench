@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AccountMap } from 'types/types';
 import { useEffect } from 'react';
-import { Statement } from 'sqlite3';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types

@@ -36,7 +36,6 @@ import {
 } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
-import Editable from './Editable';
 import { ProgramChange } from './ProgramChange';
 import {
   unsubscribeProgramChanges,
