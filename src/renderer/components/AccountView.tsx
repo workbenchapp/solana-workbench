@@ -4,6 +4,7 @@ import {
   faEdit,
   faSave,
   faCancel,
+  faKey,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
@@ -168,6 +169,26 @@ function AccountView(props: { pubKey: string | undefined }) {
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
                             icon={faTerminal}
+                          />
+                          <small className="ms-1 mb-1">Yes</small>
+                        </div>
+                      ) : (
+                        <small className="fst-italic fw-light text-muted">
+                          No
+                        </small>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Private key known</small>
+                    </td>
+                    <td>
+                      {accountMeta?.privatekey ? (
+                        <div>
+                          <FontAwesomeIcon
+                            className="border-success rounded p-1 exe-icon"
+                            icon={faKey}
                           />
                           <small className="ms-1 mb-1">Yes</small>
                         </div>

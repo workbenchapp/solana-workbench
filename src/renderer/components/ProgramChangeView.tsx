@@ -43,6 +43,7 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
+import { setAccountValues } from '../data/accounts/accountState';
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -279,6 +280,15 @@ function ProgramChangeView() {
               <Button
                 onClick={() => {
                   const newAccount = createNewAccount();
+                  // TODO: yeah, this is horrible, will be easier to do generating the new Key on the server, and saving it there...
+                  dispatch(
+                    setAccountValues({
+                      key: newAccount.publicKey.toString(),
+                      value: {
+                        privatekey: newAccount.secretKey.toString(),
+                      },
+                    })
+                  );
                   pinAccount(newAccount.publicKey.toString(), false);
                   dispatch(setSelected(newAccount.publicKey.toString()));
                   // or do we save it to the backend? and defer getting it back to 0.4.0..

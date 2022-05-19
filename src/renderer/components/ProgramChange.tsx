@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { faStar } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faKey } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
@@ -18,6 +18,7 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAccountMeta } from '../data/accounts/accountState';
 
 const logger = window.electron.log;
 
@@ -32,6 +33,7 @@ export function ProgramChange(props: {
   const { pubKey, selected, net, pinned, pinAccount } = props;
   const [change, setChangeInfo] = useState<AccountInfo | undefined>(undefined);
   const { status } = useAppSelector(selectValidatorNetworkState);
+  const accountMeta = useAccountMeta(pubKey);
 
   const updateAccount = useCallback(() => {
     if (status !== NetStatus.Running) {
@@ -77,6 +79,11 @@ export function ProgramChange(props: {
       </td>
       <td>
         <InlinePK pk={pubKey} />
+        {accountMeta?.privatekey ? (
+          <FontAwesomeIcon title="has private key" icon={faKey} />
+        ) : (
+          ''
+        )}
       </td>
       <td>
         <span className="ms-2 rounded p-1">
