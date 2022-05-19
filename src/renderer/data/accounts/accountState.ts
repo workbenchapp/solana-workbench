@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { AccountMap } from 'types/types';
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 
@@ -83,7 +82,7 @@ export function useAccountsState() {
     if (account.loading) {
       window.promiseIpc
         .send('ACCOUNT-GetAll')
-        .then((ret: AccountMap) => {
+        .then((ret: AccountMeta) => {
           dispatch(
             setAccount({
               accounts: ret,

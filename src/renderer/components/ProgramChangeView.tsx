@@ -131,7 +131,9 @@ function ProgramChangeView() {
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-  const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
+  const [programID, setProgramID] = useState<string>(
+    KnownProgramID.SystemProgram
+  );
   const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
