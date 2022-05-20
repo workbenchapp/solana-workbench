@@ -8,7 +8,8 @@ import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
 import { runValidator, validatorLogs } from './validator';
-import { initConfigPromises } from './config';
+import { initConfigPromises } from './ipc/config';
+import { initAccountPromises } from './ipc/accounts';
 import fetchAnchorIdl from './anchor';
 
 import {
@@ -29,6 +30,7 @@ let mainWindow: BrowserWindow | null = null;
 const MAX_STRING_LOG_LENGTH = 32;
 
 initConfigPromises();
+initAccountPromises();
 
 ipcMain.on(
   'main',

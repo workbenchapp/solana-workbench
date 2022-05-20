@@ -14,6 +14,7 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
 import Popover from 'react-bootstrap/Popover';
+import EdiText from 'react-editext';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
@@ -35,7 +36,6 @@ import {
 } from '../data/accounts/getAccount';
 import { AccountInfo } from '../data/accounts/accountInfo';
 
-import Editable from './Editable';
 import { ProgramChange } from './ProgramChange';
 import {
   unsubscribeProgramChanges,
@@ -43,6 +43,7 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
+import { setAccountValues } from '../data/accounts/accountState';
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -130,7 +131,9 @@ function ProgramChangeView() {
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
   const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
-  const [programID, setProgramID] = useState(KnownProgramID.SystemProgram);
+  const [programID, setProgramID] = useState<string>(
+    KnownProgramID.SystemProgram
+  );
   const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
@@ -208,23 +211,11 @@ function ProgramChangeView() {
                     <small>Serum DEX V3</small>
                   </Dropdown.Item>
                   <div className="p-2">
-                    <Editable
-                      value="Custom"
-                      ref={filterProgramIDRef}
-                      onClick={() => {
-                        filterProgramIDRef.current.value = '';
-                      }}
-                      placeholder="Paste Program ID"
-                      onKeyDown={(e) => {
-                        if (!(e.code === 'MetaRight' || e.code === 'KeyV')) {
-                          toast.warn('Must paste in valid program ID');
-                          filterProgramIDRef.current.value = 'Custom';
-                          filterProgramIDRef.current.blur();
-                          setFilterDropdownShow(false);
-                        }
-                      }}
-                      onPaste={(e) => {
-                        const pastedID = e.clipboardData.getData('Text');
+                    <EdiText
+                      type="text"
+                      value={programID}
+                      onSave={(val: string) => {
+                        const pastedID = val;
                         if (pastedID.match(BASE58_PUBKEY_REGEX)) {
                           unsubscribeProgramChanges(net, programID);
                           subscribeProgramChanges(
@@ -291,6 +282,15 @@ function ProgramChangeView() {
               <Button
                 onClick={() => {
                   const newAccount = createNewAccount();
+                  // TODO: yeah, this is horrible, will be easier to do generating the new Key on the server, and saving it there...
+                  dispatch(
+                    setAccountValues({
+                      key: newAccount.publicKey.toString(),
+                      value: {
+                        privatekey: newAccount.secretKey.toString(),
+                      },
+                    })
+                  );
                   pinAccount(newAccount.publicKey.toString(), false);
                   dispatch(setSelected(newAccount.publicKey.toString()));
                   // or do we save it to the backend? and defer getting it back to 0.4.0..

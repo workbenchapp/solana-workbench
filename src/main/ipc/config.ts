@@ -2,7 +2,7 @@ import cfg from 'electron-cfg';
 import promiseIpc from 'electron-promise-ipc';
 import type { IpcMainEvent, IpcRendererEvent } from 'electron';
 
-import { logger } from './logger';
+import { logger } from '../logger';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 

@@ -91,7 +91,7 @@ export interface LogSubscriptionMap {
   };
 }
 
-export interface ImportedAccountMap {
+export interface AccountMap {
   [pubKey: string]: boolean;
 }
 

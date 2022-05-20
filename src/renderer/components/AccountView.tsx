@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { faTerminal } from '@fortawesome/free-solid-svg-icons';
+import { useState, useEffect } from 'react';
+import {
+  faTerminal,
+  faEdit,
+  faSave,
+  faCancel,
+  faKey,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
-import { useInterval, useAppSelector } from '../hooks';
+import EdiText from 'react-editext';
+import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
+import {
+  setAccountValues,
+  useAccountMeta,
+} from '../data/accounts/accountState';
 import {
   truncateLamportAmount,
   getHumanName,
@@ -43,6 +54,9 @@ const explorerURL = (net: Net, address: string) => {
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const dispatch = useAppDispatch();
+  const accountMeta = useAccountMeta(pubKey);
+  const [humanName, setHumanName] = useState<string>('');
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
@@ -61,9 +75,28 @@ function AccountView(props: { pubKey: string | undefined }) {
     }
   }, 666);
 
-  const humanName = account
-    ? getHumanName(account)
-    : 'No on-chain account selected';
+  useEffect(() => {
+    const alias = getHumanName(accountMeta);
+    setHumanName(alias);
+    logger.info(`get human name for pubKey ${pubKey} == ${alias}`);
+  }, [pubKey, accountMeta]);
+
+  const handleHumanNameSave = (val: string) => {
+    if (!pubKey) {
+      return;
+    }
+    dispatch(
+      setAccountValues({
+        key: pubKey,
+        value: {
+          ...accountMeta,
+          humanname: val,
+        },
+      })
+    );
+  };
+
+  // const humanName = getHumanName(accountMeta);
   return (
     <Container>
       <ButtonToolbar aria-label="Toolbar with button groups">
@@ -72,21 +105,40 @@ function AccountView(props: { pubKey: string | undefined }) {
           <TransferSolButton pubKey={pubKey} />
         </ButtonGroup>
       </ButtonToolbar>
-      <div className="row">
-        <div className="col-auto">
-          <div>
-            <h6 className="ms-1">
-              {humanName !== '' ? humanName : <div>&nbsp;</div>}
-            </h6>
-          </div>
-        </div>
-      </div>
+
       <div className="row">
         <div className="col">
           <div className="row">
-            <div className="col-auto">
+            <div className="col col-md-12  ">
               <table className="table table-borderless table-sm mb-0">
                 <tbody>
+                  <tr>
+                    <td className="col-md-4">
+                      <div className="align-center">
+                        <div>
+                          <small className="text-muted">Editable Alias</small>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="col-md-8">
+                      <small>
+                        <EdiText
+                          submitOnEnter
+                          cancelOnEscape
+                          buttonsAlign="after"
+                          type="text"
+                          value={humanName}
+                          onSave={handleHumanNameSave}
+                          hideIcons
+                          editButtonContent={<FontAwesomeIcon icon={faEdit} />}
+                          saveButtonContent={<FontAwesomeIcon icon={faSave} />}
+                          cancelButtonContent={
+                            <FontAwesomeIcon icon={faCancel} />
+                          }
+                        />
+                      </small>
+                    </td>
+                  </tr>
                   <tr>
                     <td>
                       <small className="text-muted">Pubkey</small>
@@ -117,6 +169,26 @@ function AccountView(props: { pubKey: string | undefined }) {
                           <FontAwesomeIcon
                             className="border-success rounded p-1 exe-icon"
                             icon={faTerminal}
+                          />
+                          <small className="ms-1 mb-1">Yes</small>
+                        </div>
+                      ) : (
+                        <small className="fst-italic fw-light text-muted">
+                          No
+                        </small>
+                      )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <small className="text-muted">Private key known</small>
+                    </td>
+                    <td>
+                      {accountMeta?.privatekey ? (
+                        <div>
+                          <FontAwesomeIcon
+                            className="border-success rounded p-1 exe-icon"
+                            icon={faKey}
                           />
                           <small className="ms-1 mb-1">Yes</small>
                         </div>
