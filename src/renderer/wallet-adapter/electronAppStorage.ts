@@ -16,7 +16,6 @@ import {
   WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import * as sol from '@solana/web3.js';
-import { useKeypair } from '../data/accounts/accountState';
 
 interface ElectronAppStorageWalletEvents {
   connect(...args: unknown[]): unknown;

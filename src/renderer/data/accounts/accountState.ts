@@ -115,9 +115,8 @@ export function useAccountMeta(key: string | undefined) {
 }
 
 // get a specific account
-export function useKeypair() {
-  const account = useAccountsState();
-  const key = '5SbnxhU174qWHCzw18LyawfJW4ZgLJdYDQHUeAwtoscy';
+export function useKeypair(key: string | undefined) {
+  const account = useAccountMeta(key);
 
   if (
     !key ||

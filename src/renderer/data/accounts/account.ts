@@ -3,8 +3,10 @@ import * as web3 from '@solana/web3.js';
 // import { struct, u32, ns64 } from '@solana/buffer-layout';
 // import { Buffer } from 'buffer';
 
+import { ConfigState } from 'types/types';
 import { reloadFromMain } from './accountState';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
+import { setConfigValue } from '../Config/configState';
 
 const logger = window.electron.log;
 
@@ -32,7 +34,6 @@ export async function transferSol(
   );
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
-// TODO: replace this with a request to remote (cos in a few months, the private key should not be accessible in the client code.)
 async function createNewAccount(dispatch): Promise<web3.Keypair> {
   return window.promiseIpc
     .send('ACCOUNT-CreateNew')
@@ -43,6 +44,31 @@ async function createNewAccount(dispatch): Promise<web3.Keypair> {
       logger.info(`renderer received a new account${JSON.stringify(account)}`);
       const newKeypair = web3.Keypair.fromSeed(account.privatekey.slice(0, 32));
       return newKeypair;
+    })
+    .catch((e) => {
+      logger.error(e);
+      throw e;
+    });
+}
+
+export async function getElectronStorageWallet(
+  config?: ConfigState,
+  dispatch
+): Promise<web3.Keypair> {
+  // if (config && config.values && `ElectronAppStorageKeypair` in config.values) {
+  //   return getAccountFromConfig(config.values.ElectronAppStorageKeypair);
+  // }
+
+  // if the config doesn't have a keypair set, make one..
+  createNewAccount(dispatch)
+    .then((keypair) => {
+      dispatch(
+        setConfigValue({
+          key: 'ElectronAppStorageKeypair',
+          value: keypair.publicKey.toString(),
+        })
+      );
+      return keypair;
     })
     .catch((e) => {
       logger.error(e);

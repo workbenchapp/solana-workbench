@@ -57,13 +57,13 @@ import {
   setConfigValue,
   ConfigKey,
 } from './data/Config/configState';
+import { useAccountsState, useKeypair } from './data/accounts/accountState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
-import createNewAccount from './data/accounts/account';
-import { useKeypair } from './data/accounts/accountState';
+import { getElectronStorageWallet } from './data/accounts/account';
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -276,6 +276,8 @@ function AnalyticsBanner() {
 
 export const GlobalContainer: FC = () => {
   const dispatch = useAppDispatch();
+  const config = useConfigState();
+  const accounts = useAccountsState();
 
   // function GlobalContainer() {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
@@ -302,15 +304,40 @@ export const GlobalContainer: FC = () => {
       new ElectronAppStorageWalletAdapter({
         endpoint,
         accountFn: (): Promise<sol.Keypair> => {
+          // TODO: move this into getElectronStorageWallet() and move it to somewhere more sane..
+          if (config?.values?.ElectronAppStorageKeypair) {
+            const account =
+              accounts.accounts[config?.values?.ElectronAppStorageKeypair];
+
+            if (account) {
+              const pk = new Uint8Array({ length: 64 });
+              // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
+              let i = 0;
+              while (i < 64) {
+                // const index = i.toString();
+                const value = account.privatekey[i];
+                pk[i] = value;
+                i += 1;
+              }
+              // const pk = account.accounts[key].privatekey as Uint8Array;
+              try {
+                return sol.Keypair.fromSecretKey(pk);
+              } catch (e) {
+                logger.error('useKeypair: ', e);
+              }
+            }
+          }
           // TODO: this should re-use an existing account - and there needs to be UX to select a different one..
-          return createNewAccount(dispatch);
+          return getElectronStorageWallet(config, dispatch);
         },
       }),
       new LocalStorageWalletAdapter({ endpoint }),
     ],
-    [endpoint]
+    [endpoint, config, accounts]
   );
-
+  if (config.loading || accounts.loading) {
+    return <>Config Loading ...${accounts.loading}</>;
+  }
   return (
     <div className="vh-100">
       <ConnectionProvider endpoint={endpoint}>
@@ -330,11 +357,12 @@ export const GlobalContainer: FC = () => {
 
 function App() {
   const config = useConfigState();
+  const accounts = useAccountsState();
 
   Object.assign(console, logger.functions);
 
   if (config.loading) {
-    return <>Config Loading ...</>;
+    return <>Config Loading ...${accounts.loading}</>;
   }
   if (!config.values || !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     return <AnalyticsBanner />;
