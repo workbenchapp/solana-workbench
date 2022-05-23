@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import isElectron from 'is-electron';
 import './App.scss';
+import * as sol from '@solana/web3.js';
 
 import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
 
@@ -30,6 +31,7 @@ import { FC, useMemo, useEffect, useState } from 'react';
 import {
   ConnectionProvider,
   WalletProvider,
+  Adapter,
 } from '@solana/wallet-adapter-react';
 import {
   LedgerWalletAdapter,
@@ -41,8 +43,8 @@ import {
   WalletModalProvider,
   WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
-import { ConfigAction } from 'types/types';
 import { LocalStorageWalletAdapter } from './wallet-adapter/localstorage';
+import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
@@ -60,6 +62,8 @@ import {
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
+import createNewAccount from './data/accounts/account';
+import { useKeypair } from './data/accounts/accountState';
 
 // Default styles that can be overridden by your app
 require('@solana/wallet-adapter-react-ui/styles.css');
@@ -271,6 +275,8 @@ function AnalyticsBanner() {
 }
 
 export const GlobalContainer: FC = () => {
+  const dispatch = useAppDispatch();
+
   // function GlobalContainer() {
   // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
   // const network = WalletAdapterNetwork.Devnet;
@@ -293,6 +299,13 @@ export const GlobalContainer: FC = () => {
       new LedgerWalletAdapter(),
       // new SolletWalletAdapter({ network }),
       // new SolletExtensionWalletAdapter({ network }),
+      new ElectronAppStorageWalletAdapter({
+        endpoint,
+        accountFn: (): Promise<sol.Keypair> => {
+          // TODO: this should re-use an existing account - and there needs to be UX to select a different one..
+          return createNewAccount(dispatch);
+        },
+      }),
       new LocalStorageWalletAdapter({ endpoint }),
     ],
     [endpoint]

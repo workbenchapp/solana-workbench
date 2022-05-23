@@ -5,6 +5,7 @@ import {
   faUnsorted,
 } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
+import * as sol from '@solana/web3.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
@@ -45,7 +46,6 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
-import { setAccountValues } from '../data/accounts/accountState';
 
 const logger = window.electron.log;
 
@@ -294,20 +294,20 @@ function ProgramChangeView() {
             >
               <Button
                 onClick={() => {
-                  const newAccount = createNewAccount();
-                  // TODO: yeah, this is horrible, will be easier to do generating the new Key on the server, and saving it there...
-                  dispatch(
-                    setAccountValues({
-                      key: newAccount.publicKey.toString(),
-                      value: {
-                        privatekey: newAccount.secretKey.toString(),
-                      },
+                  createNewAccount(dispatch)
+                    .then((newKeypair) => {
+                      logger.info(
+                        'renderer got new account',
+                        newKeypair.publicKey.toString()
+                      );
+
+                      pinAccount(newKeypair.publicKey.toString(), false);
+                      dispatch(setSelected(newKeypair.publicKey.toString()));
+                      // or do we save it to the backend? and defer getting it back to 0.4.0..
+                      setAnchorEl(newKeypair);
+                      return newKeypair;
                     })
-                  );
-                  pinAccount(newAccount.publicKey.toString(), false);
-                  dispatch(setSelected(newAccount.publicKey.toString()));
-                  // or do we save it to the backend? and defer getting it back to 0.4.0..
-                  setAnchorEl(newAccount);
+                    .catch(logger.error);
                 }}
               >
                 Create Account

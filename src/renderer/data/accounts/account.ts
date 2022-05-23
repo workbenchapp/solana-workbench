@@ -1,7 +1,9 @@
 import * as web3 from '@solana/web3.js';
+
 // import { struct, u32, ns64 } from '@solana/buffer-layout';
 // import { Buffer } from 'buffer';
 
+import { reloadFromMain } from './accountState';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 
 const logger = window.electron.log;
@@ -31,9 +33,21 @@ export async function transferSol(
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
 // TODO: replace this with a request to remote (cos in a few months, the private key should not be accessible in the client code.)
-function createNewAccount() {
-  const keypair = web3.Keypair.generate();
-  return keypair;
+async function createNewAccount(dispatch): Promise<web3.Keypair> {
+  return window.promiseIpc
+    .send('ACCOUNT-CreateNew')
+    .then((account) => {
+      if (dispatch) {
+        dispatch(reloadFromMain());
+      }
+      logger.info(`renderer received a new account${JSON.stringify(account)}`);
+      const newKeypair = web3.Keypair.fromSeed(account.privatekey.slice(0, 32));
+      return newKeypair;
+    })
+    .catch((e) => {
+      logger.error(e);
+      throw e;
+    });
 }
 
 export default createNewAccount;
