@@ -89,7 +89,7 @@ export async function getElectronStorageWallet(
   // }
 
   // if the config doesn't have a keypair set, make one..
-  createNewAccount(dispatch)
+  return createNewAccount(dispatch)
     .then((keypair) => {
       dispatch(
         setConfigValue({

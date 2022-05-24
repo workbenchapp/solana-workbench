@@ -8,7 +8,6 @@
 
 import {
   BaseMessageSignerWalletAdapter,
-  EventEmitter,
   SendTransactionOptions,
   WalletDisconnectedError,
   WalletDisconnectionError,
@@ -24,13 +23,7 @@ import {
   globalNetworkSet,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
-interface ElectronAppStorageWalletEvents {
-  connect(...args: unknown[]): unknown;
-  disconnect(...args: unknown[]): unknown;
-}
-
-interface ElectronAppStorageWallet
-  extends EventEmitter<ElectronAppStorageWalletEvents> {
+interface ElectronAppStorageWallet {
   isElectronAppStorage?: boolean;
   publicKey?: { toBytes(): Uint8Array };
   isConnected: boolean;

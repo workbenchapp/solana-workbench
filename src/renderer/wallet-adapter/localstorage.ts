@@ -7,7 +7,6 @@
 
 import {
   BaseMessageSignerWalletAdapter,
-  EventEmitter,
   SendTransactionOptions,
   WalletDisconnectedError,
   WalletDisconnectionError,
@@ -21,12 +20,7 @@ import * as sol from '@solana/web3.js';
 import * as bip39 from 'bip39';
 import { saveState, loadState } from '../data/localstorage';
 
-interface LocalStorageWalletEvents {
-  connect(...args: unknown[]): unknown;
-  disconnect(...args: unknown[]): unknown;
-}
-
-interface LocalStorageWallet extends EventEmitter<LocalStorageWalletEvents> {
+interface LocalStorageWallet {
   isLocalStorage?: boolean;
   publicKey?: { toBytes(): Uint8Array };
   isConnected: boolean;
