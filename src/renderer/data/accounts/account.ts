@@ -1,7 +1,6 @@
 import * as web3 from '@solana/web3.js';
 
-// import { struct, u32, ns64 } from '@solana/buffer-layout';
-// import { Buffer } from 'buffer';
+import { WalletContextState } from '@solana/wallet-adapter-react';
 
 import { ConfigState } from 'types/types';
 import { reloadFromMain } from './accountState';
@@ -34,6 +33,36 @@ export async function transferSol(
   );
   return new Promise((resolve) => setTimeout(resolve, 2000));
 }
+
+export async function sendSolFromSelectedWallet(
+  connection: web3.Connection,
+  fromKey: WalletContextState,
+  toKey: string,
+  solAmount: string
+) {
+  const { publicKey, sendTransaction } = fromKey;
+  if (!publicKey) {
+    throw Error('no wallet selected');
+  }
+  const toPublicKey = new web3.PublicKey(toKey);
+
+  const lamports = web3.LAMPORTS_PER_SOL * parseFloat(solAmount);
+
+  let signature: web3.TransactionSignature = '';
+
+  const transaction = new web3.Transaction().add(
+    web3.SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: toPublicKey,
+      lamports,
+    })
+  );
+
+  signature = await sendTransaction(transaction, connection);
+
+  await connection.confirmTransaction(signature, 'finalized');
+}
+
 async function createNewAccount(dispatch): Promise<web3.Keypair> {
   return window.promiseIpc
     .send('ACCOUNT-CreateNew')

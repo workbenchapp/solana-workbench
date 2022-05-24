@@ -11,6 +11,7 @@ import Container from 'react-bootstrap/Container';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import EdiText from 'react-editext';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import analytics from '../common/analytics';

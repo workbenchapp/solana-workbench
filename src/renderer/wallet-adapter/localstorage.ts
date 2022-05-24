@@ -2,6 +2,8 @@
 // code style from solana-labs/wallet-adapter
 
 /*  eslint-disable max-classes-per-file */
+/* eslint-disable class-methods-use-this */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import {
   BaseMessageSignerWalletAdapter,

@@ -26,12 +26,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
-import { FC, useMemo, useEffect, useState } from 'react';
+import { FC, useMemo, useState } from 'react';
 
 import {
   ConnectionProvider,
   WalletProvider,
-  Adapter,
 } from '@solana/wallet-adapter-react';
 import {
   LedgerWalletAdapter,
@@ -43,7 +42,6 @@ import {
   WalletModalProvider,
   WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
-import { LocalStorageWalletAdapter } from './wallet-adapter/localstorage';
 import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
 import Account from './nav/Account';
@@ -57,7 +55,7 @@ import {
   setConfigValue,
   ConfigKey,
 } from './data/Config/configState';
-import { useAccountsState, useKeypair } from './data/accounts/accountState';
+import { useAccountsState } from './data/accounts/accountState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
   netToURL,
@@ -278,13 +276,7 @@ export const GlobalContainer: FC = () => {
   const dispatch = useAppDispatch();
   const config = useConfigState();
   const accounts = useAccountsState();
-
-  // function GlobalContainer() {
-  // The network can be set to 'devnet', 'testnet', or 'mainnet-beta'.
-  // const network = WalletAdapterNetwork.Devnet;
-
-  const validator = useAppSelector(selectValidatorNetworkState);
-  const { net } = validator;
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
   // You can also provide a custom RPC endpoint.
   const endpoint = useMemo(() => netToURL(net), [net]);
@@ -292,8 +284,43 @@ export const GlobalContainer: FC = () => {
   // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading --
   // Only the wallets you configure here will be compiled into your application, and only the dependencies
   // of wallets that your users connect to will be loaded.
-  const wallets = useMemo(
-    () => [
+  const wallets = useMemo(() => {
+    const electronStorageWallet = new ElectronAppStorageWalletAdapter({
+      endpointFn: (): Promise<string> => {
+        // TODO: so this is where I assumed I could get the wallet to use the other network
+        //       failed, so I made globalNetworkSet for this PR.
+        //       also note that there's a PR in for wallet-adapter that adds network switching.
+        return endpoint;
+      },
+      accountFn: (): Promise<sol.Keypair> => {
+        // TODO: move this into getElectronStorageWallet() and move it to somewhere more sane..
+        // TODO: or even better, make the wallet aware of the accounts store, and be able to sign for any keypair in it..
+        if (config?.values?.ElectronAppStorageKeypair) {
+          const account =
+            accounts.accounts[config?.values?.ElectronAppStorageKeypair];
+
+          if (account) {
+            const pk = new Uint8Array({ length: 64 });
+            // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
+            let i = 0;
+            while (i < 64) {
+              // const index = i.toString();
+              const value = account.privatekey[i];
+              pk[i] = value;
+              i += 1;
+            }
+            // const pk = account.accounts[key].privatekey as Uint8Array;
+            try {
+              return sol.Keypair.fromSecretKey(pk);
+            } catch (e) {
+              logger.error('useKeypair: ', e);
+            }
+          }
+        }
+        return getElectronStorageWallet(config, dispatch);
+      },
+    });
+    return [
       new PhantomWalletAdapter(),
       new SlopeWalletAdapter(),
       // new SolflareWalletAdapter({ network }),
@@ -301,46 +328,17 @@ export const GlobalContainer: FC = () => {
       new LedgerWalletAdapter(),
       // new SolletWalletAdapter({ network }),
       // new SolletExtensionWalletAdapter({ network }),
-      new ElectronAppStorageWalletAdapter({
-        endpoint,
-        accountFn: (): Promise<sol.Keypair> => {
-          // TODO: move this into getElectronStorageWallet() and move it to somewhere more sane..
-          if (config?.values?.ElectronAppStorageKeypair) {
-            const account =
-              accounts.accounts[config?.values?.ElectronAppStorageKeypair];
+      electronStorageWallet,
+      // new LocalStorageWalletAdapter({ endpoint }),
+    ];
+  }, [endpoint, config, accounts, dispatch]);
 
-            if (account) {
-              const pk = new Uint8Array({ length: 64 });
-              // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
-              let i = 0;
-              while (i < 64) {
-                // const index = i.toString();
-                const value = account.privatekey[i];
-                pk[i] = value;
-                i += 1;
-              }
-              // const pk = account.accounts[key].privatekey as Uint8Array;
-              try {
-                return sol.Keypair.fromSecretKey(pk);
-              } catch (e) {
-                logger.error('useKeypair: ', e);
-              }
-            }
-          }
-          // TODO: this should re-use an existing account - and there needs to be UX to select a different one..
-          return getElectronStorageWallet(config, dispatch);
-        },
-      }),
-      new LocalStorageWalletAdapter({ endpoint }),
-    ],
-    [endpoint, config, accounts]
-  );
   if (config.loading || accounts.loading) {
     return <>Config Loading ...${accounts.loading}</>;
   }
   return (
     <div className="vh-100">
-      <ConnectionProvider endpoint={endpoint}>
+      <ConnectionProvider endpoint={netToURL(net)}>
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
             <Topbar />

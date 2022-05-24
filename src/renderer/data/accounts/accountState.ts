@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { useEffect } from 'react';
 import * as sol from '@solana/web3.js';
-import { Statement } from 'sqlite3';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types

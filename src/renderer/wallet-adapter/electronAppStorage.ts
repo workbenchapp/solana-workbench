@@ -3,6 +3,9 @@
 
 /*  eslint-disable max-classes-per-file */
 
+/* eslint-disable class-methods-use-this */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import {
   BaseMessageSignerWalletAdapter,
   EventEmitter,
@@ -16,6 +19,10 @@ import {
   WalletSignTransactionError,
 } from '@solana/wallet-adapter-base';
 import * as sol from '@solana/web3.js';
+import {
+  netToURL,
+  globalNetworkSet,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 
 interface ElectronAppStorageWalletEvents {
   connect(...args: unknown[]): unknown;
@@ -53,13 +60,12 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 
   isConnected = false;
 
-  endpoint: string;
+  endpointFn: () => Promise<string>;
 
   account: sol.Keypair;
 
   constructor(config: ElectronAppStorageWalletAdapterConfig) {
-    this.endpoint = config.endpoint;
-    console.log(`er, huh${JSON.stringify(config.account)}`);
+    this.endpointFn = config.endpointFn;
     this.account = config.account;
   }
 
@@ -78,7 +84,7 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
     transaction: sol.Transaction,
     options?: sol.SendOptions
   ): Promise<{ signature: sol.TransactionSignature }> => {
-    const connection = new sol.Connection(this.endpoint);
+    const connection = new sol.Connection(netToURL(globalNetworkSet.net));
 
     transaction.recentBlockhash = (
       await connection.getRecentBlockhash('max')
@@ -115,6 +121,8 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
   disconnect = async (): Promise<void> => {};
 
   _handleDisconnect = (): void => {};
+
+  off = (): void => {};
 }
 
 // interface ElectronAppStorageWindow extends Window {
@@ -124,7 +132,8 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 // declare const window: ElectronAppStorageWindow;
 
 export interface ElectronAppStorageWalletAdapterConfig {
-  endpoint: string;
+  // endpoint: string;
+  endpointFn: () => Promise<string>;
   accountFn: () => Promise<sol.Keypair>;
   account?: sol.Keypair;
 }
@@ -163,7 +172,6 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
   }
 
   get publicKey(): sol.PublicKey | null {
-    console.log(`Public Key for wallet-adapter: ${this._publicKey}`);
     return this._publicKey;
   }
 
@@ -191,10 +199,10 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
 
     if (!this._publicKey) {
       this._keyPair = await this._config.accountFn();
-      console.log(`set publicKey: ${this._keyPair.publicKey.toString}`);
       this._publicKey = this._keyPair.publicKey;
       this._config.account = this._keyPair;
     }
+    // TODO: i think really, this provider gets moved out to our code...
     this._wallet = new ElectronAppStorageWalletProvider(this._config);
     this._wallet.isConnected = true;
 

@@ -5,7 +5,6 @@ import {
   faUnsorted,
 } from '@fortawesome/free-solid-svg-icons';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
-import * as sol from '@solana/web3.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
