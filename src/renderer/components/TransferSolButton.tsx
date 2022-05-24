@@ -120,7 +120,14 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
                     {
                       pending: 'Transfer submitted',
                       success: 'Transfer succeeded 👌',
-                      error: 'Transfer failed 🤯',
+                      error: {
+                        render({ data }) {
+                          // eslint-disable-next-line no-console
+                          console.log('eror', data);
+                          // When the promise reject, data will contains the error
+                          return 'error';
+                        },
+                      },
                     }
                   );
                 }}
