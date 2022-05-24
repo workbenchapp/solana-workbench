@@ -55,6 +55,16 @@ sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-con
 - XCode Command Line Tools (if on OSX)
 - on OSX some path stuffing around, so solana and anchor binaries are in the path (for development)
 - Docker Desktop, or a working configured Docker setup
+- Add anchor and solana to your path (edit `~/.zshenv` if you're using `zsh`):
+
+```
+. "$HOME/.cargo/env"
+
+path+=('/Users/sven/.avm/bin')
+path+=('/Users/sven/.local/share/solana/install/active_release/bin')
+
+export PATH
+```
 
 ### Windows (native)
 
