@@ -110,7 +110,9 @@ class LocalStorageWalletProvider implements LocalStorageWallet {
 
   signMessage = async (
     message: Uint8Array
-  ): Promise<{ signature: Uint8Array }> => {};
+  ): Promise<{ signature: Uint8Array }> => {
+    throw new Error(`nope: ${message}`);
+  };
 
   connect = async (): Promise<void> => {};
 
@@ -127,11 +129,10 @@ class LocalStorageWalletProvider implements LocalStorageWallet {
 
 export interface LocalStorageWalletAdapterConfig {
   endpoint: string;
-  account?: sol.Keypair;
+  account: sol.Keypair;
 }
 
-export const LocalStorageWalletName =
-  'LocalStorage' as WalletName<'LocalStorage'>;
+export const LocalStorageWalletName = 'LocalStorage' as const as WalletName;
 
 export class LocalStorageWalletAdapter extends BaseMessageSignerWalletAdapter {
   name = LocalStorageWalletName;
@@ -226,11 +227,12 @@ export class LocalStorageWalletAdapter extends BaseMessageSignerWalletAdapter {
     if (this._wallet) {
       this._wallet.off('disconnect', this._disconnected);
 
+      const wallet = this._wallet;
       this._wallet = null;
       this._publicKey = null;
 
       try {
-        await this._wallet.disconnect();
+        await wallet.disconnect();
       } catch (error: any) {
         this.emit('error', new WalletDisconnectionError(error?.message, error));
       }

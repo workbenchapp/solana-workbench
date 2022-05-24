@@ -114,7 +114,9 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 
   signMessage = async (
     message: Uint8Array
-  ): Promise<{ signature: Uint8Array }> => {};
+  ): Promise<{ signature: Uint8Array }> => {
+    throw new Error(`nope: ${message}`);
+  };
 
   connect = async (): Promise<void> => {};
 
@@ -135,7 +137,7 @@ export interface ElectronAppStorageWalletAdapterConfig {
   // endpoint: string;
   endpointFn: () => Promise<string>;
   accountFn: () => Promise<sol.Keypair>;
-  account?: sol.Keypair;
+  account: sol.Keypair;
 }
 
 export const ElectronAppStorageWalletName = 'ElectronAppStorage' as WalletName;
@@ -215,11 +217,12 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
     if (this._wallet) {
       this._wallet.off('disconnect', this._disconnected);
 
+      const wallet = this._wallet;
       this._wallet = null;
       this._publicKey = null;
 
       try {
-        await this._wallet.disconnect();
+        await wallet.disconnect();
       } catch (error: any) {
         this.emit('error', new WalletDisconnectionError(error?.message, error));
       }
