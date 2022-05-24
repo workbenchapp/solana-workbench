@@ -60,8 +60,10 @@ sudo apt-get install -yq curl libudev-dev git build-essential libssl-dev pkg-con
 ```
 . "$HOME/.cargo/env"
 
-path+=('/Users/sven/.avm/bin')
-path+=('/Users/sven/.local/share/solana/install/active_release/bin')
+path+=("$HOME/.avm/bin")
+path+=("$HOME/.local/share/solana/install/active_release/bin")
+
+. "$HOME/.nvm/nvm.sh"
 
 export PATH
 ```
