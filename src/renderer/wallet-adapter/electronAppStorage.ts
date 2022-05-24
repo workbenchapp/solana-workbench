@@ -39,6 +39,7 @@ interface ElectronAppStorageWallet {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   _handleDisconnect(...args: unknown[]): unknown;
+  off(): void;
 }
 
 /*
@@ -53,12 +54,12 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 
   isConnected = false;
 
-  endpointFn: () => Promise<string>;
-
   account: sol.Keypair;
 
   constructor(config: ElectronAppStorageWalletAdapterConfig) {
-    this.endpointFn = config.endpointFn;
+    if (!config.account) {
+      throw Error('Wallet account info not ready yet');
+    }
     this.account = config.account;
   }
 
@@ -127,10 +128,8 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 // declare const window: ElectronAppStorageWindow;
 
 export interface ElectronAppStorageWalletAdapterConfig {
-  // endpoint: string;
-  endpointFn: () => Promise<string>;
   accountFn: () => Promise<sol.Keypair>;
-  account: sol.Keypair;
+  account?: sol.Keypair;
 }
 
 export const ElectronAppStorageWalletName = 'ElectronAppStorage' as WalletName;
@@ -194,8 +193,8 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
 
     if (!this._publicKey) {
       this._keyPair = await this._config.accountFn();
-      this._publicKey = this._keyPair.publicKey;
       this._config.account = this._keyPair;
+      this._publicKey = this._keyPair.publicKey;
     }
     // TODO: i think really, this provider gets moved out to our code...
     this._wallet = new ElectronAppStorageWalletProvider(this._config);

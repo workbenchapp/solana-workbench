@@ -36,6 +36,7 @@ interface LocalStorageWallet {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   _handleDisconnect(...args: unknown[]): unknown;
+  off(): void;
 }
 
 /*

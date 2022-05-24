@@ -99,11 +99,6 @@ export interface ConfigMap {
   [key: string]: string | undefined;
 }
 
-export interface ConfigState {
-  loading: boolean;
-  values: ConfigMap;
-}
-
 export type VCount = {
   version: string;
   count: number;
@@ -125,3 +120,8 @@ export type NodeInfo = {
   featureSet?: number | null; // - The unique identifier of the node's feature set
   shredVersion?: number | null; // - The shred version the node has been configured to use
 };
+
+export interface NewKeyPairInfo {
+  privatekey: Uint8Array;
+  mnemonic: string;
+}

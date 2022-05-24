@@ -286,13 +286,12 @@ export const GlobalContainer: FC = () => {
   // of wallets that your users connect to will be loaded.
   const wallets = useMemo(() => {
     const electronStorageWallet = new ElectronAppStorageWalletAdapter({
-      endpointFn: (): Promise<string> => {
-        // TODO: so this is where I assumed I could get the wallet to use the other network
-        //       failed, so I made globalNetworkSet for this PR.
-        //       also note that there's a PR in for wallet-adapter that adds network switching.
-        return endpoint;
-      },
       accountFn: (): Promise<sol.Keypair> => {
+        if (!config) {
+          throw Error(
+            "Config not loaded, can't get ElectronWallet keypair yet"
+          );
+        }
         // TODO: move this into getElectronStorageWallet() and move it to somewhere more sane..
         // TODO: or even better, make the wallet aware of the accounts store, and be able to sign for any keypair in it..
         if (config?.values?.ElectronAppStorageKeypair) {
@@ -311,13 +310,15 @@ export const GlobalContainer: FC = () => {
             }
             // const pk = account.accounts[key].privatekey as Uint8Array;
             try {
-              return sol.Keypair.fromSecretKey(pk);
+              return new Promise((resolve) => {
+                resolve(sol.Keypair.fromSecretKey(pk));
+              });
             } catch (e) {
               logger.error('useKeypair: ', e);
             }
           }
         }
-        return getElectronStorageWallet(config, dispatch);
+        return getElectronStorageWallet(dispatch, config);
       },
     });
     return [

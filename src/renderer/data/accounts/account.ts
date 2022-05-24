@@ -2,10 +2,16 @@ import * as web3 from '@solana/web3.js';
 
 import { WalletContextState } from '@solana/wallet-adapter-react';
 
-import { ConfigState } from 'types/types';
-import { reloadFromMain } from './accountState';
-import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
-import { setConfigValue } from '../Config/configState';
+import { ThunkDispatch, AnyAction, Dispatch } from '@reduxjs/toolkit';
+import { AccountsState, reloadFromMain } from './accountState';
+import {
+  Net,
+  netToURL,
+  ValidatorState,
+} from '../ValidatorNetwork/validatorNetworkState';
+import { ConfigState, setConfigValue } from '../Config/configState';
+import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
+import { NewKeyPairInfo } from '../../../types/types';
 
 const logger = window.electron.log;
 
@@ -63,10 +69,22 @@ export async function sendSolFromSelectedWallet(
   await connection.confirmTransaction(signature, 'finalized');
 }
 
-async function createNewAccount(dispatch): Promise<web3.Keypair> {
+async function createNewAccount(
+  dispatch: ThunkDispatch<
+    {
+      validatornetwork: ValidatorState;
+      selectedaccounts: SelectedAccountsList;
+      config: ConfigState;
+      account: AccountsState;
+    },
+    undefined,
+    AnyAction
+  > &
+    Dispatch<AnyAction>
+): Promise<web3.Keypair> {
   return window.promiseIpc
     .send('ACCOUNT-CreateNew')
-    .then((account) => {
+    .then((account: NewKeyPairInfo) => {
       if (dispatch) {
         dispatch(reloadFromMain());
       }
@@ -74,15 +92,26 @@ async function createNewAccount(dispatch): Promise<web3.Keypair> {
       const newKeypair = web3.Keypair.fromSeed(account.privatekey.slice(0, 32));
       return newKeypair;
     })
-    .catch((e) => {
+    .catch((e: Error) => {
       logger.error(e);
       throw e;
     });
 }
 
 export async function getElectronStorageWallet(
-  config?: ConfigState,
-  dispatch
+  dispatch: ThunkDispatch<
+    {
+      validatornetwork: ValidatorState;
+      selectedaccounts: SelectedAccountsList;
+      config: ConfigState;
+      account: AccountsState;
+    },
+    undefined,
+    AnyAction
+  > &
+    Dispatch<AnyAction>,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  config?: ConfigState
 ): Promise<web3.Keypair> {
   // if (config && config.values && `ElectronAppStorageKeypair` in config.values) {
   //   return getAccountFromConfig(config.values.ElectronAppStorageKeypair);

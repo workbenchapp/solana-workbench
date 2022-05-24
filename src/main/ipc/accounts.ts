@@ -5,9 +5,11 @@ import { IpcMainEvent, IpcRendererEvent } from 'electron';
 import * as web3 from '@solana/web3.js';
 import * as bip39 from 'bip39';
 
+import { NewKeyPairInfo } from '../../types/types';
+
 import { logger } from '../logger';
 
-async function createNewKeypair() {
+async function createNewKeypair(): Promise<NewKeyPairInfo> {
   const mnemonic = bip39.generateMnemonic();
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const newKeypair = web3.Keypair.fromSeed(seed.slice(0, 32));
@@ -49,10 +51,13 @@ export function initAccountPromises() {
       return cfg.set(`accounts.${key}`, val);
     }
   );
-  promiseIpc.on('ACCOUNT-CreateNew', (event: IpcEvent | undefined) => {
-    logger.info(`main: called ACCOUNT-CreateNew, ${event}`);
-    return createNewKeypair();
-  });
+  promiseIpc.on(
+    'ACCOUNT-CreateNew',
+    (event: IpcEvent | undefined): Promise<NewKeyPairInfo> => {
+      logger.info(`main: called ACCOUNT-CreateNew, ${event}`);
+      return createNewKeypair();
+    }
+  );
 }
 
 export default {};
