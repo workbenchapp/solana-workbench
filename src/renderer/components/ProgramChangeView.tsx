@@ -45,6 +45,7 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
+import InlinePK from './InlinePK';
 
 const logger = window.electron.log;
 
@@ -250,68 +251,28 @@ function ProgramChangeView() {
             </Dropdown>
           </ButtonGroup>
           <ButtonGroup size="sm" className="me-2" aria-label="First group">
-            <OverlayTrigger
-              // trigger="click"
-              placement="right"
-              show={anchorEl !== undefined}
-              overlay={
-                <Popover className="mb-6" id="popover-basic">
-                  <Popover.Header as="h3">
-                    New Account
-                    <Button
-                      onClick={() => {
-                        setAnchorEl(undefined);
-                      }}
-                    >
-                      X
-                    </Button>
-                  </Popover.Header>
-                  <Popover.Body>
-                    <div>New Account Keypair created.</div>
-                    <div>
-                      Public Key:{' '}
-                      <pre>
-                        <code>{anchorEl?.publicKey.toString()}</code>
-                      </pre>
-                    </div>
-                    <div>
-                      Private Key: (keep this in a <code>.json</code> file
-                      somewhere safe)
-                    </div>
-                    <textarea
-                      className="vscroll almost-vh-100 w-100"
-                      readOnly
-                      value={`[${anchorEl?.secretKey.toString()}]`}
-                    />
-                    <b>
-                      NOTE: This account does not exist on chain until you
-                      Airdrop or transfer SOL to it.
-                    </b>
-                  </Popover.Body>
-                </Popover>
-              }
-            >
-              <Button
-                onClick={() => {
-                  createNewAccount(dispatch)
-                    .then((newKeypair) => {
-                      logger.info(
-                        'renderer got new account',
-                        newKeypair.publicKey.toString()
-                      );
+            <Button
+              onClick={() => {
+                createNewAccount(dispatch)
+                  .then((newKeypair) => {
+                    const pubKey = newKeypair.publicKey.toString();
+                    logger.info('renderer got new account', pubKey);
 
-                      pinAccount(newKeypair.publicKey.toString(), false);
-                      dispatch(setSelected(newKeypair.publicKey.toString()));
-                      // or do we save it to the backend? and defer getting it back to 0.4.0..
-                      setAnchorEl(newKeypair);
-                      return newKeypair;
-                    })
-                    .catch(logger.error);
-                }}
-              >
-                Create Account
-              </Button>
-            </OverlayTrigger>
+                    pinAccount(pubKey, false);
+                    dispatch(setSelected(pubKey));
+                    toast(
+                      <div>
+                        Watching new keypair: <br />
+                        <InlinePK pk={pubKey} />
+                      </div>
+                    );
+                    return newKeypair;
+                  })
+                  .catch(logger.error);
+              }}
+            >
+              Create Account
+            </Button>
 
             <WatchAccountButton pinAccount={pinAccount} />
           </ButtonGroup>
