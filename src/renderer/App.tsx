@@ -332,7 +332,7 @@ export const GlobalContainer: FC = () => {
       electronStorageWallet,
       // new LocalStorageWalletAdapter({ endpoint }),
     ];
-  }, [endpoint, config, accounts, dispatch]);
+  }, [config, accounts, dispatch]);
 
   if (config.loading || accounts.loading) {
     return <>Config Loading ...${accounts.loading}</>;
