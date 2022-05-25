@@ -13,15 +13,11 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
-import Popover from 'react-bootstrap/Popover';
 import EdiText from 'react-editext';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-
 import { useWallet } from '@solana/wallet-adapter-react';
-import { Keypair } from '@solana/web3.js';
 import {
   setSelected,
   accountsActions,
@@ -147,7 +143,6 @@ function ProgramChangeView() {
   const [programID, setProgramID] = useState<string>(
     KnownProgramID.SystemProgram
   );
-  const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {

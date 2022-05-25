@@ -278,12 +278,6 @@ export const GlobalContainer: FC = () => {
   const accounts = useAccountsState();
   const { net } = useAppSelector(selectValidatorNetworkState);
 
-  // You can also provide a custom RPC endpoint.
-  const endpoint = useMemo(() => netToURL(net), [net]);
-
-  // @solana/wallet-adapter-wallets includes all the adapters but supports tree shaking and lazy loading --
-  // Only the wallets you configure here will be compiled into your application, and only the dependencies
-  // of wallets that your users connect to will be loaded.
   const wallets = useMemo(() => {
     const electronStorageWallet = new ElectronAppStorageWalletAdapter({
       accountFn: (): Promise<sol.Keypair> => {
