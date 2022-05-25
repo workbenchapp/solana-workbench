@@ -14,7 +14,7 @@ async function createNewKeypair(): Promise<NewKeyPairInfo> {
   const seed = await bip39.mnemonicToSeed(mnemonic);
   const newKeypair = web3.Keypair.fromSeed(seed.slice(0, 32));
 
-  logger.info(
+  logger.silly(
     `main generated new account${newKeypair.publicKey.toString()} ${JSON.stringify(
       newKeypair
     )}`
@@ -35,7 +35,7 @@ declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 export function initAccountPromises() {
   // gets written to .\AppData\Roaming\SolanaWorkbench\electron-cfg.json on windows
   promiseIpc.on('ACCOUNT-GetAll', (event: IpcEvent | undefined) => {
-    logger.info('main: called ACCOUNT-GetAll', event);
+    logger.silly('main: called ACCOUNT-GetAll', event);
     const config = cfg.get('accounts');
     if (!config) {
       return {};
@@ -54,7 +54,7 @@ export function initAccountPromises() {
   promiseIpc.on(
     'ACCOUNT-CreateNew',
     (event: IpcEvent | undefined): Promise<NewKeyPairInfo> => {
-      logger.info(`main: called ACCOUNT-CreateNew, ${event}`);
+      logger.silly(`main: called ACCOUNT-CreateNew, ${event}`);
       return createNewKeypair();
     }
   );

@@ -1,4 +1,4 @@
-import * as web3 from '@solana/web3.js';
+import * as sol from '@solana/web3.js';
 
 import { WalletContextState } from '@solana/wallet-adapter-react';
 
@@ -16,14 +16,14 @@ import { NewKeyPairInfo } from '../../../types/types';
 const logger = window.electron.log;
 
 export async function airdropSol(net: Net, toKey: string, solAmount: string) {
-  const to = new web3.PublicKey(toKey);
+  const to = new sol.PublicKey(toKey);
   const sols = parseFloat(solAmount);
 
-  const connection = new web3.Connection(netToURL(net));
+  const connection = new sol.Connection(netToURL(net));
 
   const airdropSignature = await connection.requestAirdrop(
     to,
-    sols * web3.LAMPORTS_PER_SOL
+    sols * sol.LAMPORTS_PER_SOL
   );
 
   await connection.confirmTransaction(airdropSignature);
@@ -41,7 +41,7 @@ export async function transferSol(
 }
 
 export async function sendSolFromSelectedWallet(
-  connection: web3.Connection,
+  connection: sol.Connection,
   fromKey: WalletContextState,
   toKey: string,
   solAmount: string
@@ -50,14 +50,14 @@ export async function sendSolFromSelectedWallet(
   if (!publicKey) {
     throw Error('no wallet selected');
   }
-  const toPublicKey = new web3.PublicKey(toKey);
+  const toPublicKey = new sol.PublicKey(toKey);
 
-  const lamports = web3.LAMPORTS_PER_SOL * parseFloat(solAmount);
+  const lamports = sol.LAMPORTS_PER_SOL * parseFloat(solAmount);
 
-  let signature: web3.TransactionSignature = '';
+  let signature: sol.TransactionSignature = '';
 
-  const transaction = new web3.Transaction().add(
-    web3.SystemProgram.transfer({
+  const transaction = new sol.Transaction().add(
+    sol.SystemProgram.transfer({
       fromPubkey: publicKey,
       toPubkey: toPublicKey,
       lamports,
@@ -81,7 +81,7 @@ async function createNewAccount(
     AnyAction
   > &
     Dispatch<AnyAction>
-): Promise<web3.Keypair> {
+): Promise<sol.Keypair> {
   return window.promiseIpc
     .send('ACCOUNT-CreateNew')
     .then((account: NewKeyPairInfo) => {
@@ -89,7 +89,7 @@ async function createNewAccount(
         dispatch(reloadFromMain());
       }
       logger.info(`renderer received a new account${JSON.stringify(account)}`);
-      const newKeypair = web3.Keypair.fromSeed(account.privatekey.slice(0, 32));
+      const newKeypair = sol.Keypair.fromSeed(account.privatekey.slice(0, 32));
       return newKeypair;
     })
     .catch((e: Error) => {
@@ -109,13 +109,35 @@ export async function getElectronStorageWallet(
     undefined,
     AnyAction
   > &
-    Dispatch<AnyAction>
-  //  config?: ConfigState
-): Promise<web3.Keypair> {
-  // if (config && config.values && `ElectronAppStorageKeypair` in config.values) {
-  //   return getAccountFromConfig(config.values.ElectronAppStorageKeypair);
-  // }
+    Dispatch<AnyAction>,
+  config: ConfigState,
+  accounts: AccountsState
+): Promise<sol.Keypair> {
+  // TODO: This will eventually move into an electron wallet module, with its promiseIPC bits abstracted, but not this month.
+  if (config?.values?.ElectronAppStorageKeypair) {
+    const account =
+      accounts.accounts[config?.values?.ElectronAppStorageKeypair];
 
+    if (account) {
+      const pk = new Uint8Array({ length: 64 });
+      // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
+      let i = 0;
+      while (i < 64) {
+        // const index = i.toString();
+        const value = account.privatekey[i];
+        pk[i] = value;
+        i += 1;
+      }
+      // const pk = account.accounts[key].privatekey as Uint8Array;
+      try {
+        return await new Promise((resolve) => {
+          resolve(sol.Keypair.fromSecretKey(pk));
+        });
+      } catch (e) {
+        logger.error('useKeypair: ', e);
+      }
+    }
+  }
   // if the config doesn't have a keypair set, make one..
   return createNewAccount(dispatch)
     .then((keypair) => {

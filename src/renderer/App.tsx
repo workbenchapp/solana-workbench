@@ -281,33 +281,8 @@ export const GlobalContainer: FC = () => {
             "Config not loaded, can't get ElectronWallet keypair yet"
           );
         }
-        // TODO: move this into getElectronStorageWallet() and move it to somewhere more sane..
-        // TODO: or even better, make the wallet aware of the accounts store, and be able to sign for any keypair in it..
-        if (config?.values?.ElectronAppStorageKeypair) {
-          const account =
-            accounts.accounts[config?.values?.ElectronAppStorageKeypair];
 
-          if (account) {
-            const pk = new Uint8Array({ length: 64 });
-            // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
-            let i = 0;
-            while (i < 64) {
-              // const index = i.toString();
-              const value = account.privatekey[i];
-              pk[i] = value;
-              i += 1;
-            }
-            // const pk = account.accounts[key].privatekey as Uint8Array;
-            try {
-              return new Promise((resolve) => {
-                resolve(sol.Keypair.fromSecretKey(pk));
-              });
-            } catch (e) {
-              logger.error('useKeypair: ', e);
-            }
-          }
-        }
-        return getElectronStorageWallet(dispatch);
+        return getElectronStorageWallet(dispatch, config, accounts);
       },
     });
     return [
@@ -322,7 +297,7 @@ export const GlobalContainer: FC = () => {
       electronStorageWallet,
       // new LocalStorageWalletAdapter({ endpoint }),
     ];
-  }, [config, accounts, dispatch]);
+  }, [accounts, config, dispatch]);
 
   if (config.loading || accounts.loading) {
     return <>Config Loading ...${accounts.loading}</>;

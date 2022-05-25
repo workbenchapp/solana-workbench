@@ -11,6 +11,7 @@ declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initConfigPromises() {
+  logger.info(`Config file at ${cfg.file()}`);
   // gets written to .\AppData\Roaming\SolanaWorkbench\electron-cfg.json on windows
   promiseIpc.on('CONFIG-GetAll', (event: IpcEvent | undefined) => {
     logger.silly('main: called CONFIG-GetAll', event);
