@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Stack from 'react-bootstrap/Stack';
 import { Row, Col } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
@@ -13,15 +14,17 @@ import {
   mintTo,
   setAuthority,
   transfer,
+  MINT_SIZE,
+  getMinimumBalanceForRentExemptMint,
+  TOKEN_PROGRAM_ID,
+  createInitializeMintInstruction,
 } from '@solana/spl-token';
 import { toast } from 'react-toastify';
-import { useAppSelector } from '../hooks';
-import {
-  netToURL,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import createNewAccount from 'renderer/data/accounts/account';
+import { SendTransactionOptions } from '@solana/wallet-adapter-base';
 import AccountView from '../components/AccountView';
 import { TokenMetaView } from '../components/TokenView';
+import { useAppDispatch } from '../hooks';
 
 // eslint-disable-next-line no-global-assign
 Buffer = require('buffer').Buffer;
@@ -29,30 +32,32 @@ Buffer = require('buffer').Buffer;
 const logger = window.electron.log;
 
 function TokenPage() {
-  const validator = useAppSelector(selectValidatorNetworkState);
-  const { net } = validator;
+  const dispatch = useAppDispatch();
+
+  const fromKey = useWallet();
+  const { connection } = useConnection();
 
   // TODO: this will come from main config...
-  const [myWallet, updateWallet] = useState<sol.Keypair>();
-  const [mintKey, updateMintKey] = useState<sol.PublicKey>();
+  const [mintKey, updateMintKey] = useState<sol.Keypair>();
   const [tokenSender, updateTokenSender] = useState<sol.PublicKey>();
   const [tokenReceiver, updateTokenReceiver] = useState<sol.Keypair>();
   const [ataReceiver, updateAtaReceiver] = useState<sol.PublicKey>();
 
-  async function prepareFundingWallet() {
-    if (!myWallet) {
-      // TODO: i wonder if this is sharing a connection under the hood, or if we should be...
-      const solConn = new sol.Connection(netToURL(net), 'finalized');
+  const { publicKey } = fromKey;
+  if (!publicKey) {
+    return <div>Loading wallet</div>;
+  }
+  const myWallet = publicKey;
 
-      // Generate a new wallet keypair and airdrop SOL
-      const fromWallet = sol.Keypair.generate();
-      updateWallet(fromWallet);
-      const fromAirdropSignature = await solConn.requestAirdrop(
-        fromWallet.publicKey,
-        LAMPORTS_PER_SOL
-      );
-      // Wait for airdrop confirmation
-      await solConn.confirmTransaction(fromAirdropSignature);
+  async function createOurMintKeypair() {
+    if (!mintKey) {
+      // TODO: OMFG - the reloadFromMain() causes the wallet to disconnect...
+      createNewAccount()
+        .then((mint) => {
+          updateMintKey(mint);
+          return mint;
+        })
+        .catch(logger.error);
     }
   }
   async function createOurMint() {
@@ -60,18 +65,53 @@ function TokenPage() {
       logger.info('no myWallet', myWallet);
       return;
     }
+    if (!mintKey) {
+      logger.info('no myWallet');
+      return;
+    }
 
     // Create a new token
     logger.info('createMint', myWallet);
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
-    const mint = await createMint(
-      solConn,
-      myWallet, // Payer of the transaction
-      myWallet.publicKey, // Account that will control the minting
-      null, // Account that will control the freezing of the token
-      0 // Location of the decimal place
+    // const mint = await createMint(
+    //   connection,
+    //   myWallet, // Payer of the transaction
+    //   myWallet.publicKey, // Account that will control the minting
+    //   null, // Account that will control the freezing of the token
+    //   0 // Location of the decimal place
+    // );
+    const lamports = await getMinimumBalanceForRentExemptMint(connection);
+    const mintAuthority = myWallet;
+    const freezeAuthority = null;
+    const decimals = 9;
+
+    // logger.info(`SVEVSVSVE: ${JSON.stringify(fromKey)}`);
+
+    const transaction = new sol.Transaction().add(
+      sol.SystemProgram.createAccount({
+        fromPubkey: myWallet,
+        newAccountPubkey: mintKey.publicKey,
+        space: MINT_SIZE,
+        lamports,
+        programId: TOKEN_PROGRAM_ID,
+      }),
+      createInitializeMintInstruction(
+        mintKey.publicKey,
+        decimals,
+        mintAuthority,
+        freezeAuthority,
+        TOKEN_PROGRAM_ID
+      )
     );
-    updateMintKey(mint);
+
+    // transaction.partialSign(mint);
+    const options: SendTransactionOptions = { signers: [mintKey] };
+    const signature = await fromKey.sendTransaction(
+      transaction,
+      connection,
+      options
+    );
+
+    await connection.confirmTransaction(signature, 'finalized');
   }
   async function createOurMintMetadata() {
     if (!myWallet) {
@@ -85,7 +125,6 @@ function TokenPage() {
 
     // Create a new token
     logger.info('createOurMintMetadata', mintKey);
-    const conn = new metaplex.Connection(netToURL(net), 'finalized');
     try {
       const metadata = new metaplex.programs.metadata.MetadataDataData({
         name: 'Workbench token',
@@ -96,7 +135,7 @@ function TokenPage() {
       });
 
       const meta = await metaplex.actions.createMetadata({
-        connection: conn,
+        connection,
         wallet: new metaplex.NodeWallet(myWallet),
         editionMint: mintKey,
         metadataData: metadata,
@@ -119,11 +158,10 @@ function TokenPage() {
 
     // Get the token account of the fromWallet Solana address. If it does not exist, create it.
     logger.info('getOrCreateAssociatedTokenAccount');
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     try {
       const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-        solConn,
+        connection,
         myWallet,
         mintKey,
         myWallet.publicKey
@@ -143,7 +181,6 @@ function TokenPage() {
       return;
     }
     // Generate a new wallet to receive the newly minted token
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     const toWallet = sol.Keypair.generate();
     updateTokenReceiver(toWallet);
@@ -152,7 +189,7 @@ function TokenPage() {
     logger.info('getOrCreateAssociatedTokenAccount');
     try {
       const toTokenAccount = await getOrCreateAssociatedTokenAccount(
-        solConn,
+        connection,
         myWallet,
         mintKey,
         toWallet.publicKey
@@ -175,11 +212,10 @@ function TokenPage() {
       logger.info('no tokenSender', tokenSender);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     // Minting 1 new token to the "fromTokenAccount" account we just returned/created.
     const signature = await mintTo(
-      solConn,
+      connection,
       myWallet, // Payer of the transaction fees
       mintKey, // Mint for the account
       tokenSender, // Address of the account to mint to
@@ -197,10 +233,9 @@ function TokenPage() {
       logger.info('no mintKey', mintKey);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
 
     await setAuthority(
-      solConn,
+      connection,
       myWallet, // Payer of the transaction fees
       mintKey, // Account
       myWallet.publicKey, // Current authority
@@ -221,10 +256,8 @@ function TokenPage() {
       logger.info('no ataReceiver', ataReceiver);
       return;
     }
-    const solConn = new sol.Connection(netToURL(net), 'finalized');
-
     const signature = await transfer(
-      solConn,
+      connection,
       myWallet, // Payer of the transaction fees
       tokenSender, // Source account
       ataReceiver, // Destination account
@@ -246,19 +279,19 @@ function TokenPage() {
       <Row>
         <Col>
           <Button
-            disabled={myWallet !== undefined}
+            disabled={myWallet === undefined || mintKey !== undefined}
             onClick={() => {
-              toast.promise(prepareFundingWallet(), {
-                pending: `Create new funding account submitted`,
-                success: `Create new funding account  succeeded 👌`,
-                error: `Create new funding account   failed 🤯`,
+              toast.promise(createOurMintKeypair(), {
+                pending: `Create mint keys submitted`,
+                success: `Create mint keys  succeeded 👌`,
+                error: `Create mint keys   failed 🤯`,
               });
             }}
           >
-            create and fund initiating account account
+            initialize mint
           </Button>
           <Button
-            disabled={myWallet === undefined || mintKey !== undefined}
+            disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
               toast.promise(createOurMint(), {
                 pending: `Create mint account submitted`,
@@ -362,16 +395,15 @@ function TokenPage() {
 
       <Row className="flex-fill almost-vh-80">
         <Col className="col-md-4 almost-vh-100 vscroll">
-          User Account (Fee payer, mint owner):
-          {myWallet?.secretKey.toString()}
-          Make it a dropdown of all the ones we have...
-          <AccountView pubKey={myWallet?.publicKey?.toString()} />
+          <AccountView pubKey={myWallet?.toString()} />
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
           Token Mint
-          <AccountView pubKey={mintKey?.toString()} />
+          <AccountView pubKey={mintKey?.publicKey.toString()} />
           <div>
-            <TokenMetaView mintKey={mintKey ? mintKey.toString() : ''} />
+            <TokenMetaView
+              mintKey={mintKey ? mintKey.publicKey.toString() : ''}
+            />
           </div>
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">

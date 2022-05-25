@@ -17,6 +17,7 @@ const logger = window.electron.log;
 export function TokenMetaView(props: { mintKey: string; className?: string }) {
   const { mintKey, className } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
+
   const [metaInfo, updateMetaInfo] =
     useState<metaplex.programs.metadata.Metadata>();
 

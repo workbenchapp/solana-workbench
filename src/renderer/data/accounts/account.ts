@@ -29,17 +29,6 @@ export async function airdropSol(net: Net, toKey: string, solAmount: string) {
   await connection.confirmTransaction(airdropSignature);
 }
 
-export async function transferSol(
-  fromKey: string,
-  toKey: string,
-  solAmount: string
-) {
-  logger.info(
-    `TODO(need to store private keys safely first): transfer ${solAmount} from ${fromKey} to ${toKey}`
-  );
-  return new Promise((resolve) => setTimeout(resolve, 2000));
-}
-
 export async function sendSolFromSelectedWallet(
   connection: sol.Connection,
   fromKey: WalletContextState,
@@ -70,7 +59,7 @@ export async function sendSolFromSelectedWallet(
 }
 
 async function createNewAccount(
-  dispatch: ThunkDispatch<
+  dispatch?: ThunkDispatch<
     {
       validatornetwork: ValidatorState;
       selectedaccounts: SelectedAccountsList;

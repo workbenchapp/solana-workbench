@@ -353,7 +353,7 @@ function App() {
     <div className="vh-100">
       <Routes>
         <Route path="/" element={<GlobalContainer />}>
-          <Route index element={<Account />} />
+          <Route index element={<TokenPage />} />
           <Route path="account" element={<Account />} />
           <Route path="tokens" element={<TokenPage />} />
           <Route path="validator" element={<Validator />} />
