@@ -8,10 +8,7 @@ import { toast } from 'react-toastify';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useAppSelector } from '../hooks';
 
-import {
-  sendSolFromSelectedWallet,
-  transferSol,
-} from '../data/accounts/account';
+import { sendSolFromSelectedWallet } from '../data/accounts/account';
 import {
   NetStatus,
   selectValidatorNetworkState,
