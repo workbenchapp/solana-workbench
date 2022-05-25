@@ -32,12 +32,7 @@ import {
   ConnectionProvider,
   WalletProvider,
 } from '@solana/wallet-adapter-react';
-import {
-  LedgerWalletAdapter,
-  PhantomWalletAdapter,
-  SlopeWalletAdapter,
-  TorusWalletAdapter,
-} from '@solana/wallet-adapter-wallets';
+// import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import {
   WalletModalProvider,
   WalletMultiButton,
@@ -316,11 +311,12 @@ export const GlobalContainer: FC = () => {
       },
     });
     return [
-      new PhantomWalletAdapter(),
-      new SlopeWalletAdapter(),
+      // Sadly, electron apps don't run browser plugins, so these won't work without lots of pain
+      // new PhantomWalletAdapter(),
+      // new SlopeWalletAdapter(),
       // new SolflareWalletAdapter({ network }),
-      new TorusWalletAdapter(),
-      new LedgerWalletAdapter(),
+      // new TorusWalletAdapter(),
+      // new LedgerWalletAdapter(),
       // new SolletWalletAdapter({ network }),
       // new SolletExtensionWalletAdapter({ network }),
       electronStorageWallet,
