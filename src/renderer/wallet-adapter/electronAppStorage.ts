@@ -39,7 +39,7 @@ interface ElectronAppStorageWallet {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   _handleDisconnect(...args: unknown[]): unknown;
-  off(): void;
+  off(_name: string, _func: { (): void; (): void }): void;
 }
 
 /*
@@ -118,7 +118,8 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
 
   _handleDisconnect = (): void => {};
 
-  off = (): void => {};
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  off = (_name: string, _func: { (): void; (): void }): void => {};
 }
 
 // interface ElectronAppStorageWindow extends Window {

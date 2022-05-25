@@ -312,7 +312,7 @@ export const GlobalContainer: FC = () => {
             }
           }
         }
-        return getElectronStorageWallet(dispatch, config);
+        return getElectronStorageWallet(dispatch);
       },
     });
     return [

@@ -36,7 +36,7 @@ interface LocalStorageWallet {
   connect(): Promise<void>;
   disconnect(): Promise<void>;
   _handleDisconnect(...args: unknown[]): unknown;
-  off(): void;
+  off(_name: string, _func: { (): void; (): void }): void;
 }
 
 /*
@@ -114,6 +114,9 @@ class LocalStorageWalletProvider implements LocalStorageWallet {
   disconnect = async (): Promise<void> => {};
 
   _handleDisconnect = (): void => {};
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  off = (_name: string, _func: { (): void; (): void }): void => {};
 }
 
 // interface LocalStorageWindow extends Window {

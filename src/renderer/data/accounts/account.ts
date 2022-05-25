@@ -109,9 +109,8 @@ export async function getElectronStorageWallet(
     undefined,
     AnyAction
   > &
-    Dispatch<AnyAction>,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  config?: ConfigState
+    Dispatch<AnyAction>
+  //  config?: ConfigState
 ): Promise<web3.Keypair> {
   // if (config && config.values && `ElectronAppStorageKeypair` in config.values) {
   //   return getAccountFromConfig(config.values.ElectronAppStorageKeypair);
