@@ -72,6 +72,7 @@ function TokenPage() {
 
     // Create a new token
     logger.info('createMint', myWallet);
+    // https://github.com/solana-labs/solana-program-library/blob/f487f520bf10ca29bf8d491192b6ff2b4bf89710/token/js/src/actions/createMint.ts
     // const mint = await createMint(
     //   connection,
     //   myWallet, // Payer of the transaction
