@@ -1,8 +1,33 @@
 import cfg from 'electron-cfg';
 import promiseIpc from 'electron-promise-ipc';
-import type { IpcMainEvent, IpcRendererEvent } from 'electron';
+import { IpcMainEvent, IpcRendererEvent } from 'electron';
+
+import * as web3 from '@solana/web3.js';
+import * as bip39 from 'bip39';
+
+import { NewKeyPairInfo } from '../../types/types';
 
 import { logger } from '../logger';
+
+async function createNewKeypair(): Promise<NewKeyPairInfo> {
+  const mnemonic = bip39.generateMnemonic();
+  const seed = await bip39.mnemonicToSeed(mnemonic);
+  const newKeypair = web3.Keypair.fromSeed(seed.slice(0, 32));
+
+  logger.silly(
+    `main generated new account${newKeypair.publicKey.toString()} ${JSON.stringify(
+      newKeypair
+    )}`
+  );
+
+  const val = {
+    privatekey: newKeypair.secretKey,
+    mnemonic,
+  };
+  cfg.set(`accounts.${newKeypair.publicKey.toString()}`, val);
+
+  return val;
+}
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
@@ -24,6 +49,13 @@ export function initAccountPromises() {
     (key: unknown, val: unknown, event?: IpcEvent | undefined) => {
       logger.silly(`main: called ACCOUNT-Set, ${key}, ${val}, ${event}`);
       return cfg.set(`accounts.${key}`, val);
+    }
+  );
+  promiseIpc.on(
+    'ACCOUNT-CreateNew',
+    (event: IpcEvent | undefined): Promise<NewKeyPairInfo> => {
+      logger.silly(`main: called ACCOUNT-CreateNew, ${event}`);
+      return createNewKeypair();
     }
   );
 }

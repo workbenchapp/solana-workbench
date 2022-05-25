@@ -39,6 +39,10 @@ export interface ValidatorState {
   status: NetStatus;
 }
 
+// TODO: Using a global to let the electron solana-wallet-backend what network we're on (its not a react component)
+//       Sven wasted too much time on this, and its only temporary until that txn sign code moves to the react backend.
+export const globalNetworkSet = { net: Net.Localhost };
+
 // Define the initial state using that type
 const initialState: ValidatorState = {
   net: Net.Localhost,
@@ -52,6 +56,7 @@ export const validatorNetworkSlice = createSlice({
   reducers: {
     setNet: (state, action: PayloadAction<Net>) => {
       state.net = action.payload;
+      globalNetworkSet.net = state.net;
     },
     setState: (state, action: PayloadAction<NetStatus>) => {
       state.status = action.payload;

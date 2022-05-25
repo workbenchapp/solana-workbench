@@ -60,13 +60,15 @@ function LogView() {
 
     return () => {
       const sub = logSubscriptions[net];
-      sub.solConn
-        .removeOnLogsListener(sub.subscriptionID)
-        // eslint-disable-next-line promise/always-return
-        .then(() => {
-          delete logSubscriptions[net];
-        })
-        .catch(logger.info);
+      if (sub?.solConn) {
+        sub.solConn
+          .removeOnLogsListener(sub.subscriptionID)
+          // eslint-disable-next-line promise/always-return
+          .then(() => {
+            delete logSubscriptions[net];
+          })
+          .catch(logger.info);
+      }
     };
   }, [net, status]);
 

@@ -193,6 +193,13 @@ th,
   overflow-y: auto; 
 }
 
+// Wallet adapter colours so its easier to see our dragonfly logo
+// this isn't really right, but i don't like the purple, as it implies Phantom wallet?
+// .wallet-adapter-button-trigger {
+//     background-color: powderblue !important;
+//     color: steelblue !important;
+// }
+
 // EdiText - https://github.com/alioguzhan/react-editext#styling-with-styled-components
 div[editext='view-container'],
 div[editext='view'],

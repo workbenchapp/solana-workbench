@@ -13,13 +13,11 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
 import { toast } from 'react-toastify';
-import Popover from 'react-bootstrap/Popover';
 import EdiText from 'react-editext';
 
 import OutsideClickHandler from 'react-outside-click-handler';
 
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import { Keypair } from '@solana/web3.js';
+import { useWallet } from '@solana/wallet-adapter-react';
 import {
   setSelected,
   accountsActions,
@@ -43,7 +41,9 @@ import {
 } from '../data/accounts/programChanges';
 import createNewAccount from '../data/accounts/account';
 import WatchAccountButton from './WatchAccountButton';
-import { setAccountValues } from '../data/accounts/accountState';
+import InlinePK from './InlinePK';
+
+const logger = window.electron.log;
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {
@@ -83,6 +83,7 @@ function ProgramChangeView() {
   const [sortColumn, setSortColumn] = useState<SortColumn>(SortColumn.MaxDelta);
   const [validatorSlot, setValidatorSlot] = useState<number>(0);
   const [pinnedAccount, setPinnedAccount] = useState<PinnedAccountMap>({});
+  const WalletAdapterState = useWallet();
 
   function sortFunction(a: AccountInfo, b: AccountInfo) {
     switch (sortColumn) {
@@ -106,9 +107,17 @@ function ProgramChangeView() {
     const pinMap: PinnedAccountMap = {};
 
     const showKeys: string[] = []; // list of Keys
-    pinnedAccounts.forEach((key: string) => {
+    // Add the solana wallet's account to the monitored list (if its not already watched.)
+    if (WalletAdapterState.publicKey) {
+      const key = WalletAdapterState.publicKey.toString();
       showKeys.push(key);
       pinMap[key] = true;
+    }
+    pinnedAccounts.forEach((key: string) => {
+      if (!(key in pinMap)) {
+        showKeys.push(key);
+        pinMap[key] = true;
+      }
     });
 
     const changes = GetTopAccounts(
@@ -118,9 +127,9 @@ function ProgramChangeView() {
     );
 
     // logger.info('GetTopAccounts', changes);
-    changes.forEach((c: string) => {
-      if (!(c in pinnedAccount)) {
-        showKeys.push(c);
+    changes.forEach((key: string) => {
+      if (!(key in pinMap)) {
+        showKeys.push(key);
       }
     });
     setPinnedAccount(pinMap);
@@ -134,7 +143,6 @@ function ProgramChangeView() {
   const [programID, setProgramID] = useState<string>(
     KnownProgramID.SystemProgram
   );
-  const [anchorEl, setAnchorEl] = useState<Keypair | undefined>(undefined);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -238,68 +246,28 @@ function ProgramChangeView() {
             </Dropdown>
           </ButtonGroup>
           <ButtonGroup size="sm" className="me-2" aria-label="First group">
-            <OverlayTrigger
-              // trigger="click"
-              placement="right"
-              show={anchorEl !== undefined}
-              overlay={
-                <Popover className="mb-6" id="popover-basic">
-                  <Popover.Header as="h3">
-                    New Account
-                    <Button
-                      onClick={() => {
-                        setAnchorEl(undefined);
-                      }}
-                    >
-                      X
-                    </Button>
-                  </Popover.Header>
-                  <Popover.Body>
-                    <div>New Account Keypair created.</div>
-                    <div>
-                      Public Key:{' '}
-                      <pre>
-                        <code>{anchorEl?.publicKey.toString()}</code>
-                      </pre>
-                    </div>
-                    <div>
-                      Private Key: (keep this in a <code>.json</code> file
-                      somewhere safe)
-                    </div>
-                    <textarea
-                      className="vscroll almost-vh-100 w-100"
-                      readOnly
-                      value={`[${anchorEl?.secretKey.toString()}]`}
-                    />
-                    <b>
-                      NOTE: This account does not exist on chain until you
-                      Airdrop or transfer SOL to it.
-                    </b>
-                  </Popover.Body>
-                </Popover>
-              }
+            <Button
+              onClick={() => {
+                createNewAccount(dispatch)
+                  .then((newKeypair) => {
+                    const pubKey = newKeypair.publicKey.toString();
+                    logger.info('renderer got new account', pubKey);
+
+                    pinAccount(pubKey, false);
+                    dispatch(setSelected(pubKey));
+                    toast(
+                      <div>
+                        Watching new keypair: <br />
+                        <InlinePK pk={pubKey} />
+                      </div>
+                    );
+                    return newKeypair;
+                  })
+                  .catch(logger.error);
+              }}
             >
-              <Button
-                onClick={() => {
-                  const newAccount = createNewAccount();
-                  // TODO: yeah, this is horrible, will be easier to do generating the new Key on the server, and saving it there...
-                  dispatch(
-                    setAccountValues({
-                      key: newAccount.publicKey.toString(),
-                      value: {
-                        privatekey: newAccount.secretKey.toString(),
-                      },
-                    })
-                  );
-                  pinAccount(newAccount.publicKey.toString(), false);
-                  dispatch(setSelected(newAccount.publicKey.toString()));
-                  // or do we save it to the backend? and defer getting it back to 0.4.0..
-                  setAnchorEl(newAccount);
-                }}
-              >
-                Create Account
-              </Button>
-            </OverlayTrigger>
+              Create Account
+            </Button>
 
             <WatchAccountButton pinAccount={pinAccount} />
           </ButtonGroup>

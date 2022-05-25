@@ -6,25 +6,38 @@ import Form from 'react-bootstrap/Form';
 import { Row, Col } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 
-import { transferSol } from '../data/accounts/account';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { sendSolFromSelectedWallet } from '../data/accounts/account';
 
 function TransferSolPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
+  const selectedWallet = useWallet();
+  const { connection } = useConnection();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
     pubKeyVal = 'paste';
   }
 
+  let fromKeyVal = selectedWallet.publicKey?.toString();
+  if (!fromKeyVal) {
+    fromKeyVal = 'unset';
+  }
+
   const [sol, setSol] = useState<string>('0.01');
-  const [fromKey, setFromKey] = useState<string>(pubKeyVal);
-  const [toKey, setToKey] = useState<string>('');
+  const [fromKey, setFromKey] = useState<string>(fromKeyVal);
+  const [toKey, setToKey] = useState<string>(pubKeyVal);
 
   useEffect(() => {
     if (pubKeyVal) {
-      setFromKey(pubKeyVal);
+      setToKey(pubKeyVal);
     }
   }, [pubKeyVal]);
+  useEffect(() => {
+    if (fromKeyVal) {
+      setFromKey(fromKeyVal);
+    }
+  }, [fromKeyVal]);
 
   return (
     <Popover id="popover-basic">
@@ -57,6 +70,7 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
             </Form.Label>
             <Col sm={9}>
               <Form.Control
+                readOnly // Because we use the wallet to do the signing, this can't be changed
                 type="text"
                 placeholder="Select Account to take the SOL from"
                 value={fromKey}
@@ -96,11 +110,26 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(transferSol(fromKey, toKey, sol), {
-                    pending: 'Transfer submitted',
-                    success: 'Transfer succeeded 👌',
-                    error: 'Transfer failed 🤯',
-                  });
+                  toast.promise(
+                    sendSolFromSelectedWallet(
+                      connection,
+                      selectedWallet,
+                      toKey,
+                      sol
+                    ),
+                    {
+                      pending: 'Transfer submitted',
+                      success: 'Transfer succeeded 👌',
+                      error: {
+                        render({ data }) {
+                          // eslint-disable-next-line no-console
+                          console.log('eror', data);
+                          // When the promise reject, data will contains the error
+                          return 'error';
+                        },
+                      },
+                    }
+                  );
                 }}
               >
                 Submit Transfer

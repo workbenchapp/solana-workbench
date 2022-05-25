@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { useEffect } from 'react';
+import * as sol from '@solana/web3.js';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
@@ -7,10 +8,6 @@ import { useAppDispatch, useAppSelector } from '../../hooks';
 import { RootState } from '../../store';
 
 const logger = window.electron.log;
-
-export enum AccountKey {
-  AnalyticsEnabled = 'analytics_enabled',
-}
 
 export interface AccountMetaValues {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,11 +59,16 @@ export const accountSlice = createSlice({
           .catch(logger.error);
       }
     },
+    reloadFromMain: (state) => {
+      logger.info('triggerReload accounts from main (setting loading = true)');
+
+      state.loading = true;
+    },
   },
 });
 
 export const accountActions = accountSlice.actions;
-export const { setAccountValues } = accountSlice.actions;
+export const { setAccountValues, reloadFromMain } = accountSlice.actions;
 
 export const selectAccountsState = (state: RootState) => state.account;
 
@@ -83,6 +85,7 @@ export function useAccountsState() {
       window.promiseIpc
         .send('ACCOUNT-GetAll')
         .then((ret: AccountMeta) => {
+          logger.info('LOADING accounts from main');
           dispatch(
             setAccount({
               accounts: ret,
@@ -108,4 +111,35 @@ export function useAccountMeta(key: string | undefined) {
   // exists to cater for the possibility that we need to do a round trip
   // for now, I'm just going to use the existing state
   return account.accounts[key];
+}
+
+// get a specific account
+export function useKeypair(key: string | undefined) {
+  const account = useAccountMeta(key);
+
+  if (
+    !key ||
+    !account ||
+    account.loading ||
+    !account.accounts ||
+    !account.accounts[key]
+  ) {
+    return undefined;
+  }
+  const pk = new Uint8Array({ length: 64 });
+  // TODO: so i wanted a for loop, but somehow, all the magic TS stuff said nope.
+  let i = 0;
+  while (i < 64) {
+    const index = i.toString();
+    const value = account.accounts[key].privatekey[index];
+    pk[i] = value;
+    i += 1;
+  }
+  // const pk = account.accounts[key].privatekey as Uint8Array;
+  try {
+    return sol.Keypair.fromSecretKey(pk);
+  } catch (e) {
+    logger.error('useKeypair: ', e);
+  }
+  return undefined;
 }

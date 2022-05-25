@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import isElectron from 'is-electron';
 import './App.scss';
+import * as sol from '@solana/web3.js';
 
 import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
 
@@ -25,19 +26,40 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 
-import { useState } from 'react';
+import { FC, useMemo, useState } from 'react';
+
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
+// import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
+import {
+  WalletModalProvider,
+  WalletMultiButton,
+} from '@solana/wallet-adapter-react-ui';
+import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
+
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 
-import { useAppDispatch } from './hooks';
+import { useAppDispatch, useAppSelector } from './hooks';
 import {
   useConfigState,
   setConfigValue,
   ConfigKey,
 } from './data/Config/configState';
+import { useAccountsState } from './data/accounts/accountState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
+import {
+  netToURL,
+  selectValidatorNetworkState,
+} from './data/ValidatorNetwork/validatorNetworkState';
+import { getElectronStorageWallet } from './data/accounts/account';
+
+// Default styles that can be overridden by your app
+require('@solana/wallet-adapter-react-ui/styles.css');
 
 const logger = window.electron.log;
 
@@ -178,6 +200,7 @@ function Topbar() {
           >
             <TopbarNavItems />
           </Nav>
+          <WalletMultiButton />
           <Form className="d-flex">
             <ValidatorNetwork />
           </Form>
@@ -244,26 +267,66 @@ function AnalyticsBanner() {
   );
 }
 
-function GlobalContainer() {
-  // Note: NavLink is not compatible with react-router-dom's NavLink, so just add the styling
+export const GlobalContainer: FC = () => {
+  const dispatch = useAppDispatch();
+  const config = useConfigState();
+  const accounts = useAccountsState();
+  const { net } = useAppSelector(selectValidatorNetworkState);
+
+  const wallets = useMemo(() => {
+    const electronStorageWallet = new ElectronAppStorageWalletAdapter({
+      accountFn: (): Promise<sol.Keypair> => {
+        if (!config) {
+          throw Error(
+            "Config not loaded, can't get ElectronWallet keypair yet"
+          );
+        }
+
+        return getElectronStorageWallet(dispatch, config, accounts);
+      },
+    });
+    return [
+      // Sadly, electron apps don't run browser plugins, so these won't work without lots of pain
+      // new PhantomWalletAdapter(),
+      // new SlopeWalletAdapter(),
+      // new SolflareWalletAdapter({ network }),
+      // new TorusWalletAdapter(),
+      // new LedgerWalletAdapter(),
+      // new SolletWalletAdapter({ network }),
+      // new SolletExtensionWalletAdapter({ network }),
+      electronStorageWallet,
+      // new LocalStorageWalletAdapter({ endpoint }),
+    ];
+  }, [accounts, config, dispatch]);
+
+  if (config.loading || accounts.loading) {
+    return <>Config Loading ...${accounts.loading}</>;
+  }
   return (
     <div className="vh-100">
-      <Topbar />
-      <Sidebar />
-      <Container fluid className="page-content mt-3">
-        <Outlet />
-      </Container>
+      <ConnectionProvider endpoint={netToURL(net)}>
+        <WalletProvider wallets={wallets} autoConnect>
+          <WalletModalProvider>
+            <Topbar />
+            <Sidebar />
+            <Container fluid className="page-content mt-3">
+              <Outlet />
+            </Container>
+          </WalletModalProvider>
+        </WalletProvider>
+      </ConnectionProvider>
     </div>
   );
-}
+};
 
 function App() {
   const config = useConfigState();
+  const accounts = useAccountsState();
 
   Object.assign(console, logger.functions);
 
   if (config.loading) {
-    return <>Config Loading ...</>;
+    return <>Config Loading ...${accounts.loading}</>;
   }
   if (!config.values || !(`${ConfigKey.AnalyticsEnabled}` in config.values)) {
     return <AnalyticsBanner />;
