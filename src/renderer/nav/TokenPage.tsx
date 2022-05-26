@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Stack from 'react-bootstrap/Stack';
 import { Row, Col } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
@@ -7,24 +7,17 @@ import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
-import { LAMPORTS_PER_SOL } from '@solana/web3.js';
 import {
-  createMint,
   getOrCreateAssociatedTokenAccount,
   mintTo,
   setAuthority,
   transfer,
-  MINT_SIZE,
-  getMinimumBalanceForRentExemptMint,
-  TOKEN_PROGRAM_ID,
-  createInitializeMintInstruction,
 } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
-import { SendTransactionOptions } from '@solana/wallet-adapter-base';
+import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { TokenMetaView } from '../components/TokenView';
-import { useAppDispatch } from '../hooks';
 
 // eslint-disable-next-line no-global-assign
 Buffer = require('buffer').Buffer;
@@ -32,8 +25,6 @@ Buffer = require('buffer').Buffer;
 const logger = window.electron.log;
 
 function TokenPage() {
-  const dispatch = useAppDispatch();
-
   const fromKey = useWallet();
   const { connection } = useConnection();
 
@@ -80,39 +71,19 @@ function TokenPage() {
     //   null, // Account that will control the freezing of the token
     //   0 // Location of the decimal place
     // );
-    const lamports = await getMinimumBalanceForRentExemptMint(connection);
-    const mintAuthority = myWallet;
-    const freezeAuthority = null;
-    const decimals = 9;
-
-    // logger.info(`SVEVSVSVE: ${JSON.stringify(fromKey)}`);
-
-    const transaction = new sol.Transaction().add(
-      sol.SystemProgram.createAccount({
-        fromPubkey: myWallet,
-        newAccountPubkey: mintKey.publicKey,
-        space: MINT_SIZE,
-        lamports,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      createInitializeMintInstruction(
-        mintKey.publicKey,
-        decimals,
-        mintAuthority,
-        freezeAuthority,
-        TOKEN_PROGRAM_ID
-      )
-    );
-
-    // transaction.partialSign(mint);
-    const options: SendTransactionOptions = { signers: [mintKey] };
-    const signature = await fromKey.sendTransaction(
-      transaction,
+    const confirmOptions: sol.ConfirmOptions = {
+      commitment: 'finalized',
+    };
+    const mint = await walletWeb3.createMint(
       connection,
-      options
+      fromKey, // Payer of the transaction
+      myWallet, // Account that will control the minting
+      null, // Account that will control the freezing of the token
+      0, // Location of the decimal place
+      mintKey, // mint keypair - will be generated if not specified
+      confirmOptions
     );
-
-    await connection.confirmTransaction(signature, 'finalized');
+    logger.info('Minted ', mint);
   }
   async function createOurMintMetadata() {
     if (!myWallet) {
