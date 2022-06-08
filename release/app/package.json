@@ -16,6 +16,5 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@solana/wallet-adapter-wallets": "^0.15.5"
   }
 }
