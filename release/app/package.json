@@ -15,6 +15,5 @@
     "postinstall": "npm run electron-rebuild && npm run link-modules"
   },
   "license": "MIT",
-  "dependencies": {
-  }
+  "dependencies": {}
 }
