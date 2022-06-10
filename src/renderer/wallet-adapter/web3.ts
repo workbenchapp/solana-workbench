@@ -217,4 +217,240 @@ export async function getOrCreateAssociatedTokenAccount(
   return account;
 }
 
+// ARGH!
+// https://github.com/solana-labs/solana-program-library/blob/master/token/js/src/actions/internal.ts
+export function getSigners(
+  signerOrMultisig: sol.Signer | sol.PublicKey,
+  multiSigners: sol.Signer[]
+): [sol.PublicKey, sol.Signer[]] {
+  return signerOrMultisig instanceof sol.PublicKey
+    ? [signerOrMultisig, multiSigners]
+    : [signerOrMultisig.publicKey, [signerOrMultisig]];
+}
+
+// https://github.com/solana-labs/solana-program-library/blob/master/token/js/src/actions/mintTo.ts
+/**
+ * Mint tokens to an account
+ *
+ * @param connection     Connection to use
+ * @param payer          Payer of the transaction fees
+ * @param mint           Mint for the account
+ * @param destination    Address of the account to mint to
+ * @param authority      Minting authority
+ * @param amount         Amount to mint
+ * @param multiSigners   Signing accounts if `authority` is a multisig
+ * @param confirmOptions Options for confirming the transaction
+ * @param programId      SPL Token program account
+ *
+ * @return Signature of the confirmed transaction
+ */
+export async function mintTo(
+  connection: sol.Connection,
+  payer: sol.Signer | WalletContextState,
+  mint: sol.PublicKey,
+  destination: sol.PublicKey,
+  authority: sol.Signer | sol.PublicKey,
+  amount: number | bigint,
+  multiSigners: sol.Signer[] = [],
+  confirmOptions?: sol.ConfirmOptions,
+  programId = splToken.TOKEN_PROGRAM_ID
+): Promise<sol.TransactionSignature> {
+  const [authorityPublicKey, signers] = getSigners(authority, multiSigners);
+
+  const transaction = new sol.Transaction().add(
+    splToken.createMintToInstruction(
+      mint,
+      destination,
+      authorityPublicKey,
+      amount,
+      multiSigners,
+      programId
+    )
+  );
+
+  if ('privateKey' in payer) {
+    // payer is a sol.Signer
+    return sol.sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [payer, ...signers],
+      confirmOptions
+    );
+  }
+  if ('sendTransaction' in payer) {
+    // payer is a WalletContextState
+    const options: SendTransactionOptions = { signers: [...signers] };
+    const signature = await payer.sendTransaction(
+      transaction,
+      connection,
+      options
+    );
+
+    // await connection.confirmTransaction(signature, confirmOptions?.commitment);
+    const latestBlockHash = await connection.getLatestBlockhash();
+
+    await connection.confirmTransaction(
+      {
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        signature,
+      },
+      confirmOptions?.commitment
+    );
+  } else {
+    throw Error('payer not a Keypair or Wallet.');
+  }
+}
+
+// https://github.com/solana-labs/solana-program-library/blob/master/token/js/src/actions/transfer.ts
+/**
+ * Transfer tokens from one account to another
+ *
+ * @param connection     Connection to use
+ * @param payer          Payer of the transaction fees
+ * @param source         Source account
+ * @param destination    Destination account
+ * @param owner          Owner of the source account
+ * @param amount         Number of tokens to transfer
+ * @param multiSigners   Signing accounts if `owner` is a multisig
+ * @param confirmOptions Options for confirming the transaction
+ * @param programId      SPL Token program account
+ *
+ * @return Signature of the confirmed transaction
+ */
+export async function transfer(
+  connection: sol.Connection,
+  payer: sol.Signer | WalletContextState,
+  source: sol.PublicKey,
+  destination: sol.PublicKey,
+  owner: sol.Signer | sol.PublicKey,
+  amount: number | bigint,
+  multiSigners: sol.Signer[] = [],
+  confirmOptions?: sol.ConfirmOptions,
+  programId = splToken.TOKEN_PROGRAM_ID
+): Promise<sol.TransactionSignature> {
+  const [ownerPublicKey, signers] = getSigners(owner, multiSigners);
+
+  const transaction = new sol.Transaction().add(
+    splToken.createTransferInstruction(
+      source,
+      destination,
+      ownerPublicKey,
+      amount,
+      multiSigners,
+      programId
+    )
+  );
+
+  if ('privateKey' in payer) {
+    // payer is a sol.Signer
+    return sol.sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [payer, ...signers],
+      confirmOptions
+    );
+  }
+  if ('sendTransaction' in payer) {
+    // payer is a WalletContextState
+    const options: SendTransactionOptions = { signers: [...signers] };
+    const signature = await payer.sendTransaction(
+      transaction,
+      connection,
+      options
+    );
+
+    // await connection.confirmTransaction(signature, confirmOptions?.commitment);
+    const latestBlockHash = await connection.getLatestBlockhash();
+
+    await connection.confirmTransaction(
+      {
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        signature,
+      },
+      confirmOptions?.commitment
+    );
+  } else {
+    throw Error('payer not a Keypair or Wallet.');
+  }
+}
+
+// https://github.com/solana-labs/solana-program-library/blob/master/token/js/src/actions/setAuthority.ts
+/**
+ * Assign a new authority to the account
+ *
+ * @param connection       Connection to use
+ * @param payer            Payer of the transaction fees
+ * @param account          Address of the account
+ * @param currentAuthority Current authority of the specified type
+ * @param authorityType    Type of authority to set
+ * @param newAuthority     New authority of the account
+ * @param multiSigners     Signing accounts if `currentAuthority` is a multisig
+ * @param confirmOptions   Options for confirming the transaction
+ * @param programId        SPL Token program account
+ *
+ * @return Signature of the confirmed transaction
+ */
+export async function setAuthority(
+  connection: sol.Connection,
+  payer: sol.Signer | WalletContextState,
+  account: sol.PublicKey,
+  currentAuthority: sol.Signer | sol.PublicKey,
+  authorityType: splToken.AuthorityType,
+  newAuthority: sol.PublicKey | null,
+  multiSigners: sol.Signer[] = [],
+  confirmOptions?: sol.ConfirmOptions,
+  programId = splToken.TOKEN_PROGRAM_ID
+): Promise<sol.TransactionSignature> {
+  const [currentAuthorityPublicKey, signers] = getSigners(
+    currentAuthority,
+    multiSigners
+  );
+
+  const transaction = new sol.Transaction().add(
+    splToken.createSetAuthorityInstruction(
+      account,
+      currentAuthorityPublicKey,
+      authorityType,
+      newAuthority,
+      multiSigners,
+      programId
+    )
+  );
+
+  if ('privateKey' in payer) {
+    // payer is a sol.Signer
+    return sol.sendAndConfirmTransaction(
+      connection,
+      transaction,
+      [payer, ...signers],
+      confirmOptions
+    );
+  }
+  if ('sendTransaction' in payer) {
+    // payer is a WalletContextState
+    const options: SendTransactionOptions = { signers: [...signers] };
+    const signature = await payer.sendTransaction(
+      transaction,
+      connection,
+      options
+    );
+
+    // await connection.confirmTransaction(signature, confirmOptions?.commitment);
+    const latestBlockHash = await connection.getLatestBlockhash();
+
+    await connection.confirmTransaction(
+      {
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        signature,
+      },
+      confirmOptions?.commitment
+    );
+  } else {
+    throw Error('payer not a Keypair or Wallet.');
+  }
+}
+
 export default {};

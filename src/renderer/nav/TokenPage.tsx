@@ -7,7 +7,7 @@ import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
-import { mintTo, setAuthority, transfer } from '@solana/spl-token';
+import { setAuthority } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
 import * as walletWeb3 from '../wallet-adapter/web3';
@@ -160,7 +160,7 @@ function TokenPage() {
         connection,
         fromKey,
         mintKey.publicKey,
-        myWallet
+        toWallet.publicKey
       );
       updateAtaReceiver(toTokenAccount.address);
     } catch (e) {
@@ -182,10 +182,10 @@ function TokenPage() {
     }
 
     // Minting 1 new token to the "fromTokenAccount" account we just returned/created.
-    const signature = await mintTo(
+    const signature = await walletWeb3.mintTo(
       connection,
-      myWallet, // Payer of the transaction fees
-      mintKey, // Mint for the account
+      fromKey, // Payer of the transaction fees
+      mintKey.publicKey, // Mint for the account
       tokenSender, // Address of the account to mint to
       myWallet, // Minting authority
       1 // Amount to mint
@@ -202,12 +202,12 @@ function TokenPage() {
       return;
     }
 
-    await setAuthority(
+    await walletWeb3.setAuthority(
       connection,
-      myWallet, // Payer of the transaction fees
-      mintKey, // Account
-      myWallet.publicKey, // Current authority
-      0, // Authority type: "0" represents Mint Tokens
+      fromKey, // Payer of the transaction fees
+      mintKey.publicKey, // Account
+      myWallet, // Current authority
+      'MintTokens', // Authority type: "0" represents Mint Tokens
       null // Setting the new Authority to null
     );
   }
@@ -224,12 +224,12 @@ function TokenPage() {
       logger.info('no ataReceiver', ataReceiver);
       return;
     }
-    const signature = await transfer(
+    const signature = await walletWeb3.transfer(
       connection,
-      myWallet, // Payer of the transaction fees
+      fromKey, // Payer of the transaction fees
       tokenSender, // Source account
       ataReceiver, // Destination account
-      myWallet.publicKey, // Owner of the source account
+      myWallet, // Owner of the source account
       1 // Number of tokens to transfer
     );
 
@@ -322,9 +322,9 @@ function TokenPage() {
             }
             onClick={() => {
               toast.promise(mintToken(), {
-                pending: `Mint To ${myWallet?.publicKey.toString()} submitted`,
-                success: `Mint To ${myWallet?.publicKey.toString()} succeeded 👌`,
-                error: `Mint To ${myWallet?.publicKey.toString()}  failed 🤯`,
+                pending: `Mint To ${myWallet?.toString()} submitted`,
+                success: `Mint To ${myWallet?.toString()} succeeded 👌`,
+                error: `Mint To ${myWallet?.toString()}  failed 🤯`,
               });
             }}
           >
