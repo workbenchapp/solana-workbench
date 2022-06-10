@@ -7,12 +7,7 @@ import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
-import {
-  getOrCreateAssociatedTokenAccount,
-  mintTo,
-  setAuthority,
-  transfer,
-} from '@solana/spl-token';
+import { mintTo, setAuthority, transfer } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
 import * as walletWeb3 from '../wallet-adapter/web3';
@@ -132,12 +127,13 @@ function TokenPage() {
     logger.info('getOrCreateAssociatedTokenAccount');
 
     try {
-      const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-        connection,
-        myWallet,
-        mintKey,
-        myWallet.publicKey
-      );
+      const fromTokenAccount =
+        await walletWeb3.getOrCreateAssociatedTokenAccount(
+          connection,
+          fromKey,
+          mintKey.publicKey,
+          myWallet
+        );
       updateTokenSender(fromTokenAccount.address);
     } catch (e) {
       logger.error(e, 'getOrCreateAssociatedTokenAccount ensuremyAta');
@@ -160,11 +156,11 @@ function TokenPage() {
     // Get the token account of the toWallet Solana address. If it does not exist, create it.
     logger.info('getOrCreateAssociatedTokenAccount');
     try {
-      const toTokenAccount = await getOrCreateAssociatedTokenAccount(
+      const toTokenAccount = await walletWeb3.getOrCreateAssociatedTokenAccount(
         connection,
-        myWallet,
-        mintKey,
-        toWallet.publicKey
+        fromKey,
+        mintKey.publicKey,
+        myWallet
       );
       updateAtaReceiver(toTokenAccount.address);
     } catch (e) {
@@ -191,7 +187,7 @@ function TokenPage() {
       myWallet, // Payer of the transaction fees
       mintKey, // Mint for the account
       tokenSender, // Address of the account to mint to
-      myWallet.publicKey, // Minting authority
+      myWallet, // Minting authority
       1 // Amount to mint
     );
     logger.info('SIGNATURE', signature);
@@ -260,7 +256,7 @@ function TokenPage() {
               });
             }}
           >
-            initialize mint
+            create mint keypair
           </Button>
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
@@ -272,7 +268,7 @@ function TokenPage() {
               });
             }}
           >
-            initialize mint
+            initialize mint account
           </Button>
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
