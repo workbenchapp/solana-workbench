@@ -1,12 +1,11 @@
-import Stack from 'react-bootstrap/Stack';
 import { Col, Row } from 'react-bootstrap';
 
+import Split from 'react-split';
 import AccountView from '../components/AccountView';
 import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
 import { useAppSelector } from '../hooks';
 import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAccountsState';
-import Split from "react-split";
 
 function Account() {
   const accounts = useAppSelector(selectAccountsListState);
@@ -14,13 +13,21 @@ function Account() {
 
   // TODO: the borders should eventually be resizable
   return (
-    <Split className="almost-vh-100 v-stack" direction="vertical" sizes={[80, 20]} >
+    <Split
+      className="almost-vh-100 v-stack"
+      direction="vertical"
+      sizes={[80, 20]}
+    >
       <Split className="d-flex almost-vh-80 row" sizes={[50, 48]}>
         <Col className="col-md-6 almost-vh-100 vscroll">
           <ProgramChangeView />
         </Col>
         <Col className="border-left col-md-6 almost-vh-100 vscroll">
-          <Split className="almost-vh-100 v-stack vstack" direction="vertical" sizes={[80, 20]}>
+          <Split
+            className="almost-vh-100 v-stack vstack"
+            direction="vertical"
+            sizes={[80, 20]}
+          >
             <Row className="flex-fill">
               <AccountView pubKey={selectedAccount} />
             </Row>
@@ -33,7 +40,7 @@ function Account() {
       <Row className="border-top almost-vh-20">
         <LogView />
       </Row>
-    </Split >
+    </Split>
   );
 }
 
