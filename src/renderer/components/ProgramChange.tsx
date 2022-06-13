@@ -70,7 +70,7 @@ export function ProgramChange(props: {
   return (
     <tr
       onClick={() => dispatch(setSelected(pubKey))}
-      className={selected ? 'blue' : ''}
+      className={selected ? 'bg-lightblue' : ''}
     >
       <td onClick={() => pinAccount(pubKey, pinned)}>
         <span className="icon icon-interactive">

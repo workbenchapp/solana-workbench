@@ -11,7 +11,6 @@ function Account() {
   const accounts = useAppSelector(selectAccountsListState);
   const { selectedAccount } = accounts;
 
-  // TODO: the borders should eventually be resizable
   return (
     <Split
       className="almost-vh-100 v-stack"
