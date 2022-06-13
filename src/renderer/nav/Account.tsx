@@ -6,6 +6,7 @@ import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
 import { useAppSelector } from '../hooks';
 import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAccountsState';
+import Split from "react-split";
 
 function Account() {
   const accounts = useAppSelector(selectAccountsListState);
@@ -13,26 +14,26 @@ function Account() {
 
   // TODO: the borders should eventually be resizable
   return (
-    <Stack className="almost-vh-100">
-      <Row className="flex-fill almost-vh-80">
+    <Split className="almost-vh-100 v-stack" direction="vertical" sizes={[80, 20]} >
+      <Split className="d-flex almost-vh-80 row" sizes={[50, 48]}>
         <Col className="col-md-6 almost-vh-100 vscroll">
           <ProgramChangeView />
         </Col>
         <Col className="border-left col-md-6 almost-vh-100 vscroll">
-          <Stack className="almost-vh-100">
+          <Split className="almost-vh-100 v-stack vstack" direction="vertical" sizes={[80, 20]}>
             <Row className="flex-fill">
               <AccountView pubKey={selectedAccount} />
             </Row>
-            <Row className="border-top flex-fill">
+            <Row className="border-top flex-fill bg-light">
               transaction or program details
             </Row>
-          </Stack>
+          </Split>
         </Col>
-      </Row>
+      </Split>
       <Row className="border-top almost-vh-20">
         <LogView />
       </Row>
-    </Stack>
+    </Split >
   );
 }
 
