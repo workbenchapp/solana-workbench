@@ -13,6 +13,7 @@ import EdiText from 'react-editext';
 import Table from 'react-bootstrap/Table';
 import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
+import { Card } from 'react-bootstrap';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
@@ -54,7 +55,8 @@ function tryExpandingTokenState(
   return (
     <div>
       <div>
-        Mint: <InlinePK pk={accountState.mint.toString()} />:{' '}
+        {tAccount.account.data.parsed.type}:{' '}
+        <InlinePK pk={accountState.mint.toString()} />:{' '}
         {accountState.tokenAmount.amount} tokens
       </div>
       <div>
@@ -243,32 +245,36 @@ function AccountView(props: { pubKey: string | undefined }) {
                     }) => {
                       // TODO: extract to its own component
                       return (
-                        <div>
-                          <div>
-                            ATA: <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
-                            {tAccount.account.data.program.toString()}:
-                          </div>
-                          <div>
-                            <div>
-                              {truncateSolAmount(
-                                tAccount.account.lamports / sol.LAMPORTS_PER_SOL
-                              )}{' '}
-                              SOL
-                            </div>
-                            <div>
-                              state: {tAccount.account.data.parsed.info.state}
-                            </div>
-                            <pre className="exe-hexdump p-2 rounded">
-                              <code>
-                                {JSON.stringify(tAccount.account.data.parsed)}
-                              </code>
-                            </pre>
-                            <div>
-                              token state:
-                              {tryExpandingTokenState(net, tAccount)}
-                            </div>
-                          </div>
-                        </div>
+                        <Card>
+                          <Card.Body>
+                            <Card.Title>
+                              ATA: <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
+                              Program:{' '}
+                              {tAccount.account.data.program.toString()}
+                            </Card.Title>
+                            <Card.Text>
+                              <div>
+                                {truncateSolAmount(
+                                  tAccount.account.lamports /
+                                    sol.LAMPORTS_PER_SOL
+                                )}{' '}
+                                SOL
+                              </div>
+                              <div>
+                                state: {tAccount.account.data.parsed.info.state}
+                              </div>
+                              <pre className="exe-hexdump p-2 rounded">
+                                <code>
+                                  {JSON.stringify(tAccount.account, null, 2)}
+                                </code>
+                              </pre>
+                              <div>
+                                token state:
+                                {tryExpandingTokenState(net, tAccount)}
+                              </div>
+                            </Card.Text>
+                          </Card.Body>
+                        </Card>
                       );
                     }
                   )}

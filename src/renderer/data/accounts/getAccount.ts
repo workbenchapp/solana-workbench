@@ -58,6 +58,7 @@ export async function getAccount(
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
   const solAccount = await solConn.getAccountInfo(key);
+  //  const solAccount = await solConn.getParsedAccountInfo(key);
 
   logger.silly('getAccountInfo cache miss', pubKey, solAccount);
   // TODO: these should not be made individually, instead, toss them on a list, and make getMultipleAccounts call once every 333mS or something
@@ -70,7 +71,7 @@ export async function getAccount(
     count: 0,
     solDelta: 0,
     maxDelta: 0,
-    programID: '',
+    programID: solAccount?.owner.toString(),
   };
   cache.set(`${net}_${pubKey}`, response);
   return response;
