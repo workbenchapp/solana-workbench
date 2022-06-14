@@ -1,3 +1,6 @@
+# Files built during compilation
+release
+
 # Logs
 logs
 *.log

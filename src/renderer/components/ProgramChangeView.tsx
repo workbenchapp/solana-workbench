@@ -1,47 +1,41 @@
 import {
-  faFilter,
-  faSpinner,
-  faSortDesc,
-  faUnsorted,
-} from '@fortawesome/free-solid-svg-icons';
+  accountsActions,
+  selectAccountsListState, setSelected
+} from '@/data/SelectedAccountsList/selectedAccountsState';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
-
+import {
+  faFilter, faSortDesc, faSpinner, faUnsorted
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useRef, useState } from 'react';
-import { Dropdown, DropdownButton, Button } from 'react-bootstrap';
+import { Button, Dropdown, DropdownButton } from 'react-bootstrap';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Table from 'react-bootstrap/Table';
-import { toast } from 'react-toastify';
 import EdiText from 'react-editext';
-
 import OutsideClickHandler from 'react-outside-click-handler';
-
-import { useWallet } from '@solana/wallet-adapter-react';
-import {
-  setSelected,
-  accountsActions,
-  selectAccountsListState,
-} from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
-import {
-  selectValidatorNetworkState,
-  NetStatus,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import { toast } from 'react-toastify';
+import createNewAccount from '../data/accounts/account';
+import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   BASE58_PUBKEY_REGEX,
-  GetTopAccounts,
+  GetTopAccounts
 } from '../data/accounts/getAccount';
-import { AccountInfo } from '../data/accounts/accountInfo';
-
-import { ProgramChange } from './ProgramChange';
 import {
-  unsubscribeProgramChanges,
-  subscribeProgramChanges,
+  subscribeProgramChanges, unsubscribeProgramChanges
 } from '../data/accounts/programChanges';
-import createNewAccount from '../data/accounts/account';
-import WatchAccountButton from './WatchAccountButton';
+import {
+  NetStatus, selectValidatorNetworkState
+} from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
+import { ProgramChange } from './ProgramChange';
+import WatchAccountButton from './WatchAccountButton';
+
+
+
+
 
 const logger = window.electron.log;
 

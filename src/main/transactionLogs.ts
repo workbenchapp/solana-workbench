@@ -1,6 +1,6 @@
+import { LogSubscriptionMap } from '@/types/types';
 import * as sol from '@solana/web3.js';
 import Electron from 'electron';
-import { LogSubscriptionMap } from 'types/types';
 import { netToURL } from '../common/strings';
 
 const logSubscriptions: LogSubscriptionMap = {};

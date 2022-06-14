@@ -1,24 +1,24 @@
-import { useEffect, useState, useCallback } from 'react';
-import { faStar, faKey } from '@fortawesome/free-solid-svg-icons';
+import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import * as faRegular from '@fortawesome/free-regular-svg-icons';
+import { faKey, faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppDispatch, useInterval, useAppSelector } from '../hooks';
-
-import InlinePK from './InlinePK';
-
+import { useCallback, useEffect, useState } from 'react';
 import { AccountInfo } from '../data/accounts/accountInfo';
+import { useAccountMeta } from '../data/accounts/accountState';
 import {
   getAccount,
   truncateLamportAmount,
-  truncateSolAmount,
+  truncateSolAmount
 } from '../data/accounts/getAccount';
 import {
   Net,
   NetStatus,
-  selectValidatorNetworkState,
+  selectValidatorNetworkState
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { useAccountMeta } from '../data/accounts/accountState';
+import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
+import InlinePK from './InlinePK';
+
+
 
 const logger = window.electron.log;
 

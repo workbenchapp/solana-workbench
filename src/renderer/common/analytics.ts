@@ -1,5 +1,5 @@
+import store from '@/store';
 import amplitude from 'amplitude-js';
-import store from 'renderer/store';
 import { ConfigKey } from '../data/Config/configState';
 
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';

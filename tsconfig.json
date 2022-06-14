@@ -20,7 +20,10 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "release/app/dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["./src/*", "./dist/*"]
+    }
   },
   "exclude": [
     "test",

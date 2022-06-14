@@ -1,65 +1,49 @@
-import PropTypes from 'prop-types';
-import isElectron from 'is-electron';
-import './App.scss';
-import * as sol from '@solana/web3.js';
-
-import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
-
-import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
-import Nav from 'react-bootstrap/Nav';
-import { Form, Button } from 'react-bootstrap';
-
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
-
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
+import { SizeProp } from '@fortawesome/fontawesome-svg-core';
 import {
-  faBook,
-  faTh,
-  faAnchor,
-  faNetworkWired,
+  faAnchor, faBook, faNetworkWired, faTh
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { SizeProp } from '@fortawesome/fontawesome-svg-core';
-
-import { FC, useMemo, useState } from 'react';
-
 import {
   ConnectionProvider,
-  WalletProvider,
+  WalletProvider
 } from '@solana/wallet-adapter-react';
 // import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import {
   WalletModalProvider,
-  WalletMultiButton,
+  WalletMultiButton
 } from '@solana/wallet-adapter-react-ui';
-import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
-
+// Default styles that can be overridden by your app
+import '@solana/wallet-adapter-react-ui/styles.css';
+import * as sol from '@solana/web3.js';
+import isElectron from 'is-electron';
+import PropTypes from 'prop-types';
+import { FC, useMemo, useState } from 'react';
+import { Button, Form } from 'react-bootstrap';
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
+import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import './App.scss';
+import { getElectronStorageWallet } from './data/accounts/account';
+import { useAccountsState } from './data/accounts/accountState';
+import {
+  ConfigKey, setConfigValue, useConfigState
+} from './data/Config/configState';
+import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
+import {
+  netToURL,
+  selectValidatorNetworkState
+} from './data/ValidatorNetwork/validatorNetworkState';
+import { useAppDispatch, useAppSelector } from './hooks';
 import Account from './nav/Account';
 import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
-
-import { useAppDispatch, useAppSelector } from './hooks';
-import {
-  useConfigState,
-  setConfigValue,
-  ConfigKey,
-} from './data/Config/configState';
-import { useAccountsState } from './data/accounts/accountState';
-import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
-import {
-  netToURL,
-  selectValidatorNetworkState,
-} from './data/ValidatorNetwork/validatorNetworkState';
-import { getElectronStorageWallet } from './data/accounts/account';
-
-// Default styles that can be overridden by your app
-require('@solana/wallet-adapter-react-ui/styles.css');
+import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
 const logger = window.electron.log;
 
@@ -98,7 +82,7 @@ TooltipNavItem.propTypes = {
   title: PropTypes.string.isRequired,
   tooltipMessage: PropTypes.string.isRequired,
   eventKey: PropTypes.string.isRequired,
-  icon: PropTypes.element.isRequired, // instanceOf(IconDefinition).isRequired,
+  icon: PropTypes.object.isRequired, // instanceOf(IconDefinition).isRequired,
   iconsize: PropTypes.string.isRequired,
 };
 // TODO: work out TooltipNavItem.defaults
