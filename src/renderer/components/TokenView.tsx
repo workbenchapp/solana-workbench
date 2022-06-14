@@ -31,16 +31,19 @@ export function TokenMetaView(props: { mintKey: string; className?: string }) {
       return;
     }
     try {
-      const solConn = new sol.Connection(netToURL(net));
-      const key = new sol.PublicKey(mintKey);
-      solConn
-        .getParsedAccountInfo(key)
+      // const solConn = new sol.Connection(netToURL(net));
+      // const key = new sol.PublicKey(mintKey);
+      // solConn
+      //   .getParsedAccountInfo(key)
+      getAccount(net, mintKey)
         .then((account) => {
-          logger.info('got it', account.value);
-          updateMintInfo(account.value);
+          logger.info('got it', account);
+          updateMintInfo(account);
           return account;
         })
-        .catch(logger.error);
+        .catch((err) => {
+          logger.error('WHAT', err);
+        });
     } catch (e) {
       // moreInfo = JSON.stringify(e);
       logger.error('getAccount what', e);
@@ -69,7 +72,7 @@ export function TokenMetaView(props: { mintKey: string; className?: string }) {
   return (
     <div className={className}>
       <div>
-        {mintInto?.data.parsed.type}: <InlinePK pk={mintKey.toString()} />
+        {mintInto?.data?.parsed?.type}: <InlinePK pk={mintKey.toString()} />
         <a href={metaInfo?.data.data.uri}>{metaInfo?.data.data.symbol}</a> (
         {metaInfo?.data.data.name} )
       </div>

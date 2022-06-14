@@ -57,21 +57,21 @@ export async function getAccount(
 
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
-  const solAccount = await solConn.getAccountInfo(key);
-  //  const solAccount = await solConn.getParsedAccountInfo(key);
+  // const solAccount = await solConn.getAccountInfo(key);
+  const solAccount = await solConn.getParsedAccountInfo(key);
 
   logger.silly('getAccountInfo cache miss', pubKey, solAccount);
   // TODO: these should not be made individually, instead, toss them on a list, and make getMultipleAccounts call once every 333mS or something
   //  if (solAccount) {
   const response: AccountInfo = {
     accountId: key,
-    accountInfo: solAccount,
-    pubKey: key.toString(),
+    accountInfo: solAccount.value,
+    pubKey,
     net,
     count: 0,
     solDelta: 0,
     maxDelta: 0,
-    programID: solAccount?.owner.toString(),
+    // programID: '', // solAccount?.owner?.toString(),
   };
   cache.set(`${net}_${pubKey}`, response);
   return response;
@@ -105,7 +105,7 @@ export async function getTokenAccounts(
     filter
   );
 
-  logger.silly('getTokenAccounts cache miss', tokenAccounts);
+  logger.silly('getTokenAccounts cache miss', pubKey, tokenAccounts);
 
   // cache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
   return tokenAccounts;
@@ -161,7 +161,10 @@ export const renderData = (account: AccountInfo | undefined) => {
   if (account.accountInfo?.data === undefined) {
     return '';
   }
-  return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
+  if ('subarray' in account.accountInfo.data) {
+    return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
+  }
+  return JSON.stringify(account.accountInfo.data, null, 2);
 };
 
 // TODO: this should look up a persistent key: string map

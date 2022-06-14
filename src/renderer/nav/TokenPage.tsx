@@ -118,8 +118,8 @@ function TokenPage() {
 
       const meta = await metaplex.actions.createMetadata({
         connection,
-        wallet: new metaplex.NodeWallet(myWallet),
-        editionMint: mintKey,
+        wallet: fromKey,
+        editionMint: mintKey.publicKey,
         metadataData: metadata,
       });
       logger.info('metadata', meta);
@@ -333,7 +333,7 @@ function TokenPage() {
             initialize mint
           </Button>
           <Button
-            disabled={true || myWallet === undefined || mintKey === undefined}
+            disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
               toast.promise(createOurMintMetadata(), {
                 pending: `Add mint metadata submitted`,
