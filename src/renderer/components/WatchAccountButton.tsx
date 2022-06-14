@@ -23,7 +23,7 @@ function WatchAcountPopover(props: {
 
   return (
     <Popover id="popover-basic">
-      <Popover.Header as="h3">Airdrop SOL</Popover.Header>
+      <Popover.Header as="h3">Watch account</Popover.Header>
       <Popover.Body>
         <Form>
           <Form.Group as={Row} className="mb-8" controlId="formToAccount">

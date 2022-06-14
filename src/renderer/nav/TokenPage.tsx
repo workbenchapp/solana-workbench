@@ -7,9 +7,9 @@ import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
-import { setAuthority } from '@solana/spl-token';
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
+import WatchAccountButton from 'renderer/components/WatchAccountButton';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { TokenMetaView } from '../components/TokenView';
@@ -25,9 +25,24 @@ function TokenPage() {
 
   // TODO: this will come from main config...
   const [mintKey, updateMintKey] = useState<sol.Keypair>();
-  const [tokenSender, updateTokenSender] = useState<sol.PublicKey>();
+  const [tokenSender, updateFunderATA] = useState<sol.PublicKey>();
   const [tokenReceiver, updateTokenReceiver] = useState<sol.Keypair>();
   const [ataReceiver, updateAtaReceiver] = useState<sol.PublicKey>();
+
+  const setMintPubKey = (pubKey: string) => {
+    const key = new sol.PublicKey(pubKey);
+
+    const edkey: sol.Ed25519Keypair = {
+      publicKey: key.toBytes(),
+      secretKey: key.toBytes(),
+    };
+    const kp = new sol.Keypair(edkey);
+    if (kp) {
+      updateMintKey(kp);
+      updateFunderATA(undefined);
+      updateAtaReceiver(undefined);
+    }
+  };
 
   const { publicKey } = fromKey;
   if (!publicKey) {
@@ -134,7 +149,7 @@ function TokenPage() {
           mintKey.publicKey,
           myWallet
         );
-      updateTokenSender(fromTokenAccount.address);
+      updateFunderATA(fromTokenAccount.address);
     } catch (e) {
       logger.error(e, 'getOrCreateAssociatedTokenAccount ensuremyAta');
     }
@@ -152,20 +167,6 @@ function TokenPage() {
 
     const toWallet = sol.Keypair.generate();
     updateTokenReceiver(toWallet);
-
-    // Get the token account of the toWallet Solana address. If it does not exist, create it.
-    logger.info('getOrCreateAssociatedTokenAccount');
-    try {
-      const toTokenAccount = await walletWeb3.getOrCreateAssociatedTokenAccount(
-        connection,
-        fromKey,
-        mintKey.publicKey,
-        toWallet.publicKey
-      );
-      updateAtaReceiver(toTokenAccount.address);
-    } catch (e) {
-      logger.error(e, 'getOrCreateAssociatedTokenAccount ensureReceiverAta');
-    }
   }
   async function mintToken() {
     if (!myWallet) {
@@ -220,6 +221,29 @@ function TokenPage() {
       logger.info('no tokenSender', tokenSender);
       return;
     }
+    if (!mintKey) {
+      logger.info('no mintKey', mintKey);
+      return;
+    }
+    if (!tokenReceiver) {
+      logger.info('no tokenReceiver', tokenReceiver);
+      return;
+    }
+
+    // Get the token account of the toWallet Solana address. If it does not exist, create it.
+    logger.info('getOrCreateAssociatedTokenAccount');
+    try {
+      const toTokenAccount = await walletWeb3.getOrCreateAssociatedTokenAccount(
+        connection,
+        fromKey,
+        mintKey.publicKey,
+        tokenReceiver.publicKey
+      );
+      updateAtaReceiver(toTokenAccount.address);
+    } catch (e) {
+      logger.error(e, 'getOrCreateAssociatedTokenAccount ensureReceiverAta');
+    }
+
     if (!ataReceiver) {
       logger.info('no ataReceiver', ataReceiver);
       return;
@@ -239,50 +263,14 @@ function TokenPage() {
   return (
     <Stack className="almost-vh-100">
       <Row>
-        <Col>
-          List of buttons for each step? or maybe just a set of tabs that lets
-          the user do the steps in order, or whatever they like...
-        </Col>
+        <Col />
       </Row>
-      <Row>
-        <Col>
+
+      <Row className="flex-fill almost-vh-80">
+        <Col className="col-md-4 almost-vh-100 vscroll">
+          Our Wallet
           <Button
-            disabled={myWallet === undefined || mintKey !== undefined}
-            onClick={() => {
-              toast.promise(createOurMintKeypair(), {
-                pending: `Create mint keys submitted`,
-                success: `Create mint keys  succeeded 👌`,
-                error: `Create mint keys   failed 🤯`,
-              });
-            }}
-          >
-            create mint keypair
-          </Button>
-          <Button
-            disabled={myWallet === undefined || mintKey === undefined}
-            onClick={() => {
-              toast.promise(createOurMint(), {
-                pending: `Create mint account submitted`,
-                success: `Create mint account  succeeded 👌`,
-                error: `Create mint account   failed 🤯`,
-              });
-            }}
-          >
-            initialize mint account
-          </Button>
-          <Button
-            disabled={myWallet === undefined || mintKey === undefined}
-            onClick={() => {
-              toast.promise(createOurMintMetadata(), {
-                pending: `Add mint metadata submitted`,
-                success: `Add mint metadata  succeeded 👌`,
-                error: `Add mint metadata   failed 🤯`,
-              });
-            }}
-          >
-            add mint metadata
-          </Button>
-          <Button
+            // TODO: need to auto-detect that it already exists?
             disabled={
               myWallet === undefined ||
               mintKey === undefined ||
@@ -296,23 +284,7 @@ function TokenPage() {
               });
             }}
           >
-            create funder account ATA for this mint
-          </Button>
-          <Button
-            disabled={
-              myWallet === undefined ||
-              mintKey === undefined ||
-              tokenReceiver !== undefined
-            }
-            onClick={() => {
-              toast.promise(ensureReceiverAta(), {
-                pending: `Create receiver ATA account submitted`,
-                success: `Create receiver ATA account  succeeded 👌`,
-                error: `Create receiver ATA account   failed 🤯`,
-              });
-            }}
-          >
-            create receiver account and ATA account
+            Ensure ATA account
           </Button>
           <Button
             disabled={
@@ -330,21 +302,47 @@ function TokenPage() {
           >
             mint token to funder
           </Button>
+          <AccountView pubKey={myWallet?.toString()} />
+        </Col>
+        <Col className="col-md-4 almost-vh-100 vscroll">
+          Token Mint
+          <WatchAccountButton pinAccount={setMintPubKey} />
           <Button
-            disabled={
-              myWallet === undefined ||
-              tokenSender === undefined ||
-              ataReceiver === undefined
-            }
+            disabled={myWallet === undefined || mintKey !== undefined}
             onClick={() => {
-              toast.promise(transferTokenToReceiver(), {
-                pending: `Transfer token To ${ataReceiver?.toString()} submitted`,
-                success: `Transfer token To ${ataReceiver?.toString()} succeeded 👌`,
-                error: `Transfer token To ${ataReceiver?.toString()}  failed 🤯`,
+              toast.promise(createOurMintKeypair(), {
+                pending: `Create mint keys submitted`,
+                success: `Create mint keys  succeeded 👌`,
+                error: `Create mint keys   failed 🤯`,
               });
             }}
           >
-            send token to receiver
+            create mint keypair
+          </Button>
+          <Button
+            // TODO: this button should be disabled if the selected mint (or account) exists
+            disabled={myWallet === undefined || mintKey === undefined}
+            onClick={() => {
+              toast.promise(createOurMint(), {
+                pending: `Create mint account submitted`,
+                success: `Create mint account  succeeded 👌`,
+                error: `Create mint account   failed 🤯`,
+              });
+            }}
+          >
+            initialize mint
+          </Button>
+          <Button
+            disabled={true || myWallet === undefined || mintKey === undefined}
+            onClick={() => {
+              toast.promise(createOurMintMetadata(), {
+                pending: `Add mint metadata submitted`,
+                success: `Add mint metadata  succeeded 👌`,
+                error: `Add mint metadata   failed 🤯`,
+              });
+            }}
+          >
+            add metadata
           </Button>
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
@@ -358,15 +356,6 @@ function TokenPage() {
           >
             Set max supply (aka, close mint)
           </Button>
-        </Col>
-      </Row>
-
-      <Row className="flex-fill almost-vh-80">
-        <Col className="col-md-4 almost-vh-100 vscroll">
-          <AccountView pubKey={myWallet?.toString()} />
-        </Col>
-        <Col className="col-md-4 almost-vh-100 vscroll">
-          Token Mint
           <AccountView pubKey={mintKey?.publicKey.toString()} />
           <div>
             <TokenMetaView
@@ -375,10 +364,35 @@ function TokenPage() {
           </div>
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
-          tokenReceiver:
-          {tokenReceiver?.secretKey?.toString()}
-          ATA:
-          {ataReceiver?.toString()}
+          non-funder account
+          <Button
+            disabled={
+              myWallet === undefined ||
+              mintKey === undefined ||
+              tokenReceiver !== undefined
+            }
+            onClick={() => {
+              toast.promise(ensureReceiverAta(), {
+                pending: `Create receiver ATA account submitted`,
+                success: `Create receiver ATA account  succeeded 👌`,
+                error: `Create receiver ATA account   failed 🤯`,
+              });
+            }}
+          >
+            create receiver account and ATA account
+          </Button>
+          <Button
+            disabled={myWallet === undefined || tokenSender === undefined}
+            onClick={() => {
+              toast.promise(transferTokenToReceiver(), {
+                pending: `Transfer token To ${ataReceiver?.toString()} submitted`,
+                success: `Transfer token To ${ataReceiver?.toString()} succeeded 👌`,
+                error: `Transfer token To ${ataReceiver?.toString()}  failed 🤯`,
+              });
+            }}
+          >
+            mint token to receiver
+          </Button>
           <AccountView pubKey={tokenReceiver?.publicKey?.toString()} />
         </Col>
       </Row>
