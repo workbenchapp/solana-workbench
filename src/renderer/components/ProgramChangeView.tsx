@@ -1,18 +1,18 @@
 import {
   accountsActions,
-  selectAccountsListState, setSelected
+  selectAccountsListState,
+  setSelected,
 } from '@/data/SelectedAccountsList/selectedAccountsState';
-import * as faRegular from '@fortawesome/free-regular-svg-icons';
 import {
-  faFilter, faSortDesc, faSpinner, faUnsorted
+  faFilter,
+  faSortDesc,
+  faSpinner,
+  faUnsorted,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useRef, useState } from 'react';
 import { Button, Dropdown, DropdownButton } from 'react-bootstrap';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
-import Table from 'react-bootstrap/Table';
 import EdiText from 'react-editext';
 import OutsideClickHandler from 'react-outside-click-handler';
 import { toast } from 'react-toastify';
@@ -20,22 +20,20 @@ import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   BASE58_PUBKEY_REGEX,
-  GetTopAccounts
+  GetTopAccounts,
 } from '../data/accounts/getAccount';
 import {
-  subscribeProgramChanges, unsubscribeProgramChanges
+  subscribeProgramChanges,
+  unsubscribeProgramChanges,
 } from '../data/accounts/programChanges';
 import {
-  NetStatus, selectValidatorNetworkState
+  NetStatus,
+  selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
 import { ProgramChange } from './ProgramChange';
 import WatchAccountButton from './WatchAccountButton';
-
-
-
-
 
 const logger = window.electron.log;
 
@@ -163,8 +161,10 @@ function ProgramChangeView() {
     </>
   );
 
+  const sortIcon = () => {};
+
   return (
-    <div>
+    <div className="w-full p-3 flex flex-col">
       <div className="mb-2">
         <div className="mb-2">
           <small>
@@ -172,100 +172,100 @@ function ProgramChangeView() {
             <small>(Validator Slot {validatorSlot})</small>
           </small>
         </div>
-        <ButtonToolbar aria-label="Toolbar with button groups">
-          <ButtonGroup size="sm" className="me-2" aria-label="First group">
-            <Dropdown>
-              <OutsideClickHandler
-                onOutsideClick={() => setFilterDropdownShow(false)}
-                display="inline"
-              >
-                <DropdownButton
-                  size="sm"
-                  id="dropdown-basic-button"
-                  title={changeFilterDropdownTitle}
-                  onSelect={(s: string | null) => {
-                    setFilterDropdownShow(false);
-                    if (s) setProgramID(s as KnownProgramID);
-                  }}
-                  onClick={() => {
-                    if (!filterDropdownShow) {
-                      setFilterDropdownShow(true);
-                    } else {
-                      setFilterDropdownShow(false);
-                    }
-                  }}
-                  className="ms-2 d-inline"
-                  variant="light"
-                  show={filterDropdownShow}
-                >
-                  <div className="ms-1 p-1 border-bottom border-light">
-                    <small>
-                      <strong>Program ID</strong>
-                    </small>
-                  </div>
-                  <Dropdown.Item eventKey="">
-                    <small>System Program</small>
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={KnownProgramID.TokenProgram}>
-                    <small>Token Program</small>
-                  </Dropdown.Item>
-                  <Dropdown.Item eventKey={KnownProgramID.SerumDEXV3}>
-                    <small>Serum DEX V3</small>
-                  </Dropdown.Item>
-                  <div className="p-2">
-                    <EdiText
-                      type="text"
-                      value={programID}
-                      onSave={(val: string) => {
-                        const pastedID = val;
-                        if (pastedID.match(BASE58_PUBKEY_REGEX)) {
-                          unsubscribeProgramChanges(net, programID);
-                          subscribeProgramChanges(
-                            net,
-                            programID,
-                            setValidatorSlot
-                          );
-                          setProgramID(pastedID);
-                        } else {
-                          toast.warn(`Invalid program ID: ${pastedID}`);
-                        }
-                        filterProgramIDRef.current.value = 'Custom';
-                        filterProgramIDRef.current.blur();
-                        setFilterDropdownShow(false);
-                      }}
-                    />
-                  </div>
-                </DropdownButton>
-              </OutsideClickHandler>
-            </Dropdown>
-          </ButtonGroup>
-          <ButtonGroup size="sm" className="me-2" aria-label="First group">
-            <Button
-              onClick={() => {
-                createNewAccount(dispatch)
-                  .then((newKeypair) => {
-                    const pubKey = newKeypair.publicKey.toString();
-                    logger.info('renderer got new account', pubKey);
-
-                    pinAccount(pubKey, false);
-                    dispatch(setSelected(pubKey));
-                    toast(
-                      <div>
-                        Watching new keypair: <br />
-                        <InlinePK pk={pubKey} />
-                      </div>
-                    );
-                    return newKeypair;
-                  })
-                  .catch(logger.error);
-              }}
+        <div className="mb-2">
+          <Dropdown>
+            <OutsideClickHandler
+              onOutsideClick={() => setFilterDropdownShow(false)}
+              display="inline"
             >
-              Create Account
-            </Button>
+              <DropdownButton
+                size="sm"
+                id="dropdown-basic-button"
+                title={changeFilterDropdownTitle}
+                onSelect={(s: string | null) => {
+                  setFilterDropdownShow(false);
+                  if (s) setProgramID(s as KnownProgramID);
+                }}
+                onClick={() => {
+                  if (!filterDropdownShow) {
+                    setFilterDropdownShow(true);
+                  } else {
+                    setFilterDropdownShow(false);
+                  }
+                }}
+                className="ms-2 d-inline"
+                variant="light"
+                show={filterDropdownShow}
+              >
+                <div className="ms-1 p-1 border-bottom border-light">
+                  <small>
+                    <strong>Program ID</strong>
+                  </small>
+                </div>
+                <Dropdown.Item eventKey="">
+                  <small>System Program</small>
+                </Dropdown.Item>
+                <Dropdown.Item eventKey={KnownProgramID.TokenProgram}>
+                  <small>Token Program</small>
+                </Dropdown.Item>
+                <Dropdown.Item eventKey={KnownProgramID.SerumDEXV3}>
+                  <small>Serum DEX V3</small>
+                </Dropdown.Item>
+                <div className="p-2">
+                  <EdiText
+                    type="text"
+                    value={programID}
+                    onSave={(val: string) => {
+                      const pastedID = val;
+                      if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                        unsubscribeProgramChanges(net, programID);
+                        subscribeProgramChanges(
+                          net,
+                          programID,
+                          setValidatorSlot
+                        );
+                        setProgramID(pastedID);
+                      } else {
+                        toast.warn(`Invalid program ID: ${pastedID}`);
+                      }
+                      filterProgramIDRef.current.value = 'Custom';
+                      filterProgramIDRef.current.blur();
+                      setFilterDropdownShow(false);
+                    }}
+                  />
+                </div>
+              </DropdownButton>
+            </OutsideClickHandler>
+          </Dropdown>
+        </div>
+        <div>
+          <Button
+            onClick={() => {
+              createNewAccount(dispatch)
+                .then((newKeypair) => {
+                  const pubKey = newKeypair.publicKey.toString();
+                  logger.info('renderer got new account', pubKey);
 
-            <WatchAccountButton pinAccount={pinAccount} />
-          </ButtonGroup>
-        </ButtonToolbar>
+                  pinAccount(pubKey, false);
+                  dispatch(setSelected(pubKey));
+                  toast(
+                    <div>
+                      Watching new keypair: <br />
+                      <InlinePK pk={pubKey} />
+                    </div>
+                  );
+                  return newKeypair;
+                })
+                .catch(logger.error);
+            }}
+            className="mr-2"
+            size="sm"
+          >
+            Create Account
+          </Button>
+
+          <WatchAccountButton pinAccount={pinAccount} />
+        </div>
         <span>
           <small className="ms-2 text-secondary">
             <span>
@@ -276,14 +276,14 @@ function ProgramChangeView() {
           </small>
         </span>
       </div>
-      <div>
+      <div className="flex-1 overflow-auto">
         {displayList.length > 0 ? (
-          <Table hover size="sm">
-            <tbody>
-              <tr>
+          <table className="w-full h-full border-collapse overflow-auto">
+            <thead>
+              <tr className="bg-surface-400">
                 <th>
                   {' '}
-                  <FontAwesomeIcon className="me-1" icon={faRegular.faStar} />
+                  <IconMdiStarOutline />
                 </th>
                 <th>Address</th>
                 <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>
@@ -316,6 +316,8 @@ function ProgramChangeView() {
                   />
                 </th>
               </tr>
+            </thead>
+            <tbody className="w-full">
               {displayList
                 .slice(0, MAX_PROGRAM_CHANGES_DISPLAYED)
                 .map((pubKey: string) => {
@@ -331,7 +333,7 @@ function ProgramChangeView() {
                   );
                 })}
             </tbody>
-          </Table>
+          </table>
         ) : (
           <div>
             <FontAwesomeIcon className="me-1 fa-spin" icon={faSpinner} />

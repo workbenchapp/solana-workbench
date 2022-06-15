@@ -1,24 +1,19 @@
 import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
-import * as faRegular from '@fortawesome/free-regular-svg-icons';
-import { faKey, faStar } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useCallback, useEffect, useState } from 'react';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
 import {
   getAccount,
   truncateLamportAmount,
-  truncateSolAmount
+  truncateSolAmount,
 } from '../data/accounts/getAccount';
 import {
   Net,
   NetStatus,
-  selectValidatorNetworkState
+  selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
-
-
 
 const logger = window.electron.log;
 
@@ -72,18 +67,14 @@ export function ProgramChange(props: {
       onClick={() => dispatch(setSelected(pubKey))}
       className={selected ? 'bg-lightblue' : ''}
     >
-      <td onClick={() => pinAccount(pubKey, pinned)}>
+      <td onClick={() => pinAccount(pubKey, pinned)} align="center">
         <span className="icon icon-interactive">
-          <FontAwesomeIcon icon={pinned ? faStar : faRegular.faStar} />
+          {pinned ? <IconMdiStar /> : <IconMdiStarOutline />}
         </span>
       </td>
       <td>
         <InlinePK pk={pubKey} />
-        {accountMeta?.privatekey ? (
-          <FontAwesomeIcon title="has private key" icon={faKey} />
-        ) : (
-          ''
-        )}
+        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
       </td>
       <td>
         <span className="ms-2 rounded p-1">

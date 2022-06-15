@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
-import { useAppSelector } from '../hooks';
+import { useEffect, useState } from 'react';
 import {
   NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAppSelector } from '../hooks';
 
 export interface LogSubscriptionMap {
   [net: string]: {
@@ -73,17 +73,15 @@ function LogView() {
   }, [net, status]);
 
   return (
-    <div>
-      <textarea
-        readOnly
-        className="vscroll almost-vh-100 w-100"
-        value={
-          logs.length > 0
-            ? logs.join('\n')
-            : 'Logs will appear here once transactions are processed.'
-        }
-      />
-    </div>
+    <textarea
+      readOnly
+      className="w-full h-full text-xs text-gray-400 font-mono"
+      value={
+        logs.length > 0
+          ? logs.join('\n')
+          : 'Logs will appear here once transactions are processed.'
+      }
+    />
   );
 }
 

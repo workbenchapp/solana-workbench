@@ -1,5 +1,4 @@
 import { ACCOUNTS_NONE_KEY } from '../data/accounts/accountInfo';
-
 import CopyIcon from './CopyIcon';
 
 const prettifyPubkey = (pk = '') => {

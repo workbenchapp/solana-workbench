@@ -4,12 +4,12 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
 import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { debounce } from 'underscore';
-
-import { useInterval, useAppSelector } from '../hooks';
 import {
   NetStatus,
-  selectValidatorNetworkState,
+  selectValidatorNetworkState
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAppSelector, useInterval } from '../hooks';
+
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -50,7 +50,7 @@ const Validator = () => {
 
   // TODO(nathanleclaire): Don't nest ternary
   return (
-    <div className="row">
+    <div>
       {!(validator.status === NetStatus.Running) &&
       !(validator.status === NetStatus.Starting) ? (
         <Button

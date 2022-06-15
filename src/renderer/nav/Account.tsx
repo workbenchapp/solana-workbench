@@ -1,11 +1,8 @@
-import Stack from 'react-bootstrap/Stack';
-import { Col, Row } from 'react-bootstrap';
-
 import AccountView from '../components/AccountView';
-import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
-import { useAppSelector } from '../hooks';
+import ProgramChangeView from '../components/ProgramChangeView';
 import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAccountsState';
+import { useAppSelector } from '../hooks';
 
 function Account() {
   const accounts = useAppSelector(selectAccountsListState);
@@ -13,26 +10,24 @@ function Account() {
 
   // TODO: the borders should eventually be resizable
   return (
-    <Stack className="almost-vh-100">
-      <Row className="flex-fill almost-vh-80">
-        <Col className="col-md-6 almost-vh-100 vscroll">
+    <>
+      <div className="flex-1 flex w-full min-h-0">
+        <div className="flex min-h-min w-full">
           <ProgramChangeView />
-        </Col>
-        <Col className="border-left col-md-6 almost-vh-100 vscroll">
-          <Stack className="almost-vh-100">
-            <Row className="flex-fill">
-              <AccountView pubKey={selectedAccount} />
-            </Row>
-            <Row className="border-top flex-fill">
+        </div>
+        <div className="w-xs">
+          <div className="flex-1 p-3">
+            <AccountView pubKey={selectedAccount} />
+            <div className="border-top flex-fill">
               transaction or program details
-            </Row>
-          </Stack>
-        </Col>
-      </Row>
-      <Row className="border-top almost-vh-20">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="border-top h-50">
         <LogView />
-      </Row>
-    </Stack>
+      </div>
+    </>
   );
 }
 

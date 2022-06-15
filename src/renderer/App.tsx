@@ -1,27 +1,19 @@
-import { SizeProp } from '@fortawesome/fontawesome-svg-core';
-import {
-  faAnchor, faBook, faNetworkWired, faTh
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   ConnectionProvider,
-  WalletProvider
+  WalletProvider,
 } from '@solana/wallet-adapter-react';
 // import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
 import {
   WalletModalProvider,
-  WalletMultiButton
+  WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
 // Default styles that can be overridden by your app
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import PropTypes from 'prop-types';
 import { FC, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
-import Nav from 'react-bootstrap/Nav';
-import Navbar from 'react-bootstrap/Navbar';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
@@ -31,12 +23,14 @@ import './App.scss';
 import { getElectronStorageWallet } from './data/accounts/account';
 import { useAccountsState } from './data/accounts/accountState';
 import {
-  ConfigKey, setConfigValue, useConfigState
+  ConfigKey,
+  setConfigValue,
+  useConfigState,
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
   netToURL,
-  selectValidatorNetworkState
+  selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector } from './hooks';
 import Account from './nav/Account';
@@ -57,74 +51,70 @@ declare global {
   }
 }
 
-function TooltipNavItem({
-  to = '/',
-  title = 'nav',
-  tooltipMessage = 'nav tooltip',
-  eventKey = 'default',
-  icon = faBook,
-  iconsize = '1x',
-}) {
+const TooltipNavItem: React.FC<{
+  to: string;
+  title: string;
+  tooltipMessage: string;
+  eventKey: string;
+  children?: React.ReactNode;
+}> = ({ to, title, tooltipMessage, eventKey, children }) => {
   return (
     <OverlayTrigger
       key={`${eventKey}-right`}
       placement="right"
       overlay={<Tooltip id="tooltip-right">{tooltipMessage}</Tooltip>}
     >
-      <NavLink /* eventKey={eventKey} */ to={to} className="nav-link">
-        <FontAwesomeIcon size={iconsize as SizeProp} icon={icon} /> {title}
+      <NavLink /* eventKey={eventKey} */ to={to} className="block p-3">
+        {children} {title}
       </NavLink>
     </OverlayTrigger>
   );
-} // TODO: work out how propTypes work with fontAwesome
-TooltipNavItem.propTypes = {
-  to: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  tooltipMessage: PropTypes.string.isRequired,
-  eventKey: PropTypes.string.isRequired,
-  icon: PropTypes.object.isRequired, // instanceOf(IconDefinition).isRequired,
-  iconsize: PropTypes.string.isRequired,
 };
-// TODO: work out TooltipNavItem.defaults
+
+function NavigationIcons() {
+  return (
+    <>
+      <TooltipNavItem
+        to="/"
+        title=""
+        tooltipMessage="Changes"
+        eventKey="changes"
+      >
+        <IconMdiTable className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem
+        to="/validator"
+        title=""
+        tooltipMessage="Validator"
+        eventKey="validator"
+      >
+        <IconMdiBookOpenOutline className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem
+        to="/anchor"
+        title=""
+        tooltipMessage="Anchor"
+        eventKey="anchor"
+      >
+        <IconMdiAnchor className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem
+        to="/validatornetworkinfo"
+        title=""
+        tooltipMessage="Network Info"
+        eventKey="validatornetworkinfo"
+      >
+        <IconMdiVectorTriangle className="block" />
+      </TooltipNavItem>
+    </>
+  );
+}
 
 function Sidebar() {
   return (
-    <Navbar className="l-navbar" bg="light" expand="sm">
-      <nav className="nav">
-        <TooltipNavItem
-          to="/"
-          title=""
-          tooltipMessage="Changes"
-          eventKey="changes"
-          icon={faTh}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/validator"
-          title=""
-          tooltipMessage="Validator"
-          eventKey="validator"
-          icon={faBook}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/anchor"
-          title=""
-          tooltipMessage="Anchor"
-          eventKey="anchor"
-          icon={faAnchor}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/validatornetworkinfo"
-          title=""
-          tooltipMessage="Network Info"
-          eventKey="validatornetworkinfo"
-          icon={faNetworkWired}
-          iconsize="2x"
-        />
-      </nav>
-    </Navbar>
+    <nav className="bg-surface-400">
+      <NavigationIcons />
+    </nav>
   );
 }
 
@@ -132,65 +122,18 @@ function TopbarNavItems() {
   if (isElectron()) {
     return <></>;
   }
-  return (
-    <>
-      <TooltipNavItem
-        to="/"
-        title="Changes"
-        tooltipMessage="Changes"
-        eventKey="changes"
-        icon={faTh}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/validator"
-        title="Validator"
-        tooltipMessage="Validator"
-        eventKey="validator"
-        icon={faBook}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/anchor"
-        title="Anchor"
-        tooltipMessage="Anchor"
-        eventKey="anchor"
-        icon={faAnchor}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/validatornetworkinfo"
-        title="Network Info"
-        tooltipMessage="Network Info"
-        eventKey="validatornetworkinfo"
-        icon={faNetworkWired}
-        iconsize="xl"
-      />{' '}
-    </>
-  );
+  return <></>;
 }
 
 function Topbar() {
   return (
-    <Navbar sticky="top" bg="primary" variant="dark" expand="sm">
-      <Container fluid>
-        <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
-        <Navbar.Toggle aria-controls="navbarScroll" />
-        <Navbar.Collapse id="navbarScroll">
-          <Nav
-            className="me-auto my-2 my-lg-0"
-            style={{ maxHeight: '100px' }}
-            navbarScroll
-          >
-            <TopbarNavItems />
-          </Nav>
-          <WalletMultiButton />
-          <Form className="d-flex">
-            <ValidatorNetwork />
-          </Form>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <div className="flex items-center p-1 px-2 bg-surface-400">
+      <a href="#">Solana Workbench</a>
+      <div className="flex-1" />
+      {isElectron() ? null : <NavigationIcons />}
+      <WalletMultiButton className="h-min" />
+      <ValidatorNetwork />
+    </div>
   );
 }
 
@@ -287,15 +230,19 @@ export const GlobalContainer: FC = () => {
     return <>Config Loading ...${accounts.loading}</>;
   }
   return (
-    <div className="vh-100">
+    <div className="w-full h-full">
       <ConnectionProvider endpoint={netToURL(net)}>
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
-            <Topbar />
-            <Sidebar />
-            <Container fluid className="page-content mt-3">
-              <Outlet />
-            </Container>
+            <div className="flex flex-col h-full">
+              <Topbar />
+              <div className="flex flex-1 overflow-hidden">
+                <Sidebar />
+                <div className="flex-1 flex flex-col">
+                  <Outlet />
+                </div>
+              </div>
+            </div>
           </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
@@ -316,7 +263,7 @@ function App() {
     return <AnalyticsBanner />;
   }
   return (
-    <div className="vh-100">
+    <>
       <Routes>
         <Route path="/" element={<GlobalContainer />}>
           <Route index element={<Account />} />
@@ -330,7 +277,7 @@ function App() {
         </Route>
       </Routes>
       <ToastContainer />
-    </div>
+    </>
   );
 }
 

@@ -1,18 +1,9 @@
-import { useState, useEffect } from 'react';
-import {
-  faTerminal,
-  faEdit,
-  faSave,
-  faCancel,
-  faKey,
-} from '@fortawesome/free-solid-svg-icons';
+import { faKey, faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Container from 'react-bootstrap/Container';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
+import Container from 'react-bootstrap/Container';
 import EdiText from 'react-editext';
-import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
-
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -20,10 +11,10 @@ import {
   useAccountMeta,
 } from '../data/accounts/accountState';
 import {
-  truncateLamportAmount,
+  getAccount,
   getHumanName,
   renderData,
-  getAccount,
+  truncateLamportAmount,
 } from '../data/accounts/getAccount';
 import {
   Net,
@@ -31,10 +22,10 @@ import {
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import InlinePK from './InlinePK';
-
-import TransferSolButton from './TransferSolButton';
+import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import AirDropSolButton from './AirDropSolButton';
+import InlinePK from './InlinePK';
+import TransferSolButton from './TransferSolButton';
 
 const logger = window.electron.log;
 
@@ -100,16 +91,16 @@ function AccountView(props: { pubKey: string | undefined }) {
   return (
     <Container>
       <ButtonToolbar aria-label="Toolbar with button groups">
-        <ButtonGroup size="sm" className="me-2" aria-label="First group">
+        <div className="flex gap-2">
           <AirDropSolButton pubKey={pubKey} />
           <TransferSolButton pubKey={pubKey} />
-        </ButtonGroup>
+        </div>
       </ButtonToolbar>
 
-      <div className="row">
+      <div>
         <div className="col">
-          <div className="row">
-            <div className="col col-md-12  ">
+          <div>
+            <div className="col col-md-12">
               <table className="table table-borderless table-sm mb-0">
                 <tbody>
                   <tr>
@@ -130,11 +121,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                           value={humanName}
                           onSave={handleHumanNameSave}
                           hideIcons
-                          editButtonContent={<FontAwesomeIcon icon={faEdit} />}
-                          saveButtonContent={<FontAwesomeIcon icon={faSave} />}
-                          cancelButtonContent={
-                            <FontAwesomeIcon icon={faCancel} />
-                          }
+                          editButtonContent={<IconMdiPencil />}
+                          saveButtonContent={<IconMdiContentSave />}
+                          cancelButtonContent={<IconMdiCancel />}
                         />
                       </small>
                     </td>

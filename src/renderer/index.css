@@ -1,0 +1,32 @@
+html, body, #root {
+  @apply bg-surface-500 w-full h-full;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface-400;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-surface-300;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-300;
+}
+
+textarea {
+  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-blue-400 rounded-md focus:ring-1;
+}
+
+svg {
+  @apply align-text-bottom;
+}
+
+/* TODO: move away from bootstrap to have nicer custom buttons and reduce bloat */
+.btn {
+  @apply bg-transparent text-contrast;
+}

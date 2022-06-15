@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react';
 import { join } from 'path';
-import { FileSystemIconLoader } from 'unplugin-icons/loaders';
+import AutoImport from 'unplugin-auto-import/vite';
+import IconsResolver from 'unplugin-icons/resolver';
 import Icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
 import WindiCSS from 'vite-plugin-windicss';
@@ -20,9 +21,16 @@ export default defineConfig({
   },
   plugins: [
     Icons({
-      customCollections: {
-        fluency: FileSystemIconLoader('./assets/icons/app-icons'),
-      },
+      compiler: 'jsx',
+      jsx: 'react',
+    }),
+    AutoImport({
+      resolvers: [
+        IconsResolver({
+          prefix: 'Icon',
+          extension: 'jsx',
+        }),
+      ],
     }),
     WindiCSS({
       scan: {
@@ -31,6 +39,7 @@ export default defineConfig({
       },
     }),
     react(),
+    WindiCSS(),
   ],
   base: '',
   server: {

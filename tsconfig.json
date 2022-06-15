@@ -23,7 +23,8 @@
     "skipLibCheck": true,
     "paths": {
       "@/*": ["./src/*", "./dist/*"]
-    }
+    },
+    "types": ["unplugin-icons/types/react"]
   },
   "exclude": [
     "test",
