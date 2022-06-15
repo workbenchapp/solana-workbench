@@ -1,15 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Stack from 'react-bootstrap/Stack';
-import { Row, Col } from 'react-bootstrap';
+import { Row, Col, Form } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
+import * as spltoken from '@solana/spl-token';
+
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
 import WatchAccountButton from 'renderer/components/WatchAccountButton';
 import MetaplexTokenDataButton from 'renderer/components/tokens/MetaplexTokenData';
+import { getTokenAccounts } from 'renderer/data/accounts/getAccount';
+import { useAppSelector } from 'renderer/hooks';
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from 'renderer/data/ValidatorNetwork/validatorNetworkState';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { TokenMetaView } from '../components/TokenView';
@@ -22,8 +30,10 @@ const logger = window.electron.log;
 function TokenPage() {
   const fromKey = useWallet();
   const { connection } = useConnection();
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: this will come from main config...
+  const [mintList, updateMintList] = useState<sol.PublicKey[]>([]);
   const [mintKey, updateMintKey] = useState<sol.Keypair>();
   const [tokenSender, updateFunderATA] = useState<sol.PublicKey>();
   const [tokenReceiver, updateTokenReceiver] = useState<sol.Keypair>();
@@ -43,6 +53,33 @@ function TokenPage() {
       updateAtaReceiver(undefined);
     }
   };
+  useEffect(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
+    if (!fromKey.publicKey) {
+      return;
+    }
+    if (mintList.length > 0) {
+      // TODO: need to work out when to refresh
+      return;
+    }
+    getTokenAccounts(net, fromKey.publicKey.toString())
+      .then((ATAs) => {
+        const mints: sol.PublicKey[] = [];
+        ATAs.value.map((ATA) => {
+          const accountState = ATA.account.data.parsed.info as spltoken.Account;
+
+          mints.push(accountState.mint);
+        });
+        updateMintList(mints);
+        if (mints.length > 0) {
+          setMintPubKey(mints[0].toString());
+        }
+        return mints;
+      })
+      .catch(logger.error);
+  });
 
   const { publicKey } = fromKey;
   if (!publicKey) {
@@ -274,7 +311,19 @@ function TokenPage() {
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
           Token Mint
-          <WatchAccountButton pinAccount={setMintPubKey} />
+          <Form.Select
+            aria-label="Default select example"
+            onChange={(value) => setMintPubKey(value.target.value)}
+          >
+            {mintList.map((key) => {
+              const sel = key === mintKey?.publicKey;
+              return (
+                <option selected={sel} value={key.toString()}>
+                  {key.toString()}
+                </option>
+              );
+            })}
+          </Form.Select>
           <Button
             disabled={myWallet === undefined || mintKey !== undefined}
             onClick={() => {
