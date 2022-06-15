@@ -1,20 +1,32 @@
 import { ACCOUNTS_NONE_KEY } from '../data/accounts/accountInfo';
+import CopyIcon from './CopyIcon';
 
-const prettifyPubkey = (pk = '') => {
+const prettifyPubkey = (pk = '', formatLength: number) => {
   if (pk === null) {
     // cope with bad data in config
     return '';
   }
   return pk !== ACCOUNTS_NONE_KEY
-    ? `${pk.slice(0, 4)}…${pk.slice(pk.length - 4, pk.length)}`
+    ? `${pk.slice(0, formatLength)}…${pk.slice(
+        pk.length - formatLength,
+        pk.length
+      )}`
     : '';
 };
 
-function InlinePK(props: { pk: string; className?: string }) {
+function InlinePK(props: {
+  pk: string;
+  className?: string;
+  format?: boolean;
+  formatLength?: number;
+}) {
   const { pk, className } = props;
   return (
     <span className={className}>
-      <code className="overflow-ellipsis">{pk}</code>
+      <code>
+        {props.format ? prettifyPubkey(pk, props.formatLength || 4) : pk}
+      </code>
+      <CopyIcon writeValue={pk} />
     </span>
   );
 }

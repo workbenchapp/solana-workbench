@@ -6,10 +6,9 @@ import { Button, FormControl, InputGroup } from 'react-bootstrap';
 import { debounce } from 'underscore';
 import {
   NetStatus,
-  selectValidatorNetworkState
+  selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
-
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -50,7 +49,7 @@ const Validator = () => {
 
   // TODO(nathanleclaire): Don't nest ternary
   return (
-    <div>
+    <div className="p-3">
       {!(validator.status === NetStatus.Running) &&
       !(validator.status === NetStatus.Starting) ? (
         <Button

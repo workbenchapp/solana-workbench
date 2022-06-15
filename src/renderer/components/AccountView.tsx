@@ -1,4 +1,4 @@
-import { faKey, faTerminal } from '@fortawesome/free-solid-svg-icons';
+import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
@@ -134,7 +134,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td>
                       <small>
-                        {pubKey ? <InlinePK pk={pubKey} /> : 'None selected'}
+                        {pubKey ? (
+                          <InlinePK format pk={pubKey} formatLength={6} />
+                        ) : (
+                          'None selected'
+                        )}
                       </small>
                     </td>
                   </tr>
@@ -175,11 +179,8 @@ function AccountView(props: { pubKey: string | undefined }) {
                     <td>
                       {accountMeta?.privatekey ? (
                         <div>
-                          <FontAwesomeIcon
-                            className="border-success rounded p-1 exe-icon"
-                            icon={faKey}
-                          />
-                          <small className="ms-1 mb-1">Yes</small>
+                          <IconMdiKey />
+                          <small className="ml-2">Yes</small>
                         </div>
                       ) : (
                         <small className="fst-italic fw-light text-muted">

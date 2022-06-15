@@ -3,19 +3,14 @@ import {
   selectAccountsListState,
   setSelected,
 } from '@/data/SelectedAccountsList/selectedAccountsState';
-import {
-  faFilter,
-  faSortDesc,
-  faSpinner,
-  faUnsorted,
-} from '@fortawesome/free-solid-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useRef, useState } from 'react';
-import { Button, Dropdown, DropdownButton } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import EdiText from 'react-editext';
-import OutsideClickHandler from 'react-outside-click-handler';
 import { toast } from 'react-toastify';
+import { css } from 'vite-plugin-inline-css-modules';
 import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -31,6 +26,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
+import { Chip } from './base/Chip';
 import InlinePK from './InlinePK';
 import { ProgramChange } from './ProgramChange';
 import WatchAccountButton from './WatchAccountButton';
@@ -47,6 +43,15 @@ export enum KnownProgramID {
 interface PinnedAccountMap {
   [pubKey: string]: boolean;
 }
+
+const classes = css`
+  .account-view {
+    @apply w-full h-full border-collapse overflow-auto;
+    & th:not(:global(.text-center)) {
+      @apply text-left;
+    }
+  }
+`;
 
 function ProgramChangeView() {
   const dispatch = useAppDispatch();
@@ -156,12 +161,21 @@ function ProgramChangeView() {
 
   const changeFilterDropdownTitle = (
     <>
-      <FontAwesomeIcon className="me-1" icon={faFilter} />
+      <IconMdiFilter />
       <span>Filter</span>
     </>
   );
 
-  const sortIcon = () => {};
+  const SortIcon: React.FC<{
+    sortColumn: SortColumn;
+    target: SortColumn;
+  }> = ({ sortColumn, target }) => {
+    return sortColumn === target ? (
+      <IconMdiChevronDown />
+    ) : (
+      <IconMdiUnfoldMoreHorizontal />
+    );
+  };
 
   return (
     <div className="w-full p-3 flex flex-col">
@@ -173,72 +187,6 @@ function ProgramChangeView() {
           </small>
         </div>
         <div className="mb-2">
-          <Dropdown>
-            <OutsideClickHandler
-              onOutsideClick={() => setFilterDropdownShow(false)}
-              display="inline"
-            >
-              <DropdownButton
-                size="sm"
-                id="dropdown-basic-button"
-                title={changeFilterDropdownTitle}
-                onSelect={(s: string | null) => {
-                  setFilterDropdownShow(false);
-                  if (s) setProgramID(s as KnownProgramID);
-                }}
-                onClick={() => {
-                  if (!filterDropdownShow) {
-                    setFilterDropdownShow(true);
-                  } else {
-                    setFilterDropdownShow(false);
-                  }
-                }}
-                className="ms-2 d-inline"
-                variant="light"
-                show={filterDropdownShow}
-              >
-                <div className="ms-1 p-1 border-bottom border-light">
-                  <small>
-                    <strong>Program ID</strong>
-                  </small>
-                </div>
-                <Dropdown.Item eventKey="">
-                  <small>System Program</small>
-                </Dropdown.Item>
-                <Dropdown.Item eventKey={KnownProgramID.TokenProgram}>
-                  <small>Token Program</small>
-                </Dropdown.Item>
-                <Dropdown.Item eventKey={KnownProgramID.SerumDEXV3}>
-                  <small>Serum DEX V3</small>
-                </Dropdown.Item>
-                <div className="p-2">
-                  <EdiText
-                    type="text"
-                    value={programID}
-                    onSave={(val: string) => {
-                      const pastedID = val;
-                      if (pastedID.match(BASE58_PUBKEY_REGEX)) {
-                        unsubscribeProgramChanges(net, programID);
-                        subscribeProgramChanges(
-                          net,
-                          programID,
-                          setValidatorSlot
-                        );
-                        setProgramID(pastedID);
-                      } else {
-                        toast.warn(`Invalid program ID: ${pastedID}`);
-                      }
-                      filterProgramIDRef.current.value = 'Custom';
-                      filterProgramIDRef.current.blur();
-                      setFilterDropdownShow(false);
-                    }}
-                  />
-                </div>
-              </DropdownButton>
-            </OutsideClickHandler>
-          </Dropdown>
-        </div>
-        <div>
           <Button
             onClick={() => {
               createNewAccount(dispatch)
@@ -266,56 +214,70 @@ function ProgramChangeView() {
 
           <WatchAccountButton pinAccount={pinAccount} />
         </div>
-        <span>
-          <small className="ms-2 text-secondary">
-            <span>
-              Program:
-              <code className="me-2">{programID}</code>
+        <div className="mt-2">
+          <span className="text-sm font-bold">Filter Programs</span>
+          <div className="flex gap-2 text-sm flex-wrap w-full my-2">
+            <Chip active>System Program</Chip>
+            <Chip>Token Program</Chip>
+            <Chip>Serum DEX V3</Chip>
+          </div>
+          <EdiText
+            type="text"
+            value={programID}
+            onSave={(val: string) => {
+              const pastedID = val;
+              if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                unsubscribeProgramChanges(net, programID);
+                subscribeProgramChanges(net, programID, setValidatorSlot);
+                setProgramID(pastedID);
+              } else {
+                toast.warn(`Invalid program ID: ${pastedID}`);
+              }
+              filterProgramIDRef.current.value = 'Custom';
+              filterProgramIDRef.current.blur();
+              setFilterDropdownShow(false);
+            }}
+          />
+        </div>
+      </div>
+      <span className="mb-2">
+        <small className="ms-2 text-secondary">
+          <span className="flex gap-2 items-center">
+            Program:
+            <code>{programID}</code>
+            <div className="flex-1" />
+            <span className="font-bold">
               {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
             </span>
-          </small>
-        </span>
-      </div>
+          </span>
+        </small>
+      </span>
       <div className="flex-1 overflow-auto">
         {displayList.length > 0 ? (
-          <table className="w-full h-full border-collapse overflow-auto">
+          <table className={classes['account-view']}>
             <thead>
               <tr className="bg-surface-400">
-                <th>
+                <th className="text-center">
                   {' '}
                   <IconMdiStarOutline />
                 </th>
                 <th>Address</th>
-                <th className="w-1/100 whitespace-nowrap">Info</th>
                 <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>
                   Max Δ{' '}
-                  <FontAwesomeIcon
-                    className="me-1"
-                    icon={
-                      sortColumn === SortColumn.MaxDelta
-                        ? faSortDesc
-                        : faUnsorted
-                    }
+                  <SortIcon
+                    sortColumn={sortColumn}
+                    target={SortColumn.MaxDelta}
                   />
                 </th>
                 <th onClick={() => setSortColumn(SortColumn.Sol)}>
                   SOL{' '}
-                  <FontAwesomeIcon
-                    className="me-1"
-                    icon={
-                      sortColumn === SortColumn.Sol ? faSortDesc : faUnsorted
-                    }
-                  />
+                  <SortIcon sortColumn={sortColumn} target={SortColumn.Sol} />
                 </th>
                 <th onClick={() => setSortColumn(SortColumn.Count)}>
                   Count{' '}
-                  <FontAwesomeIcon
-                    className="me-1"
-                    icon={
-                      sortColumn === SortColumn.Count ? faSortDesc : faUnsorted
-                    }
-                  />
+                  <SortIcon sortColumn={sortColumn} target={SortColumn.Count} />
                 </th>
+                <th className="w-1/100 whitespace-nowrap">Info</th>
               </tr>
             </thead>
             <tbody className="w-full">

@@ -13,7 +13,6 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
-import CopyIcon from './CopyIcon';
 import InlinePK from './InlinePK';
 
 const logger = window.electron.log;
@@ -74,11 +73,7 @@ export function ProgramChange(props: {
         </span>
       </td>
       <td>
-        <InlinePK pk={pubKey} />
-      </td>
-      <td className="w-1/100 whitespace-nowrap">
-        <CopyIcon writeValue={pubKey} />
-        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
+        <InlinePK format formatLength={12} pk={pubKey} />
       </td>
       <td>
         <span className="ms-2 rounded p-1">
@@ -94,6 +89,9 @@ export function ProgramChange(props: {
         <span className="ms-2 badge bg-secondary rounded-pill">
           {showCount}
         </span>
+      </td>
+      <td className="w-1/100 whitespace-nowrap">
+        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
       </td>
     </tr>
   );

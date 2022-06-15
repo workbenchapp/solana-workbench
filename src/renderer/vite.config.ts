@@ -4,6 +4,7 @@ import AutoImport from 'unplugin-auto-import/vite';
 import IconsResolver from 'unplugin-icons/resolver';
 import Icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
+import InlineCSSModules from 'vite-plugin-inline-css-modules';
 import WindiCSS from 'vite-plugin-windicss';
 
 const PACKAGE_ROOT = __dirname;
@@ -20,6 +21,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    InlineCSSModules(),
     Icons({
       compiler: 'jsx',
       jsx: 'react',

@@ -24,7 +24,7 @@ function Anchor() {
   }, []);
 
   return (
-    <div>
+    <div className="p-3">
       <div>
         <div className="col-sm-5">
           <InputGroup size="sm" className="mb-2 mt-1">
