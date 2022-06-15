@@ -18,8 +18,8 @@ html, body, #root {
   @apply bg-surface-300;
 }
 
-textarea {
-  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-blue-400 rounded-md focus:ring-1;
+textarea, input {
+  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-blue-400 rounded-md focus:ring-1 text-contrast p-2;
 }
 
 svg {
@@ -29,4 +29,16 @@ svg {
 /* TODO: move away from bootstrap to have nicer custom buttons and reduce bloat */
 .btn {
   @apply bg-transparent text-contrast;
+}
+
+.popover-header {
+  @apply bg-surface-300;
+}
+
+.popover-body, .dropdown-menu {
+  @apply bg-surface-400 text-contrast;
+}
+
+.dropdown-item {
+  @apply text-contrast hover:bg-surface-500 hover:text-contrast;
 }

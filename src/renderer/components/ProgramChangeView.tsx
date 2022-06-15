@@ -286,6 +286,7 @@ function ProgramChangeView() {
                   <IconMdiStarOutline />
                 </th>
                 <th>Address</th>
+                <th className="w-1/100 whitespace-nowrap">Info</th>
                 <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>
                   Max Δ{' '}
                   <FontAwesomeIcon
