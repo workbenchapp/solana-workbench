@@ -4,12 +4,12 @@ import { Row, Col } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
-import * as metaplex from '@metaplex/js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 import { toast } from 'react-toastify';
 import createNewAccount from 'renderer/data/accounts/account';
 import WatchAccountButton from 'renderer/components/WatchAccountButton';
+import MetaplexTokenDataButton from 'renderer/components/tokens/MetaplexTokenData';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { TokenMetaView } from '../components/TokenView';
@@ -95,39 +95,7 @@ function TokenPage() {
     );
     logger.info('Minted ', mint);
   }
-  async function createOurMintMetadata() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
 
-    // Create a new token
-    logger.info('createOurMintMetadata', mintKey);
-    try {
-      const metadata = new metaplex.programs.metadata.MetadataDataData({
-        name: 'Workbench token',
-        symbol: 'WORKBENCH',
-        uri: 'https://github.com/workbenchapp/solana-workbench/',
-        sellerFeeBasisPoints: 10,
-        creators: null,
-      });
-
-      const meta = await metaplex.actions.createMetadata({
-        connection,
-        wallet: fromKey,
-        editionMint: mintKey.publicKey,
-        metadataData: metadata,
-      });
-      logger.info('metadata', meta);
-      // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
-    } catch (e) {
-      logger.error('metadata create', e);
-    }
-  }
   async function ensuremyAta() {
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
@@ -332,18 +300,7 @@ function TokenPage() {
           >
             initialize mint
           </Button>
-          <Button
-            disabled={myWallet === undefined || mintKey === undefined}
-            onClick={() => {
-              toast.promise(createOurMintMetadata(), {
-                pending: `Add mint metadata submitted`,
-                success: `Add mint metadata  succeeded 👌`,
-                error: `Add mint metadata   failed 🤯`,
-              });
-            }}
-          >
-            add metadata
-          </Button>
+          <MetaplexTokenDataButton mintPubKey={mintKey?.publicKey} />
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
