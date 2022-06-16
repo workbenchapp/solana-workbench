@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import Stack from 'react-bootstrap/Stack';
-import { Row, Col, Form } from 'react-bootstrap';
+import { Row, Col, Form, Accordion } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
@@ -16,9 +16,10 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from 'renderer/data/ValidatorNetwork/validatorNetworkState';
+import MetaplexMintMetaDataView from 'renderer/components/tokens/MetaplexMintMetaDataView';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
-import { TokenMetaView } from '../components/TokenView';
+import { MintInfoView } from '../components/MintInfoView';
 
 // eslint-disable-next-line no-global-assign
 Buffer = require('buffer').Buffer;
@@ -169,7 +170,6 @@ function TokenPage() {
       return;
     }
     // Generate a new wallet to receive the newly minted token
-
     const toWallet = sol.Keypair.generate();
     updateTokenReceiver(toWallet);
   }
@@ -331,9 +331,14 @@ function TokenPage() {
             Set max supply (aka, close mint)
           </Button>
           <AccountView pubKey={mintKey?.toString()} />
-          <div>
-            <TokenMetaView mintKey={mintKey ? mintKey.toString() : ''} />
-          </div>
+          <Accordion>
+            <MintInfoView mintKey={mintKey ? mintKey.toString() : ''} />
+          </Accordion>
+          <Accordion>
+            <MetaplexMintMetaDataView
+              mintKey={mintKey ? mintKey.toString() : ''}
+            />{' '}
+          </Accordion>
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
           non-funder account

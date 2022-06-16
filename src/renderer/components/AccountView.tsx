@@ -13,7 +13,7 @@ import EdiText from 'react-editext';
 import Table from 'react-bootstrap/Table';
 import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
-import { Button, Card } from 'react-bootstrap';
+import { Accordion, Button, Card } from 'react-bootstrap';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
@@ -40,7 +40,8 @@ import InlinePK from './InlinePK';
 
 import TransferSolButton from './TransferSolButton';
 import AirDropSolButton from './AirDropSolButton';
-import { TokenMetaView } from './TokenView';
+import { MintInfoView } from './MintInfoView';
+import { MetaplexMintMetaDataView } from './tokens/MetaplexMintMetaDataView';
 
 const logger = window.electron.log;
 
@@ -51,17 +52,10 @@ function tryExpandingTokenState(
     account: sol.AccountInfo<sol.ParsedAccountData>;
   }
 ) {
-  const accountState = tAccount.account.data.parsed.info as spltoken.Account;
-
   return (
     <div>
       <div>
-        {tAccount.account.data.parsed.type}:{' '}
-        <InlinePK pk={accountState.mint.toString()} />:{' '}
-        {accountState.tokenAmount.amount} tokens
-      </div>
-      <div>
-        <TokenMetaView mintKey={accountState.mint} />
+        <MintInfoView mintKey={tAccount.account.data.parsed.info.mint} />
       </div>
     </div>
   );
@@ -259,30 +253,51 @@ function AccountView(props: { pubKey: string | undefined }) {
                         <Card>
                           <Card.Body>
                             <Card.Title>
-                              ATA: <InlinePK pk={tAccount.pubkey.toString()} />:{' '}
-                              Program:{' '}
-                              {tAccount.account.data.program.toString()}
+                              ATA: <InlinePK pk={tAccount.pubkey.toString()} />
+                              To Mint:{' '}
+                              <InlinePK
+                                pk={tAccount.account.data.parsed.info.mint.toString()}
+                              />
                             </Card.Title>
                             <Card.Text>
-                              <div>
-                                {truncateSolAmount(
-                                  tAccount.account.lamports /
-                                    sol.LAMPORTS_PER_SOL
-                                )}{' '}
-                                SOL
-                              </div>
-                              <div>
-                                state: {tAccount.account.data.parsed.info.state}
-                              </div>
-                              <pre className="exe-hexdump p-2 rounded">
-                                <code>
-                                  {JSON.stringify(tAccount.account, null, 2)}
-                                </code>
-                              </pre>
-                              <div>
-                                token state:
-                                {tryExpandingTokenState(net, tAccount)}
-                              </div>
+                              <Accordion>
+                                <Accordion.Item eventKey="1">
+                                  <Accordion.Header>
+                                    ATA holds{' '}
+                                    {
+                                      tAccount.account.data.parsed.info
+                                        .tokenAmount.amount
+                                    }{' '}
+                                    tokens (
+                                    {truncateSolAmount(
+                                      tAccount.account.lamports /
+                                        sol.LAMPORTS_PER_SOL
+                                    )}{' '}
+                                    SOL)
+                                  </Accordion.Header>
+                                  <Accordion.Body>
+                                    <pre className="exe-hexdump p-2 rounded">
+                                      <code>
+                                        {JSON.stringify(
+                                          tAccount.account,
+                                          null,
+                                          2
+                                        )}
+                                      </code>
+                                    </pre>
+                                  </Accordion.Body>
+                                </Accordion.Item>
+                                <MintInfoView
+                                  mintKey={
+                                    tAccount.account.data.parsed.info.mint
+                                  }
+                                />
+                                <MetaplexMintMetaDataView
+                                  mintKey={
+                                    tAccount.account.data.parsed.info.mint
+                                  }
+                                />
+                              </Accordion>
                             </Card.Text>
                           </Card.Body>
                         </Card>
