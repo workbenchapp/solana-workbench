@@ -9,8 +9,11 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import * as metaplex from '@metaplex/js';
 import * as sol from '@solana/web3.js';
 
-import { getTokenMetadata } from 'renderer/data/accounts/getAccount';
-import { useAppSelector } from '../../hooks';
+import {
+  forceRequestTokenAccount,
+  getTokenMetadata,
+} from 'renderer/data/accounts/getAccount';
+import { useAppSelector, useInterval } from '../../hooks';
 
 import {
   NetStatus,
@@ -23,6 +26,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey | undefined }) {
   const { mintPubKey } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   const [name, setName] = useState<string>('Workbench token');
   const [symbol, setSymbol] = useState<string>('WORKBENCH');
@@ -30,6 +34,36 @@ function DataPopover(props: { mintPubKey: sol.PublicKey | undefined }) {
     'https://github.com/workbenchapp/solana-workbench/'
   );
   const [sellerFeeBasisPoints, setSellerFeeBasisPoints] = useState<number>(10);
+  const [metaData, setMetaData] =
+    useState<metaplex.programs.metadata.Metadata>();
+
+  useInterval(() => {
+    // I don't think i can useEffect, as we need to keep polling until the metadata exists
+    if (status !== NetStatus.Running) {
+      return;
+    }
+    if (metaData && metaData.data.mint !== mintPubKey?.toString()) {
+      setMetaData(undefined);
+
+      return;
+    }
+    if (metaData) {
+      return;
+    }
+    if (mintPubKey) {
+      getTokenMetadata(net, mintPubKey.toString())
+        .then((md) => {
+          setMetaData(md);
+          // TODO: no, this is wrong, only want this to happen once... (and then refresh onchange)
+          setName(md.data.data.name);
+          setSymbol(md.data.data.symbol);
+          setUri(md.data.data.uri);
+          setSellerFeeBasisPoints(md.data.data.sellerFeeBasisPoints);
+          return md;
+        })
+        .catch(logger.info);
+    }
+  }, 666);
 
   async function createOurMintMetadata() {
     // Create a new token
@@ -46,12 +80,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey | undefined }) {
         creators: null, // TODO:
       });
 
-      // Check to see if metadata already exists
-      const metaExists = await metaplex.programs.metadata.Metadata.findByMint(
-        connection,
-        mintPubKey
-      );
-      if (metaExists) {
+      if (metaData && metaData.data.mint === mintPubKey.toString()) {
         // https://github.com/metaplex-foundation/js/blob/a4274ec97c6599dbfae8860ae2edc03f49d35d68/src/actions/updateMetadata.ts
         const meta = await metaplex.actions.updateMetadata({
           connection,

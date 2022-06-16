@@ -42,6 +42,10 @@ export function peekAccount(net: Net, pubKey: string): AccountInfo | null {
   return cache.peek(`${net}_${pubKey}`);
 }
 
+export function forceRequestAccount(net: Net, pubKey: string) {
+  cache.delete(`${net}_${pubKey}`);
+}
+
 // This will always use, and update the lastUsed time any account in the cache.
 // if you absoluetly need to current latest, don't use this function :)
 // it is written to avoid RPC requests if at all possible, and is used in conjunction with the programChanges subscriptions
@@ -93,11 +97,15 @@ const tokenAccountCache = new LRUCache<
   entryExpirationTimeInMS: 60000,
 });
 
+export function forceRequestTokenAccount(net: Net, pubKey: string) {
+  cache.delete(`${net}_${pubKey}_getTokenAccounts`);
+}
+
 export async function getTokenAccounts(
   net: Net,
   pubKey: string
 ): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
-  logger.silly('getTokenAccounts', { pubKey });
+  // logger.silly('getTokenAccounts', { pubKey });
   const cachedResponse = tokenAccountCache.peek(
     `${net}_${pubKey}_getTokenAccounts`
   );

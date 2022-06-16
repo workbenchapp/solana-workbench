@@ -9,8 +9,6 @@ import * as spltoken from '@solana/spl-token';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 
 import { toast } from 'react-toastify';
-import createNewAccount from 'renderer/data/accounts/account';
-import WatchAccountButton from 'renderer/components/WatchAccountButton';
 import MetaplexTokenDataButton from 'renderer/components/tokens/MetaplexTokenData';
 import { getTokenAccounts } from 'renderer/data/accounts/getAccount';
 import { useAppSelector } from 'renderer/hooks';
@@ -34,24 +32,17 @@ function TokenPage() {
 
   // TODO: this will come from main config...
   const [mintList, updateMintList] = useState<sol.PublicKey[]>([]);
-  const [mintKey, updateMintKey] = useState<sol.Keypair>();
-  const [tokenSender, updateFunderATA] = useState<sol.PublicKey>();
+  const [mintKey, updateMintKey] = useState<sol.PublicKey>();
+  // const [tokenSender, updateFunderATA] = useState<sol.PublicKey>();
   const [tokenReceiver, updateTokenReceiver] = useState<sol.Keypair>();
   const [ataReceiver, updateAtaReceiver] = useState<sol.PublicKey>();
 
-  const setMintPubKey = (pubKey: string) => {
+  const setMintPubKey = (pubKey: string | sol.PublicKey) => {
     const key = new sol.PublicKey(pubKey);
 
-    const edkey: sol.Ed25519Keypair = {
-      publicKey: key.toBytes(),
-      secretKey: key.toBytes(),
-    };
-    const kp = new sol.Keypair(edkey);
-    if (kp) {
-      updateMintKey(kp);
-      updateFunderATA(undefined);
-      updateAtaReceiver(undefined);
-    }
+    updateMintKey(key);
+    // updateFunderATA(undefined);
+    updateAtaReceiver(undefined);
   };
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -67,11 +58,19 @@ function TokenPage() {
     getTokenAccounts(net, fromKey.publicKey.toString())
       .then((ATAs) => {
         const mints: sol.PublicKey[] = [];
+        let addMintKey = true;
         ATAs.value.map((ATA) => {
           const accountState = ATA.account.data.parsed.info as spltoken.Account;
 
           mints.push(accountState.mint);
+          if (accountState.mint === mintKey) {
+            addMintKey = false;
+          }
         });
+        if (addMintKey && mintKey) {
+          mints.push(mintKey);
+        }
+
         updateMintList(mints);
         if (mints.length > 0) {
           setMintPubKey(mints[0].toString());
@@ -87,29 +86,45 @@ function TokenPage() {
   }
   const myWallet = publicKey;
 
-  async function createOurMintKeypair() {
-    if (!mintKey) {
-      // TODO: OMFG - the reloadFromMain() causes the wallet to disconnect...
-      createNewAccount()
-        .then((mint) => {
-          updateMintKey(mint);
-          return mint;
-        })
-        .catch(logger.error);
+  async function ensureAtaFor(
+    newMint: sol.PublicKey,
+    ATAFor: sol.PublicKey
+  ): Promise<sol.PublicKey | undefined> {
+    if (!myWallet) {
+      logger.info('no myWallet', myWallet);
+      return undefined;
     }
+
+    // Get the token account of the fromWallet Solana address. If it does not exist, create it.
+    logger.info('getOrCreateAssociatedTokenAccount', newMint.toString());
+
+    try {
+      const fromTokenAccount =
+        await walletWeb3.getOrCreateAssociatedTokenAccount(
+          connection,
+          fromKey,
+          newMint,
+          ATAFor
+        );
+      // updateFunderATA(fromTokenAccount.address);
+      return fromTokenAccount.address;
+    } catch (e) {
+      logger.error(
+        e,
+        'getOrCreateAssociatedTokenAccount ensuremyAta',
+        newMint.toString()
+      );
+    }
+    return undefined;
   }
-  async function createOurMint() {
+
+  async function createNewMint() {
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
       return;
     }
-    if (!mintKey) {
-      logger.info('no myWallet');
-      return;
-    }
 
-    // Create a new token
-    logger.info('createMint', myWallet);
+    logger.info('createMint', myWallet.toString());
     // https://github.com/solana-labs/solana-program-library/blob/f487f520bf10ca29bf8d491192b6ff2b4bf89710/token/js/src/actions/createMint.ts
     // const mint = await createMint(
     //   connection,
@@ -121,44 +136,29 @@ function TokenPage() {
     const confirmOptions: sol.ConfirmOptions = {
       commitment: 'finalized',
     };
-    const mint = await walletWeb3.createMint(
-      connection,
-      fromKey, // Payer of the transaction
-      myWallet, // Account that will control the minting
-      null, // Account that will control the freezing of the token
-      0, // Location of the decimal place
-      mintKey, // mint keypair - will be generated if not specified
-      confirmOptions
-    );
-    logger.info('Minted ', mint);
+    // eslint-disable-next-line promise/no-nesting
+    walletWeb3
+      .createMint(
+        connection,
+        fromKey, // Payer of the transaction
+        myWallet, // Account that will control the minting
+        null, // Account that will control the freezing of the token
+        0, // Location of the decimal place
+        undefined, // mint keypair - will be generated if not specified
+        confirmOptions
+      )
+      .then((newMint) => {
+        setMintPubKey(newMint);
+        logger.info('Minted ', newMint.toString());
+
+        ensureAtaFor(newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
+
+        updateMintList([]);
+        return newMint;
+      })
+      .catch(logger.error);
   }
 
-  async function ensuremyAta() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
-
-    // Get the token account of the fromWallet Solana address. If it does not exist, create it.
-    logger.info('getOrCreateAssociatedTokenAccount');
-
-    try {
-      const fromTokenAccount =
-        await walletWeb3.getOrCreateAssociatedTokenAccount(
-          connection,
-          fromKey,
-          mintKey.publicKey,
-          myWallet
-        );
-      updateFunderATA(fromTokenAccount.address);
-    } catch (e) {
-      logger.error(e, 'getOrCreateAssociatedTokenAccount ensuremyAta');
-    }
-  }
   async function ensureReceiverAta() {
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
@@ -182,8 +182,9 @@ function TokenPage() {
       logger.info('no mintKey', mintKey);
       return;
     }
-    if (!tokenSender) {
-      logger.info('no tokenSender', tokenSender);
+    const funderAta = await ensureAtaFor(mintKey, myWallet);
+    if (!funderAta) {
+      logger.info('no funderAta', funderAta);
       return;
     }
 
@@ -191,8 +192,8 @@ function TokenPage() {
     const signature = await walletWeb3.mintTo(
       connection,
       fromKey, // Payer of the transaction fees
-      mintKey.publicKey, // Mint for the account
-      tokenSender, // Address of the account to mint to
+      mintKey, // Mint for the account
+      funderAta, // Address of the account to mint to
       myWallet, // Minting authority
       1 // Amount to mint
     );
@@ -211,7 +212,7 @@ function TokenPage() {
     await walletWeb3.setAuthority(
       connection,
       fromKey, // Payer of the transaction fees
-      mintKey.publicKey, // Account
+      mintKey, // Account
       myWallet, // Current authority
       'MintTokens', // Authority type: "0" represents Mint Tokens
       null // Setting the new Authority to null
@@ -222,12 +223,13 @@ function TokenPage() {
       logger.info('no myWallet', myWallet);
       return;
     }
-    if (!tokenSender) {
-      logger.info('no tokenSender', tokenSender);
-      return;
-    }
     if (!mintKey) {
       logger.info('no mintKey', mintKey);
+      return;
+    }
+    const funderAta = await ensureAtaFor(mintKey, myWallet);
+    if (!funderAta) {
+      logger.info('no funderAta', funderAta);
       return;
     }
     if (!tokenReceiver) {
@@ -241,7 +243,7 @@ function TokenPage() {
       const toTokenAccount = await walletWeb3.getOrCreateAssociatedTokenAccount(
         connection,
         fromKey,
-        mintKey.publicKey,
+        mintKey,
         tokenReceiver.publicKey
       );
       updateAtaReceiver(toTokenAccount.address);
@@ -256,12 +258,11 @@ function TokenPage() {
     const signature = await walletWeb3.transfer(
       connection,
       fromKey, // Payer of the transaction fees
-      tokenSender, // Source account
+      funderAta, // Source account
       ataReceiver, // Destination account
       myWallet, // Owner of the source account
       1 // Number of tokens to transfer
     );
-
     logger.info('SIGNATURE', signature);
   }
 
@@ -275,28 +276,7 @@ function TokenPage() {
         <Col className="col-md-4 almost-vh-100 vscroll">
           Our Wallet
           <Button
-            // TODO: need to auto-detect that it already exists?
-            disabled={
-              myWallet === undefined ||
-              mintKey === undefined ||
-              tokenSender !== undefined
-            }
-            onClick={() => {
-              toast.promise(ensuremyAta(), {
-                pending: `Create funder ATA account submitted`,
-                success: `Create funder ATA account  succeeded 👌`,
-                error: `Create funder ATA account   failed 🤯`,
-              });
-            }}
-          >
-            Ensure ATA account
-          </Button>
-          <Button
-            disabled={
-              myWallet === undefined ||
-              mintKey === undefined ||
-              tokenSender === undefined
-            }
+            disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
               toast.promise(mintToken(), {
                 pending: `Mint To ${myWallet?.toString()} submitted`,
@@ -316,7 +296,7 @@ function TokenPage() {
             onChange={(value) => setMintPubKey(value.target.value)}
           >
             {mintList.map((key) => {
-              const sel = key === mintKey?.publicKey;
+              const sel = key === mintKey;
               return (
                 <option selected={sel} value={key.toString()}>
                   {key.toString()}
@@ -325,31 +305,19 @@ function TokenPage() {
             })}
           </Form.Select>
           <Button
-            disabled={myWallet === undefined || mintKey !== undefined}
-            onClick={() => {
-              toast.promise(createOurMintKeypair(), {
-                pending: `Create mint keys submitted`,
-                success: `Create mint keys  succeeded 👌`,
-                error: `Create mint keys   failed 🤯`,
-              });
-            }}
-          >
-            create mint keypair
-          </Button>
-          <Button
             // TODO: this button should be disabled if the selected mint (or account) exists
-            disabled={myWallet === undefined || mintKey === undefined}
+            disabled={myWallet === undefined}
             onClick={() => {
-              toast.promise(createOurMint(), {
+              toast.promise(createNewMint(), {
                 pending: `Create mint account submitted`,
                 success: `Create mint account  succeeded 👌`,
                 error: `Create mint account   failed 🤯`,
               });
             }}
           >
-            initialize mint
+            New mint
           </Button>
-          <MetaplexTokenDataButton mintPubKey={mintKey?.publicKey} />
+          <MetaplexTokenDataButton mintPubKey={mintKey} />
           <Button
             disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
@@ -362,11 +330,9 @@ function TokenPage() {
           >
             Set max supply (aka, close mint)
           </Button>
-          <AccountView pubKey={mintKey?.publicKey.toString()} />
+          <AccountView pubKey={mintKey?.toString()} />
           <div>
-            <TokenMetaView
-              mintKey={mintKey ? mintKey.publicKey.toString() : ''}
-            />
+            <TokenMetaView mintKey={mintKey ? mintKey.toString() : ''} />
           </div>
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">
@@ -385,10 +351,10 @@ function TokenPage() {
               });
             }}
           >
-            create receiver account and ATA account
+            create new User account and ATA account
           </Button>
           <Button
-            disabled={myWallet === undefined || tokenSender === undefined}
+            disabled={myWallet === undefined}
             onClick={() => {
               toast.promise(transferTokenToReceiver(), {
                 pending: `Transfer token To ${ataReceiver?.toString()} submitted`,
@@ -397,7 +363,7 @@ function TokenPage() {
               });
             }}
           >
-            mint token to receiver
+            transfer token from funder
           </Button>
           <AccountView pubKey={tokenReceiver?.publicKey?.toString()} />
         </Col>

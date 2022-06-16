@@ -13,7 +13,7 @@ import EdiText from 'react-editext';
 import Table from 'react-bootstrap/Table';
 import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
-import { Card } from 'react-bootstrap';
+import { Button, Card } from 'react-bootstrap';
 import { useInterval, useAppSelector, useAppDispatch } from '../hooks';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
@@ -29,6 +29,7 @@ import {
   getAccount,
   getTokenAccounts,
   TokenAccountArray,
+  forceRequestAccount,
 } from '../data/accounts/getAccount';
 import {
   Net,
@@ -122,6 +123,16 @@ function AccountView(props: { pubKey: string | undefined }) {
         <ButtonGroup size="sm" className="me-2" aria-label="First group">
           <AirDropSolButton pubKey={pubKey} />
           <TransferSolButton pubKey={pubKey} />
+          <Button
+            onClick={() => {
+              if (pubKey) {
+                forceRequestAccount(net, pubKey);
+                // force refresh for ATA's, PDA's etc?
+              }
+            }}
+          >
+            Refresh
+          </Button>
         </ButtonGroup>
       </ButtonToolbar>
 
