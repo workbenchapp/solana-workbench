@@ -85,15 +85,25 @@ export type TokenAccountArray = Array<{
   account: sol.AccountInfo<sol.ParsedAccountData>;
 }>;
 
+const tokenAccountCache = new LRUCache<
+  string,
+  sol.RpcResponseAndContext<TokenAccountArray>
+>({
+  maxSize: 500,
+  entryExpirationTimeInMS: 60000,
+});
+
 export async function getTokenAccounts(
   net: Net,
   pubKey: string
 ): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
-  // logger.silly('getTokenAccounts', { pubKey });
-  // const cachedResponse = cache.peek(`${net}_${pubKey}_getTokenAccounts`);
-  // if (cachedResponse) {
-  //   return cachedResponse;
-  // }
+  logger.silly('getTokenAccounts', { pubKey });
+  const cachedResponse = tokenAccountCache.peek(
+    `${net}_${pubKey}_getTokenAccounts`
+  );
+  if (cachedResponse) {
+    return cachedResponse;
+  }
 
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
@@ -107,7 +117,7 @@ export async function getTokenAccounts(
 
   logger.silly('getTokenAccounts cache miss', pubKey, tokenAccounts);
 
-  // cache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
+  tokenAccountCache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
   return tokenAccounts;
 }
 
