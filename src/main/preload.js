@@ -15,6 +15,9 @@ contextBridge.exposeInMainWorld('electron', {
     runValidator() {
       send('run-validator', {});
     },
+    stopValidator() {
+      send('stop-validator', {});
+    },
     validatorState(msg) {
       send('validator-state', msg);
     },

@@ -52,7 +52,7 @@ const Validator = () => {
   return (
     <div className="row">
       {!(validator.status === NetStatus.Running) &&
-      !(validator.status === NetStatus.Starting) ? (
+        !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             window.electron.ipcRenderer.runValidator();
@@ -86,11 +86,20 @@ const Validator = () => {
               }, 300)}
             />
           </InputGroup>
+          <pre className="mt-2 pre-scrollable">
+            <code>{validatorLogs}</code>
+          </pre>
+          <Button
+            onClick={() => {
+              window.electron.ipcRenderer.stopValidator();
+            }}
+            className="mt-2"
+            variant="dark"
+          >
+            Stop
+          </Button>
         </>
       )}
-      <pre className="mt-2 pre-scrollable">
-        <code>{validatorLogs}</code>
-      </pre>
     </div>
   );
 };
