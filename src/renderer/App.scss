@@ -218,3 +218,11 @@ div[editext='view'] {
   align-items: center;
   height: 2.4em; /* TODO: this is a terrible hack for aligning the "Editable Alias" with the inline edit box height. */
 }
+
+.gutter.gutter-horizontal {
+  cursor: col-resize;
+}
+
+.gutter.gutter-vertical {
+  cursor: row-resize;
+}
