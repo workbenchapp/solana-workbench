@@ -52,7 +52,7 @@ const Validator = () => {
   return (
     <div className="row">
       {!(validator.status === NetStatus.Running) &&
-        !(validator.status === NetStatus.Starting) ? (
+      !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             window.electron.ipcRenderer.runValidator();
