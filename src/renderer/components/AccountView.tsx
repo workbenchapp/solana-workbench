@@ -107,7 +107,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                     <td className="col-md-4">
                       <div className="align-center">
                         <div>
-                          <small className="text-muted">Editable Alias</small>
+                          <small className="text-gray-400">
+                            Editable Alias
+                          </small>
                         </div>
                       </div>
                     </td>

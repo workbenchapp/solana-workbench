@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { HashRouter } from 'react-router-dom';
+import 'virtual:fonts.css';
 import 'virtual:windi.css';
 import App from './App';
 import './index.css';
@@ -14,5 +15,5 @@ root.render(
     <HashRouter>
       <App />
     </HashRouter>
-  </Provider>,
+  </Provider>
 );

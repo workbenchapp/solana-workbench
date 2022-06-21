@@ -15,5 +15,5 @@ html {
   --secondary-light: 238, 84, 255;
   --secondary-dark: 23, 127, 179;
 
-  color: white !important;
+  color: white;
 }

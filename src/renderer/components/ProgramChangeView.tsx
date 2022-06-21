@@ -1,8 +1,3 @@
-import {
-  accountsActions,
-  selectAccountsListState,
-  setSelected,
-} from '@/data/SelectedAccountsList/selectedAccountsState';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -11,6 +6,11 @@ import { Button } from 'react-bootstrap';
 import EdiText from 'react-editext';
 import { toast } from 'react-toastify';
 import { css } from 'vite-plugin-inline-css-modules';
+import {
+  accountsActions,
+  selectAccountsListState,
+  setSelected,
+} from '@/data/SelectedAccountsList/selectedAccountsState';
 import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -46,7 +46,7 @@ interface PinnedAccountMap {
 
 const classes = css`
   .account-view {
-    @apply w-full h-full border-collapse overflow-auto;
+    @apply w-full h-full border-collapse overflow-auto text-xs;
     & th:not(:global(.text-center)) {
       @apply text-left;
     }
@@ -252,7 +252,7 @@ function ProgramChangeView() {
           </span>
         </small>
       </span>
-      <div className="flex-1 overflow-auto">
+      <div className="overflow-auto block">
         {displayList.length > 0 ? (
           <table className={classes['account-view']}>
             <thead>
@@ -277,7 +277,6 @@ function ProgramChangeView() {
                   Count{' '}
                   <SortIcon sortColumn={sortColumn} target={SortColumn.Count} />
                 </th>
-                <th className="w-1/100 whitespace-nowrap">Info</th>
               </tr>
             </thead>
             <tbody className="w-full">

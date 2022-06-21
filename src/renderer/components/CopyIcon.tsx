@@ -34,9 +34,9 @@ function CopyIcon(props: { writeValue: string }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           _
         ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
-        className="icon-interactive ms-1"
+        className="icon-interactive p-2 hover:bg-contrast/10 rounded-full inline-flex items-center justify-center cursor-pointer"
       >
-        <IconMdiContentCopy className="cursor-pointer" />
+        <IconMdiContentCopy />
       </span>
     </OverlayTrigger>
   );

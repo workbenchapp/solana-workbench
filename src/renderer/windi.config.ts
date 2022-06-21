@@ -21,6 +21,10 @@ function cssVarRgbHelper(cssVariable: string) {
 export default defineConfig({
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['"Roboto"'],
+        mono: ['"Space Mono"'],
+      },
       colors: {
         primary: {
           base: cssVarRgbHelper('primary-base'),

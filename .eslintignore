@@ -2,6 +2,9 @@
 logs
 *.log
 
+# built package
+release
+
 # Runtime data
 pids
 *.pid

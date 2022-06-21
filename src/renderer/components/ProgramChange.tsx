@@ -1,5 +1,5 @@
-import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import { useCallback, useEffect, useState } from 'react';
+import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
 import {
@@ -65,7 +65,9 @@ export function ProgramChange(props: {
   return (
     <tr
       onClick={() => dispatch(setSelected(pubKey))}
-      className={selected ? 'bg-lightblue' : ''}
+      className={`transition duration-50 bg-opacity-20 hover:bg-opacity-30 hover:bg-primary-light ${
+        selected ? 'bg-primary-light' : ''
+      }`}
     >
       <td onClick={() => pinAccount(pubKey, pinned)} align="center">
         <span className="icon icon-interactive">
@@ -73,7 +75,13 @@ export function ProgramChange(props: {
         </span>
       </td>
       <td>
-        <InlinePK format formatLength={12} pk={pubKey} />
+        <InlinePK
+          className="inline-flex items-center mr-2"
+          format
+          formatLength={12}
+          pk={pubKey}
+        />
+        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
       </td>
       <td>
         <span className="ms-2 rounded p-1">
@@ -89,9 +97,6 @@ export function ProgramChange(props: {
         <span className="ms-2 badge bg-secondary rounded-pill">
           {showCount}
         </span>
-      </td>
-      <td className="w-1/100 whitespace-nowrap">
-        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
       </td>
     </tr>
   );
