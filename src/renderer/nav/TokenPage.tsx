@@ -120,6 +120,7 @@ function TokenPage() {
   }
 
   async function createNewMint() {
+    // TODO: extract to createMintButton
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
       return;
@@ -276,6 +277,7 @@ function TokenPage() {
         <Col className="col-md-4 almost-vh-100 vscroll">
           Our Wallet
           <Button
+            size="sm"
             disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
               toast.promise(mintToken(), {
@@ -305,6 +307,7 @@ function TokenPage() {
             })}
           </Form.Select>
           <Button
+            size="sm"
             // TODO: this button should be disabled if the selected mint (or account) exists
             disabled={myWallet === undefined}
             onClick={() => {
@@ -319,6 +322,7 @@ function TokenPage() {
           </Button>
           <MetaplexTokenDataButton mintPubKey={mintKey} />
           <Button
+            size="sm"
             disabled={myWallet === undefined || mintKey === undefined}
             onClick={() => {
               toast.promise(closeMint(), {
@@ -343,6 +347,7 @@ function TokenPage() {
         <Col className="col-md-4 almost-vh-100 vscroll">
           non-funder account
           <Button
+            size="sm"
             disabled={
               myWallet === undefined ||
               mintKey === undefined ||
@@ -359,6 +364,7 @@ function TokenPage() {
             create new User account and ATA account
           </Button>
           <Button
+            size="sm"
             disabled={myWallet === undefined}
             onClick={() => {
               toast.promise(transferTokenToReceiver(), {

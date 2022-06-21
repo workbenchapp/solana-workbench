@@ -239,6 +239,21 @@ function AccountView(props: { pubKey: string | undefined }) {
               <small className="text-muted">
                 Token Accounts ({tokenAccounts.length})
               </small>
+              <Button
+                // This needs to give the mint to the selected account, but paid for by the wallet
+                // BUT - need to make sure its a "normal account" - hide if not
+                disabled={pubKey === undefined}
+                size="sm"
+                onClick={() => {
+                  toast.promise(createNewMint(), {
+                    pending: `Create mint account submitted`,
+                    success: `Create mint account  succeeded 👌`,
+                    error: `Create mint account   failed 🤯`,
+                  });
+                }}
+              >
+                New mint
+              </Button>
             </div>
             <div>
               <Table hover size="sm">
@@ -274,6 +289,40 @@ function AccountView(props: { pubKey: string | undefined }) {
                                         sol.LAMPORTS_PER_SOL
                                     )}{' '}
                                     SOL)
+                                    <Button
+                                      // extract to mintTokenButton and default to this account, but have a way to select a random pubkey..
+                                      size="sm"
+                                      disabled={
+                                        tAccount.account.data.parsed.info
+                                          .mint === undefined
+                                      }
+                                      onClick={() => {
+                                        toast.promise(mintToken(), {
+                                          pending: `Mint To ${myWallet?.toString()} submitted`,
+                                          success: `Mint To ${myWallet?.toString()} succeeded 👌`,
+                                          error: `Mint To ${myWallet?.toString()}  failed 🤯`,
+                                        });
+                                      }}
+                                    >
+                                      create
+                                    </Button>
+                                    <Button
+                                      // extract to sendTokenButton with popup to list of pubkeys, and editbox
+                                      size="sm"
+                                      disabled={
+                                        tAccount.account.data.parsed.info
+                                          .mint === undefined
+                                      }
+                                      onClick={() => {
+                                        toast.promise(mintToken(), {
+                                          pending: `Mint To ${myWallet?.toString()} submitted`,
+                                          success: `Mint To ${myWallet?.toString()} succeeded 👌`,
+                                          error: `Mint To ${myWallet?.toString()}  failed 🤯`,
+                                        });
+                                      }}
+                                    >
+                                      send
+                                    </Button>
                                   </Accordion.Header>
                                   <Accordion.Body>
                                     <pre className="exe-hexdump p-2 rounded">

@@ -16,6 +16,7 @@ import {
   selectValidatorNetworkState,
 } from '../../data/ValidatorNetwork/validatorNetworkState';
 import InlinePK from '../InlinePK';
+import MetaplexTokenDataButton from './MetaplexTokenData';
 
 const logger = window.electron.log;
 
@@ -95,7 +96,10 @@ export function MetaplexMintMetaDataView(props: {
   if (!metaInfo) {
     return (
       <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
-        <Accordion.Header>No Metaplex token info</Accordion.Header>
+        <Accordion.Header>
+          No Metaplex token info{' '}
+          <MetaplexTokenDataButton mintPubKey={mintKey} />
+        </Accordion.Header>
       </Accordion.Item>
     );
   }
@@ -107,6 +111,7 @@ export function MetaplexMintMetaDataView(props: {
           {metaInfo?.data.data.symbol}
         </a>
         :{'  '} ({metaInfo?.data.data.name} )
+        <MetaplexTokenDataButton mintPubKey={mintKey} />
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">

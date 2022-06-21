@@ -3,6 +3,7 @@ import * as metaplex from '@metaplex/js';
 import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
+import { Button } from 'react-bootstrap';
 import { useAppSelector } from '../hooks';
 
 import {
@@ -97,6 +98,19 @@ export function MintInfoView(props: { mintKey: string; className?: string }) {
           mintInto?.accountInfo.lamports / sol.LAMPORTS_PER_SOL
         )}{' '}
         SOL)
+        <Button
+          size="sm"
+          disabled={mintKey === undefined}
+          onClick={() => {
+            toast.promise(closeMint(), {
+              pending: `Close mint account submitted`,
+              success: `Close mint account  succeeded 👌`,
+              error: `Close mint account   failed 🤯`,
+            });
+          }}
+        >
+          Close mint
+        </Button>
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">

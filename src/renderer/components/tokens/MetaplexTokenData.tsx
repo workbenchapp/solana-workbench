@@ -224,6 +224,7 @@ function MetaplexTokenDataButton(props: {
       rootClose
     >
       <Button
+        size="sm"
         disabled={mintPubKey === undefined || status !== NetStatus.Running}
         variant="success"
       >
