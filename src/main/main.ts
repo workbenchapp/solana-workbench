@@ -7,7 +7,7 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
-import { runValidator, validatorLogs } from './validator';
+import { runValidator, stopValidator, validatorLogs } from './validator';
 import { initConfigPromises } from './ipc/config';
 import { initAccountPromises } from './ipc/accounts';
 import fetchAnchorIdl from './anchor';
@@ -42,6 +42,9 @@ ipcMain.on(
       switch (method) {
         case 'run-validator':
           await runValidator();
+          break;
+        case 'stop-validator':
+          await stopValidator();
           break;
         case 'validator-logs':
           res = await validatorLogs(msg);

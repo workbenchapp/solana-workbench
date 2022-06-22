@@ -9,7 +9,6 @@ function Account() {
   const accounts = useAppSelector(selectAccountsListState);
   const { selectedAccount } = accounts;
 
-  // TODO: the borders should eventually be resizable
   return (
     <Split
       sizes={[75, 25]}

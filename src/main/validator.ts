@@ -64,6 +64,28 @@ const runValidator = async () => {
   await execAsync(`${DOCKER_PATH} start solana-test-validator`);
 };
 
+const stopValidator = async () => {
+  try {
+    const { stdout } = await execAsync(
+      `${DOCKER_PATH} inspect solana-test-validator`
+    );
+    const inspectOutput = JSON.parse(stdout)[0];
+    const running = inspectOutput.State.Running;
+    if (running) {
+      // eslint-disable-next-line no-console
+      console.log(
+        await execAsync(`${DOCKER_PATH} logs --tail 100 solana-test-validator`)
+      );
+      logger.error('Stoping solana-test-validator...');
+      // eslint-disable-next-line no-console
+      console.log(await execAsync(`${DOCKER_PATH} stop solana-test-validator`));
+      throw new Error('Container stopped.');
+    }
+  } catch (err) {
+    logger.error(err);
+  }
+};
+
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const { filter, net } = msg;
   const MAX_TAIL_LINES = 10000;
@@ -111,4 +133,4 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return '';
 };
 
-export { runValidator, validatorLogs };
+export { runValidator, stopValidator, validatorLogs };
