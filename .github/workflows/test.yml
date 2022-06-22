@@ -35,4 +35,3 @@ jobs:
         run: |
           npm run package
           npm run lint
-          npm exec tsc
