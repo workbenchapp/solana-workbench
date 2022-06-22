@@ -81,7 +81,7 @@ export function ProgramChange(props: {
           formatLength={12}
           pk={pubKey}
         />
-        {accountMeta?.privatekey ? <IconMdiKey /> : ''}
+        {accountMeta?.privatekey ? <IconMdiKey className="inline-block" /> : ''}
       </td>
       <td>
         <span className="ms-2 rounded p-1">

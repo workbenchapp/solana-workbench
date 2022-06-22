@@ -236,7 +236,7 @@ export const GlobalContainer: FC = () => {
           <WalletModalProvider>
             <div className="flex flex-col h-full">
               <Topbar />
-              <div className="flex flex-1 overflow-hidden">
+              <div className="flex flex-1 min-h-0">
                 <Sidebar />
                 <div className="flex-1 flex flex-col">
                   <Outlet />
@@ -276,7 +276,7 @@ function App() {
           />
         </Route>
       </Routes>
-      <ToastContainer />
+      <ToastContainer theme="dark" />
     </>
   );
 }

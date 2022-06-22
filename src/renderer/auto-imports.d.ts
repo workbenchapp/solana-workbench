@@ -3,11 +3,11 @@ export {};
 declare global {
   const IconMdiAnchor: typeof import('~icons/mdi/anchor.jsx')['default'];
   const IconMdiBookOpenOutline: typeof import('~icons/mdi/book-open-outline.jsx')['default'];
-  const IconMdiCancel: typeof import('~icons/mdi/cancel.jsx')['default'];
+  const IconMdiCheck: typeof import('~icons/mdi/check.jsx')['default'];
   const IconMdiChevronDown: typeof import('~icons/mdi/chevron-down.jsx')['default'];
   const IconMdiCircle: typeof import('~icons/mdi/circle.jsx')['default'];
+  const IconMdiClose: typeof import('~icons/mdi/close.jsx')['default'];
   const IconMdiContentCopy: typeof import('~icons/mdi/content-copy.jsx')['default'];
-  const IconMdiContentSave: typeof import('~icons/mdi/content-save.jsx')['default'];
   const IconMdiFilter: typeof import('~icons/mdi/filter.jsx')['default'];
   const IconMdiKey: typeof import('~icons/mdi/key.jsx')['default'];
   const IconMdiPencil: typeof import('~icons/mdi/pencil.jsx')['default'];
@@ -16,4 +16,5 @@ declare global {
   const IconMdiTable: typeof import('~icons/mdi/table.jsx')['default'];
   const IconMdiUnfoldMoreHorizontal: typeof import('~icons/mdi/unfold-more-horizontal.jsx')['default'];
   const IconMdiVectorTriangle: typeof import('~icons/mdi/vector-triangle.jsx')['default'];
+  const IconMdiWarning: typeof import('~icons/mdi/warning.jsx')['default'];
 }

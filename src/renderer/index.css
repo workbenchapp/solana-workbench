@@ -19,7 +19,10 @@ html, body, #root {
 }
 
 textarea, input {
-  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-primary-light rounded-md focus:ring-1 text-contrast p-2;
+  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-primary-light rounded-md focus:ring-2 ring-offset-2 ring-offset-surface-400 text-contrast p-2;
+  &.dense {
+    @apply p-1;
+  }
 }
 
 svg {
@@ -35,6 +38,18 @@ code {
 
   &.btn-sm {
     @apply text-xs py-2 px-3;
+  }
+}
+
+.gutter {
+  @apply bg-surface-200 transition duration-50 active:bg-surface-100;
+
+  &.gutter-horizontal {
+    cursor: col-resize;
+  }
+
+  &.gutter-vertical {
+    cursor: row-resize;
   }
 }
 

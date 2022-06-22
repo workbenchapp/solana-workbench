@@ -9,7 +9,8 @@
     "jsx-a11y/no-static-element-interactions": "off",
     "global-require": "off",
     "jest/no-standalone-expect": "off",
-    "react/jsx-no-undef": "off"
+    "react/jsx-no-undef": "off",
+    "react/prop-types": "off"
   },
   "extends": ["erb"],
   "parser": "@typescript-eslint/parser",

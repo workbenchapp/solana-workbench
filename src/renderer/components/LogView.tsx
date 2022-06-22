@@ -73,15 +73,11 @@ function LogView() {
   }, [net, status]);
 
   return (
-    <textarea
-      readOnly
-      className="w-full h-full text-xs text-gray-400 font-mono"
-      value={
-        logs.length > 0
-          ? logs.join('\n')
-          : 'Logs will appear here once transactions are processed.'
-      }
-    />
+    <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
+      {logs.length > 0
+        ? logs.join('\n')
+        : 'Logs will appear here once transactions are processed.'}
+    </pre>
   );
 }
 

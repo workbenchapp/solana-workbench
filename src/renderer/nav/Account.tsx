@@ -1,3 +1,4 @@
+import Split from 'react-split';
 import AccountView from '../components/AccountView';
 import LogView from '../components/LogView';
 import ProgramChangeView from '../components/ProgramChangeView';
@@ -10,12 +11,20 @@ function Account() {
 
   // TODO: the borders should eventually be resizable
   return (
-    <>
-      <div className="flex-1 flex w-full min-h-0">
-        <div className="flex min-h-min w-full">
-          <ProgramChangeView />
-        </div>
-        <div className="w-xs">
+    <Split
+      sizes={[75, 25]}
+      direction="vertical"
+      className="flex-1 min-h-0"
+      gutterSize={5}
+    >
+      <Split
+        sizes={[75, 25]}
+        direction="horizontal"
+        className="flex-1 w-full flex"
+        gutterSize={5}
+      >
+        <ProgramChangeView />
+        <div className="overflow-auto">
           <div className="flex-1 p-3">
             <AccountView pubKey={selectedAccount} />
             <div className="border-top flex-fill">
@@ -23,11 +32,11 @@ function Account() {
             </div>
           </div>
         </div>
-      </div>
-      <div className="border-top h-50">
+      </Split>
+      <div className="overflow-auto">
         <LogView />
       </div>
-    </>
+    </Split>
   );
 }
 

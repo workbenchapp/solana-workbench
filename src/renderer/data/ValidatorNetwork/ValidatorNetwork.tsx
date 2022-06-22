@@ -68,15 +68,15 @@ function ValidatorNetwork() {
     statusClass = 'text-green-500';
   }
   const statusDisplay = (
-    <span className="badge p-2">
-      <IconMdiCircle className={`mr-2 ${statusClass}`} />
-      {statusText}
-    </span>
+    <>
+      <IconMdiCircle className={`mx-1 inline-block ${statusClass}`} />
+      <span className="mr-2">{statusText}</span>
+    </>
   );
 
   const netDropdownTitle = (
     <>
-      <IconMdiVectorTriangle /> {net}
+      <IconMdiVectorTriangle className="inline-block" /> {net}
       {statusDisplay}
     </>
   );

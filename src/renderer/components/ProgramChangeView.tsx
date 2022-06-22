@@ -1,9 +1,8 @@
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
-import EdiText from 'react-editext';
 import { toast } from 'react-toastify';
 import { css } from 'vite-plugin-inline-css-modules';
 import {
@@ -27,6 +26,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import { Chip } from './base/Chip';
+import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import { ProgramChange } from './ProgramChange';
 import WatchAccountButton from './WatchAccountButton';
@@ -49,6 +49,10 @@ const classes = css`
     @apply w-full h-full border-collapse overflow-auto text-xs;
     & th:not(:global(.text-center)) {
       @apply text-left;
+    }
+
+    & th svg {
+      @apply inline-block;
     }
   }
 `;
@@ -135,7 +139,6 @@ function ProgramChangeView() {
 
   const uniqueAccounts = displayList.length;
   const [filterDropdownShow, setFilterDropdownShow] = useState(false);
-  const filterProgramIDRef = useRef<HTMLInputElement>({} as HTMLInputElement);
 
   const [programID, setProgramID] = useState<string>(
     KnownProgramID.SystemProgram
@@ -156,7 +159,24 @@ function ProgramChangeView() {
   }, [net, programID, status]);
 
   if (status !== NetStatus.Running) {
-    return <div>network not available</div>;
+    return (
+      <div className="h-full w-full justify-center items-center flex flex-col">
+        <div className="relative z-0 flex flex-col items-center">
+          <svg
+            viewBox="0 0 200 200"
+            className="absolute transform -translate-x-1/2 -translate-y-1/2 left-1/2 top-1/2 w-80 h-80 -z-1"
+          >
+            <path
+              fill="rgb(var(--surface-300))"
+              d="M41.7,-52.4C52.9,-40.3,60.2,-26.1,67,-8.7C73.8,8.7,80.2,29.4,72.9,42.1C65.6,54.9,44.5,59.8,25.6,63.7C6.7,67.7,-10.1,70.7,-25.1,66.3C-40.1,62,-53.3,50.2,-61.3,35.7C-69.4,21.2,-72.4,3.9,-70.2,-13.1C-68.1,-30.1,-60.8,-47,-48.3,-58.9C-35.7,-70.9,-17.9,-77.9,-1.3,-76.3C15.2,-74.8,30.5,-64.6,41.7,-52.4Z"
+              transform="translate(100 100)"
+            />
+          </svg>
+          <IconMdiWarning className="text-6xl z-1" />
+          <span className="z-2">Network Not Available</span>
+        </div>
+      </div>
+    );
   }
 
   const changeFilterDropdownTitle = (
@@ -178,13 +198,11 @@ function ProgramChangeView() {
   };
 
   return (
-    <div className="w-full p-3 flex flex-col">
+    <div className="w-full p-3 flex flex-col overflow-auto">
       <div className="mb-2">
-        <div className="mb-2">
-          <small>
-            <strong>Program Account Changes</strong>:
-            <small>(Validator Slot {validatorSlot})</small>
-          </small>
+        <div className="mb-2 flex gap-2 items-center">
+          <strong>Program Account Changes</strong>
+          <small>(Validator Slot {validatorSlot})</small>
         </div>
         <div className="mb-2">
           <Button
@@ -221,30 +239,27 @@ function ProgramChangeView() {
             <Chip>Token Program</Chip>
             <Chip>Serum DEX V3</Chip>
           </div>
-          <EdiText
-            type="text"
-            value={programID}
-            onSave={(val: string) => {
-              const pastedID = val;
-              if (pastedID.match(BASE58_PUBKEY_REGEX)) {
-                unsubscribeProgramChanges(net, programID);
-                subscribeProgramChanges(net, programID, setValidatorSlot);
-                setProgramID(pastedID);
-              } else {
-                toast.warn(`Invalid program ID: ${pastedID}`);
-              }
-              filterProgramIDRef.current.value = 'Custom';
-              filterProgramIDRef.current.blur();
-              setFilterDropdownShow(false);
-            }}
-          />
         </div>
       </div>
       <span className="mb-2">
         <small className="ms-2 text-secondary">
           <span className="flex gap-2 items-center">
             Program:
-            <code>{programID}</code>
+            <EditableText
+              type="text"
+              value={programID}
+              onSave={(val: string) => {
+                const pastedID = val;
+                if (pastedID.match(BASE58_PUBKEY_REGEX)) {
+                  unsubscribeProgramChanges(net, programID);
+                  subscribeProgramChanges(net, programID, setValidatorSlot);
+                  setProgramID(pastedID);
+                } else {
+                  toast.warn(`Invalid program ID: ${pastedID}`);
+                }
+                setFilterDropdownShow(false);
+              }}
+            />
             <div className="flex-1" />
             <span className="font-bold">
               {`${uniqueAccounts} account${uniqueAccounts > 1 ? 's' : ''}`}
@@ -252,14 +267,14 @@ function ProgramChangeView() {
           </span>
         </small>
       </span>
-      <div className="overflow-auto block">
+      <div className="flex-1 block min-h-0 overflow-auto">
         {displayList.length > 0 ? (
           <table className={classes['account-view']}>
             <thead>
               <tr className="bg-surface-400">
                 <th className="text-center">
                   {' '}
-                  <IconMdiStarOutline />
+                  <IconMdiStarOutline className="inline-block" />
                 </th>
                 <th>Address</th>
                 <th onClick={() => setSortColumn(SortColumn.MaxDelta)}>

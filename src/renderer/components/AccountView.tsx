@@ -3,7 +3,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
-import EdiText from 'react-editext';
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -24,6 +23,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import AirDropSolButton from './AirDropSolButton';
+import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import TransferSolButton from './TransferSolButton';
 
@@ -91,147 +91,120 @@ function AccountView(props: { pubKey: string | undefined }) {
   return (
     <Container>
       <ButtonToolbar aria-label="Toolbar with button groups">
-        <div className="flex gap-2">
+        <div className="flex gap-2 mb-2">
           <AirDropSolButton pubKey={pubKey} />
           <TransferSolButton pubKey={pubKey} />
         </div>
       </ButtonToolbar>
-
-      <div>
-        <div className="col">
-          <div>
-            <div className="col col-md-12">
-              <table className="table table-borderless table-sm mb-0">
-                <tbody>
-                  <tr>
-                    <td className="col-md-4">
-                      <div className="align-center">
-                        <div>
-                          <small className="text-gray-400">
-                            Editable Alias
-                          </small>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="col-md-8">
-                      <small>
-                        <EdiText
-                          submitOnEnter
-                          cancelOnEscape
-                          buttonsAlign="after"
-                          type="text"
-                          value={humanName}
-                          onSave={handleHumanNameSave}
-                          hideIcons
-                          editButtonContent={<IconMdiPencil />}
-                          saveButtonContent={<IconMdiContentSave />}
-                          cancelButtonContent={<IconMdiCancel />}
-                        />
-                      </small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Pubkey</small>
-                    </td>
-                    <td>
-                      <small>
-                        {pubKey ? (
-                          <InlinePK format pk={pubKey} formatLength={6} />
-                        ) : (
-                          'None selected'
-                        )}
-                      </small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">SOL</small>
-                    </td>
-                    <td>
-                      <small>
-                        {account ? truncateLamportAmount(account) : 0}
-                      </small>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Executable</small>
-                    </td>
-                    <td>
-                      {account?.accountInfo?.executable ? (
-                        <div>
-                          <FontAwesomeIcon
-                            className="border-success rounded p-1 exe-icon"
-                            icon={faTerminal}
-                          />
-                          <small className="ms-1 mb-1">Yes</small>
-                        </div>
-                      ) : (
-                        <small className="fst-italic fw-light text-muted">
-                          No
-                        </small>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Private key known</small>
-                    </td>
-                    <td>
-                      {accountMeta?.privatekey ? (
-                        <div>
-                          <IconMdiKey />
-                          <small className="ml-2">Yes</small>
-                        </div>
-                      ) : (
-                        <small className="fst-italic fw-light text-muted">
-                          No
-                        </small>
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <small className="text-muted">Explorer</small>
-                    </td>
-                    <td>
-                      <small>
-                        {account ? (
-                          <a
-                            onClick={() =>
-                              analytics('clickExplorerLink', { net })
-                            }
-                            href={explorerURL(
-                              net,
-                              account.accountId.toString()
-                            )}
-                            target="_blank"
-                            className="sol-link"
-                            rel="noreferrer"
-                          >
-                            Link
-                          </a>
-                        ) : (
-                          'No onchain account'
-                        )}
-                      </small>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="ms-1">
-            <div>
-              <small className="text-muted">Data</small>
-            </div>
-            <div>
-              <pre className="exe-hexdump p-2 rounded">
-                <code>{renderData(account)}</code>
-              </pre>
-            </div>
-          </div>
+      <div className="col col-md-12">
+        <table className="table table-borderless table-sm mb-0">
+          <tbody>
+            <tr>
+              <td className="col-md-4">
+                <div className="align-center">
+                  <div>
+                    <small className="text-gray-400">Editable Alias</small>
+                  </div>
+                </div>
+              </td>
+              <td className="col-md-8">
+                <small>
+                  <EditableText
+                    value={humanName}
+                    onSave={handleHumanNameSave}
+                    type="text"
+                  />
+                </small>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small className="text-muted">Pubkey</small>
+              </td>
+              <td>
+                <small>
+                  {pubKey ? (
+                    <InlinePK format pk={pubKey} formatLength={6} />
+                  ) : (
+                    'None selected'
+                  )}
+                </small>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small className="text-muted">SOL</small>
+              </td>
+              <td>
+                <small>{account ? truncateLamportAmount(account) : 0}</small>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small className="text-muted">Executable</small>
+              </td>
+              <td>
+                {account?.accountInfo?.executable ? (
+                  <div>
+                    <FontAwesomeIcon
+                      className="border-success rounded p-1 exe-icon"
+                      icon={faTerminal}
+                    />
+                    <small className="ms-1 mb-1">Yes</small>
+                  </div>
+                ) : (
+                  <small className="fst-italic fw-light text-muted">No</small>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small className="text-muted">Private key known</small>
+              </td>
+              <td>
+                {accountMeta?.privatekey ? (
+                  <div>
+                    <IconMdiKey />
+                    <small className="ml-2">Yes</small>
+                  </div>
+                ) : (
+                  <small className="fst-italic fw-light text-muted">No</small>
+                )}
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <small className="text-muted">Explorer</small>
+              </td>
+              <td>
+                <small>
+                  {account ? (
+                    <a
+                      onClick={() => analytics('clickExplorerLink', { net })}
+                      href={explorerURL(net, account.accountId.toString())}
+                      target="_blank"
+                      className="sol-link"
+                      rel="noreferrer"
+                    >
+                      Link
+                    </a>
+                  ) : (
+                    'No onchain account'
+                  )}
+                </small>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="ms-1">
+        <div>
+          <small className="text-muted">Data</small>
+        </div>
+        <div className="p-2">
+          <code className="whitespace-pre-wrap w-full block">
+            {renderData(account)}
+          </code>
         </div>
       </div>
     </Container>

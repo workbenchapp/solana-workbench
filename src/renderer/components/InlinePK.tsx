@@ -1,3 +1,4 @@
+import classnames from 'classnames';
 import { ACCOUNTS_NONE_KEY } from '../data/accounts/accountInfo';
 import CopyIcon from './CopyIcon';
 
@@ -22,7 +23,7 @@ function InlinePK(props: {
 }) {
   const { pk, className } = props;
   return (
-    <span className={className}>
+    <span className={classnames('flex items-center', className)}>
       <code>
         {props.format ? prettifyPubkey(pk, props.formatLength || 4) : pk}
       </code>
@@ -30,9 +31,5 @@ function InlinePK(props: {
     </span>
   );
 }
-
-InlinePK.defaultProps = {
-  className: '',
-};
 
 export default InlinePK;

@@ -22,7 +22,7 @@
     "outDir": "release/app/dist",
     "skipLibCheck": true,
     "paths": {
-      "@/*": ["./src/*", "./dist/*"]
+      "@/*": ["src/*", "dist/*"]
     },
     "types": ["unplugin-icons/types/react"]
   },
