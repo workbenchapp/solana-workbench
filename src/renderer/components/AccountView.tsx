@@ -1,3 +1,4 @@
+import { logger } from '@/common/globals';
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
@@ -26,8 +27,6 @@ import AirDropSolButton from './AirDropSolButton';
 import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import TransferSolButton from './TransferSolButton';
-
-const logger = window.electron.log;
 
 const explorerURL = (net: Net, address: string) => {
   switch (net) {

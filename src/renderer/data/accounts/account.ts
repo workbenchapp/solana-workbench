@@ -1,19 +1,16 @@
-import * as sol from '@solana/web3.js';
-
+import { logger } from '@/common/globals';
+import { AnyAction, Dispatch, ThunkDispatch } from '@reduxjs/toolkit';
 import { WalletContextState } from '@solana/wallet-adapter-react';
-
-import { ThunkDispatch, AnyAction, Dispatch } from '@reduxjs/toolkit';
-import { AccountsState, reloadFromMain } from './accountState';
+import * as sol from '@solana/web3.js';
+import { NewKeyPairInfo } from '../../../types/types';
+import { ConfigState, setConfigValue } from '../Config/configState';
+import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
 import {
   Net,
   netToURL,
   ValidatorState,
 } from '../ValidatorNetwork/validatorNetworkState';
-import { ConfigState, setConfigValue } from '../Config/configState';
-import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
-import { NewKeyPairInfo } from '../../../types/types';
-
-const logger = window.electron.log;
+import { AccountsState, reloadFromMain } from './accountState';
 
 export async function airdropSol(net: Net, toKey: string, solAmount: string) {
   const to = new sol.PublicKey(toKey);

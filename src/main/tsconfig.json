@@ -5,8 +5,8 @@
     "paths": {
       "@/*": ["../*"]
     },
-    "outDir": "../../release/dist/main"
+    "outDir": "../../release/dist"
   },
   "files": ["main.ts"],
-  "include": ["../../types/**/*.d.ts", "preload.ts"]
+  "include": ["../types/**/*", "preload.js"]
 }

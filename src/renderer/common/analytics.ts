@@ -1,10 +1,10 @@
-import amplitude from 'amplitude-js';
+import { logger } from '@/common/globals';
 import store from '@/store';
+import amplitude from 'amplitude-js';
 import { ConfigKey } from '../data/Config/configState';
 
 const AMPLITUDE_KEY = 'f1cde3642f7e0f483afbb7ac15ae8277';
 const AMPLITUDE_HEARTBEAT_INTERVAL = 3600000;
-const logger = window.electron.log;
 
 amplitude.getInstance().init(AMPLITUDE_KEY);
 

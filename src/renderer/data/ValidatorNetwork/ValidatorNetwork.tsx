@@ -1,3 +1,4 @@
+import { logger } from '@/common/globals';
 import * as sol from '@solana/web3.js';
 import { useEffect } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -11,8 +12,6 @@ import {
   setNet,
   setState,
 } from './validatorNetworkState';
-
-const logger = window.electron.log;
 
 const validatorState = async (net: Net): Promise<NetStatus> => {
   let solConn: sol.Connection;

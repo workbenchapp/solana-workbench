@@ -1,3 +1,4 @@
+import { logger } from '@/common/globals';
 import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import {
@@ -13,7 +14,6 @@ export interface LogSubscriptionMap {
     solConn: sol.Connection;
   };
 }
-const logger = window.electron.log;
 
 // TODO: make this selectable - Return information at the selected commitment level
 //      [possible values: processed, confirmed, finalized]

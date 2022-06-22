@@ -19,7 +19,7 @@ const IconButton: React.FC<
     HTMLButtonElement
   >
 > = (props) => {
-  const { children, className, ...rest } = props;
+  const { children, className, dense, ...rest } = props;
 
   return (
     <button

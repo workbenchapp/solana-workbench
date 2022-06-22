@@ -1,3 +1,4 @@
+import { logger } from '@/common/globals';
 import {
   ConnectionProvider,
   WalletProvider,
@@ -38,8 +39,6 @@ import Anchor from './nav/Anchor';
 import Validator from './nav/Validator';
 import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
 import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
-
-const logger = window.electron.log;
 
 // So we can electron
 declare global {
@@ -254,7 +253,7 @@ function App() {
   const config = useConfigState();
   const accounts = useAccountsState();
 
-  Object.assign(console, logger.functions);
+  Object.assign(console, logger?.functions);
 
   if (config.loading) {
     return <>Config Loading ...${accounts.loading}</>;

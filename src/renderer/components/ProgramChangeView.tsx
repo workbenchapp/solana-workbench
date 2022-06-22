@@ -1,3 +1,9 @@
+import { logger } from '@/common/globals';
+import {
+  accountsActions,
+  selectAccountsListState,
+  setSelected,
+} from '@/data/SelectedAccountsList/selectedAccountsState';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -5,11 +11,6 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { css } from 'vite-plugin-inline-css-modules';
-import {
-  accountsActions,
-  selectAccountsListState,
-  setSelected,
-} from '@/data/SelectedAccountsList/selectedAccountsState';
 import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -30,8 +31,6 @@ import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import { ProgramChange } from './ProgramChange';
 import WatchAccountButton from './WatchAccountButton';
-
-const logger = window.electron.log;
 
 export const MAX_PROGRAM_CHANGES_DISPLAYED = 20;
 export enum KnownProgramID {

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { logger } from '@/common/globals';
 import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
+import { useCallback, useEffect, useState } from 'react';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
 import {
@@ -14,8 +15,6 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
-
-const logger = window.electron.log;
 
 export function ProgramChange(props: {
   net: Net;

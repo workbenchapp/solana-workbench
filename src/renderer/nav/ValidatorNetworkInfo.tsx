@@ -1,3 +1,4 @@
+import { logger } from '@/common/globals';
 import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
@@ -8,8 +9,6 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector } from '../hooks';
-
-const logger = window.electron.log;
 
 interface VersionCount {
   [key: string]: number;
