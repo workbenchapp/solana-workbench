@@ -26,7 +26,6 @@ jobs:
 
       - name: Install native modules
         run: |
-          cd ./release/app
           DEBUG=electron-rebuild npm install --legacy-peer-deps
 
       - name: Run tests
