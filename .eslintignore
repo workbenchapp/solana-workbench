@@ -1,4 +1,4 @@
-./src/renderer/auto-imports.d.ts
+src/renderer/auto-imports.d.ts
 
 # Logs
 logs
