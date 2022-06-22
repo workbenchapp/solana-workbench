@@ -18,15 +18,13 @@ const IconButton: React.FC<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     HTMLButtonElement
   >
-> = (props) => {
-  const { children, className, dense, ...rest } = props;
-
+> = ({ children, className, dense, ...rest }) => {
   return (
     <button
       type="button"
       className={classNames(
         classes.btn,
-        props.dense ? classes.dense : undefined,
+        dense ? classes.dense : undefined,
         className
       )}
       {...rest}

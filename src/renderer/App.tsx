@@ -1,4 +1,3 @@
-import { logger } from '@/common/globals';
 import {
   ConnectionProvider,
   WalletProvider,
@@ -19,6 +18,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { logger } from '@/common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
 import { getElectronStorageWallet } from './data/accounts/account';
@@ -117,17 +117,10 @@ function Sidebar() {
   );
 }
 
-function TopbarNavItems() {
-  if (isElectron()) {
-    return <></>;
-  }
-  return <></>;
-}
-
 function Topbar() {
   return (
     <div className="flex items-center p-1 px-2 bg-surface-400">
-      <a href="#">Solana Workbench</a>
+      <span>Solana Workbench</span>
       <div className="flex-1" />
       {isElectron() ? null : <NavigationIcons />}
       <WalletMultiButton className="h-min" />

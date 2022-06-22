@@ -11,7 +11,7 @@
     "build:renderer": "vite build --config ./src/renderer/vite.config.ts",
     "start:main": "npm run build:main && cross-env NODE_ENV=development electronmon -r ts-node/register/transpile-only ./src/main/main.ts",
     "start:renderer": "vite dev --config ./src/renderer/vite.config.ts",
-    "package": "rimraf ./release && npm run build && electron-builder build --publish never",
+    "package": "rimraf ./release && npm run build && electron-builder -- --publish always --win --mac --linux",
     "package:asarless": "npm run build && electron-builder build --config.asar=false",
     "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
     "lint-fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
@@ -19,6 +19,9 @@
     "prepare": "husky install",
     "postinstall": "electron-builder install-app-deps"
   },
+  "browserslist": [
+    "last 1 electron version"
+  ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "cross-env NODE_ENV=development eslint"

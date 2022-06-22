@@ -10,22 +10,23 @@ const classes = css`
   }
 `;
 
-export const Chip: React.FC<
+const Chip: React.FC<
   React.DetailedHTMLProps<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
     HTMLButtonElement
   > & {
     active?: boolean;
   }
-> = (props) => {
-  const { children, active, ...rest } = props;
-
+> = ({ children, active, ...rest }) => {
   return (
     <button
       className={`${classes.chip} ${active ? classes.active : undefined}`}
+      type="button"
       {...rest}
     >
       {children}
     </button>
   );
 };
+
+export default Chip;

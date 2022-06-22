@@ -1,7 +1,7 @@
-import { logger } from '@/common/globals';
 import { AnyAction, Dispatch, ThunkDispatch } from '@reduxjs/toolkit';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import * as sol from '@solana/web3.js';
+import { logger } from '@/common/globals';
 import { NewKeyPairInfo } from '../../../types/types';
 import { ConfigState, setConfigValue } from '../Config/configState';
 import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';

@@ -1,9 +1,9 @@
-import { logger } from '@/common/globals';
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
+import { logger } from '@/common/globals';
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {

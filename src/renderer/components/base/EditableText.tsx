@@ -6,8 +6,7 @@ const EditableText: React.FC<
     value: string;
     onSave: (value: string) => void;
   } & React.InputHTMLAttributes<HTMLInputElement>
-> = (props) => {
-  const { value, onSave, ...rest } = props;
+> = ({ value, onSave, ...rest }) => {
   const [editingValue, setEditingValue] = useState<string | undefined>(
     undefined
   );
@@ -30,6 +29,8 @@ const EditableText: React.FC<
         break;
       case 'Escape':
         setEditing(false);
+        break;
+      default:
         break;
     }
   };
@@ -58,7 +59,7 @@ const EditableText: React.FC<
   }
   return (
     <div className="flex items-center">
-      <span className="p-1">{props.value || 'Unset'}</span>
+      <span className="p-1">{value || 'Unset'}</span>
       <IconButton dense onClick={() => setEditing(true)}>
         <IconMdiPencil className="block" />
       </IconButton>

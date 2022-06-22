@@ -15,21 +15,18 @@ const prettifyPubkey = (pk = '', formatLength: number) => {
     : '';
 };
 
-function InlinePK(props: {
+const InlinePK: React.FC<{
   pk: string;
   className?: string;
   format?: boolean;
   formatLength?: number;
-}) {
-  const { pk, className } = props;
+}> = ({ pk, className, format, formatLength }) => {
   return (
     <span className={classnames('flex items-center', className)}>
-      <code>
-        {props.format ? prettifyPubkey(pk, props.formatLength || 4) : pk}
-      </code>
+      <code>{format ? prettifyPubkey(pk, formatLength || 4) : pk}</code>
       <CopyIcon writeValue={pk} />
     </span>
   );
-}
+};
 
 export default InlinePK;

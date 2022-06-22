@@ -10,7 +10,8 @@
     "global-require": "off",
     "jest/no-standalone-expect": "off",
     "react/jsx-no-undef": "off",
-    "react/prop-types": "off"
+    "react/prop-types": "off",
+    "import/extensions": "off"
   },
   "extends": ["erb"],
   "parser": "@typescript-eslint/parser",

@@ -1,7 +1,7 @@
-import { logger } from '@/common/globals';
 import * as sol from '@solana/web3.js';
 import hexdump from 'hexdump-nodejs';
 import { LRUCache } from 'typescript-lru-cache';
+import { logger } from '@/common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { AccountMetaValues } from './accountState';

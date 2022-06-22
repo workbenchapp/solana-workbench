@@ -1,6 +1,6 @@
-import { logger } from '@/common/globals';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { useEffect } from 'react';
+import { logger } from '@/common/globals';
 import { ConfigMap } from '../../../../release/dist/main/types/types';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types

@@ -1,6 +1,6 @@
-import { logger } from '@/common/globals';
 import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
+import { logger } from '@/common/globals';
 import {
   NetStatus,
   netToURL,

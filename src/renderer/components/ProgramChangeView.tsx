@@ -1,9 +1,3 @@
-import { logger } from '@/common/globals';
-import {
-  accountsActions,
-  selectAccountsListState,
-  setSelected,
-} from '@/data/SelectedAccountsList/selectedAccountsState';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -11,6 +5,12 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { css } from 'vite-plugin-inline-css-modules';
+import {
+  accountsActions,
+  selectAccountsListState,
+  setSelected,
+} from '@/data/SelectedAccountsList/selectedAccountsState';
+import { logger } from '@/common/globals';
 import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
@@ -26,7 +26,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
-import { Chip } from './base/Chip';
+import Chip from './base/Chip';
 import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import { ProgramChange } from './ProgramChange';
@@ -137,7 +137,6 @@ function ProgramChangeView() {
   }, 666);
 
   const uniqueAccounts = displayList.length;
-  const [filterDropdownShow, setFilterDropdownShow] = useState(false);
 
   const [programID, setProgramID] = useState<string>(
     KnownProgramID.SystemProgram
@@ -178,18 +177,11 @@ function ProgramChangeView() {
     );
   }
 
-  const changeFilterDropdownTitle = (
-    <>
-      <IconMdiFilter />
-      <span>Filter</span>
-    </>
-  );
-
   const SortIcon: React.FC<{
     sortColumn: SortColumn;
     target: SortColumn;
-  }> = ({ sortColumn, target }) => {
-    return sortColumn === target ? (
+  }> = ({ sortColumn: column, target }) => {
+    return column === target ? (
       <IconMdiChevronDown />
     ) : (
       <IconMdiUnfoldMoreHorizontal />
@@ -262,7 +254,6 @@ function ProgramChangeView() {
                 } else {
                   toast.warn(`Invalid program ID: ${pastedID}`);
                 }
-                setFilterDropdownShow(false);
               }}
             />
             <div className="flex-1" />
