@@ -1,4 +1,3 @@
-import { PropsWithChildren } from 'react';
 import { css } from 'vite-plugin-inline-css-modules';
 
 const classes = css`
@@ -12,13 +11,19 @@ const classes = css`
 `;
 
 export const Chip: React.FC<
-  PropsWithChildren<{
+  React.DetailedHTMLProps<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    HTMLButtonElement
+  > & {
     active?: boolean;
-  }>
-> = ({ children, active }) => {
+  }
+> = (props) => {
+  const { children, active, ...rest } = props;
+
   return (
     <button
       className={`${classes.chip} ${active ? classes.active : undefined}`}
+      {...rest}
     >
       {children}
     </button>

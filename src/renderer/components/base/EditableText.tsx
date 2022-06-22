@@ -18,11 +18,15 @@ const EditableText: React.FC<
     input.current?.focus();
   }, [editing]);
 
+  const save = () => {
+    onSave(editingValue || value);
+    setEditing(false);
+  };
+
   const onKeyDown = (ev: KeyboardEvent<HTMLInputElement>) => {
     switch (ev.key) {
       case 'Enter':
-        onSave(editingValue || value);
-        setEditing(false);
+        save();
         break;
       case 'Escape':
         setEditing(false);
@@ -42,7 +46,7 @@ const EditableText: React.FC<
           onKeyDown={onKeyDown}
         />
         <div className="flex">
-          <IconButton dense>
+          <IconButton dense onClick={save}>
             <IconMdiCheck />
           </IconButton>
           <IconButton onClick={() => setEditing(false)} dense>

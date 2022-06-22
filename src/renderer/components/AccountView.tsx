@@ -95,8 +95,8 @@ function AccountView(props: { pubKey: string | undefined }) {
           <TransferSolButton pubKey={pubKey} />
         </div>
       </ButtonToolbar>
-      <div className="col col-md-12">
-        <table className="table table-borderless table-sm mb-0">
+      <div>
+        <table>
           <tbody>
             <tr>
               <td className="col-md-4">
@@ -163,7 +163,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               <td>
                 {accountMeta?.privatekey ? (
                   <div>
-                    <IconMdiKey />
+                    <IconMdiKey className="inline-block" />
                     <small className="ml-2">Yes</small>
                   </div>
                 ) : (

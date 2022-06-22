@@ -234,9 +234,15 @@ function ProgramChangeView() {
         <div className="mt-2">
           <span className="text-sm font-bold">Filter Programs</span>
           <div className="flex gap-2 text-sm flex-wrap w-full my-2">
-            <Chip active>System Program</Chip>
-            <Chip>Token Program</Chip>
-            <Chip>Serum DEX V3</Chip>
+            {Object.entries(KnownProgramID).map(([name, value]) => (
+              <Chip
+                key={name}
+                onClick={() => setProgramID(value)}
+                active={programID === value}
+              >
+                {name}
+              </Chip>
+            ))}
           </div>
         </div>
       </div>
