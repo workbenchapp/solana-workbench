@@ -47,6 +47,7 @@ function AccountView(props: { pubKey: string | undefined }) {
   const dispatch = useAppDispatch();
   const accountMeta = useAccountMeta(pubKey);
   const [humanName, setHumanName] = useState<string>('');
+  const [accountData, setAccountData] = useState<string>('');
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
@@ -85,6 +86,11 @@ function AccountView(props: { pubKey: string | undefined }) {
       })
     );
   };
+
+  const anchorData = async () => {
+    setAccountData(await renderData(account));
+  };
+  anchorData();
 
   // const humanName = getHumanName(accountMeta);
   return (
@@ -202,7 +208,7 @@ function AccountView(props: { pubKey: string | undefined }) {
         </div>
         <div className="p-2">
           <code className="whitespace-pre-wrap w-full block">
-            {renderData(account)}
+            {accountData}
           </code>
         </div>
       </div>
