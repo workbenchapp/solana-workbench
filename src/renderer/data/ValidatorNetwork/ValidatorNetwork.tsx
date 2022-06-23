@@ -1,23 +1,17 @@
 import * as sol from '@solana/web3.js';
-
 import { useEffect } from 'react';
-
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-import { faNetworkWired, faCircle } from '@fortawesome/free-solid-svg-icons';
-
-import { useInterval, useAppSelector, useAppDispatch } from '../../hooks';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import { logger } from '@/common/globals';
+import { useAppDispatch, useAppSelector, useInterval } from '../../hooks';
 import {
   Net,
-  netToURL,
   NetStatus,
+  netToURL,
+  selectValidatorNetworkState,
   setNet,
   setState,
-  selectValidatorNetworkState,
 } from './validatorNetworkState';
-
-const logger = window.electron.log;
 
 const validatorState = async (net: Net): Promise<NetStatus> => {
   let solConn: sol.Connection;
@@ -67,22 +61,21 @@ function ValidatorNetwork() {
   };
 
   let statusText = validator.status as string;
-  let statusClass = 'text-danger';
+  let statusClass = 'text-red-500';
   if (validator.status === NetStatus.Running) {
     statusText = 'Available';
-    statusClass = 'text-solgreen';
+    statusClass = 'text-green-500';
   }
   const statusDisplay = (
-    <span className="badge p-2">
-      <FontAwesomeIcon className={`me-1 ${statusClass}`} icon={faCircle} />
-      {statusText}
-    </span>
+    <>
+      <IconMdiCircle className={`mx-1 inline-block ${statusClass}`} />
+      <span className="mr-2">{statusText}</span>
+    </>
   );
 
   const netDropdownTitle = (
     <>
-      <FontAwesomeIcon className="me-1" icon={faNetworkWired} />{' '}
-      <span>{net}</span>
+      <IconMdiVectorTriangle className="inline-block" /> {net}
       {statusDisplay}
     </>
   );
@@ -90,10 +83,8 @@ function ValidatorNetwork() {
   return (
     <DropdownButton
       size="sm"
-      id="l-navbar-dropdown"
       title={netDropdownTitle}
       onSelect={netDropdownSelect}
-      className="ms-2 float-end"
       align="end"
     >
       <Dropdown.Item eventKey={Net.Localhost} href="#">

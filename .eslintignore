@@ -1,6 +1,11 @@
+src/renderer/auto-imports.d.ts
+
 # Logs
 logs
 *.log
+
+# built package
+release
 
 # Runtime data
 pids
@@ -15,12 +20,12 @@ coverage
 # https://www.npmjs.org/doc/misc/npm-faq.html#should-i-check-my-node_modules-folder-into-git
 node_modules
 
+
 # OSX
 .DS_Store
 
 release/app/dist
 release/build
-.erb/dll
 
 .idea
 npm-debug.log.*

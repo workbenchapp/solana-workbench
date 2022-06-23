@@ -1,0 +1,67 @@
+html, body, #root {
+  @apply bg-surface-500 w-full h-full;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-surface-400;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-surface-300;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface-300;
+}
+
+textarea, input {
+  @apply bg-surface-600 focus:outline-none focus:ring focus:ring-primary-light rounded-md focus:ring-2 ring-offset-2 ring-offset-surface-400 text-contrast p-2;
+  &.dense {
+    @apply p-1;
+  }
+}
+
+svg {
+  @apply align-text-bottom;
+}
+
+code {
+  @apply overflow-ellipsis text-xs bg-surface-300 p-1 rounded-lg border-surface-100 border-1 mr-2;
+}
+
+.btn {
+  @apply bg-primary-base p-1 text-contrast py-3 px-4 rounded-md cursor-pointer focus:outline outline-offset-2 outline-2 outline-primary-base;
+
+  &.btn-sm {
+    @apply text-xs py-2 px-3;
+  }
+}
+
+.gutter {
+  @apply bg-surface-200 transition duration-50 active:bg-surface-100;
+
+  &.gutter-horizontal {
+    cursor: col-resize;
+  }
+
+  &.gutter-vertical {
+    cursor: row-resize;
+  }
+}
+
+/* TODO: move away from bootstrap to have nicer custom buttons and reduce bloat */
+.popover-header {
+  @apply bg-surface-300;
+}
+
+.popover-body, .dropdown-menu {
+  @apply bg-surface-400 text-contrast;
+}
+
+.dropdown-item {
+  @apply text-contrast hover:bg-surface-500 hover:text-contrast;
+}

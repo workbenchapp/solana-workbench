@@ -1,33 +1,3 @@
-import PropTypes from 'prop-types';
-import isElectron from 'is-electron';
-import './App.scss';
-import * as sol from '@solana/web3.js';
-
-import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
-
-import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
-import Nav from 'react-bootstrap/Nav';
-import { Form, Button } from 'react-bootstrap';
-
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
-
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-
-import {
-  faBook,
-  faTh,
-  faAnchor,
-  faNetworkWired,
-} from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import { SizeProp } from '@fortawesome/fontawesome-svg-core';
-
-import { FC, useMemo, useState } from 'react';
-
 import {
   ConnectionProvider,
   WalletProvider,
@@ -37,31 +7,38 @@ import {
   WalletModalProvider,
   WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
-import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
-
-import Account from './nav/Account';
-import Anchor from './nav/Anchor';
-import Validator from './nav/Validator';
-import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
-
-import { useAppDispatch, useAppSelector } from './hooks';
-import {
-  useConfigState,
-  setConfigValue,
-  ConfigKey,
-} from './data/Config/configState';
+// Default styles that can be overridden by your app
+import '@solana/wallet-adapter-react-ui/styles.css';
+import * as sol from '@solana/web3.js';
+import isElectron from 'is-electron';
+import { FC, useMemo, useState } from 'react';
+import { Button, Form } from 'react-bootstrap';
+import Container from 'react-bootstrap/Container';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
+import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
+import { logger } from '@/common/globals';
+import 'react-toastify/dist/ReactToastify.css';
+import './App.scss';
+import { getElectronStorageWallet } from './data/accounts/account';
 import { useAccountsState } from './data/accounts/accountState';
+import {
+  ConfigKey,
+  setConfigValue,
+  useConfigState,
+} from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
-import { getElectronStorageWallet } from './data/accounts/account';
-
-// Default styles that can be overridden by your app
-require('@solana/wallet-adapter-react-ui/styles.css');
-
-const logger = window.electron.log;
+import { useAppDispatch, useAppSelector } from './hooks';
+import Account from './nav/Account';
+import Anchor from './nav/Anchor';
+import Validator from './nav/Validator';
+import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
+import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
 // So we can electron
 declare global {
@@ -73,140 +50,76 @@ declare global {
   }
 }
 
-function TooltipNavItem({
-  to = '/',
-  title = 'nav',
-  tooltipMessage = 'nav tooltip',
-  eventKey = 'default',
-  icon = faBook,
-  iconsize = '1x',
-}) {
+const TooltipNavItem: React.FC<{
+  to: string;
+  tooltipMessage: string;
+  eventKey: string;
+  children?: React.ReactNode;
+}> = ({ to, tooltipMessage, eventKey, children }) => {
   return (
     <OverlayTrigger
       key={`${eventKey}-right`}
       placement="right"
       overlay={<Tooltip id="tooltip-right">{tooltipMessage}</Tooltip>}
     >
-      <NavLink /* eventKey={eventKey} */ to={to} className="nav-link">
-        <FontAwesomeIcon size={iconsize as SizeProp} icon={icon} /> {title}
+      <NavLink /* eventKey={eventKey} */ to={to} className="block p-3">
+        {children}
       </NavLink>
     </OverlayTrigger>
   );
-} // TODO: work out how propTypes work with fontAwesome
-TooltipNavItem.propTypes = {
-  to: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-  tooltipMessage: PropTypes.string.isRequired,
-  eventKey: PropTypes.string.isRequired,
-  icon: PropTypes.element.isRequired, // instanceOf(IconDefinition).isRequired,
-  iconsize: PropTypes.string.isRequired,
 };
-// TODO: work out TooltipNavItem.defaults
 
-function Sidebar() {
+TooltipNavItem.defaultProps = {
+  tooltipMessage: 'placeholder',
+  to: '/',
+  children: <IconMdiClose />,
+  eventKey: 'placeholder',
+};
+
+function NavigationIcons() {
   return (
-    <Navbar className="l-navbar" bg="light" expand="sm">
-      <nav className="nav">
-        <TooltipNavItem
-          to="/"
-          title=""
-          tooltipMessage="Changes"
-          eventKey="changes"
-          icon={faTh}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/validator"
-          title=""
-          tooltipMessage="Validator"
-          eventKey="validator"
-          icon={faBook}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/anchor"
-          title=""
-          tooltipMessage="Anchor"
-          eventKey="anchor"
-          icon={faAnchor}
-          iconsize="2x"
-        />
-        <TooltipNavItem
-          to="/validatornetworkinfo"
-          title=""
-          tooltipMessage="Network Info"
-          eventKey="validatornetworkinfo"
-          icon={faNetworkWired}
-          iconsize="2x"
-        />
-      </nav>
-    </Navbar>
+    <>
+      <TooltipNavItem to="/" tooltipMessage="Changes" eventKey="changes">
+        <IconMdiTable className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem
+        to="/validator"
+        tooltipMessage="Validator"
+        eventKey="validator"
+      >
+        <IconMdiBookOpenOutline className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem to="/anchor" tooltipMessage="Anchor" eventKey="anchor">
+        <IconMdiAnchor className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem
+        to="/validatornetworkinfo"
+        tooltipMessage="Network Info"
+        eventKey="validatornetworkinfo"
+      >
+        <IconMdiVectorTriangle className="block" />
+      </TooltipNavItem>
+    </>
   );
 }
 
-function TopbarNavItems() {
-  if (isElectron()) {
-    return <></>;
-  }
+function Sidebar() {
   return (
-    <>
-      <TooltipNavItem
-        to="/"
-        title="Changes"
-        tooltipMessage="Changes"
-        eventKey="changes"
-        icon={faTh}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/validator"
-        title="Validator"
-        tooltipMessage="Validator"
-        eventKey="validator"
-        icon={faBook}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/anchor"
-        title="Anchor"
-        tooltipMessage="Anchor"
-        eventKey="anchor"
-        icon={faAnchor}
-        iconsize="xl"
-      />
-      <TooltipNavItem
-        to="/validatornetworkinfo"
-        title="Network Info"
-        tooltipMessage="Network Info"
-        eventKey="validatornetworkinfo"
-        icon={faNetworkWired}
-        iconsize="xl"
-      />{' '}
-    </>
+    <nav className="bg-surface-400">
+      <NavigationIcons />
+    </nav>
   );
 }
 
 function Topbar() {
   return (
-    <Navbar sticky="top" bg="primary" variant="dark" expand="sm">
-      <Container fluid>
-        <Navbar.Brand href="#">Solana Workbench</Navbar.Brand>
-        <Navbar.Toggle aria-controls="navbarScroll" />
-        <Navbar.Collapse id="navbarScroll">
-          <Nav
-            className="me-auto my-2 my-lg-0"
-            style={{ maxHeight: '100px' }}
-            navbarScroll
-          >
-            <TopbarNavItems />
-          </Nav>
-          <WalletMultiButton />
-          <Form className="d-flex">
-            <ValidatorNetwork />
-          </Form>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
+    <div className="flex items-center p-1 px-2 bg-surface-400">
+      <span>Solana Workbench</span>
+      <div className="flex-1" />
+      {isElectron() ? null : <NavigationIcons />}
+      <WalletMultiButton className="h-min" />
+      <ValidatorNetwork />
+    </div>
   );
 }
 
@@ -303,15 +216,19 @@ export const GlobalContainer: FC = () => {
     return <>Config Loading ...${accounts.loading}</>;
   }
   return (
-    <div className="vh-100">
+    <div className="w-full h-full">
       <ConnectionProvider endpoint={netToURL(net)}>
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>
-            <Topbar />
-            <Sidebar />
-            <Container fluid className="page-content mt-3">
-              <Outlet />
-            </Container>
+            <div className="flex flex-col h-full">
+              <Topbar />
+              <div className="flex flex-1 min-h-0">
+                <Sidebar />
+                <div className="flex-1 flex flex-col">
+                  <Outlet />
+                </div>
+              </div>
+            </div>
           </WalletModalProvider>
         </WalletProvider>
       </ConnectionProvider>
@@ -323,7 +240,7 @@ function App() {
   const config = useConfigState();
   const accounts = useAccountsState();
 
-  Object.assign(console, logger.functions);
+  Object.assign(console, logger?.functions);
 
   if (config.loading) {
     return <>Config Loading ...${accounts.loading}</>;
@@ -332,7 +249,7 @@ function App() {
     return <AnalyticsBanner />;
   }
   return (
-    <div className="vh-100">
+    <>
       <Routes>
         <Route path="/" element={<GlobalContainer />}>
           <Route index element={<Account />} />
@@ -345,8 +262,8 @@ function App() {
           />
         </Route>
       </Routes>
-      <ToastContainer />
-    </div>
+      <ToastContainer theme="dark" />
+    </>
   );
 }
 

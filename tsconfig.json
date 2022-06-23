@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
+    "typeRoots": ["node_modules/@types"],
     "target": "es2021",
     "module": "commonjs",
-    "lib": ["dom", "esnext"],
+    "lib": ["dom", "es2021"],
     "declaration": true,
     "declarationMap": true,
     "jsx": "react-jsx",
@@ -20,14 +21,11 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "outDir": "release/app/dist",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "@/*": ["src/*", "dist/*"]
+    },
+    "types": ["unplugin-icons/types/react"]
   },
-  "exclude": [
-    "test",
-    "node_modules",
-    "release/app/node_modules",
-    "release/build",
-    "release/app/dist",
-    ".erb/dll"
-  ]
+  "exclude": ["test", "release"]
 }

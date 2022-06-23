@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useEffect, useState } from 'react';
+import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { Row, Col } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
-
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
 
 function TransferSolPopover(props: { pubKey: string | undefined }) {
@@ -152,7 +151,9 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
       overlay={TransferSolPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success">Transfer SOL</Button>
+      <Button variant="success" size="sm">
+        Transfer SOL
+      </Button>
     </OverlayTrigger>
   );
 }

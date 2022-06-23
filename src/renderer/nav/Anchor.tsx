@@ -24,8 +24,8 @@ function Anchor() {
   }, []);
 
   return (
-    <div className="row">
-      <div className="row">
+    <div className="p-3">
+      <div>
         <div className="col-sm-5">
           <InputGroup size="sm" className="mb-2 mt-1">
             <InputGroup.Text>Program ID</InputGroup.Text>
@@ -43,13 +43,13 @@ function Anchor() {
         </div>
       </div>
       {idl?.error ? (
-        <div className="row">
+        <div>
           <small>{idl.error?.message}</small>
         </div>
       ) : (
         ''
       )}
-      <div className="row">
+      <div>
         {idl.instructions ? (
           idl.instructions.map((instruction: any) => {
             return (
@@ -57,7 +57,7 @@ function Anchor() {
                 <h6 className="card-title p-1">
                   <code>{instruction.name}</code>
                 </h6>
-                <div className="row">
+                <div>
                   <div className="col">
                     <ul className="list-group list-group-flush">
                       <li className="bg-light list-group-item">Args</li>

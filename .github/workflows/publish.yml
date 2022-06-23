@@ -23,7 +23,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install --legacy-peer-deps && (cd release/app && npm install)
+          npm install && (cd release/app && npm install)
 
       - name: Publish releases
         env:
@@ -36,5 +36,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           npm run postinstall
-          npm run build
-          npm exec electron-builder -- --publish always --win --mac --linux
+          npm run package
