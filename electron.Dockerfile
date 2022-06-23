@@ -8,6 +8,6 @@ ENV DEBUG electron-rebuild
 RUN rm -f /usr/bin/python && ln -s /usr/bin/python3 /usr/bin/python
 
 # Need Typescript, etc. for native extension build to work
-RUN npm install --legacy-peer-deps
-RUN (cd ./release/app npm install --legacy-peer-deps)
-RUN npm build 
+RUN npm install
+RUN (cd ./release/app npm install)
+RUN npm build

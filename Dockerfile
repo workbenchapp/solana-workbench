@@ -22,7 +22,7 @@ WORKDIR /app/
 COPY . .
 RUN rm -rf node_modules src/node_modules release/app/node_modules
 RUN source /root/.profile && source $HOME/.nvm/nvm.sh \
-    && npm install --legacy-peer-deps
+    && npm install
 
 # more DEBUG build info
 ENV DEBUG=electron-rebuild
