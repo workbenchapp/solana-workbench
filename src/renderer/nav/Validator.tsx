@@ -2,10 +2,11 @@
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useRef, useState } from 'react';
-import { Button, FormControl, InputGroup } from 'react-bootstrap';
+import { Button, FormControl, InputGroup, Alert } from 'react-bootstrap';
 import { debounce } from 'underscore';
 import {
   NetStatus,
+  Net,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
@@ -50,8 +51,12 @@ const Validator = () => {
   // TODO(nathanleclaire): Don't nest ternary
   return (
     <div className="p-3">
-      {!(validator.status === NetStatus.Running) &&
-      !(validator.status === NetStatus.Starting) ? (
+      {validator.net !== Net.Localhost ? (
+        <Alert variant="warning">
+          Cannot show validator container output from {validator.net}
+        </Alert>
+      ) : !(validator.status === NetStatus.Running) &&
+        !(validator.status === NetStatus.Starting) ? (
         <Button
           onClick={() => {
             window.electron.ipcRenderer.runValidator();
