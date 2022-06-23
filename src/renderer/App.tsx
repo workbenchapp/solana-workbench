@@ -52,11 +52,10 @@ declare global {
 
 const TooltipNavItem: React.FC<{
   to: string;
-  title: string;
   tooltipMessage: string;
   eventKey: string;
   children?: React.ReactNode;
-}> = ({ to, title, tooltipMessage, eventKey, children }) => {
+}> = ({ to, tooltipMessage, eventKey, children }) => {
   return (
     <OverlayTrigger
       key={`${eventKey}-right`}
@@ -64,42 +63,37 @@ const TooltipNavItem: React.FC<{
       overlay={<Tooltip id="tooltip-right">{tooltipMessage}</Tooltip>}
     >
       <NavLink /* eventKey={eventKey} */ to={to} className="block p-3">
-        {children} {title}
+        {children}
       </NavLink>
     </OverlayTrigger>
   );
 };
 
+TooltipNavItem.defaultProps = {
+  tooltipMessage: 'placeholder',
+  to: '/',
+  children: <IconMdiClose />,
+  eventKey: 'placeholder',
+};
+
 function NavigationIcons() {
   return (
     <>
-      <TooltipNavItem
-        to="/"
-        title=""
-        tooltipMessage="Changes"
-        eventKey="changes"
-      >
+      <TooltipNavItem to="/" tooltipMessage="Changes" eventKey="changes">
         <IconMdiTable className="block" />
       </TooltipNavItem>
       <TooltipNavItem
         to="/validator"
-        title=""
         tooltipMessage="Validator"
         eventKey="validator"
       >
         <IconMdiBookOpenOutline className="block" />
       </TooltipNavItem>
-      <TooltipNavItem
-        to="/anchor"
-        title=""
-        tooltipMessage="Anchor"
-        eventKey="anchor"
-      >
+      <TooltipNavItem to="/anchor" tooltipMessage="Anchor" eventKey="anchor">
         <IconMdiAnchor className="block" />
       </TooltipNavItem>
       <TooltipNavItem
         to="/validatornetworkinfo"
-        title=""
         tooltipMessage="Network Info"
         eventKey="validatornetworkinfo"
       >
