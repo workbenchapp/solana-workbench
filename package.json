@@ -2,7 +2,7 @@
   "name": "solana-workbench",
   "productName": "SolanaWorkbench",
   "description": "Solana workbench app for making development on Solana better",
-  "version": "0.0.1",
+  "version": "0.3.1",
   "main": "./release/dist/main/main.js",
   "scripts": {
     "start": "npm run dev",
@@ -110,8 +110,8 @@
     "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
   },
   "author": {
-    "name": "Electron React Boilerplate Maintainers",
-    "email": "nathan.leclaire@gmail.com",
+    "name": "Nathan LeClaire",
+    "email": "nathan@cryptoworkbench.io",
     "url": "https://github.com/workbenchapp/solana-workbench-releases"
   },
   "contributors": [],
