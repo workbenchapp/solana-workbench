@@ -1,16 +1,13 @@
-import { useState, useEffect } from 'react';
-
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
+import { useEffect, useState } from 'react';
+import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { Row, Col } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
-import { useAppSelector } from '../hooks';
-
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
-
 import { airdropSol } from '../data/accounts/account';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAppSelector } from '../hooks';
 
 function AirDropPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -98,7 +95,9 @@ function AirDropSolButton(props: { pubKey: string | undefined }) {
       overlay={AirDropPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success">Airdrop SOL</Button>
+      <Button variant="success" size="sm">
+        Airdrop SOL
+      </Button>
     </OverlayTrigger>
   );
 }

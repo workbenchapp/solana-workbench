@@ -1,10 +1,8 @@
 import * as sol from '@solana/web3.js';
+import { logger } from '@/common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
-
 import { AccountInfo } from './accountInfo';
 import { peekAccount, updateCache } from './getAccount';
-
-const logger = window.electron.log;
 
 export interface ProgramChangesState {
   changes: AccountInfo[];

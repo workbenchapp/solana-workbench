@@ -1,13 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { ConfigMap } from 'types/types';
 import { useEffect } from 'react';
+import { logger } from '@/common/globals';
+import { ConfigMap } from '../../../../release/dist/main/types/types';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
 // eslint-disable-next-line import/no-cycle
 import { RootState } from '../../store';
-
-const logger = window.electron.log;
 
 export enum ConfigKey {
   AnalyticsEnabled = 'analytics_enabled',
