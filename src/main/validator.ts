@@ -1,12 +1,11 @@
 import * as shell from 'shelljs';
+import Docker = require('dockerode');
+import { start } from 'repl';
 import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
-const DOCKER_IMAGE =
-  process.arch === 'arm64'
-    ? 'cryptoworkbench/solana:v1.9.20'
-    : 'solanalabs/solana:v1.9.20';
+const DOCKER_IMAGE = 'daonetes/solana-amman:v1.10.26';
 let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
@@ -37,31 +36,97 @@ const runValidator = async () => {
       throw new Error("Container exists, but isn't running.");
     }
   } catch (e) {
-    logger.error(e);
+    logger.error(`NO-CONTAINER: ${e}`);
     // TODO: check for image, pull if not present
-    await execAsync(
-      `${DOCKER_PATH} run \
-        --name solana-test-validator \
-        -d \
-        -v /test-ledger \
-        --init \
-        -p 8899:8899/tcp \
-        -p 8900:8900/tcp \
-        -p 9900:9900/tcp \
-        -p 10000:10000/tcp \
-        -p 10000-10020:10000-10020/udp \
-        --log-driver local \
-        --ulimit nofile=1000000 \
-        ${DOCKER_IMAGE} \
-        solana-test-validator \
-        --dynamic-port-range 10000-10020 \
-        --ledger test-ledger \
-        --no-bpf-jit \
-        --log`
-    );
-    return;
+    // await execAsync(
+    //   `${DOCKER_PATH} run \
+    //     --name solana-test-validator \
+    //     -d \
+    //     -v /test-ledger \
+    //     --init \
+    //     -p 8899:8899/tcp \
+    //     -p 8900:8900/tcp \
+    //     -p 9900:9900/tcp \
+    //     -p 10000:10000/tcp \
+    //     -p 10000-10020:10000-10020/udp \
+    //     --log-driver local \
+    //     --ulimit nofile=1000000 \
+    //     ${DOCKER_IMAGE} \
+    //     solana-test-validator \
+    //     --dynamic-port-range 10000-10020 \
+    //     --ledger test-ledger \
+    //     --no-bpf-jit \
+    //     --log`
+    // );
+    const dockerClient = new Docker();
+    dockerClient
+      .createContainer({
+        name: 'solana-test-validator',
+        Image: DOCKER_IMAGE,
+        AttachStdin: false,
+        AttachStdout: true,
+        AttachStderr: true,
+        Tty: true,
+        Entrypoint: 'tail',
+        Cmd: ['-f', '/etc/os-release'],
+        OpenStdin: false,
+        StdinOnce: false,
+        Labels: {
+          environment: 'blueWhale',
+        },
+        ExposedPorts: {
+          '8899/tcp': {},
+          '8900/tcp': {},
+        },
+        HostConfig: {
+          PortBindings: {
+            '8899/tcp': [
+              {
+                HostPort: '8899',
+              },
+            ],
+            '8900/tcp': [
+              {
+                HostPort: '8900',
+              },
+            ],
+          },
+        },
+      })
+      .then((container: Docker.Container) => {
+        console.log('container created');
+        return container;
+      })
+      .catch(console.log);
   }
-  await execAsync(`${DOCKER_PATH} start solana-test-validator`);
+  //  await execAsync(`${DOCKER_PATH} start solana-test-validator`);
+  const dockerClient = new Docker();
+
+  const container = dockerClient.getContainer('solana-test-validator');
+  container
+    .start({})
+    .then((startedContainer: Docker.Container) => {
+      console.log('container started');
+
+      container
+        .exec({
+          Cmd: ['bash', '-c', 'amman start'],
+          AttachStdin: false,
+          AttachStdout: false,
+        })
+        .then((e: Docker.Exec) => {
+          console.log('exec created');
+
+          return e.start({});
+        })
+        .then(() => {
+          console.log('execed');
+          return true;
+        })
+        .catch(console.log);
+      return startedContainer;
+    })
+    .catch(console.log);
 };
 
 const stopValidator = async () => {
