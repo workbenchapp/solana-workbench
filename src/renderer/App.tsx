@@ -18,6 +18,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import type { Program } from '@project-serum/anchor';
 import { logger } from '@/common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
@@ -47,6 +48,9 @@ declare global {
     electron?: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     promiseIpc?: any;
+    anchor: {
+      program: typeof Program;
+    };
   }
 }
 

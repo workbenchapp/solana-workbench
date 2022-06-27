@@ -1,7 +1,6 @@
 import * as sol from '@solana/web3.js';
 import hexdump from 'hexdump-nodejs';
 import { LRUCache } from 'typescript-lru-cache';
-import { Program } from '@project-serum/anchor';
 import { logger } from '@/common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
@@ -109,7 +108,8 @@ export const renderData = async (account: AccountInfo | undefined) => {
   }
 
   // await Program.at(AccountInfo.owner)).account.<my-account>.fetch("<address>"
-  console.log(await Program.at(account.programID));
+  console.log('we are fetching data');
+  // console.log(await window.anchor.program.at(account.programID));
 
   return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
 };

@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const log = require('electron-log');
 const promiseIpc = require('electron-promise-ipc');
+const { Program } = require('@project-serum/anchor');
 // TODO: make this a setting...
 log.transports.console.level = 'silly';
 log.transports.ipc.level = 'silly';
@@ -8,6 +9,10 @@ log.transports.ipc.level = 'silly';
 const send = (method, msg) => {
   ipcRenderer.send('main', method, msg);
 };
+
+contextBridge.exposeInMainWorld('anchor', {
+  program: Program,
+});
 
 contextBridge.exposeInMainWorld('electron', {
   log: log.functions,
