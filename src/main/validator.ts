@@ -1,11 +1,10 @@
 import * as shell from 'shelljs';
 import Docker = require('dockerode');
-import { start } from 'repl';
 import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
-const DOCKER_IMAGE = 'daonetes/solana-amman:v1.10.26';
+const DOCKER_IMAGE = 'cryptoworkbench/solana-amman:v1.11.1';
 let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
@@ -59,7 +58,22 @@ const runValidator = async () => {
     //     --log`
     // );
     const dockerClient = new Docker();
-    dockerClient
+    logger.error(`PULL: ${DOCKER_IMAGE}`);
+
+    await dockerClient
+      .pull(DOCKER_IMAGE)
+      .then((o) => {
+        console.log('image pulled');
+        return o;
+      })
+      .catch((e) => {
+        console.log(`catch ${e}`);
+        throw e;
+      });
+
+    logger.error(`create: solana-test-validator`);
+
+    await dockerClient
       .createContainer({
         name: 'solana-test-validator',
         Image: DOCKER_IMAGE,
@@ -103,6 +117,8 @@ const runValidator = async () => {
   const dockerClient = new Docker();
 
   const container = dockerClient.getContainer('solana-test-validator');
+  logger.error(`start: solana-test-validator`);
+
   container
     .start({})
     .then((startedContainer: Docker.Container) => {
