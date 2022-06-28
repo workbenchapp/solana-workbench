@@ -66,9 +66,9 @@ const runValidator = async () => {
         console.log('image pulled');
         return o;
       })
-      .catch((e) => {
-        console.log(`catch ${e}`);
-        throw e;
+      .catch((e2) => {
+        console.log(`catch ${e2}`);
+        throw e2;
       });
 
     logger.error(`create: solana-test-validator`);
