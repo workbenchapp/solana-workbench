@@ -7,6 +7,7 @@ import fetchAnchorIdl from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
 import { initConfigPromises } from './ipc/config';
+import { initDockerPromises } from './ipc/docker';
 import { initLogging, logger } from './logger';
 import MenuBuilder from './menu';
 import {
@@ -29,6 +30,7 @@ const MAX_STRING_LOG_LENGTH = 32;
 
 initConfigPromises();
 initAccountPromises();
+initDockerPromises();
 
 ipcMain.on(
   'main',

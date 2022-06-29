@@ -4,13 +4,13 @@ import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
-const DOCKER_IMAGE = 'cryptoworkbench/solana-amman:v1.11.1';
+// const DOCKER_IMAGE = 'cryptoworkbench/solana-amman:v1.11.1';
 let DOCKER_PATH = 'docker';
 if (process.platform === 'darwin') {
   DOCKER_PATH = '/usr/local/bin/docker';
 }
 
-const runValidator = async () => {
+const runValidator = async (validatorImage: string) => {
   if (!shell.which(DOCKER_PATH)) {
     logger.info('Docker executable not found.');
     return;
@@ -58,10 +58,10 @@ const runValidator = async () => {
     //     --log`
     // );
     const dockerClient = new Docker();
-    logger.error(`PULL: ${DOCKER_IMAGE}`);
+    logger.error(`PULL: ${validatorImageTag}`);
 
     await dockerClient
-      .pull(DOCKER_IMAGE)
+      .pull(validatorImageTag)
       .then((o) => {
         console.log('image pulled');
         return o;
@@ -76,7 +76,7 @@ const runValidator = async () => {
     await dockerClient
       .createContainer({
         name: 'solana-test-validator',
-        Image: DOCKER_IMAGE,
+        Image: validatorImageTag,
         AttachStdin: false,
         AttachStdout: true,
         AttachStderr: true,
@@ -135,8 +135,8 @@ const runValidator = async () => {
 
           return e.start({});
         })
-        .then(() => {
-          console.log('execed');
+        .then((output) => {
+          console.log(`execed: ${JSON.stringify(output)}`);
           return true;
         })
         .catch(console.log);
