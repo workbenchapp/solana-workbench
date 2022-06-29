@@ -9,11 +9,16 @@ const send = (method, msg) => {
   ipcRenderer.send('main', method, msg);
 };
 
+const invoke = (method, msg) => ipcRenderer.invoke('main', method, msg);
+
 contextBridge.exposeInMainWorld('electron', {
   log: log.functions,
   ipcRenderer: {
     runValidator() {
       send('run-validator', {});
+    },
+    stopValidator() {
+      send('stop-validator', {});
     },
     validatorState(msg) {
       send('validator-state', msg);
@@ -35,6 +40,9 @@ contextBridge.exposeInMainWorld('electron', {
     },
     removeAllListeners(channel) {
       ipcRenderer.removeAllListeners(channel);
+    },
+    fetchDockerState() {
+      return invoke('fetch-docker-state', {});
     },
   },
 });

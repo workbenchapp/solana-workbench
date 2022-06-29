@@ -71,6 +71,15 @@ const Validator = () => {
         </div>
       ) : (
         <>
+          <Button
+            onClick={() => {
+              window.electron.ipcRenderer.stopValidator();
+            }}
+            className="mt-2 mb-4"
+            variant="dark"
+          >
+            Stop
+          </Button>
           <InputGroup size="sm">
             <FormControl
               ref={filterRef}
@@ -86,11 +95,11 @@ const Validator = () => {
               }, 300)}
             />
           </InputGroup>
+          <pre className="mt-2 pre-scrollable">
+            <code>{validatorLogs}</code>
+          </pre>
         </>
       )}
-      <pre className="mt-2 pre-scrollable">
-        <code>{validatorLogs}</code>
-      </pre>
     </div>
   );
 };

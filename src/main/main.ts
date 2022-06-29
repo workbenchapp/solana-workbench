@@ -7,7 +7,8 @@ import log from 'electron-log';
 import MenuBuilder from './menu';
 import { resolveHtmlPath } from './util';
 import { logger, initLogging } from './logger';
-import { runValidator, validatorLogs } from './validator';
+import { runValidator, stopValidator, validatorLogs } from './validator';
+import { checkDockerState } from './docker';
 import { initConfigPromises } from './ipc/config';
 import { initAccountPromises } from './ipc/accounts';
 import fetchAnchorIdl from './anchor';
@@ -43,6 +44,9 @@ ipcMain.on(
         case 'run-validator':
           await runValidator();
           break;
+        case 'stop-validator':
+          await stopValidator();
+          break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
@@ -74,6 +78,32 @@ ipcMain.on(
       logger.error('Stacktrace:');
       stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
       event.reply('main', { method, error });
+    }
+  }
+);
+
+ipcMain.handle(
+  'main',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line consistent-return
+  (_event: Electron.IpcMainInvokeEvent, method: string, ...args: any[]) => {
+    logger.info('IPC event', { ...args });
+    try {
+      switch (method) {
+        case 'fetch-docker-state':
+          return checkDockerState();
+        default:
+      }
+    } catch (e) {
+      const error = e as Error;
+      const { stack } = error;
+      logger.error('ERROR', {
+        method,
+        name: error.name,
+      });
+      logger.error('Stacktrace:');
+      stack?.split('\n').forEach((line) => logger.error(`\t${line}`));
+      return { method, error };
     }
   }
 );

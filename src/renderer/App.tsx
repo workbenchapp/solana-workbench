@@ -3,6 +3,7 @@ import isElectron from 'is-electron';
 import './App.scss';
 import * as sol from '@solana/web3.js';
 
+import { useEffect } from 'react';
 import { Routes, Route, NavLink, Outlet } from 'react-router-dom';
 
 import Container from 'react-bootstrap/Container';
