@@ -1,11 +1,12 @@
-import { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
-import { useAppSelector } from '../hooks';
+import { useEffect, useState } from 'react';
+import { logger } from '@/common/globals';
 import {
   NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { useAppSelector } from '../hooks';
 
 export interface LogSubscriptionMap {
   [net: string]: {
@@ -13,7 +14,6 @@ export interface LogSubscriptionMap {
     solConn: sol.Connection;
   };
 }
-const logger = window.electron.log;
 
 // TODO: make this selectable - Return information at the selected commitment level
 //      [possible values: processed, confirmed, finalized]
@@ -73,17 +73,11 @@ function LogView() {
   }, [net, status]);
 
   return (
-    <div>
-      <textarea
-        readOnly
-        className="vscroll almost-vh-100 w-100"
-        value={
-          logs.length > 0
-            ? logs.join('\n')
-            : 'Logs will appear here once transactions are processed.'
-        }
-      />
-    </div>
+    <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
+      {logs.length > 0
+        ? logs.join('\n')
+        : 'Logs will appear here once transactions are processed.'}
+    </pre>
   );
 }
 

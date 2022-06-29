@@ -1,5 +1,5 @@
 import * as shell from 'shelljs';
-import { Net, ValidatorLogsRequest } from '../types/types';
+import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 import { checkDockerState, DockerStatus, DOCKER_PATH } from './docker';
@@ -84,13 +84,9 @@ const stopValidator = async () => {
 };
 
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
-  const { filter, net } = msg;
+  const { filter } = msg;
   const MAX_TAIL_LINES = 10000;
   const MAX_DISPLAY_LINES = 30;
-
-  if (net !== Net.Localhost) {
-    return `Cannot show validator container output from ${net}`;
-  }
 
   // TODO: doing this out of process might be a better fit
   const maxBuffer = 104857600; // 100MB

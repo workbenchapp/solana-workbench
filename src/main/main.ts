@@ -1,23 +1,21 @@
-import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { app, BrowserWindow, ipcMain, shell } from 'electron';
 import log from 'electron-log';
-import MenuBuilder from './menu';
-import { resolveHtmlPath } from './util';
-import { logger, initLogging } from './logger';
-import { runValidator, stopValidator, validatorLogs } from './validator';
-import { checkDockerState } from './docker';
-import { initConfigPromises } from './ipc/config';
-import { initAccountPromises } from './ipc/accounts';
+import { autoUpdater } from 'electron-updater';
+import path from 'path';
+import 'regenerator-runtime/runtime';
 import fetchAnchorIdl from './anchor';
-
+import { RESOURCES_PATH } from './const';
+import { initAccountPromises } from './ipc/accounts';
+import { initConfigPromises } from './ipc/config';
+import { initLogging, logger } from './logger';
+import MenuBuilder from './menu';
 import {
   subscribeTransactionLogs,
   unsubscribeTransactionLogs,
 } from './transactionLogs';
-import { RESOURCES_PATH } from './const';
+import { resolveHtmlPath } from './util';
+import { runValidator, stopValidator, validatorLogs } from './validator';
+import { checkDockerState } from './docker';
 
 export default class AppUpdater {
   constructor() {

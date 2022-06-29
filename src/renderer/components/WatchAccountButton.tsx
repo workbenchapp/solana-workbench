@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
-
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Popover from 'react-bootstrap/Popover';
+import { useEffect, useState } from 'react';
+import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import { Row, Col } from 'react-bootstrap';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Popover from 'react-bootstrap/Popover';
 
 function WatchAcountPopover(props: {
   pinAccount: (pk: string, b: boolean) => void;
@@ -72,7 +71,9 @@ function WatchAccountButton(props: {
       overlay={WatchAcountPopover({ pinAccount })}
       rootClose
     >
-      <Button variant="success">Watch</Button>
+      <Button variant="success" size="sm">
+        Watch
+      </Button>
     </OverlayTrigger>
   );
 }

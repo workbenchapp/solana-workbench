@@ -1,0 +1,19 @@
+html {
+  --surface-600: 1, 4, 9;
+  --surface-500: 8, 12, 20;
+  --surface-400: 15, 19, 25;
+  --surface-300: 24, 29, 37;
+  --surface-200: 35, 41, 49;
+  --surface-100: 42, 48, 56;
+  --contrast: 255, 255, 255;
+
+  --primary-base: 131, 69, 255;
+  --primary-light: 172, 133, 255;
+  --primary-dark: 86, 3, 252;
+
+  --secondary-base: 230, 0, 255;
+  --secondary-light: 238, 84, 255;
+  --secondary-dark: 23, 127, 179;
+
+  color: white;
+}

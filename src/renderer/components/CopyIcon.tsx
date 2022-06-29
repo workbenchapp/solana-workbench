@@ -1,5 +1,3 @@
-import { faCopy } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
@@ -36,9 +34,9 @@ function CopyIcon(props: { writeValue: string }) {
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           _
         ) => window.setTimeout(() => setCopyTooltipText('Copy'), 500)}
-        className="icon-interactive ms-1"
+        className="icon-interactive p-2 hover:bg-contrast/10 rounded-full inline-flex items-center justify-center cursor-pointer"
       >
-        <FontAwesomeIcon className="cursor-pointer" icon={faCopy} />
+        <IconMdiContentCopy />
       </span>
     </OverlayTrigger>
   );

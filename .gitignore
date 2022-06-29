@@ -1,3 +1,6 @@
+# Files built during compilation
+release
+
 # Logs
 logs
 *.log
@@ -20,7 +23,6 @@ node_modules
 
 release/app/dist
 release/build
-.erb/dll
 
 .idea
 npm-debug.log.*

@@ -22,12 +22,11 @@ jobs:
       - name: Install intial npm deps
         run: |
           npm install -g npm@latest
-          npm install --legacy-peer-deps || exit 0
+          npm install || exit 0
 
       - name: Install native modules
         run: |
-          cd ./release/app
-          DEBUG=electron-rebuild npm install --legacy-peer-deps
+          DEBUG=electron-rebuild npm install
 
       - name: Run tests
         env:
@@ -35,4 +34,3 @@ jobs:
         run: |
           npm run package
           npm run lint
-          npm exec tsc

@@ -1,8 +1,0 @@
-{
-  "rules": {
-    "global-require": "off",
-    "import/no-dynamic-require": "off",
-    "import/no-extraneous-dependencies": "off",
-    "react/jsx-props-no-spreading": "off"
-  }
-}

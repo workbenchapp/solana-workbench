@@ -1,17 +1,14 @@
-import { useEffect, useState } from 'react';
-import Container from 'react-bootstrap/Container';
-import { Row, Col } from 'react-bootstrap';
-import { VictoryPie } from 'victory';
-
 import * as sol from '@solana/web3.js';
-
-import { useAppSelector } from '../hooks';
+import { useEffect, useState } from 'react';
+import { Col, Row } from 'react-bootstrap';
+import Container from 'react-bootstrap/Container';
+import { VictoryPie } from 'victory';
+import { logger } from '@/common/globals';
 import {
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-
-const logger = window.electron.log;
+import { useAppSelector } from '../hooks';
 
 interface VersionCount {
   [key: string]: number;
@@ -84,7 +81,7 @@ function ValidatorNetworkInfo() {
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status
   return (
-    <Container fluid>
+    <Container fluid className="p-3">
       <Row>
         <Col>
           Current Network:

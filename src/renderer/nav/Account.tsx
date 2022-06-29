@@ -1,11 +1,9 @@
-import { Col, Row } from 'react-bootstrap';
-
 import Split from 'react-split';
 import AccountView from '../components/AccountView';
-import ProgramChangeView from '../components/ProgramChangeView';
 import LogView from '../components/LogView';
-import { useAppSelector } from '../hooks';
+import ProgramChangeView from '../components/ProgramChangeView';
 import { selectAccountsListState } from '../data/SelectedAccountsList/selectedAccountsState';
+import { useAppSelector } from '../hooks';
 
 function Account() {
   const accounts = useAppSelector(selectAccountsListState);
@@ -13,32 +11,30 @@ function Account() {
 
   return (
     <Split
-      className="almost-vh-100 v-stack"
+      sizes={[75, 25]}
       direction="vertical"
-      sizes={[80, 20]}
+      className="flex-1 min-h-0"
+      gutterSize={5}
     >
-      <Split className="d-flex almost-vh-80 row" sizes={[50, 48]}>
-        <Col className="col-md-6 almost-vh-100 vscroll">
-          <ProgramChangeView />
-        </Col>
-        <Col className="border-left col-md-6 almost-vh-100 vscroll">
-          <Split
-            className="almost-vh-100 v-stack vstack"
-            direction="vertical"
-            sizes={[80, 20]}
-          >
-            <Row className="flex-fill">
-              <AccountView pubKey={selectedAccount} />
-            </Row>
-            <Row className="border-top flex-fill bg-light">
+      <Split
+        sizes={[75, 25]}
+        direction="horizontal"
+        className="flex-1 w-full flex"
+        gutterSize={5}
+      >
+        <ProgramChangeView />
+        <div className="overflow-auto">
+          <div className="flex-1 p-3">
+            <AccountView pubKey={selectedAccount} />
+            <div className="border-top flex-fill">
               transaction or program details
-            </Row>
-          </Split>
-        </Col>
+            </div>
+          </div>
+        </div>
       </Split>
-      <Row className="border-top almost-vh-20">
+      <div className="overflow-auto">
         <LogView />
-      </Row>
+      </div>
     </Split>
   );
 }

@@ -12,9 +12,7 @@ If you already have Node on your system (we recommend version 17), you can
 install the Node deps like so:
 
 ```
-$ npm install --legacy-peer-deps && \
-    (cd ./release/app/ && npm install --legacy-peer-deps) && \
-    npm install --legacy-peer-deps
+$ npm install
 ```
 
 In order to use Anchor functionality, the `anchor` CLI must be
@@ -76,9 +74,7 @@ without anchor tooling for now
 - Node (latest version): `nvm install 16.15.0`
 - as Administrator `nvm use 16.15.0`
 - Yarn: `corepack enable`
-- `npm install --legacy-peer-deps`
-- `cd ./release/app/`
-- `npm install --legacy-peer-deps`
+- `npm install`
 - Docker Desktop, or a working configured Docker setup
 
 
@@ -87,10 +83,15 @@ without anchor tooling for now
 to run:
 
 ```
-$ npm run start
+$ npm run dev
 ```
 
 Now you're working with Workbench!
+
+## Development
+
+The project is currently in a migratory phase from Bootstrap to Tailwind. Do not write new code using Bootstrap layouting. Instead, opt for using Tailwind's
+atomic CSS system instead. The goal is to eventually be able to fully remove bootstrap from the codebase.
 
 ## building a release
 
@@ -99,11 +100,7 @@ On each platform (OSX, Windows, Linux), run:
 ```
 git clone https://github.com/workbenchapp/solana-workbench new-release-dir
 cd new-release-dir
-npm install --legacy-peer-deps
-cd ./release/app/
-npm install --legacy-peer-deps
-cd ../..
-npm install --legacy-peer-deps
+npm install
 npm run package
 ```
 

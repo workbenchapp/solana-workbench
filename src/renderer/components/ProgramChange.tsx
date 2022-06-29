@@ -1,13 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
-import { faStar, faKey } from '@fortawesome/free-solid-svg-icons';
-import * as faRegular from '@fortawesome/free-regular-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { setSelected } from 'renderer/data/SelectedAccountsList/selectedAccountsState';
-import { useAppDispatch, useInterval, useAppSelector } from '../hooks';
-
-import InlinePK from './InlinePK';
-
+import { useCallback, useEffect, useState } from 'react';
+import { logger } from '@/common/globals';
+import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import { AccountInfo } from '../data/accounts/accountInfo';
+import { useAccountMeta } from '../data/accounts/accountState';
 import {
   getAccount,
   truncateLamportAmount,
@@ -18,9 +13,8 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { useAccountMeta } from '../data/accounts/accountState';
-
-const logger = window.electron.log;
+import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
+import InlinePK from './InlinePK';
 
 export function ProgramChange(props: {
   net: Net;
@@ -70,20 +64,23 @@ export function ProgramChange(props: {
   return (
     <tr
       onClick={() => dispatch(setSelected(pubKey))}
-      className={selected ? 'bg-lightblue' : ''}
+      className={`transition duration-50 bg-opacity-20 hover:bg-opacity-30 hover:bg-primary-light ${
+        selected ? 'bg-primary-light' : ''
+      }`}
     >
-      <td onClick={() => pinAccount(pubKey, pinned)}>
+      <td onClick={() => pinAccount(pubKey, pinned)} align="center">
         <span className="icon icon-interactive">
-          <FontAwesomeIcon icon={pinned ? faStar : faRegular.faStar} />
+          {pinned ? <IconMdiStar /> : <IconMdiStarOutline />}
         </span>
       </td>
       <td>
-        <InlinePK pk={pubKey} />
-        {accountMeta?.privatekey ? (
-          <FontAwesomeIcon title="has private key" icon={faKey} />
-        ) : (
-          ''
-        )}
+        <InlinePK
+          className="inline-flex items-center mr-2"
+          format
+          formatLength={12}
+          pk={pubKey}
+        />
+        {accountMeta?.privatekey ? <IconMdiKey className="inline-block" /> : ''}
       </td>
       <td>
         <span className="ms-2 rounded p-1">
