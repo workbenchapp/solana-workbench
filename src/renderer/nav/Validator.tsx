@@ -1,6 +1,6 @@
 /* eslint-disable no-nested-ternary */
-import { faSpinner } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { toast } from 'react-toastify';
+
 import { useEffect, useRef, useState } from 'react';
 import {
   Button,
@@ -19,6 +19,14 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '@/common/globals';
+
+const ipcDockerToast = (dockerIPCMethod: string) => {
+  return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
+    pending: `${dockerIPCMethod} submitted`,
+    success: `${dockerIPCMethod} succeeded 👌`,
+    error: `${dockerIPCMethod} failed 🤯`,
+  });
+};
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -160,17 +168,7 @@ const Validator = () => {
               containerInspect?.State?.Running || validatorImageTag === ''
             }
             onClick={() => {
-              logger.info(`calling ${JSON.stringify(validatorImageTag)}`);
-
-              // window.electron.ipcRenderer.runValidator(validatorImageTag);
-              window.promiseIpc
-                .send('DOCKER-StartValidatorContainer', validatorImageTag)
-                .then((info: any) => {
-                  // setValidatorImageTags(tags);
-                  logger.info(`hooray ${JSON.stringify(info)}`);
-                  return info;
-                })
-                .catch(logger.error);
+              ipcDockerToast('StartValidatorContainer');
             }}
             className="mt-2 mb-4"
             variant="dark"
@@ -181,17 +179,7 @@ const Validator = () => {
             size="sm"
             disabled={!containerInspect?.State?.Running}
             onClick={() => {
-              logger.info(`calling ${JSON.stringify(validatorImageTag)}`);
-
-              // window.electron.ipcRenderer.runValidator(validatorImageTag);
-              window.promiseIpc
-                .send('DOCKER-StartAmmanValidator', validatorImageTag)
-                .then((info: any) => {
-                  // setValidatorImageTags(tags);
-                  logger.info(`hooray ${JSON.stringify(info)}`);
-                  return info;
-                })
-                .catch(logger.error);
+              ipcDockerToast('StartAmmanValidator');
             }}
             className="mt-2 mb-4"
             variant="dark"
@@ -202,17 +190,7 @@ const Validator = () => {
             size="sm"
             disabled={!containerInspect?.State?.Running}
             onClick={() => {
-              logger.info(`calling ${JSON.stringify(validatorImageTag)}`);
-
-              // window.electron.ipcRenderer.runValidator(validatorImageTag);
-              window.promiseIpc
-                .send('DOCKER-StopAmmanValidator', validatorImageTag)
-                .then((info: any) => {
-                  // setValidatorImageTags(tags);
-                  logger.info(`hooray ${JSON.stringify(info)}`);
-                  return info;
-                })
-                .catch(logger.error);
+              ipcDockerToast('StopAmmanValidator');
             }}
             className="mt-2 mb-4"
             variant="dark"
@@ -223,12 +201,23 @@ const Validator = () => {
             size="sm"
             disabled={!containerInspect?.State?.Running}
             onClick={() => {
-              window.electron.ipcRenderer.stopValidator();
+              ipcDockerToast('StopValidatorContainer');
             }}
             className="mt-2 mb-4"
             variant="dark"
           >
             Stop Container
+          </Button>
+          <Button
+            size="sm"
+            disabled={!containerInspect?.State}
+            onClick={() => {
+              ipcDockerToast('RemoveValidatorContainer');
+            }}
+            className="mt-2 mb-4"
+            variant="dark"
+          >
+            Remove Container
           </Button>
         </div>
       </ButtonToolbar>

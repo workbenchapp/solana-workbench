@@ -262,7 +262,7 @@ function App() {
           />
         </Route>
       </Routes>
-      <ToastContainer theme="dark" />
+      <ToastContainer position="bottom-right" theme="dark" />
     </>
   );
 }

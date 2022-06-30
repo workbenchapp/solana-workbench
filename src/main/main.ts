@@ -15,7 +15,7 @@ import {
   unsubscribeTransactionLogs,
 } from './transactionLogs';
 import { resolveHtmlPath } from './util';
-import { runValidator, stopValidator, validatorLogs } from './validator';
+import { validatorLogs } from './validator';
 
 export default class AppUpdater {
   constructor() {
@@ -40,12 +40,6 @@ ipcMain.on(
     let res = {};
     try {
       switch (method) {
-        case 'run-validator':
-          await runValidator();
-          break;
-        case 'stop-validator':
-          await stopValidator();
-          break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;

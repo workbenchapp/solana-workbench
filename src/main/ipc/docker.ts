@@ -97,6 +97,49 @@ export function initDockerPromises() {
   );
 
   promiseIpc.on(
+    'DOCKER-StopValidatorContainer',
+    (image: unknown, event?: IpcEvent | undefined) => {
+      logger.info(
+        `main: called DOCKER-StopValidatorContainer, ${image}, ${event}`
+      );
+
+      const dockerClient = new Docker();
+      const container = dockerClient.getContainer('solana-test-validator');
+      logger.error(`stop: solana-test-validator`);
+
+      return container
+        .stop()
+        .then(() => {
+          logger.info('exec started ');
+          return container.wait();
+        })
+        .then(() => {
+          logger.info('container stopped ');
+          return 'OK';
+        });
+    }
+  );
+
+  promiseIpc.on(
+    'DOCKER-RemoveValidatorContainer',
+    (image: unknown, event?: IpcEvent | undefined) => {
+      logger.info(
+        `main: called DOCKER-RemoveValidatorContainer, ${image}, ${event}`
+      );
+
+      const dockerClient = new Docker();
+      const container = dockerClient.getContainer('solana-test-validator');
+      logger.error(`stop: solana-test-validator`);
+
+      // TODO: should we be force removing?
+      return container.remove().then(() => {
+        logger.info('container removed ');
+        return 'OK';
+      });
+    }
+  );
+
+  promiseIpc.on(
     'DOCKER-StartAmmanValidator',
     (image: unknown, event?: IpcEvent | undefined) => {
       logger.info(
@@ -123,9 +166,10 @@ export function initDockerPromises() {
             Tty: true,
           });
         })
-        .then((output) => {
-          console.log(`execed: ${JSON.stringify(output)}`);
-          return output;
+        .then(() => {
+          console.log(`execed`);
+          // TODO: can we wait til we detect the validator has started, or failed to start?
+          return 'OK';
         });
     }
   );
@@ -155,9 +199,10 @@ export function initDockerPromises() {
             Tty: true,
           });
         })
-        .then((output) => {
-          console.log(`execed: ${JSON.stringify(output)}`);
-          return output;
+        .then(() => {
+          logger.info('exec started ');
+          // TODO: wait tile the validator has stopped..
+          return 'OK';
         });
     }
   );
