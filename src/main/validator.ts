@@ -1,4 +1,3 @@
-import { writeFile } from 'fs';
 import * as shell from 'shelljs';
 import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
