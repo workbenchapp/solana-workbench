@@ -1,13 +1,12 @@
+import { writeFile } from 'fs';
 import * as shell from 'shelljs';
 import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
 
 // const DOCKER_IMAGE = 'cryptoworkbench/solana-amman:v1.11.1';
-let DOCKER_PATH = 'docker';
-if (process.platform === 'darwin') {
-  DOCKER_PATH = '/usr/local/bin/docker';
-}
+const DOCKER_PATH =
+  process.platform === 'darwin' ? '/usr/local/bin/docker' : 'docker';
 
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const { filter } = msg;
@@ -52,4 +51,4 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return '';
 };
 
-export { validatorLogs };
+export { DOCKER_PATH, validatorLogs };

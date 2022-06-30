@@ -1,10 +1,100 @@
 import promiseIpc from 'electron-promise-ipc';
 import { IpcMainEvent, IpcRendererEvent } from 'electron';
+import { writeFile } from 'fs';
 import Docker = require('dockerode');
+import * as shell from 'shelljs';
+
+import { execAsync } from '../const';
 
 import { logger } from '../logger';
+import { DOCKER_PATH } from '../validator';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
+
+const ammanrc = {
+  validator: {
+    // By default Amman will pull the account data from the accountsCluster (can be overridden on a per account basis)
+    accountsCluster: 'https://api.metaplex.solana.com',
+    accounts: [
+      {
+        label: 'Token Metadata Program',
+        accountId: 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+        // marking executable as true will cause Amman to pull the executable data account as well automatically
+        executable: true,
+      },
+      {
+        label: 'Svens debug account',
+        accountId: 'SvencSSSMANWBYyqFhMur1r7a3N6WAA1TEQNSEcRBnz',
+      },
+      {
+        label: 'Random other account',
+        accountId: '4VLgNs1jXgdciSidxcaLKfrR9WjATkj6vmTm5yCwNwui',
+        // By default executable is false and is not required to be in the config
+        // executable: false,
+
+        // Providing a cluster here will override the accountsCluster field
+        cluster: 'https://metaplex.devnet.rpcpool.com',
+      },
+    ],
+    killRunningValidators: true,
+    jsonRpcUrl: 'http://0.0.0.0:8899',
+    websocketUrl: '',
+    commitment: 'confirmed',
+    // ledgerDir: tmpLedgerDir(),
+    resetLedger: true,
+    verifyFees: false,
+    detached: true,
+  },
+  relay: {
+    enabled: true,
+    killlRunningRelay: true,
+  },
+  storage: {
+    enabled: false,
+    storageId: 'mock-storage',
+    clearOnStart: true,
+  },
+};
+
+export type CopyFileRequest = {
+  filename: string;
+  destination: string;
+  content: string;
+};
+const copyDockerFile = async (msg: CopyFileRequest) => {
+  const { filename, destination, content } = msg;
+  logger.info(`try writing to ${filename}`);
+
+  if (!shell.which(DOCKER_PATH)) {
+    logger.info(`Docker executable not found. ${DOCKER_PATH}`);
+
+    return 'Docker executable not found.';
+  }
+
+  // TODO: and now test if there's a Docker daemon up
+
+  try {
+    logger.info(`writing to ${filename}`);
+    writeFile(filename, content, (err) => {
+      if (err) {
+        logger.error(err);
+        throw err;
+      }
+    });
+    const { stderr } = await execAsync(
+      `${DOCKER_PATH} cp ${filename} solana-test-validator:${destination}/${filename}`,
+      {}
+    );
+    logger.info(`ok wrote to ${filename}: ${stderr}`);
+
+    return stderr;
+  } catch (error) {
+    logger.error('catch', error as string);
+    return error as string;
+  }
+
+  return '';
+};
 
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
@@ -145,6 +235,12 @@ export function initDockerPromises() {
       logger.info(
         `main: called DOCKER-StartAmmanValidator, ${image}, ${event}`
       );
+
+      copyDockerFile({
+        filename: '.ammanrc.js',
+        content: `module.exports = ${JSON.stringify(ammanrc)}`,
+        destination: '/test-ledger',
+      });
 
       const dockerClient = new Docker();
       const container = dockerClient.getContainer('solana-test-validator');

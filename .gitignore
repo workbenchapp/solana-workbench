@@ -1,6 +1,9 @@
 # Files built during compilation
 release
 
+# ammanrc.js written by start amman validator
+.ammanrc.js
+
 # Logs
 logs
 *.log
