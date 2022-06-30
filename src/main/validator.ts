@@ -1,5 +1,4 @@
 import * as shell from 'shelljs';
-import Docker = require('dockerode');
 import { ValidatorLogsRequest } from '../types/types';
 import { execAsync } from './const';
 import { logger } from './logger';
@@ -53,4 +52,4 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return '';
 };
 
-export { runValidator, validatorLogs };
+export { validatorLogs };

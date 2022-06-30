@@ -42,7 +42,7 @@ export function initDockerPromises() {
         return dockerClient
           .createContainer({
             name: 'solana-test-validator',
-            Image: image,
+            Image: image as string,
             AttachStdin: false,
             AttachStdout: true,
             AttachStderr: true,
