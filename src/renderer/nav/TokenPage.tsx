@@ -20,8 +20,11 @@ import { useAppSelector } from '../hooks';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { MintInfoView } from '../components/MintInfoView';
+import CreateNewMintButton, {
+  ensureAtaFor,
+} from '@/components/tokens/CreateNewMintButton';
 
-const logger = window.electron.log;
+import { logger } from '@/common/globals';
 
 function TokenPage() {
   const fromKey = useWallet();
@@ -85,80 +88,6 @@ function TokenPage() {
   }
   const myWallet = publicKey;
 
-  async function ensureAtaFor(
-    newMint: sol.PublicKey,
-    ATAFor: sol.PublicKey
-  ): Promise<sol.PublicKey | undefined> {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return undefined;
-    }
-
-    // Get the token account of the fromWallet Solana address. If it does not exist, create it.
-    logger.info('getOrCreateAssociatedTokenAccount', newMint.toString());
-
-    try {
-      const fromTokenAccount =
-        await walletWeb3.getOrCreateAssociatedTokenAccount(
-          connection,
-          fromKey,
-          newMint,
-          ATAFor
-        );
-      // updateFunderATA(fromTokenAccount.address);
-      return fromTokenAccount.address;
-    } catch (e) {
-      logger.error(
-        e,
-        'getOrCreateAssociatedTokenAccount ensuremyAta',
-        newMint.toString()
-      );
-    }
-    return undefined;
-  }
-
-  async function createNewMint() {
-    // TODO: extract to createMintButton
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-
-    logger.info('createMint', myWallet.toString());
-    // https://github.com/solana-labs/solana-program-library/blob/f487f520bf10ca29bf8d491192b6ff2b4bf89710/token/js/src/actions/createMint.ts
-    // const mint = await createMint(
-    //   connection,
-    //   myWallet, // Payer of the transaction
-    //   myWallet.publicKey, // Account that will control the minting
-    //   null, // Account that will control the freezing of the token
-    //   0 // Location of the decimal place
-    // );
-    const confirmOptions: sol.ConfirmOptions = {
-      commitment: 'finalized',
-    };
-    // eslint-disable-next-line promise/no-nesting
-    walletWeb3
-      .createMint(
-        connection,
-        fromKey, // Payer of the transaction
-        myWallet, // Account that will control the minting
-        null, // Account that will control the freezing of the token
-        0, // Location of the decimal place
-        undefined, // mint keypair - will be generated if not specified
-        confirmOptions
-      )
-      .then((newMint) => {
-        setMintPubKey(newMint);
-        logger.info('Minted ', newMint.toString());
-
-        ensureAtaFor(newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
-
-        updateMintList([]);
-        return newMint;
-      })
-      .catch(logger.error);
-  }
-
   async function ensureReceiverAta() {
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
@@ -181,7 +110,12 @@ function TokenPage() {
       logger.info('no mintKey', mintKey);
       return;
     }
-    const funderAta = await ensureAtaFor(mintKey, myWallet);
+    const funderAta = await ensureAtaFor(
+      connection,
+      fromKey,
+      mintKey,
+      myWallet
+    );
     if (!funderAta) {
       logger.info('no funderAta', funderAta);
       return;
@@ -226,7 +160,12 @@ function TokenPage() {
       logger.info('no mintKey', mintKey);
       return;
     }
-    const funderAta = await ensureAtaFor(mintKey, myWallet);
+    const funderAta = await ensureAtaFor(
+      connection,
+      fromKey,
+      mintKey,
+      myWallet
+    );
     if (!funderAta) {
       logger.info('no funderAta', funderAta);
       return;
@@ -304,20 +243,17 @@ function TokenPage() {
               );
             })}
           </Form.Select>
-          <Button
-            size="sm"
-            // TODO: this button should be disabled if the selected mint (or account) exists
-            disabled={myWallet === undefined}
-            onClick={() => {
-              toast.promise(createNewMint(), {
-                pending: `Create mint account submitted`,
-                success: `Create mint account  succeeded 👌`,
-                error: `Create mint account   failed 🤯`,
-              });
+          <CreateNewMintButton
+            connection={connection}
+            fromKey={fromKey}
+            myWallet={myWallet}
+            andThen={(newMint: sol.PublicKey) => {
+              setMintPubKey(newMint);
+              ensureAtaFor(connection, fromKey, newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
+              updateMintList([]);
+              return newMint;
             }}
-          >
-            New mint
-          </Button>
+          />
           <MetaplexTokenDataButton mintPubKey={mintKey} />
           <Button
             size="sm"

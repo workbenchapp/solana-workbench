@@ -3,12 +3,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
-import EdiText from 'react-editext';
 import Table from 'react-bootstrap/Table';
 import * as sol from '@solana/web3.js';
-import * as spltoken from '@solana/spl-token';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import analytics from '../common/analytics';
+import { toast } from 'react-toastify';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { logger } from '@/common/globals';
 import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
 
@@ -28,7 +27,6 @@ import {
   forceRequestAccount,
 } from '../data/accounts/getAccount';
 import {
-  Net,
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -38,22 +36,9 @@ import InlinePK from './InlinePK';
 import TransferSolButton from './TransferSolButton';
 import { MintInfoView } from './MintInfoView';
 import { MetaplexMintMetaDataView } from './tokens/MetaplexMintMetaDataView';
-
-function tryExpandingTokenState(
-  _net: Net,
-  tAccount: {
-    pubkey: sol.PublicKey;
-    account: sol.AccountInfo<sol.ParsedAccountData>;
-  }
-) {
-  return (
-    <div>
-      <div>
-        <MintInfoView mintKey={tAccount.account.data.parsed.info.mint} />
-      </div>
-    </div>
-  );
-}
+import CreateNewMintButton, {
+  ensureAtaFor,
+} from './tokens/CreateNewMintButton';
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -61,6 +46,9 @@ function AccountView(props: { pubKey: string | undefined }) {
   const dispatch = useAppDispatch();
   const accountMeta = useAccountMeta(pubKey);
   const [humanName, setHumanName] = useState<string>('');
+  const accountPubKey = pubKey ? new sol.PublicKey(pubKey) : undefined;
+  const fromKey = useWallet(); // pay from wallet adapter
+  const { connection } = useConnection();
 
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
@@ -223,21 +211,18 @@ function AccountView(props: { pubKey: string | undefined }) {
               <small className="text-muted">
                 Token Accounts ({tokenAccounts.length})
               </small>
-              <Button
-                // This needs to give the mint to the selected account, but paid for by the wallet
-                // BUT - need to make sure its a "normal account" - hide if not
-                disabled={pubKey === undefined}
-                size="sm"
-                onClick={() => {
-                  toast.promise(createNewMint(), {
-                    pending: `Create mint account submitted`,
-                    success: `Create mint account  succeeded 👌`,
-                    error: `Create mint account   failed 🤯`,
-                  });
+              <CreateNewMintButton
+                connection={connection}
+                fromKey={fromKey}
+                myWallet={accountPubKey}
+                andThen={(newMint: sol.PublicKey) => {
+                  if (!accountPubKey) {
+                    return newMint;
+                  }
+                  ensureAtaFor(connection, fromKey, newMint, accountPubKey); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
+                  return newMint;
                 }}
-              >
-                New mint
-              </Button>
+              />
             </div>
             <div>
               <Table hover size="sm">
@@ -282,9 +267,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       }
                                       onClick={() => {
                                         toast.promise(mintToken(), {
-                                          pending: `Mint To ${myWallet?.toString()} submitted`,
-                                          success: `Mint To ${myWallet?.toString()} succeeded 👌`,
-                                          error: `Mint To ${myWallet?.toString()}  failed 🤯`,
+                                          pending: `Mint To ${accountPubKey?.toString()} submitted`,
+                                          success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
+                                          error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
                                         });
                                       }}
                                     >
@@ -299,9 +284,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       }
                                       onClick={() => {
                                         toast.promise(mintToken(), {
-                                          pending: `Mint To ${myWallet?.toString()} submitted`,
-                                          success: `Mint To ${myWallet?.toString()} succeeded 👌`,
-                                          error: `Mint To ${myWallet?.toString()}  failed 🤯`,
+                                          pending: `Mint To ${accountPubKey?.toString()} submitted`,
+                                          success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
+                                          error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
                                         });
                                       }}
                                     >

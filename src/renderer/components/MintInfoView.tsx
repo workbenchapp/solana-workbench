@@ -4,6 +4,7 @@ import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { Button } from 'react-bootstrap';
+import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
 
 import {
@@ -27,6 +28,7 @@ export function MintInfoView(props: { mintKey: string; className?: string }) {
   const [mintInto, updateMintInfo] = useState<sol.AccountInfo<
     Buffer | sol.ParsedAccountData
   > | null>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [metaInfo, updateMetaInfo] =
     useState<metaplex.programs.metadata.Metadata>();
 
