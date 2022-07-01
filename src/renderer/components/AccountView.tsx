@@ -140,19 +140,9 @@ function AccountView(props: { pubKey: string | undefined }) {
                     </td>
                     <td className="col-md-8">
                       <small>
-                        <EdiText
-                          submitOnEnter
-                          cancelOnEscape
-                          buttonsAlign="after"
-                          type="text"
+                        <EditableText
                           value={humanName}
                           onSave={handleHumanNameSave}
-                          hideIcons
-                          editButtonContent={<FontAwesomeIcon icon={faEdit} />}
-                          saveButtonContent={<FontAwesomeIcon icon={faSave} />}
-                          cancelButtonContent={
-                            <FontAwesomeIcon icon={faCancel} />
-                          }
                         />
                       </small>
                     </td>
