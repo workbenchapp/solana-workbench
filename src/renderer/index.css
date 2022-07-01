@@ -34,10 +34,14 @@ code {
 }
 
 .btn {
-  @apply bg-primary-base p-1 text-contrast py-3 px-4 rounded-md cursor-pointer focus:outline outline-offset-2 outline-2 outline-primary-base;
+  @apply text-xs bg-primary-base p-1 text-contrast py-2 px-4 rounded-md cursor-pointer focus:outline outline-offset-2 outline-2 outline-primary-base;
 
   &.btn-sm {
-    @apply text-xs py-2 px-3;
+    @apply py-2 px-3;
+  }
+
+  &:disabled {
+    @apply opacity-50 bg-surface-100 cursor-auto;
   }
 }
 

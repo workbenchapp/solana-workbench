@@ -86,14 +86,9 @@ function NavigationIcons() {
       <TooltipNavItem to="/" tooltipMessage="Changes" eventKey="changes">
         <IconMdiTable className="block" />
       </TooltipNavItem>
-      <TooltipNavItem
-        to="/tokens"
-        title="Tokens"
-        tooltipMessage="Tokens"
-        eventKey="tokens"
-        icon={faCoins}
-        iconsize="xl"
-      />
+      <TooltipNavItem to="/tokens" tooltipMessage="Tokens" eventKey="tokens">
+        <IconMdiCoins />
+      </TooltipNavItem>
       <TooltipNavItem
         to="/validator"
         tooltipMessage="Validator"

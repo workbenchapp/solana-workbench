@@ -21,9 +21,6 @@ import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
 import { MintInfoView } from '../components/MintInfoView';
 
-// eslint-disable-next-line no-global-assign
-Buffer = require('buffer').Buffer;
-
 const logger = window.electron.log;
 
 function TokenPage() {
