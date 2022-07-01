@@ -8,6 +8,7 @@ import ViteFonts from 'vite-plugin-fonts';
 import InlineCSSModules from 'vite-plugin-inline-css-modules';
 import WindiCSS from 'vite-plugin-windicss';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import checker from 'vite-plugin-checker';
 
 const PACKAGE_ROOT = __dirname;
 /**
@@ -63,6 +64,7 @@ export default defineConfig({
     }),
     react(),
     WindiCSS(),
+    checker({ typescript: true }),
   ],
   base: '',
   server: {
