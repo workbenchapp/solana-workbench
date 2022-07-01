@@ -1,10 +1,11 @@
 import * as sol from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
+import { createInitializeMintInstruction } from '@solana/spl-token/lib/types/instructions';
 import {
-  MINT_SIZE,
   getMinimumBalanceForRentExemptMint,
-  createInitializeMintInstruction,
-} from '@solana/spl-token';
+  MINT_SIZE,
+} from '@solana/spl-token/lib/types/state';
+
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { SendTransactionOptions } from '@solana/wallet-adapter-base';
 
