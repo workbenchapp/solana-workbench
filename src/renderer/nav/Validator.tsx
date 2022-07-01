@@ -170,7 +170,10 @@ const Validator = () => {
           <Button
             size="sm"
             disabled={
-              containerInspect?.State?.Running || validatorImageTag === ''
+              !containerInspect ||
+              !containerInspect.State ||
+              containerInspect.State.Running ||
+              validatorImageTag === ''
             }
             onClick={() => {
               ipcDockerToast('StartValidatorContainer');
@@ -182,7 +185,11 @@ const Validator = () => {
           </Button>
           <Button
             size="sm"
-            disabled={!containerInspect?.State?.Running}
+            disabled={
+              !containerInspect ||
+              !containerInspect.State ||
+              !containerInspect.State.Running
+            }
             onClick={() => {
               ipcDockerToast('StartAmmanValidator');
             }}
