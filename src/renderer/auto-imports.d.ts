@@ -7,6 +7,7 @@ declare global {
   const IconMdiChevronDown: typeof import('~icons/mdi/chevron-down.jsx')['default']
   const IconMdiCircle: typeof import('~icons/mdi/circle.jsx')['default']
   const IconMdiClose: typeof import('~icons/mdi/close.jsx')['default']
+  const IconMdiCoins: typeof import('~icons/mdi/coins.jsx')['default']
   const IconMdiContentCopy: typeof import('~icons/mdi/content-copy.jsx')['default']
   const IconMdiKey: typeof import('~icons/mdi/key.jsx')['default']
   const IconMdiPencil: typeof import('~icons/mdi/pencil.jsx')['default']

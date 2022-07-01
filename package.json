@@ -132,6 +132,7 @@
   ],
   "homepage": "https://github.com/workbenchapp/solana-workbench-releases",
   "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@iconify-json/mdi": "^1.1.20",
     "@solana/wallet-adapter-wallets": "^0.15.5",
     "@solana/web3.js": "^1.41.3",
@@ -205,6 +206,7 @@
     "unplugin-icons": "^0.14.3",
     "url-loader": "^4.1.1",
     "vite": "^2.9.12",
+    "vite-plugin-checker": "^0.4.6",
     "vite-plugin-fonts": "^0.4.0",
     "vite-plugin-inline-css-modules": "^0.0.4",
     "vite-plugin-windicss": "^1.8.4",
