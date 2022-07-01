@@ -39,6 +39,7 @@ import { MetaplexMintMetaDataView } from './tokens/MetaplexMintMetaDataView';
 import CreateNewMintButton, {
   ensureAtaFor,
 } from './tokens/CreateNewMintButton';
+import MintTokenToButton from './tokens/MintTokenToButton';
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -258,39 +259,37 @@ function AccountView(props: { pubKey: string | undefined }) {
                                         sol.LAMPORTS_PER_SOL
                                     )}{' '}
                                     SOL)
+                                    <MintTokenToButton
+                                      connection={connection}
+                                      fromKey={fromKey}
+                                      mintKey={
+                                        new sol.PublicKey(
+                                          tAccount.account.data.parsed.info.mint.toString()
+                                        )
+                                      }
+                                      mintTo={accountPubKey}
+                                      andThen={(): void => {}}
+                                    />
                                     <Button
-                                      // extract to mintTokenButton and default to this account, but have a way to select a random pubkey..
+                                      // TODO: extract to sendTokenButton with popup to list of pubkeys, and editbox
+                                      // TODO: disabled if payer has none to give? or add tickbox to mint one first..
                                       size="sm"
                                       disabled={
                                         tAccount.account.data.parsed.info
                                           .mint === undefined
                                       }
                                       onClick={() => {
-                                        toast.promise(mintToken(), {
-                                          pending: `Mint To ${accountPubKey?.toString()} submitted`,
-                                          success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
-                                          error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
-                                        });
+                                        toast.promise(
+                                          transferTokenToReceiver(),
+                                          {
+                                            pending: `Mint To ${accountPubKey?.toString()} submitted`,
+                                            success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
+                                            error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
+                                          }
+                                        );
                                       }}
                                     >
-                                      create
-                                    </Button>
-                                    <Button
-                                      // extract to sendTokenButton with popup to list of pubkeys, and editbox
-                                      size="sm"
-                                      disabled={
-                                        tAccount.account.data.parsed.info
-                                          .mint === undefined
-                                      }
-                                      onClick={() => {
-                                        toast.promise(mintToken(), {
-                                          pending: `Mint To ${accountPubKey?.toString()} submitted`,
-                                          success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
-                                          error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
-                                        });
-                                      }}
-                                    >
-                                      send
+                                      send (TODO - popup to select a publicKey)
                                     </Button>
                                   </Accordion.Header>
                                   <Accordion.Body>

@@ -1,6 +1,5 @@
 import { toast } from 'react-toastify';
 import * as sol from '@solana/web3.js';
-import * as spltoken from '@solana/spl-token';
 
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';

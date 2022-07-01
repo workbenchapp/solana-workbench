@@ -25,6 +25,7 @@ import CreateNewMintButton, {
 } from '@/components/tokens/CreateNewMintButton';
 
 import { logger } from '@/common/globals';
+import MintTokenToButton from '@/components/tokens/MintTokenToButton';
 
 function TokenPage() {
   const fromKey = useWallet();
@@ -101,37 +102,7 @@ function TokenPage() {
     const toWallet = sol.Keypair.generate();
     updateTokenReceiver(toWallet);
   }
-  async function mintToken() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
-    const funderAta = await ensureAtaFor(
-      connection,
-      fromKey,
-      mintKey,
-      myWallet
-    );
-    if (!funderAta) {
-      logger.info('no funderAta', funderAta);
-      return;
-    }
 
-    // Minting 1 new token to the "fromTokenAccount" account we just returned/created.
-    const signature = await walletWeb3.mintTo(
-      connection,
-      fromKey, // Payer of the transaction fees
-      mintKey, // Mint for the account
-      funderAta, // Address of the account to mint to
-      myWallet, // Minting authority
-      1 // Amount to mint
-    );
-    logger.info('SIGNATURE', signature);
-  }
   async function closeMint() {
     if (!myWallet) {
       logger.info('no myWallet', myWallet);
@@ -213,19 +184,13 @@ function TokenPage() {
       <Row className="flex-fill almost-vh-80">
         <Col className="col-md-4 almost-vh-100 vscroll">
           Our Wallet
-          <Button
-            size="sm"
-            disabled={myWallet === undefined || mintKey === undefined}
-            onClick={() => {
-              toast.promise(mintToken(), {
-                pending: `Mint To ${myWallet?.toString()} submitted`,
-                success: `Mint To ${myWallet?.toString()} succeeded 👌`,
-                error: `Mint To ${myWallet?.toString()}  failed 🤯`,
-              });
-            }}
-          >
-            mint token to funder
-          </Button>
+          <MintTokenToButton
+            connection={connection}
+            fromKey={fromKey}
+            mintKey={mintKey}
+            mintTo={myWallet}
+            andThen={(): void => {}}
+          />
           <AccountView pubKey={myWallet?.toString()} />
         </Col>
         <Col className="col-md-4 almost-vh-100 vscroll">

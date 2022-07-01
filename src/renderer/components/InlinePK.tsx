@@ -52,12 +52,20 @@ const prettifyPubkey = (pk = '', formatLength: number) => {
 };
 
 const InlinePK: React.FC<{
-  pk: string;
+  pk: string | undefined;
   className?: string;
   format?: boolean;
   formatLength?: number;
 }> = ({ pk, className, format, formatLength }) => {
   const { net } = useAppSelector(selectValidatorNetworkState);
+
+  if (!pk) {
+    return (
+      <span className={classnames('flex items-center', className)}>
+        <small>No onchain account</small>
+      </span>
+    );
+  }
 
   return (
     <span className={classnames('flex items-center', className)}>
