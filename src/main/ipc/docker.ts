@@ -4,6 +4,7 @@ import { writeFile } from 'fs';
 import Docker = require('dockerode');
 import * as shell from 'shelljs';
 
+import { Stream } from 'stream';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
@@ -128,45 +129,70 @@ export function initDockerPromises() {
       );
 
       const dockerClient = new Docker();
-      return dockerClient.pull(image as string).then(() => {
-        return dockerClient
-          .createContainer({
-            name: 'solana-test-validator',
-            Image: image as string,
-            AttachStdin: false,
-            AttachStdout: true,
-            AttachStderr: true,
-            Tty: true,
-            Entrypoint: 'tail',
-            Cmd: ['-f', '/etc/os-release'],
-            OpenStdin: false,
-            StdinOnce: false,
-            Labels: {
-              environment: 'blueWhale',
-            },
-            ExposedPorts: {
-              '8899/tcp': {},
-              '8900/tcp': {},
-            },
-            HostConfig: {
-              PortBindings: {
-                '8899/tcp': [
-                  {
-                    HostPort: '8899',
-                  },
-                ],
-                '8900/tcp': [
-                  {
-                    HostPort: '8900',
-                  },
-                ],
+      return dockerClient.pull(image as string, (err: any, stream: Stream) => {
+        if (err) {
+          throw err;
+        }
+        function onPullProgress(_event: any) {
+          // ...
+          logger.info(`onPullProgress: ${JSON.stringify(_event)}`);
+        }
+
+        function onPullFinished(ferr: any, _output: any) {
+          if (ferr) {
+            throw ferr;
+          }
+          logger.info(`onPullFinished: ${JSON.stringify(_output)}`);
+
+          // output is an array with output json parsed objects
+          // ...
+          dockerClient
+            .createContainer({
+              name: 'solana-test-validator',
+              Image: image as string,
+              AttachStdin: false,
+              AttachStdout: true,
+              AttachStderr: true,
+              Tty: true,
+              Entrypoint: 'tail',
+              Cmd: ['-f', '/etc/os-release'],
+              OpenStdin: false,
+              StdinOnce: false,
+              Labels: {
+                environment: 'blueWhale',
               },
-            },
-          })
-          .then((container: Docker.Container) => {
-            console.log('container created');
-            return container;
-          });
+              ExposedPorts: {
+                '8899/tcp': {},
+                '8900/tcp': {},
+              },
+              HostConfig: {
+                PortBindings: {
+                  '8899/tcp': [
+                    {
+                      HostPort: '8899',
+                    },
+                  ],
+                  '8900/tcp': [
+                    {
+                      HostPort: '8900',
+                    },
+                  ],
+                },
+              },
+            })
+            .then((container: Docker.Container) => {
+              console.log('container created');
+              return container;
+            })
+            .catch(logger.error);
+        }
+        dockerClient.modem.followProgress(
+          stream,
+          onPullFinished,
+          onPullProgress
+        );
+
+        return 'OK';
       });
     }
   );

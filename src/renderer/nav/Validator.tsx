@@ -147,15 +147,20 @@ const Validator = () => {
             onClick={() => {
               logger.info(`calling ${JSON.stringify(validatorImageTag)}`);
 
-              // window.electron.ipcRenderer.runValidator(validatorImageTag);
-              window.promiseIpc
-                .send('DOCKER-CreateValidatorContainer', validatorImageTag)
-                .then((info: any) => {
-                  // setValidatorImageTags(tags);
-                  logger.info(`hooray ${JSON.stringify(info)}`);
-                  return info;
-                })
-                .catch(logger.error);
+              toast.promise(
+                window.promiseIpc
+                  .send('DOCKER-CreateValidatorContainer', validatorImageTag)
+                  .then((info: any) => {
+                    // setValidatorImageTags(tags);
+                    logger.info(`hooray ${JSON.stringify(info)}`);
+                    return info;
+                  }),
+                {
+                  pending: `CreateValidatorContainer submitted`,
+                  success: `CreateValidatorContainer succeeded 👌`,
+                  error: `CreateValidatorContainer failed 🤯`,
+                }
+              );
             }}
             className="mt-2 mb-4"
             variant="dark"
