@@ -27,6 +27,10 @@ async function mintToken(
     logger.info('no mintKey', mintKey);
     return;
   }
+  if (!payer.publicKey) {
+    logger.info('no payer.publicKey', payer.publicKey);
+    return;
+  }
   const tokenAta = await ensureAtaFor(connection, payer, mintKey, mintTo);
   if (!tokenAta) {
     logger.info('no tokenAta', tokenAta);
@@ -62,6 +66,9 @@ function MintTokenToButton(props: {
       disabled={status !== NetStatus.Running || mintTo === undefined}
       onClick={() => {
         if (!mintTo) {
+          return;
+        }
+        if (!mintKey) {
           return;
         }
 
