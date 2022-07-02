@@ -1,10 +1,25 @@
 import * as sol from '@solana/web3.js';
 import * as splToken from '@solana/spl-token';
-import { createInitializeMintInstruction } from '@solana/spl-token/lib/types/instructions';
 import {
+  createTransferInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  createSetAuthorityInstruction,
+  createAssociatedTokenAccountInstruction,
+} from '@solana/spl-token/lib/types/instructions';
+import {
+  Account,
+  getAccount,
+  getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptMint,
   MINT_SIZE,
 } from '@solana/spl-token/lib/types/state';
+import {
+  TokenInvalidOwnerError,
+  TokenInvalidMintError,
+  TokenAccountNotFoundError,
+  TokenInvalidAccountOwnerError,
+} from '@solana/spl-token/lib/types';
 
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { SendTransactionOptions } from '@solana/wallet-adapter-base';
@@ -118,8 +133,8 @@ export async function getOrCreateAssociatedTokenAccount(
   confirmOptions?: sol.ConfirmOptions,
   programId = splToken.TOKEN_PROGRAM_ID,
   associatedTokenProgramId = splToken.ASSOCIATED_TOKEN_PROGRAM_ID
-): Promise<splToken.Account> {
-  const associatedToken = await splToken.getAssociatedTokenAddress(
+): Promise<Account> {
+  const associatedToken = await getAssociatedTokenAddress(
     mint,
     owner,
     allowOwnerOffCurve,
@@ -129,9 +144,9 @@ export async function getOrCreateAssociatedTokenAccount(
 
   // This is the optimal logic, considering TX fee, client-side computation, RPC roundtrips and guaranteed idempotent.
   // Sadly we can't do this atomically.
-  let account: splToken.Account;
+  let account: Account;
   try {
-    account = await splToken.getAccount(
+    account = await getAccount(
       connection,
       associatedToken,
       commitment,
@@ -142,13 +157,13 @@ export async function getOrCreateAssociatedTokenAccount(
     // becoming a system account. Assuming program derived addressing is safe, this is the only case for the
     // TokenInvalidAccountOwnerError in this code path.
     if (
-      error instanceof splToken.TokenAccountNotFoundError ||
-      error instanceof splToken.TokenInvalidAccountOwnerError
+      error instanceof TokenAccountNotFoundError ||
+      error instanceof TokenInvalidAccountOwnerError
     ) {
       // As this isn't atomic, it's possible others can create associated accounts meanwhile.
       try {
         const transaction = new sol.Transaction().add(
-          splToken.createAssociatedTokenAccountInstruction(
+          createAssociatedTokenAccountInstruction(
             payer.publicKey,
             associatedToken,
             owner,
@@ -201,7 +216,7 @@ export async function getOrCreateAssociatedTokenAccount(
       }
 
       // Now this should always succeed
-      account = await splToken.getAccount(
+      account = await getAccount(
         connection,
         associatedToken,
         commitment,
@@ -212,8 +227,8 @@ export async function getOrCreateAssociatedTokenAccount(
     }
   }
 
-  if (!account.mint.equals(mint)) throw new splToken.TokenInvalidMintError();
-  if (!account.owner.equals(owner)) throw new splToken.TokenInvalidOwnerError();
+  if (!account.mint.equals(mint)) throw new TokenInvalidMintError();
+  if (!account.owner.equals(owner)) throw new TokenInvalidOwnerError();
 
   return account;
 }
@@ -259,7 +274,7 @@ export async function mintTo(
   const [authorityPublicKey, signers] = getSigners(authority, multiSigners);
 
   const transaction = new sol.Transaction().add(
-    splToken.createMintToInstruction(
+    createMintToInstruction(
       mint,
       destination,
       authorityPublicKey,
@@ -333,7 +348,7 @@ export async function transfer(
   const [ownerPublicKey, signers] = getSigners(owner, multiSigners);
 
   const transaction = new sol.Transaction().add(
-    splToken.createTransferInstruction(
+    createTransferInstruction(
       source,
       destination,
       ownerPublicKey,
@@ -410,7 +425,7 @@ export async function setAuthority(
   );
 
   const transaction = new sol.Transaction().add(
-    splToken.createSetAuthorityInstruction(
+    createSetAuthorityInstruction(
       account,
       currentAuthorityPublicKey,
       authorityType,
