@@ -98,7 +98,8 @@ export const truncateLamportAmount = (account: AccountInfo | undefined) => {
   }
   return truncateSolAmount(account.accountInfo.lamports / sol.LAMPORTS_PER_SOL);
 };
-export const renderData = (account: AccountInfo | undefined) => {
+
+export const renderRawData = (account: AccountInfo | undefined) => {
   if (account === undefined || account.accountInfo === undefined) {
     return '';
   }

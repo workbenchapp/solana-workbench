@@ -11,6 +11,7 @@ export interface AccountInfo {
   accountId: sol.PublicKey;
   pubKey: string;
   net?: Net;
+  decodedData: string;
   // updatedSlot: number // this should be used to update old account info
 
   // info from program Changes
