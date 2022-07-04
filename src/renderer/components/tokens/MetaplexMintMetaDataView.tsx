@@ -51,7 +51,9 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
       <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
         <Accordion.Header>
           No Metaplex token info{' '}
-          <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
+          <MetaplexTokenDataButton
+            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : null}
+          />
         </Accordion.Header>
       </Accordion.Item>
     );
