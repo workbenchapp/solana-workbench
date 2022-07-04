@@ -78,9 +78,9 @@ function MintTokenToButton(props: {
             return andThen();
           }),
           {
-            pending: `Mint To submitted`,
-            success: `Mint To succeeded 👌`,
-            error: `Mint To failed 🤯`,
+            pending: `Mint To ${mintTo.toString()} submitted`,
+            success: `Mint To ${mintTo.toString()} succeeded 👌`,
+            error: `Mint To ${mintTo.toString()} failed 🤯`,
           }
         );
       }}
