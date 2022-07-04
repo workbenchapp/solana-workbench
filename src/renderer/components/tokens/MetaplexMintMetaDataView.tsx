@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
@@ -50,7 +51,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
       <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
         <Accordion.Header>
           No Metaplex token info{' '}
-          <MetaplexTokenDataButton mintPubKey={mintKey} />
+          <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
         </Accordion.Header>
       </Accordion.Item>
     );
@@ -63,7 +64,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
           {metaInfo?.data.data.symbol}
         </a>
         :{'  '} ({metaInfo?.data.data.name} )
-        <MetaplexTokenDataButton mintPubKey={mintKey} />
+        <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">

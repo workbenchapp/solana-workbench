@@ -6,7 +6,6 @@ import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
 import * as sol from '@solana/web3.js';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import { toast } from 'react-toastify';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { logger } from '@/common/globals';
 import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
