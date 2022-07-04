@@ -275,6 +275,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       connection={connection}
                                       fromKey={fromKey}
                                       mintKey={tAccount.account.data.parsed.info.mint.toString()}
+                                      transferFrom={pubKey}
                                     />
                                   </Accordion.Header>
                                   <Accordion.Body>

@@ -25,6 +25,7 @@ async function transferTokenToReceiver(
   connection: sol.Connection,
   fromKey: walletAdapter.WalletContextState,
   mintKey: sol.PublicKey,
+  transferFrom: sol.PublicKey,
   transferTo: sol.PublicKey,
   tokenCount: int
 ) {
@@ -40,14 +41,14 @@ async function transferTokenToReceiver(
     logger.info('no fromKey.publicKey', fromKey);
     return;
   }
-  const funderAta = await ensureAtaFor(
+  const fromAta = await ensureAtaFor(
     connection,
     fromKey,
     mintKey,
-    fromKey.publicKey
+    transferFrom
   );
-  if (!funderAta) {
-    logger.info('no funderAta', funderAta);
+  if (!fromAta) {
+    logger.info('no fromAta', fromAta);
     return;
   }
   if (!transferTo) {
@@ -71,7 +72,7 @@ async function transferTokenToReceiver(
   const signature = await walletWeb3.transfer(
     connection,
     fromKey, // Payer of the transaction fees
-    funderAta, // Source account
+    fromAta, // Source account
     ataReceiver, // Destination account
     fromKey.publicKey, // Owner of the source account
     tokenCount // Number of tokens to transfer
@@ -85,8 +86,9 @@ function TransferTokenPopover(props: {
   connection: sol.Connection;
   fromKey: walletAdapter.WalletContextState;
   mintKey: string | undefined;
+  transferFrom: string | undefined;
 }) {
-  const { connection, fromKey, mintKey } = props;
+  const { connection, fromKey, mintKey, transferFrom } = props;
 
   let pubKeyVal;
   if (!pubKeyVal) {
@@ -146,8 +148,8 @@ function TransferTokenPopover(props: {
               <Form.Control
                 readOnly // Because we use the wallet to do the signing, this can't be changed
                 type="text"
-                placeholder="Select Account to take the SOL from"
-                value={fromKey.publicKey?.toString()}
+                placeholder="Select Account to take the Token from"
+                value={transferFrom}
               />
               <Form.Text className="text-muted" />
             </Col>
@@ -185,6 +187,7 @@ function TransferTokenPopover(props: {
                       connection,
                       fromKey,
                       new sol.PublicKey(mintKey),
+                      new sol.PublicKey(transferFrom),
                       new sol.PublicKey(toKey),
                       tokenCount
                     ),
@@ -217,15 +220,21 @@ function TransferTokenButton(props: {
   connection: sol.Connection;
   fromKey: walletAdapter.WalletContextState;
   mintKey: string | undefined;
+  transferFrom: string | undefined;
 }) {
-  const { connection, fromKey, mintKey } = props;
+  const { connection, fromKey, mintKey, transferFrom } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={TransferTokenPopover({ connection, fromKey, mintKey })}
+      overlay={TransferTokenPopover({
+        connection,
+        fromKey,
+        mintKey,
+        transferFrom,
+      })}
       rootClose
     >
       <Button
