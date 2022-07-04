@@ -40,6 +40,7 @@ import CreateNewMintButton, {
   ensureAtaFor,
 } from './tokens/CreateNewMintButton';
 import MintTokenToButton from './tokens/MintTokenToButton';
+import TransferTokenButton from './tokens/TransferTokenButton';
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
@@ -212,6 +213,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               <small className="text-muted">
                 Token Accounts ({tokenAccounts.length})
               </small>
+              {/* TODO: this button should only be enabled for accounts that you can create a new mint for... */}
               <CreateNewMintButton
                 connection={connection}
                 fromKey={fromKey}
@@ -270,27 +272,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       mintTo={accountPubKey}
                                       andThen={(): void => {}}
                                     />
-                                    <Button
-                                      // TODO: extract to sendTokenButton with popup to list of pubkeys, and editbox
-                                      // TODO: disabled if payer has none to give? or add tickbox to mint one first..
-                                      size="sm"
-                                      disabled={
-                                        tAccount.account.data.parsed.info
-                                          .mint === undefined
-                                      }
-                                      onClick={() => {
-                                        toast.promise(
-                                          transferTokenToReceiver(),
-                                          {
-                                            pending: `Mint To ${accountPubKey?.toString()} submitted`,
-                                            success: `Mint To ${accountPubKey?.toString()} succeeded 👌`,
-                                            error: `Mint To ${accountPubKey?.toString()}  failed 🤯`,
-                                          }
-                                        );
-                                      }}
-                                    >
-                                      send (TODO - popup to select a publicKey)
-                                    </Button>
+                                    <TransferTokenButton
+                                      connection={connection}
+                                      fromKey={fromKey}
+                                      mintKey={tAccount.account.data.parsed.info.mint.toString()}
+                                    />
                                   </Accordion.Header>
                                   <Accordion.Body>
                                     <pre className="exe-hexdump p-2 rounded">

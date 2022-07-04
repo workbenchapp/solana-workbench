@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import * as metaplex from '@metaplex/js';
-import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { useAppSelector } from '../../hooks';
 
-import { getAccount, getTokenMetadata } from '../../data/accounts/getAccount';
+import { getTokenMetadata } from '../../data/accounts/getAccount';
 import {
   NetStatus,
   selectValidatorNetworkState,
@@ -16,40 +15,16 @@ const logger = window.electron.log;
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 
-export function MetaplexMintMetaDataView(props: {
-  mintKey: string;
-  className?: string;
-}) {
-  const { mintKey, className } = props;
+export function MetaplexMintMetaDataView(props: { mintKey: string }) {
+  const { mintKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
-  const [mintInto, updateMintInfo] = useState<sol.AccountInfo<
-    Buffer | sol.ParsedAccountData
-  > | null>();
   const [metaInfo, updateMetaInfo] =
     useState<metaplex.programs.metadata.Metadata>();
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
       return;
-    }
-    try {
-      // const solConn = new sol.Connection(netToURL(net));
-      // const key = new sol.PublicKey(mintKey);
-      // solConn
-      //   .getParsedAccountInfo(key)
-      getAccount(net, mintKey)
-        .then((account) => {
-          logger.info('got it', account);
-          updateMintInfo(account);
-          return account;
-        })
-        .catch((err) => {
-          logger.error('WHAT', err);
-        });
-    } catch (e) {
-      // moreInfo = JSON.stringify(e);
-      logger.error('getAccount what', e);
     }
     try {
       // this assumes metaplex
@@ -70,23 +45,6 @@ export function MetaplexMintMetaDataView(props: {
     }
   }, [mintKey, net, status]);
 
-  // TODO: how do I find out the total number of tokens minted, vs how many could be minted
-  // TODO: or a list of all the ATA's that have tokens (or even more fun, ATA's for this mint that don't have tokens ...)
-  // return (
-  //   <div className={className}>
-  //     <div>
-  //       {mintInto?.data?.parsed?.type}: <InlinePK pk={mintKey.toString()} />
-  //       <a href={metaInfo?.data.data.uri}>{metaInfo?.data.data.symbol}</a> (
-  //       {metaInfo?.data.data.name} )
-  //     </div>
-  //     <pre className="exe-hexdump p-2 rounded">
-  //       <code>Mint info: {JSON.stringify(mintInto, null, 2)}</code>
-  //     </pre>
-  //     <pre className="exe-hexdump p-2 rounded">
-  //       <code>Metaplex: {JSON.stringify(metaInfo, null, 2)}</code>
-  //     </pre>
-  //   </div>
-  // );
   if (!metaInfo) {
     return (
       <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
@@ -115,8 +73,5 @@ export function MetaplexMintMetaDataView(props: {
     </Accordion.Item>
   );
 }
-MetaplexMintMetaDataView.defaultProps = {
-  className: '',
-};
 
 export default MetaplexMintMetaDataView;

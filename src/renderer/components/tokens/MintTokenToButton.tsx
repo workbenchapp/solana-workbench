@@ -64,7 +64,8 @@ function MintTokenToButton(props: {
       size="sm"
       // TODO: this button should be disabled if the selected mint (or account) exists
       disabled={status !== NetStatus.Running || mintTo === undefined}
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         if (!mintTo) {
           return;
         }
@@ -84,7 +85,7 @@ function MintTokenToButton(props: {
         );
       }}
     >
-      mint token to{' '}
+      mint token
     </Button>
   );
 }

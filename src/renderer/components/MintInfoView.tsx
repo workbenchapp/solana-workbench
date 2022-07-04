@@ -21,8 +21,8 @@ const logger = window.electron.log;
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 
-export function MintInfoView(props: { mintKey: string; className?: string }) {
-  const { mintKey, className } = props;
+export function MintInfoView(props: { mintKey: string }) {
+  const { mintKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   const [mintInto, updateMintInfo] = useState<sol.AccountInfo<
@@ -120,8 +120,5 @@ export function MintInfoView(props: { mintKey: string; className?: string }) {
     </Accordion.Item>
   );
 }
-MintInfoView.defaultProps = {
-  className: '',
-};
 
 export default MintInfoView;

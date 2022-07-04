@@ -26,6 +26,7 @@ import CreateNewMintButton, {
 
 import { logger } from '@/common/globals';
 import MintTokenToButton from '@/components/tokens/MintTokenToButton';
+import TransferTokenButton from '@/components/tokens/TransferTokenButton';
 
 function TokenPage() {
   const fromKey = useWallet();
@@ -122,58 +123,6 @@ function TokenPage() {
       null // Setting the new Authority to null
     );
   }
-  async function transferTokenToReceiver() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
-    const funderAta = await ensureAtaFor(
-      connection,
-      fromKey,
-      mintKey,
-      myWallet
-    );
-    if (!funderAta) {
-      logger.info('no funderAta', funderAta);
-      return;
-    }
-    if (!tokenReceiver) {
-      logger.info('no tokenReceiver', tokenReceiver);
-      return;
-    }
-
-    // Get the token account of the toWallet Solana address. If it does not exist, create it.
-    logger.info('getOrCreateAssociatedTokenAccount');
-    try {
-      const toTokenAccount = await walletWeb3.getOrCreateAssociatedTokenAccount(
-        connection,
-        fromKey,
-        mintKey,
-        tokenReceiver.publicKey
-      );
-      updateAtaReceiver(toTokenAccount.address);
-    } catch (e) {
-      logger.error(e, 'getOrCreateAssociatedTokenAccount ensureReceiverAta');
-    }
-
-    if (!ataReceiver) {
-      logger.info('no ataReceiver', ataReceiver);
-      return;
-    }
-    const signature = await walletWeb3.transfer(
-      connection,
-      fromKey, // Payer of the transaction fees
-      funderAta, // Source account
-      ataReceiver, // Destination account
-      myWallet, // Owner of the source account
-      1 // Number of tokens to transfer
-    );
-    logger.info('SIGNATURE', signature);
-  }
 
   return (
     <Stack className="almost-vh-100">
@@ -182,18 +131,11 @@ function TokenPage() {
       </Row>
 
       <Row className="flex-fill almost-vh-80">
-        <Col className="col-md-4 almost-vh-100 vscroll">
+        <Col className="col-md-6 almost-vh-100 vscroll">
           Our Wallet
-          <MintTokenToButton
-            connection={connection}
-            fromKey={fromKey}
-            mintKey={mintKey}
-            mintTo={myWallet}
-            andThen={(): void => {}}
-          />
           <AccountView pubKey={myWallet?.toString()} />
         </Col>
-        <Col className="col-md-4 almost-vh-100 vscroll">
+        <Col className="col-md-6 almost-vh-100 vscroll">
           Token Mint
           <Form.Select
             aria-label="Default select example"
@@ -242,40 +184,6 @@ function TokenPage() {
               mintKey={mintKey ? mintKey.toString() : ''}
             />{' '}
           </Accordion>
-        </Col>
-        <Col className="col-md-4 almost-vh-100 vscroll">
-          non-funder account
-          <Button
-            size="sm"
-            disabled={
-              myWallet === undefined ||
-              mintKey === undefined ||
-              tokenReceiver !== undefined
-            }
-            onClick={() => {
-              toast.promise(ensureReceiverAta(), {
-                pending: `Create receiver ATA account submitted`,
-                success: `Create receiver ATA account  succeeded 👌`,
-                error: `Create receiver ATA account   failed 🤯`,
-              });
-            }}
-          >
-            create new User account and ATA account
-          </Button>
-          <Button
-            size="sm"
-            disabled={myWallet === undefined}
-            onClick={() => {
-              toast.promise(transferTokenToReceiver(), {
-                pending: `Transfer token To ${ataReceiver?.toString()} submitted`,
-                success: `Transfer token To ${ataReceiver?.toString()} succeeded 👌`,
-                error: `Transfer token To ${ataReceiver?.toString()}  failed 🤯`,
-              });
-            }}
-          >
-            transfer token from funder
-          </Button>
-          <AccountView pubKey={tokenReceiver?.publicKey?.toString()} />
         </Col>
       </Row>
     </Stack>

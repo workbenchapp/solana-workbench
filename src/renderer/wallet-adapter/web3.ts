@@ -47,7 +47,7 @@ export async function createMint(
       lamports,
       programId,
     }),
-    createInitializeMintInstruction(
+    splToken.createInitializeMintInstruction(
       keypair.publicKey,
       decimals,
       mintAuthority,
