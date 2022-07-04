@@ -3,7 +3,6 @@ import * as splToken from '@solana/spl-token';
 import {
   MINT_SIZE,
   getMinimumBalanceForRentExemptMint,
-  createInitializeMintInstruction,
 } from '@solana/spl-token';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import { SendTransactionOptions } from '@solana/wallet-adapter-base';

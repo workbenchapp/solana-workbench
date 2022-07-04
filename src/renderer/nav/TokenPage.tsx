@@ -25,8 +25,6 @@ import CreateNewMintButton, {
 } from '@/components/tokens/CreateNewMintButton';
 
 import { logger } from '@/common/globals';
-import MintTokenToButton from '@/components/tokens/MintTokenToButton';
-import TransferTokenButton from '@/components/tokens/TransferTokenButton';
 
 function TokenPage() {
   const fromKey = useWallet();
@@ -36,16 +34,11 @@ function TokenPage() {
   // TODO: this will come from main config...
   const [mintList, updateMintList] = useState<sol.PublicKey[]>([]);
   const [mintKey, updateMintKey] = useState<sol.PublicKey>();
-  // const [tokenSender, updateFunderATA] = useState<sol.PublicKey>();
-  const [tokenReceiver, updateTokenReceiver] = useState<sol.Keypair>();
-  const [ataReceiver, updateAtaReceiver] = useState<sol.PublicKey>();
 
   const setMintPubKey = (pubKey: string | sol.PublicKey) => {
     const key = new sol.PublicKey(pubKey);
 
     updateMintKey(key);
-    // updateFunderATA(undefined);
-    updateAtaReceiver(undefined);
   };
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -89,20 +82,6 @@ function TokenPage() {
     return <div>Loading wallet</div>;
   }
   const myWallet = publicKey;
-
-  async function ensureReceiverAta() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
-    // Generate a new wallet to receive the newly minted token
-    const toWallet = sol.Keypair.generate();
-    updateTokenReceiver(toWallet);
-  }
 
   async function closeMint() {
     if (!myWallet) {
