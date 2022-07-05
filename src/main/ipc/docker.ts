@@ -1,7 +1,7 @@
 import promiseIpc from 'electron-promise-ipc';
 import { IpcMainEvent, IpcRendererEvent } from 'electron';
 import { writeFile } from 'fs';
-import Docker = require('dockerode');
+import Dockerode from 'dockerode';
 import * as shell from 'shelljs';
 
 import { Stream } from 'stream';
@@ -116,7 +116,7 @@ export function initDockerPromises() {
     (name: unknown, event?: IpcEvent | undefined) => {
       logger.silly(`main: called DOCKER-GetContainerStatus, ${name}, ${event}`);
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       return dockerClient.getContainer(name as string).inspect();
     }
   );
@@ -128,7 +128,7 @@ export function initDockerPromises() {
         `main: called DOCKER-CreateValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       return dockerClient.pull(image as string, (err: any, stream: Stream) => {
         if (err) {
           throw err;
@@ -180,7 +180,7 @@ export function initDockerPromises() {
                 },
               },
             })
-            .then((container: Docker.Container) => {
+            .then((container: Dockerode.Container) => {
               console.log('container created');
               return container;
             })
@@ -204,7 +204,7 @@ export function initDockerPromises() {
         `main: called DOCKER-StartValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
       logger.error(`start: solana-test-validator`);
 
@@ -219,7 +219,7 @@ export function initDockerPromises() {
         `main: called DOCKER-StopValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
       logger.error(`stop: solana-test-validator`);
 
@@ -243,7 +243,7 @@ export function initDockerPromises() {
         `main: called DOCKER-RemoveValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
       logger.error(`stop: solana-test-validator`);
 
@@ -268,7 +268,7 @@ export function initDockerPromises() {
         destination: '/test-ledger',
       });
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
       logger.error(`exec: solana-test-validator`);
 
@@ -278,7 +278,7 @@ export function initDockerPromises() {
           AttachStdin: false,
           AttachStdout: false,
         })
-        .then((e: Docker.Exec) => {
+        .then((e: Dockerode.Exec) => {
           console.log('exec created');
 
           return e.start({
@@ -301,7 +301,7 @@ export function initDockerPromises() {
     (image: unknown, event?: IpcEvent | undefined) => {
       logger.info(`main: called DOCKER-StopAmmanValidator, ${image}, ${event}`);
 
-      const dockerClient = new Docker();
+      const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
       logger.error(`exec: solana-test-validator`);
 
@@ -311,7 +311,7 @@ export function initDockerPromises() {
           AttachStdin: false,
           AttachStdout: false,
         })
-        .then((e: Docker.Exec) => {
+        .then((e: Dockerode.Exec) => {
           console.log('exec created');
 
           return e.start({
