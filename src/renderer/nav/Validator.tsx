@@ -63,12 +63,12 @@ const Validator = () => {
         });
     }
 
-    if (validator.status === NetStatus.Running) {
-      window.electron.ipcRenderer.validatorLogs({
-        filter: filterRef.current.value || '',
-        net: validator.net,
-      });
-    }
+    // if (validator.status === NetStatus.Running) {
+    window.electron.ipcRenderer.validatorLogs({
+      filter: filterRef.current.value || '',
+      net: validator.net,
+    });
+    // }
   }, 5000);
 
   useEffect(() => {
@@ -87,7 +87,9 @@ const Validator = () => {
       const { method, res } = resp;
       switch (method) {
         case 'validator-logs':
-          setValidatorLogs(res);
+          logger.info('log: ', res);
+          // eslint-disable-next-line prettier/prettier
+          setValidatorLogs(res.join("\n"));
           break;
         default:
       }
@@ -239,18 +241,20 @@ const Validator = () => {
           placeholder="Filter logs"
           aria-label="Amount"
           onKeyDown={debounce(() => {
-            if (validator.status === NetStatus.Running) {
-              window.electron.ipcRenderer.validatorLogs({
-                filter: filterRef.current.value || '',
-                net: validator.net,
-              });
-            }
+            // if (validator.status === NetStatus.Running) {
+            window.electron.ipcRenderer.validatorLogs({
+              filter: filterRef.current.value || '',
+              net: validator.net,
+            });
+            // }
           }, 300)}
         />
       </InputGroup>
-      <pre className="mt-2 pre-scrollable">
-        <code>{validatorLogs}</code>
-      </pre>
+      <div className="overflow-auto">
+        <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
+          {validatorLogs}
+        </pre>
+      </div>
     </div>
   );
 };

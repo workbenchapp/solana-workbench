@@ -8,7 +8,7 @@ import { Stream } from 'stream';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
-import { DOCKER_PATH } from '../validator';
+import { log, DOCKER_PATH } from '../validator';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
@@ -103,6 +103,7 @@ export function initDockerPromises() {
     'DOCKER-GetImageTags',
     (name: unknown, event?: IpcEvent | undefined) => {
       logger.silly(`main: called DOCKER-GetImageTags, ${name}, ${event}`);
+      log(`main: called DOCKER-GetImageTags, ${name}, ${event}`);
 
       // TODO: this would use something like https://github.com/jessestuart/docker-hub-utils
       // start with just ... curl https://hub.docker.com/v2/repositories/cryptoworkbench/solana-amman/tags/ | jq '.results[].name'
@@ -115,6 +116,7 @@ export function initDockerPromises() {
     'DOCKER-GetContainerStatus',
     (name: unknown, event?: IpcEvent | undefined) => {
       logger.silly(`main: called DOCKER-GetContainerStatus, ${name}, ${event}`);
+      // log(`main: called DOCKER-GetContainerStatus, ${name}, ${event}`);
 
       const dockerClient = new Dockerode();
       return dockerClient.getContainer(name as string).inspect();
@@ -136,6 +138,7 @@ export function initDockerPromises() {
         function onPullProgress(_event: any) {
           // ...
           logger.info(`onPullProgress: ${JSON.stringify(_event)}`);
+          log(`onPullProgress: ${JSON.stringify(_event)}`);
         }
 
         function onPullFinished(ferr: any, _output: any) {
@@ -143,6 +146,7 @@ export function initDockerPromises() {
             throw ferr;
           }
           logger.info(`onPullFinished: ${JSON.stringify(_output)}`);
+          log(`FINISHED pulling container image ${image as string}`);
 
           // output is an array with output json parsed objects
           // ...
@@ -182,6 +186,7 @@ export function initDockerPromises() {
             })
             .then((container: Dockerode.Container) => {
               console.log('container created');
+              log('container created');
               return container;
             })
             .catch(logger.error);
@@ -206,7 +211,8 @@ export function initDockerPromises() {
 
       const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`start: solana-test-validator`);
+      logger.error(`request start: solana-test-validator`);
+      log(`request start: solana-test-validator`);
 
       return container.start({});
     }
@@ -221,16 +227,19 @@ export function initDockerPromises() {
 
       const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`stop: solana-test-validator`);
+      logger.error(`request stop: solana-test-validator`);
+      log(`request stop: solana-test-validator`);
 
       return container
         .stop()
         .then(() => {
           logger.info('exec started ');
+          log('request stop exec started ');
           return container.wait();
         })
         .then(() => {
           logger.info('container stopped ');
+          log('container stopped ');
           return 'OK';
         });
     }
@@ -245,11 +254,13 @@ export function initDockerPromises() {
 
       const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`stop: solana-test-validator`);
+      logger.error(`remove requested: solana-test-validator`);
+      log(`remove requested: solana-test-validator`);
 
       // TODO: should we be force removing?
       return container.remove().then(() => {
         logger.info('container removed ');
+        log('container removed ');
         return 'OK';
       });
     }
@@ -270,7 +281,8 @@ export function initDockerPromises() {
 
       const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`exec: solana-test-validator`);
+      logger.error(`request start amman exec: solana-test-validator`);
+      log(`request start amman exec: solana-test-validator`);
 
       return container
         .exec({
@@ -280,6 +292,7 @@ export function initDockerPromises() {
         })
         .then((e: Dockerode.Exec) => {
           console.log('exec created');
+          log('start amman exec created');
 
           return e.start({
             hijack: true,
@@ -290,6 +303,7 @@ export function initDockerPromises() {
         })
         .then(() => {
           console.log(`execed`);
+          log(`start amman execed`);
           // TODO: can we wait til we detect the validator has started, or failed to start?
           return 'OK';
         });
@@ -303,7 +317,8 @@ export function initDockerPromises() {
 
       const dockerClient = new Dockerode();
       const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`exec: solana-test-validator`);
+      logger.error(`request stop amman exec: solana-test-validator`);
+      log(`request stop amman exec: solana-test-validator`);
 
       return container
         .exec({
@@ -312,7 +327,8 @@ export function initDockerPromises() {
           AttachStdout: false,
         })
         .then((e: Dockerode.Exec) => {
-          console.log('exec created');
+          console.log('exec start amman created');
+          log('exec start amman created');
 
           return e.start({
             hijack: true,
@@ -322,7 +338,8 @@ export function initDockerPromises() {
           });
         })
         .then(() => {
-          logger.info('exec started ');
+          logger.info('exec amman started ');
+          log('exec amman started ');
           // TODO: wait tile the validator has stopped..
           return 'OK';
         });
