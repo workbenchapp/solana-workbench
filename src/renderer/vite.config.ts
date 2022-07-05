@@ -64,7 +64,12 @@ export default defineConfig({
     }),
     react(),
     WindiCSS(),
-    checker({ typescript: true }),
+    checker({
+      typescript: {
+        root: PACKAGE_ROOT,
+        tsconfigPath: `./tsconfig.json`,
+      },
+    }),
   ],
   base: '',
   server: {
