@@ -87,7 +87,7 @@ const Validator = () => {
       const { method, res } = resp;
       switch (method) {
         case 'validator-logs':
-          logger.info('log: ', res);
+          // logger.info('log: ', res);
           // eslint-disable-next-line prettier/prettier
           setValidatorLogs(res.join("\n"));
           break;
@@ -143,7 +143,66 @@ const Validator = () => {
               );
             })}
           </DropdownButton>
+
           <Button
+            size="sm"
+            disabled={validatorImageTag === ''}
+            onClick={() => {
+              logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
+
+              if (!containerInspect || !containerInspect.State) {
+                toast.promise(
+                  window.promiseIpc
+                    .send('DOCKER-CreateValidatorContainer', validatorImageTag)
+                    .then((info: any) => {
+                      // setValidatorImageTags(tags);
+                      logger.info(`hooray ${JSON.stringify(info)}`);
+                      return info;
+                    })
+                    .then(() => {
+                      // eslint-disable-next-line promise/catch-or-return, promise/no-nesting
+                      ipcDockerToast('StartValidatorContainer').then(() => {
+                        logger.info('STARTED CONTAINER');
+                        logger.info('START AMMAN');
+                        ipcDockerToast('StartAmmanValidator');
+                        logger.info('STARTED AMMAN');
+                        return 'ok';
+                      });
+                      return 'ok';
+                    }),
+                  {
+                    pending: `CreateValidatorContainer submitted`,
+                    success: `CreateValidatorContainer succeeded 👌`,
+                    error: `CreateValidatorContainer failed 🤯`,
+                  }
+                );
+              } else if (
+                containerInspect &&
+                containerInspect.State &&
+                !containerInspect.State.Running
+              ) {
+                ipcDockerToast('StartValidatorContainer')
+                  .then(() => {
+                    logger.info('STARTED CONTAINER');
+                    logger.info('START AMMAN');
+                    ipcDockerToast('StartAmmanValidator');
+                    logger.info('STARTED AMMAN');
+                    return 'ok';
+                  })
+                  .catch(logger.error);
+              } else {
+                // need to wait til the container has started...
+                logger.info('START AMMAN');
+                ipcDockerToast('StartAmmanValidator');
+              }
+            }}
+            className="mt-2 mb-4"
+            variant="dark"
+          >
+            Start validator
+          </Button>
+
+          {/* <Button
             size="sm"
             disabled={containerInspect?.State || validatorImageTag === ''}
             onClick={() => {
@@ -184,8 +243,8 @@ const Validator = () => {
             variant="dark"
           >
             Start Container
-          </Button>
-          <Button
+          </Button> */}
+          {/* <Button
             size="sm"
             disabled={
               !containerInspect ||
@@ -199,7 +258,7 @@ const Validator = () => {
             variant="dark"
           >
             Start Amman validator
-          </Button>
+          </Button> */}
           <Button
             size="sm"
             disabled={!containerInspect?.State?.Running}

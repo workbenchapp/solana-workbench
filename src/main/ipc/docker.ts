@@ -4,7 +4,6 @@ import { writeFile } from 'fs';
 import Dockerode from 'dockerode';
 import * as shell from 'shelljs';
 
-import { Stream } from 'stream';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
@@ -97,6 +96,80 @@ const copyDockerFile = async (msg: CopyFileRequest) => {
   return '';
 };
 
+async function createContainer(image: string) {
+  const dockerClient = new Dockerode();
+  log(`Pull ${image}`);
+  const pullStream = await dockerClient.pull(image);
+  // logger.info(`----------- pullStream ${JSON.stringify(pullStream)}`);
+
+  function onPullProgress(_event: any) {
+    // ...
+    // logger.info(`onPullProgress: ${JSON.stringify(_event)}`);
+    log(`onPullProgress: ${JSON.stringify(_event)}`);
+  }
+
+  await new Promise((resolve) =>
+    dockerClient.modem.followProgress(pullStream, resolve, onPullProgress)
+  );
+
+  log(`finished Pulling ${image}`);
+
+  // function onPullFinished(ferr: any, _output: any) {
+  //   if (ferr) {
+  //     throw ferr;
+  //   }
+  //   logger.info(`onPullFinished: ${JSON.stringify(_output)}`);
+  //   log(`FINISHED pulling container image ${image as string}`);
+  // }
+
+  // await dockerClient.modem.followProgress(
+  //   pullStream,
+  //   onPullFinished,
+  //   onPullProgress
+  // );
+
+  return dockerClient
+    .createContainer({
+      name: 'solana-test-validator',
+      Image: image as string,
+      AttachStdin: false,
+      AttachStdout: true,
+      AttachStderr: true,
+      Tty: true,
+      Entrypoint: 'tail',
+      Cmd: ['-f', '/etc/os-release'],
+      OpenStdin: false,
+      StdinOnce: false,
+      Labels: {
+        environment: 'blueWhale',
+      },
+      ExposedPorts: {
+        '8899/tcp': {},
+        '8900/tcp': {},
+      },
+      HostConfig: {
+        PortBindings: {
+          '8899/tcp': [
+            {
+              HostPort: '8899',
+            },
+          ],
+          '8900/tcp': [
+            {
+              HostPort: '8900',
+            },
+          ],
+        },
+      },
+    })
+    .then((container: Dockerode.Container) => {
+      logger.info(`container created ${container.id}`);
+      log('container created');
+      return 'OK';
+    })
+    .catch(logger.error);
+}
+
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
   promiseIpc.on(
@@ -130,77 +203,18 @@ export function initDockerPromises() {
         `main: called DOCKER-CreateValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Dockerode();
-      return dockerClient.pull(image as string, (err: any, stream: Stream) => {
-        if (err) {
-          throw err;
-        }
-        function onPullProgress(_event: any) {
-          // ...
-          logger.info(`onPullProgress: ${JSON.stringify(_event)}`);
-          log(`onPullProgress: ${JSON.stringify(_event)}`);
-        }
-
-        function onPullFinished(ferr: any, _output: any) {
-          if (ferr) {
-            throw ferr;
-          }
-          logger.info(`onPullFinished: ${JSON.stringify(_output)}`);
-          log(`FINISHED pulling container image ${image as string}`);
-
-          // output is an array with output json parsed objects
-          // ...
-          dockerClient
-            .createContainer({
-              name: 'solana-test-validator',
-              Image: image as string,
-              AttachStdin: false,
-              AttachStdout: true,
-              AttachStderr: true,
-              Tty: true,
-              Entrypoint: 'tail',
-              Cmd: ['-f', '/etc/os-release'],
-              OpenStdin: false,
-              StdinOnce: false,
-              Labels: {
-                environment: 'blueWhale',
-              },
-              ExposedPorts: {
-                '8899/tcp': {},
-                '8900/tcp': {},
-              },
-              HostConfig: {
-                PortBindings: {
-                  '8899/tcp': [
-                    {
-                      HostPort: '8899',
-                    },
-                  ],
-                  '8900/tcp': [
-                    {
-                      HostPort: '8900',
-                    },
-                  ],
-                },
-              },
-            })
-            .then((container: Dockerode.Container) => {
-              console.log('container created');
-              log('container created');
-              return container;
-            })
-            .catch(logger.error);
-        }
-        dockerClient.modem.followProgress(
-          stream,
-          onPullFinished,
-          onPullProgress
-        );
-
-        return 'OK';
-      });
+      return createContainer(image as string);
     }
   );
+
+  async function startContainer() {
+    const dockerClient = new Dockerode();
+    const container = dockerClient.getContainer('solana-test-validator');
+    logger.error(`request start: solana-test-validator`);
+    log(`request start: solana-test-validator`);
+
+    return container.start();
+  }
 
   promiseIpc.on(
     'DOCKER-StartValidatorContainer',
@@ -209,12 +223,7 @@ export function initDockerPromises() {
         `main: called DOCKER-StartValidatorContainer, ${image}, ${event}`
       );
 
-      const dockerClient = new Dockerode();
-      const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`request start: solana-test-validator`);
-      log(`request start: solana-test-validator`);
-
-      return container.start({});
+      return startContainer();
     }
   );
 
@@ -233,8 +242,8 @@ export function initDockerPromises() {
       return container
         .stop()
         .then(() => {
-          logger.info('exec started ');
-          log('request stop exec started ');
+          logger.info('request stop started ');
+          log('request stop started ');
           return container.wait();
         })
         .then(() => {
@@ -258,7 +267,7 @@ export function initDockerPromises() {
       log(`remove requested: solana-test-validator`);
 
       // TODO: should we be force removing?
-      return container.remove().then(() => {
+      return container.remove({ force: true }).then(() => {
         logger.info('container removed ');
         log('container removed ');
         return 'OK';
