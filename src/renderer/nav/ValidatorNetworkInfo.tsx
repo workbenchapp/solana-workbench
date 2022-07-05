@@ -101,8 +101,8 @@ function ValidatorNetworkInfo() {
           labelRadius={55}
           style={{ labels: { fontSize: 4 } }}
           // labels={({ datum }) => datum.version}
-          x={(d) => d.version}
-          y={(d) => d.count}
+          x={(d) => (d as VCount).version}
+          y={(d) => (d as VCount).count}
         />
       </Row>
     </Container>

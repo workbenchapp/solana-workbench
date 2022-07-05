@@ -15,7 +15,7 @@
     "package": "rimraf ./release && npm run build && electron-builder -- --publish always --win --mac --linux",
     "package-nomac": "rimraf ./release && npm run build && electron-builder -- --publish always --win --linux",
     "package:asarless": "npm run build && electron-builder build --config.asar=false",
-    "lint": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "cross-env NODE_ENV=development concurrently \"eslint . --ext .js,.jsx,.ts,.tsx\" \"tsc -p ./src/renderer --noemit\" \"tsc -p ./src/main --noemit\"",
     "lint-fix": "cross-env NODE_ENV=development eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "test": "vitest run --dir ./src --config ./src/renderer/vitest.config.ts",
     "prepare": "husky install",
