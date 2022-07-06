@@ -18,7 +18,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { logger } from '@/common/globals';
+import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
 import { getElectronStorageWallet } from './data/accounts/account';
