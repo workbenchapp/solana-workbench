@@ -57,9 +57,9 @@ const Validator = () => {
 
           return inspect;
         })
-        .catch((inspectError) => {
+        .catch((inspectError: any) => {
           setContainerInspect({});
-          // logger.error(inspectError);
+          logger.silly(inspectError);
         });
     }
 

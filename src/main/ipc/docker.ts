@@ -115,20 +115,6 @@ async function createContainer(image: string) {
 
   log(`finished Pulling ${image}`);
 
-  // function onPullFinished(ferr: any, _output: any) {
-  //   if (ferr) {
-  //     throw ferr;
-  //   }
-  //   logger.info(`onPullFinished: ${JSON.stringify(_output)}`);
-  //   log(`FINISHED pulling container image ${image as string}`);
-  // }
-
-  // await dockerClient.modem.followProgress(
-  //   pullStream,
-  //   onPullFinished,
-  //   onPullProgress
-  // );
-
   return dockerClient
     .createContainer({
       name: 'solana-test-validator',
@@ -172,6 +158,8 @@ async function createContainer(image: string) {
 }
 
 async function execAmman() {
+  // TODO: this presupposes that this workbench session starts the validator
+  //       should change this so the `amman start` tee's to a file, and then use `docker exec tail -n 20` or something
   copyDockerFile({
     filename: '.ammanrc.js',
     content: `module.exports = ${JSON.stringify(ammanrc)}`,
@@ -195,7 +183,6 @@ async function execAmman() {
       AttachStdout: true,
     })
     .then((exec: Dockerode.Exec) => {
-      console.log('exec created');
       log('start amman exec created');
 
       return exec.start({
@@ -344,7 +331,6 @@ export function initDockerPromises() {
           AttachStdout: false,
         })
         .then((e: Dockerode.Exec) => {
-          console.log('exec stop amman created');
           log('exec stop amman created');
 
           return e.start({
