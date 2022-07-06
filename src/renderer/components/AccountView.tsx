@@ -3,11 +3,15 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
-import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
+import { AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
 import Table from 'react-bootstrap/Table';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import { useConnection, useAnchorWallet } from '@solana/wallet-adapter-react';
+import {
+  useConnection,
+  useAnchorWallet,
+  useWallet,
+} from '@solana/wallet-adapter-react';
 import { logger } from '@/common/globals';
 import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
 
@@ -20,11 +24,11 @@ import {
   truncateLamportAmount,
   truncateSolAmount,
   getHumanName,
-  renderRawData,
   getAccount,
   getTokenAccounts,
   TokenAccountArray,
   forceRequestAccount,
+  renderAccountData,
 } from '../data/accounts/getAccount';
 import {
   NetStatus,
@@ -58,9 +62,11 @@ function AccountView(props: { pubKey: string | undefined }) {
   );
   const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
 
+  const wallet = useWallet();
+
   // create dummy keypair wallet if none is selected by user
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const wallet = useAnchorWallet() || {
+  const anchorWallet = useAnchorWallet() || {
     signAllTransactions: async (
       transactions: sol.Transaction[]
     ): Promise<sol.Transaction[]> => Promise.resolve(transactions),
@@ -75,48 +81,18 @@ function AccountView(props: { pubKey: string | undefined }) {
   useEffect(() => {
     setDecodedAccountData('');
     const decodeAnchor = async () => {
-      try {
-        if (
-          account?.accountInfo &&
-          !account.accountInfo.owner.equals(sol.SystemProgram.programId) &&
-          wallet
-        ) {
-          // TODO: Why do I have to set this every time
-          setProvider(
-            new AnchorProvider(
-              new sol.Connection(netToURL(net)),
-              wallet,
-              AnchorProvider.defaultOptions()
-            )
-          );
-          const info = account.accountInfo;
-          const program = await Program.at(info.owner);
-
-          program?.idl?.accounts?.forEach((accountType) => {
-            try {
-              const decodedAccount = program.coder.accounts.decode(
-                accountType.name,
-                info.data
-              );
-              setDecodedAccountData(JSON.stringify(decodedAccount, null, 2));
-            } catch (e) {
-              const err = e as Error;
-              // TODO: only log when error != invalid discriminator
-              if (err.message !== 'Invalid account discriminator') {
-                logger.silly(
-                  `Account decode failed err="${e}"  attempted_type=${accountType.name}`
-                );
-              }
-            }
-          });
-        }
-      } catch (e) {
-        logger.error(e);
-        setDecodedAccountData(renderRawData(account));
-      }
+      // TODO: Why do I have to set this every time
+      setProvider(
+        new AnchorProvider(
+          new sol.Connection(netToURL(net)),
+          anchorWallet,
+          AnchorProvider.defaultOptions()
+        )
+      );
+      setDecodedAccountData(await renderAccountData(account));
     };
     decodeAnchor();
-  }, [account, net, wallet]);
+  }, [account, net, anchorWallet]);
 
   useInterval(() => {
     if (status !== NetStatus.Running) {
@@ -264,7 +240,7 @@ function AccountView(props: { pubKey: string | undefined }) {
             </div>
             <div>
               <pre className="exe-hexdump p-2 rounded">
-                <code>{renderData(account)}</code>
+                <code>{decodedAccountData}</code>
               </pre>
             </div>
           </div>

@@ -7,6 +7,7 @@ import { logger } from '@/common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { AccountMetaValues } from './accountState';
+import { Program } from '@project-serum/anchor';
 
 export const BASE58_PUBKEY_REGEX = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
@@ -168,17 +169,47 @@ export const truncateLamportAmount = (account: AccountInfo | undefined) => {
   return truncateSolAmount(account.accountInfo.lamports / sol.LAMPORTS_PER_SOL);
 };
 
-export const renderRawData = (account: AccountInfo | undefined) => {
-  if (account === undefined || account.accountInfo === undefined) {
-    return '';
+export const renderAccountData = async (
+  account: AccountInfo | undefined
+): Promise<string> => {
+  if (!account || !account.accountInfo || !account.accountInfo.data) return '';
+
+  try {
+    if (
+      account.accountInfo &&
+      !account.accountInfo.owner.equals(sol.SystemProgram.programId)
+    ) {
+      const info = account.accountInfo;
+      const program = await Program.at(info.owner);
+      let decoded = '';
+      program?.idl?.accounts?.forEach((accountType) => {
+        try {
+          if (!account?.accountInfo) return;
+          const decodedAccount = program.coder.accounts.decode(
+            accountType.name,
+            account.accountInfo.data as Buffer
+          );
+          decoded = JSON.stringify(decodedAccount, null, 2);
+        } catch (e) {
+          const err = e as Error;
+          // TODO: only log when error != invalid discriminator
+          if (err.message !== 'Invalid account discriminator') {
+            logger.silly(
+              `Account decode failed err="${e}"  attempted_type=${accountType.name}`
+            );
+          }
+        }
+      });
+      return decoded;
+    }
+  } catch (e) {
+    logger.error(e);
   }
 
-  if (account.accountInfo?.data === undefined) {
-    return '';
-  }
   if ('subarray' in account.accountInfo.data) {
     return hexdump(account.accountInfo.data.subarray(0, HEXDUMP_BYTES));
   }
+
   return JSON.stringify(account.accountInfo.data, null, 2);
 };
 
