@@ -3,6 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
+import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
+import * as sol from '@solana/web3.js';
+import { useAnchorWallet } from '@solana/wallet-adapter-react';
 import { logger } from '@/common/globals';
 import analytics from '../common/analytics';
 import { AccountInfo } from '../data/accounts/accountInfo';
@@ -13,7 +16,7 @@ import {
 import {
   getAccount,
   getHumanName,
-  renderData,
+  renderRawData,
   truncateLamportAmount,
 } from '../data/accounts/getAccount';
 import {
@@ -51,6 +54,66 @@ function AccountView(props: { pubKey: string | undefined }) {
   const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
     undefined
   );
+
+  // create dummy keypair wallet if none is selected by user
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const wallet = useAnchorWallet() || {
+    signAllTransactions: async (
+      transactions: sol.Transaction[]
+    ): Promise<sol.Transaction[]> => Promise.resolve(transactions),
+    signTransaction: async (
+      transaction: sol.Transaction
+    ): Promise<sol.Transaction> => Promise.resolve(transaction),
+    publicKey: new sol.Keypair().publicKey,
+  };
+
+  const [decodedAccountData, setDecodedAccountData] = useState<string>();
+
+  useEffect(() => {
+    setDecodedAccountData('');
+    const decodeAnchor = async () => {
+      try {
+        if (
+          account?.accountInfo &&
+          !account.accountInfo.owner.equals(sol.SystemProgram.programId) &&
+          wallet
+        ) {
+          // TODO: Why do I have to set this every time
+          setProvider(
+            new AnchorProvider(
+              new sol.Connection(netToURL(net)),
+              wallet,
+              AnchorProvider.defaultOptions()
+            )
+          );
+          const info = account.accountInfo;
+          const program = await Program.at(info.owner);
+
+          program?.idl?.accounts?.forEach((accountType) => {
+            try {
+              const decodedAccount = program.coder.accounts.decode(
+                accountType.name,
+                info.data
+              );
+              setDecodedAccountData(JSON.stringify(decodedAccount, null, 2));
+            } catch (e) {
+              const err = e as Error;
+              // TODO: only log when error != invalid discriminator
+              if (err.message !== 'Invalid account discriminator') {
+                logger.silly(
+                  `Account decode failed err="${e}"  attempted_type=${accountType.name}`
+                );
+              }
+            }
+          });
+        }
+      } catch (e) {
+        logger.error(e);
+        setDecodedAccountData(renderRawData(account));
+      }
+    };
+    decodeAnchor();
+  }, [account, net, wallet]);
 
   useInterval(() => {
     if (status !== NetStatus.Running) {
@@ -202,7 +265,7 @@ function AccountView(props: { pubKey: string | undefined }) {
         </div>
         <div className="p-2">
           <code className="whitespace-pre-wrap w-full block">
-            {renderData(account)}
+            {decodedAccountData}
           </code>
         </div>
       </div>

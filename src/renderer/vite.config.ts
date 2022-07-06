@@ -9,6 +9,7 @@ import InlineCSSModules from 'vite-plugin-inline-css-modules';
 import WindiCSS from 'vite-plugin-windicss';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import checker from 'vite-plugin-checker';
+import EnvironmentPlugin from 'vite-plugin-environment';
 
 const PACKAGE_ROOT = __dirname;
 /**
@@ -38,6 +39,10 @@ export default defineConfig({
     },
   },
   plugins: [
+    EnvironmentPlugin({
+      BROWSER: 'true', // Anchor <=0.24.2
+      ANCHOR_BROWSER: 'true', // Anchor >0.24.2
+    }),
     ViteFonts({
       google: {
         families: ['Roboto:wght@400;500;700', 'Space Mono:wght@400'],
