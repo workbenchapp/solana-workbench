@@ -120,9 +120,7 @@ function AccountView(props: { pubKey: string | undefined }) {
       return;
     }
     if (pubKey) {
-      getAccount(net, pubKey)
-        .then((a) => setSelectedAccountInfo(a))
-        .catch(logger.info);
+      setSelectedAccountInfo(getAccount(net, pubKey));
     } else {
       setSelectedAccountInfo(undefined);
     }

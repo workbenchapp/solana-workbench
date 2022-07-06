@@ -19,15 +19,6 @@ const cache = new LRUCache<string, AccountInfo>({
   entryExpirationTimeInMS: 60000,
 });
 
-export const getAllAccounts = (): AccountInfo[] => {
-  const list: AccountInfo[] = [];
-  // eslint-disable-next-line no-restricted-syntax
-  for (const v of cache.values()) {
-    list.push(v);
-  }
-  return list;
-};
-
 export const updateCache = (account: AccountInfo) => {
   cache.set(`${account.net}_${account.pubKey}`, account);
 };
@@ -39,27 +30,23 @@ export function peekAccount(net: Net, pubKey: string): AccountInfo | null {
 // This will always use, and update the lastUsed time any account in the cache.
 // if you absoluetly need to current latest, don't use this function :)
 // it is written to avoid RPC requests if at all possible, and is used in conjunction with the programChanges subscriptions
-export async function getAccount(
-  net: Net,
-  pubKey: string
-): Promise<AccountInfo | undefined> {
-  // logger.silly('getAccount', { pubKey });
+export function getAccount(net: Net, pubKey: string): AccountInfo | undefined {
   const cachedResponse = cache.get(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
   }
 
-  const solConn = new sol.Connection(netToURL(net));
-  const key = new sol.PublicKey(pubKey);
-  const solAccount = await solConn.getAccountInfo(key);
+  logger.silly('getAccountInfo cache miss', pubKey, pubKey.toString());
 
-  logger.silly('getAccountInfo cache miss', pubKey, key.toString());
-  // TODO: these should not be made individually, instead, toss them on a list, and make getMultipleAccounts call once every 333mS or something
-  //  if (solAccount) {
   const response: AccountInfo = {
-    accountId: key,
-    accountInfo: solAccount,
-    pubKey: key.toString(),
+    accountId: new sol.PublicKey(pubKey),
+    accountInfo: {
+      executable: false,
+      lamports: 0,
+      owner: sol.SystemProgram.programId,
+      data: undefined,
+    },
+    pubKey: pubKey.toString(),
     net,
     count: 0,
     solDelta: 0,
@@ -68,9 +55,6 @@ export async function getAccount(
   };
   cache.set(`${net}_${pubKey}`, response);
   return response;
-  // }
-
-  // return undefined;
 }
 
 export const truncateSolAmount = (solAmount: number | undefined) => {
@@ -123,7 +107,6 @@ export function getAccountNoWait(
   net: Net,
   pubKey: string
 ): AccountInfo | undefined {
-  // logger.silly('getAccount', { pubKey });
   const cachedResponse = cache.peek(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
@@ -131,20 +114,31 @@ export function getAccountNoWait(
   return undefined;
 }
 
+export async function refreshAccountInfos(net: Net, keys: string[]) {
+  const solConn = new sol.Connection(netToURL(net));
+  const pubKeys = keys.map((k) => new sol.PublicKey(k));
+  const accountInfos = await solConn.getMultipleAccountsInfo(pubKeys);
+  accountInfos.forEach((info, i) => {
+    const cachedAccount = cache.get(`${net}_${keys[i]}`);
+    if (!cachedAccount) {
+      logger.silly('cache miss', `${net}_${keys[i]}`);
+      return;
+    }
+    logger.silly('cache hit', `${net}_${keys[i]}`);
+    cachedAccount.accountInfo = info;
+    cache.set(`${net}_${keys[i]}`, cachedAccount);
+  });
+}
+
 // Please note, yes, this is the shittest way to do sorting, but that's not the primary bottleneck
-export function GetTopAccounts(
+export function getTopAccounts(
   net: Net,
   count: number,
   sortFunction: (a: AccountInfo, b: AccountInfo) => number
 ): string[] {
   const top: string[] = [];
-
-  // top.push('9u5DkG65FkxkjzP84JyuhfA7PhZB2SVxMKev4yVLjAd7');
-  // 8FjV5PXabcMVuWnCtwrwiaSZHEix6FNrR48AU1zWbxjZ
-
-  // logger.info('cached size', cache.size);
-
   const keys: AccountInfo[] = [];
+
   // eslint-disable-next-line no-restricted-syntax
   for (const key of cache.keys()) {
     if (key.startsWith(net)) {
@@ -155,12 +149,11 @@ export function GetTopAccounts(
       }
     }
   }
-  // logger.info('sorting cached accounts', keys.length);
+
   keys.sort(sortFunction);
+
   // eslint-disable-next-line no-restricted-syntax
   for (const account of keys.slice(0, count - 1)) {
-    // logger.info('push', account.pubKey);
-
     top.push(account.pubKey);
   }
 

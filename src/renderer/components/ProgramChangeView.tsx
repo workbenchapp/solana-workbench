@@ -15,7 +15,8 @@ import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   BASE58_PUBKEY_REGEX,
-  GetTopAccounts,
+  getTopAccounts,
+  refreshAccountInfos,
 } from '../data/accounts/getAccount';
 import {
   subscribeProgramChanges,
@@ -120,13 +121,12 @@ function ProgramChangeView() {
       }
     });
 
-    const changes = GetTopAccounts(
+    const changes = getTopAccounts(
       net,
       MAX_PROGRAM_CHANGES_DISPLAYED,
       sortFunction
     );
 
-    // logger.info('GetTopAccounts', changes);
     changes.forEach((key: string) => {
       if (!(key in pinMap)) {
         showKeys.push(key);
@@ -134,6 +134,7 @@ function ProgramChangeView() {
     });
     setPinnedAccount(pinMap);
     setDisplayList(showKeys);
+    refreshAccountInfos(net, showKeys);
   }, 666);
 
   const uniqueAccounts = displayList.length;
