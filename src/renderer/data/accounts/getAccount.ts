@@ -103,17 +103,6 @@ export const getHumanName = (meta: AccountMetaValues | undefined) => {
   return '';
 };
 
-export function getAccountNoWait(
-  net: Net,
-  pubKey: string
-): AccountInfo | undefined {
-  const cachedResponse = cache.peek(`${net}_${pubKey}`);
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-  return undefined;
-}
-
 export async function refreshAccountInfos(net: Net, keys: string[]) {
   const solConn = new sol.Connection(netToURL(net));
   const pubKeys = keys.map((k) => new sol.PublicKey(k));
@@ -124,7 +113,6 @@ export async function refreshAccountInfos(net: Net, keys: string[]) {
       logger.silly('cache miss', `${net}_${keys[i]}`);
       return;
     }
-    logger.silly('cache hit', `${net}_${keys[i]}`);
     cachedAccount.accountInfo = info;
     cache.set(`${net}_${keys[i]}`, cachedAccount);
   });
