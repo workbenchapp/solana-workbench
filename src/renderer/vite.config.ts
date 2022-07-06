@@ -7,6 +7,8 @@ import { defineConfig } from 'vite';
 import ViteFonts from 'vite-plugin-fonts';
 import InlineCSSModules from 'vite-plugin-inline-css-modules';
 import WindiCSS from 'vite-plugin-windicss';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import checker from 'vite-plugin-checker';
 
 const PACKAGE_ROOT = __dirname;
 /**
@@ -19,6 +21,20 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/': `${join(PACKAGE_ROOT, './')}/`,
+    },
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      // Node.js global to browser globalThis
+      define: {
+        global: 'globalThis',
+      },
+      // Enable esbuild polyfill plugins
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          buffer: true,
+        }),
+      ],
     },
   },
   plugins: [
@@ -48,6 +64,12 @@ export default defineConfig({
     }),
     react(),
     WindiCSS(),
+    checker({
+      typescript: {
+        root: PACKAGE_ROOT,
+        tsconfigPath: `./tsconfig.json`,
+      },
+    }),
   ],
   base: '',
   server: {
