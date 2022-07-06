@@ -4,6 +4,7 @@ import { writeFile } from 'fs';
 import Dockerode from 'dockerode';
 import * as shell from 'shelljs';
 
+import * as newStream from 'stream';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
@@ -170,6 +171,47 @@ async function createContainer(image: string) {
     .catch(logger.error);
 }
 
+async function execAmman() {
+  copyDockerFile({
+    filename: '.ammanrc.js',
+    content: `module.exports = ${JSON.stringify(ammanrc)}`,
+    destination: '/test-ledger',
+  });
+
+  const dockerClient = new Dockerode();
+  const container = dockerClient.getContainer('solana-test-validator');
+  logger.error(`request start amman exec: solana-test-validator`);
+  log(`request start amman exec: solana-test-validator`);
+
+  const logStream = new newStream.PassThrough();
+  logStream.on('data', (chunk) => {
+    log(chunk.toString('utf8'));
+  });
+
+  const p = container
+    .exec({
+      Cmd: ['/bin/bash', '-c', 'source /root/.bashrc && amman start'],
+      AttachStdin: true,
+      AttachStdout: true,
+    })
+    .then((exec: Dockerode.Exec) => {
+      console.log('exec created');
+      log('start amman exec created');
+
+      return exec.start({
+        // hijack: true,
+        // stdin: true,
+        // Detach: false,
+        // Tty: true,
+      });
+    });
+
+  const stream = await p;
+  container.modem.demuxStream(stream, logStream, logStream);
+  log('Exiting execAmman');
+  return p;
+}
+
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
   promiseIpc.on(
@@ -281,41 +323,7 @@ export function initDockerPromises() {
       logger.info(
         `main: called DOCKER-StartAmmanValidator, ${image}, ${event}`
       );
-
-      copyDockerFile({
-        filename: '.ammanrc.js',
-        content: `module.exports = ${JSON.stringify(ammanrc)}`,
-        destination: '/test-ledger',
-      });
-
-      const dockerClient = new Dockerode();
-      const container = dockerClient.getContainer('solana-test-validator');
-      logger.error(`request start amman exec: solana-test-validator`);
-      log(`request start amman exec: solana-test-validator`);
-
-      return container
-        .exec({
-          Cmd: ['/bin/bash', '-c', 'source /root/.bashrc && amman start'],
-          AttachStdin: false,
-          AttachStdout: false,
-        })
-        .then((e: Dockerode.Exec) => {
-          console.log('exec created');
-          log('start amman exec created');
-
-          return e.start({
-            hijack: true,
-            stdin: false,
-            Detach: true,
-            Tty: true,
-          });
-        })
-        .then(() => {
-          console.log(`execed`);
-          log(`start amman execed`);
-          // TODO: can we wait til we detect the validator has started, or failed to start?
-          return 'OK';
-        });
+      return execAmman();
     }
   );
 
@@ -336,8 +344,8 @@ export function initDockerPromises() {
           AttachStdout: false,
         })
         .then((e: Dockerode.Exec) => {
-          console.log('exec start amman created');
-          log('exec start amman created');
+          console.log('exec stop amman created');
+          log('exec stop amman created');
 
           return e.start({
             hijack: true,
@@ -347,8 +355,8 @@ export function initDockerPromises() {
           });
         })
         .then(() => {
-          logger.info('exec amman started ');
-          log('exec amman started ');
+          logger.info('exec stop amman started ');
+          log('exec stop amman started ');
           // TODO: wait tile the validator has stopped..
           return 'OK';
         });

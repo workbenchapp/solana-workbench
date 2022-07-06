@@ -164,7 +164,9 @@ const Validator = () => {
                       ipcDockerToast('StartValidatorContainer').then(() => {
                         logger.info('STARTED CONTAINER');
                         logger.info('START AMMAN');
-                        ipcDockerToast('StartAmmanValidator');
+                        // TODO: blocking, no toast
+                        // ipcDockerToast('StartAmmanValidator');
+                        window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                         logger.info('STARTED AMMAN');
                         return 'ok';
                       });
@@ -185,7 +187,9 @@ const Validator = () => {
                   .then(() => {
                     logger.info('STARTED CONTAINER');
                     logger.info('START AMMAN');
-                    ipcDockerToast('StartAmmanValidator');
+                    // TODO: blocking, no toast
+                    // ipcDockerToast('StartAmmanValidator');
+                    window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                     logger.info('STARTED AMMAN');
                     return 'ok';
                   })
@@ -193,7 +197,9 @@ const Validator = () => {
               } else {
                 // need to wait til the container has started...
                 logger.info('START AMMAN');
-                ipcDockerToast('StartAmmanValidator');
+                // TODO: blocking, no toast
+                // ipcDockerToast('StartAmmanValidator');
+                window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
               }
             }}
             className="mt-2 mb-4"
