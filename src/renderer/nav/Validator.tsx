@@ -207,64 +207,6 @@ const Validator = () => {
           >
             Start validator
           </Button>
-
-          {/* <Button
-            size="sm"
-            disabled={containerInspect?.State || validatorImageTag === ''}
-            onClick={() => {
-              logger.info(`calling ${JSON.stringify(validatorImageTag)}`);
-
-              toast.promise(
-                window.promiseIpc
-                  .send('DOCKER-CreateValidatorContainer', validatorImageTag)
-                  .then((info: any) => {
-                    // setValidatorImageTags(tags);
-                    logger.info(`hooray ${JSON.stringify(info)}`);
-                    return info;
-                  }),
-                {
-                  pending: `CreateValidatorContainer submitted`,
-                  success: `CreateValidatorContainer succeeded 👌`,
-                  error: `CreateValidatorContainer failed 🤯`,
-                }
-              );
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Create Container
-          </Button>
-          <Button
-            size="sm"
-            disabled={
-              !containerInspect ||
-              !containerInspect.State ||
-              containerInspect.State.Running ||
-              validatorImageTag === ''
-            }
-            onClick={() => {
-              ipcDockerToast('StartValidatorContainer');
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Start Container
-          </Button> */}
-          {/* <Button
-            size="sm"
-            disabled={
-              !containerInspect ||
-              !containerInspect.State ||
-              !containerInspect.State.Running
-            }
-            onClick={() => {
-              ipcDockerToast('StartAmmanValidator');
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Start Amman validator
-          </Button> */}
           <Button
             size="sm"
             disabled={!containerInspect?.State?.Running}

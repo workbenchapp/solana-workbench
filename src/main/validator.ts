@@ -1,11 +1,4 @@
-// import * as shell from 'shelljs';
 import { ValidatorLogsRequest } from '../types/types';
-// import { execAsync } from './const';
-// import { logger } from './logger';
-
-// const DOCKER_IMAGE = 'cryptoworkbench/solana-amman:v1.11.1';
-const DOCKER_PATH =
-  process.platform === 'darwin' ? '/usr/local/bin/docker' : 'docker';
 
 const logArray: string[] = [];
 const MAX_DISPLAY_LINES = 30;
@@ -17,6 +10,7 @@ const log = (line: string) => {
   }
 };
 
+// TODO: keeping this as not PromiseIPC for now - but it would be good to move it into ipc/docker.ts later
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const { filter } = msg;
   // const MAX_TAIL_LINES = 10000;
@@ -31,4 +25,4 @@ const validatorLogs = async (msg: ValidatorLogsRequest) => {
   return logArray;
 };
 
-export { log, DOCKER_PATH, validatorLogs };
+export { log, validatorLogs };

@@ -8,9 +8,12 @@ import * as newStream from 'stream';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
-import { log, DOCKER_PATH } from '../validator';
+import { log } from '../validator';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
+
+const DOCKER_PATH =
+  process.platform === 'darwin' ? '/usr/local/bin/docker' : 'docker';
 
 const ammanrc = {
   validator: {
