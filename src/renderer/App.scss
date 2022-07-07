@@ -14,10 +14,11 @@
 @import "bootstrap/scss/mixins";
 
 // 4. Include any optional Bootstrap components as you like
+@import "bootstrap/scss/accordion";
+@import "bootstrap/scss/buttons";
 @import "bootstrap/scss/dropdown";
 @import "bootstrap/scss/tooltip";
 @import "bootstrap/scss/popover";
-@import "bootstrap/scss/buttons";
 
 // Import all of bootstrap, this isn't an exercise in minimisation
 // @import "bootstrap/scss/bootstrap";

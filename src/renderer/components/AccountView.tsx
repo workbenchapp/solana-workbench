@@ -5,7 +5,11 @@ import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import {
+  useConnection,
+  useWallet,
+  useAnchorWallet,
+} from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
 import { logger } from '@/common/globals';
@@ -19,7 +23,6 @@ import {
 import {
   truncateSolAmount,
   getHumanName,
-  renderData,
   getAccount,
   getTokenAccounts,
   TokenAccountArray,
@@ -124,7 +127,7 @@ function AccountView(props: { pubKey: string | undefined }) {
     }
     if (pubKey) {
       setSelectedAccountInfo(getAccount(net, pubKey));
-      setTokenAccounts(getTokenAccounts(net, pubKey)?.value)
+      setTokenAccounts(getTokenAccounts(net, pubKey)?.value);
     } else {
       setSelectedAccountInfo(undefined);
     }
@@ -261,14 +264,14 @@ function AccountView(props: { pubKey: string | undefined }) {
             </div>
             <div>
               <pre className="exe-hexdump p-2 rounded">
-                <code>{renderData(account)}</code>
+                <code>{renderRawData(account)}</code>
               </pre>
             </div>
           </div>
           <div className="ms-1">
             <div>
               <small className="text-muted">
-                Token Accounts ({tokenAccounts.length})
+                Token Accounts ({tokenAccounts?.length})
               </small>
               {/* TODO: this button should only be enabled for accounts that you can create a new mint for... */}
               <CreateNewMintButton
@@ -287,7 +290,7 @@ function AccountView(props: { pubKey: string | undefined }) {
             <div>
               <Table hover size="sm">
                 <tbody>
-                  {tokenAccounts.map(
+                  {tokenAccounts?.map(
                     (tAccount: {
                       pubkey: sol.PublicKey;
                       account: sol.AccountInfo<sol.ParsedAccountData>;
@@ -365,6 +368,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                       );
                     }
                   )}
+                </tbody>
+              </Table>
+            </div>
+          </div>
+        </div>
       </div>
       <div className="ms-1">
         <div>
