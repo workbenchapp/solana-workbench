@@ -17,12 +17,6 @@ const send = (method, msg) => {
 contextBridge.exposeInMainWorld('electron', {
   log: log.functions,
   ipcRenderer: {
-    runValidator() {
-      send('run-validator', {});
-    },
-    stopValidator() {
-      send('stop-validator', {});
-    },
     validatorState(msg) {
       send('validator-state', msg);
     },
