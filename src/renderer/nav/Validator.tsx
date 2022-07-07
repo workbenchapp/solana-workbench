@@ -17,6 +17,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { default as AnsiUp } from 'ansi_up';
+import DOMPurify from 'dompurify';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '@/common/globals';
 
@@ -28,7 +29,7 @@ const ipcDockerToast = (dockerIPCMethod: string) => {
   });
 };
 
-const ansi_up = new AnsiUp();
+const ansiUp = new AnsiUp();
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -87,7 +88,9 @@ const Validator = () => {
       switch (method) {
         case 'validator-logs':
           // eslint-disable-next-line prettier/prettier
-          setValidatorLogs(ansi_up.ansi_to_html(res.join('\n')));
+          setValidatorLogs(
+            DOMPurify.sanitize(ansiUp.ansi_to_html(res.join('\n')))
+          );
           break;
         default:
       }
