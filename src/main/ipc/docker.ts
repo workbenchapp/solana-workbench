@@ -9,6 +9,8 @@ import { execAsync } from '../const';
 
 import { logger } from '../logger';
 import { log } from '../validator';
+import { netToURL } from '@/common/strings';
+import { Net } from '@/types/types';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
@@ -18,7 +20,7 @@ const DOCKER_PATH =
 const ammanrc = {
   validator: {
     // By default Amman will pull the account data from the accountsCluster (can be overridden on a per account basis)
-    accountsCluster: 'https://api.metaplex.solana.com',
+    accountsCluster: netToURL(Net.MainnetBeta),
     accounts: [
       {
         label: 'Token Metadata Program',
@@ -27,22 +29,22 @@ const ammanrc = {
         executable: true,
       },
       {
+        // This is an onchain account Sven uses for testing that the import worked (and other tests)
         label: 'Svens debug account',
         accountId: 'SvencSSSMANWBYyqFhMur1r7a3N6WAA1TEQNSEcRBnz',
       },
       {
+        // Random devnet account ()
         label: 'Random other account',
         accountId: '4VLgNs1jXgdciSidxcaLKfrR9WjATkj6vmTm5yCwNwui',
-        // By default executable is false and is not required to be in the config
-        // executable: false,
 
         // Providing a cluster here will override the accountsCluster field
-        cluster: 'https://metaplex.devnet.rpcpool.com',
+        cluster: netToURL(Net.Dev),
       },
     ],
     killRunningValidators: true,
     jsonRpcUrl: 'http://0.0.0.0:8899',
-    websocketUrl: '',
+    websocketUrl: 'ws://0.0.0.0:8900',
     commitment: 'confirmed',
     // ledgerDir: tmpLedgerDir(),
     resetLedger: true,
@@ -104,11 +106,8 @@ async function createContainer(image: string) {
   const dockerClient = new Dockerode();
   log(`Pull ${image}`);
   const pullStream = await dockerClient.pull(image);
-  // logger.info(`----------- pullStream ${JSON.stringify(pullStream)}`);
 
   function onPullProgress(_event: any) {
-    // ...
-    // logger.info(`onPullProgress: ${JSON.stringify(_event)}`);
     log(`onPullProgress: ${JSON.stringify(_event)}`);
   }
 
@@ -188,12 +187,7 @@ async function execAmman() {
     .then((exec: Dockerode.Exec) => {
       log('start amman exec created');
 
-      return exec.start({
-        // hijack: true,
-        // stdin: true,
-        // Detach: false,
-        // Tty: true,
-      });
+      return exec.start({});
     });
 
   const stream = await p;
@@ -221,7 +215,6 @@ export function initDockerPromises() {
     'DOCKER-GetContainerStatus',
     (name: unknown, event?: IpcEvent | undefined) => {
       logger.silly(`main: called DOCKER-GetContainerStatus, ${name}, ${event}`);
-      // log(`main: called DOCKER-GetContainerStatus, ${name}, ${event}`);
 
       const dockerClient = new Dockerode();
       return dockerClient.getContainer(name as string).inspect();
@@ -298,7 +291,6 @@ export function initDockerPromises() {
       logger.error(`remove requested: solana-test-validator`);
       log(`remove requested: solana-test-validator`);
 
-      // TODO: should we be force removing?
       return container.remove({ force: true }).then(() => {
         logger.info('container removed ');
         log('container removed ');
@@ -346,7 +338,7 @@ export function initDockerPromises() {
         .then(() => {
           logger.info('exec stop amman started ');
           log('exec stop amman started ');
-          // TODO: wait tile the validator has stopped..
+          // TODO: wait til the validator has stopped..
           return 'OK';
         });
     }

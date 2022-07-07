@@ -13,7 +13,6 @@ const log = (line: string) => {
 // TODO: keeping this as not PromiseIPC for now - but it would be good to move it into ipc/docker.ts later
 const validatorLogs = async (msg: ValidatorLogsRequest) => {
   const { filter } = msg;
-  // const MAX_TAIL_LINES = 10000;
 
   if (logArray.length === 0) {
     if (filter) {

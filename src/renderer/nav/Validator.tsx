@@ -13,7 +13,6 @@ import {
 } from 'react-bootstrap';
 import { debounce } from 'underscore';
 import {
-  NetStatus,
   Net,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -42,9 +41,6 @@ const Validator = () => {
       window.promiseIpc
         .send('DOCKER-GetContainerStatus', 'solana-test-validator')
         .then((inspect: any) => {
-          // setValidatorImageTags(tags);
-          // logger.info(`INSPECT: ${JSON.stringify(inspect)}`);
-
           if (!inspect) {
             setContainerInspect({});
             return {};
@@ -62,14 +58,14 @@ const Validator = () => {
           logger.silly(inspectError);
         });
     }
+  }, 5000);
 
-    // if (validator.status === NetStatus.Running) {
+  useInterval(() => {
     window.electron.ipcRenderer.validatorLogs({
       filter: filterRef.current.value || '',
       net: validator.net,
     });
-    // }
-  }, 5000);
+  }, 222);
 
   useEffect(() => {
     window.promiseIpc
@@ -87,7 +83,6 @@ const Validator = () => {
       const { method, res } = resp;
       switch (method) {
         case 'validator-logs':
-          // logger.info('log: ', res);
           // eslint-disable-next-line prettier/prettier
           setValidatorLogs(res.join("\n"));
           break;
@@ -95,12 +90,10 @@ const Validator = () => {
       }
     };
     window.electron.ipcRenderer.on('main', listener);
-    if (validator.status === NetStatus.Running) {
-      window.electron.ipcRenderer.validatorLogs({
-        filter: '',
-        net: validator.net,
-      });
-    }
+    window.electron.ipcRenderer.validatorLogs({
+      filter: '',
+      net: validator.net,
+    });
     return () => {
       window.electron.ipcRenderer.removeListener('main', listener);
     };
@@ -164,8 +157,7 @@ const Validator = () => {
                       ipcDockerToast('StartValidatorContainer').then(() => {
                         logger.info('STARTED CONTAINER');
                         logger.info('START AMMAN');
-                        // TODO: blocking, no toast
-                        // ipcDockerToast('StartAmmanValidator');
+                        // TODO: StartAmmanValidator blocks, no toast for now
                         window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                         logger.info('STARTED AMMAN');
                         return 'ok';
@@ -187,18 +179,15 @@ const Validator = () => {
                   .then(() => {
                     logger.info('STARTED CONTAINER');
                     logger.info('START AMMAN');
-                    // TODO: blocking, no toast
-                    // ipcDockerToast('StartAmmanValidator');
+                    // TODO: StartAmmanValidator blocks, no toast for now
                     window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                     logger.info('STARTED AMMAN');
                     return 'ok';
                   })
                   .catch(logger.error);
               } else {
-                // need to wait til the container has started...
                 logger.info('START AMMAN');
-                // TODO: blocking, no toast
-                // ipcDockerToast('StartAmmanValidator');
+                // TODO: StartAmmanValidator blocks, no toast for now
                 window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
               }
             }}
@@ -248,12 +237,10 @@ const Validator = () => {
           placeholder="Filter logs"
           aria-label="Amount"
           onKeyDown={debounce(() => {
-            // if (validator.status === NetStatus.Running) {
             window.electron.ipcRenderer.validatorLogs({
               filter: filterRef.current.value || '',
               net: validator.net,
             });
-            // }
           }, 300)}
         />
       </InputGroup>
