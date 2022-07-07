@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
-import * as sol from '@solana/web3.js';
 import { Accordion, Button, Card } from 'react-bootstrap';
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useConnection, useWallet, useAnchorWallet } from '@solana/wallet-adapter-react';
+import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
+import * as sol from '@solana/web3.js';
 import { logger } from '@/common/globals';
 import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
 
@@ -16,7 +17,6 @@ import {
   useAccountMeta,
 } from '../data/accounts/accountState';
 import {
-  truncateLamportAmount,
   truncateSolAmount,
   getHumanName,
   renderData,
@@ -24,6 +24,8 @@ import {
   getTokenAccounts,
   TokenAccountArray,
   forceRequestAccount,
+  renderRawData,
+  truncateLamportAmount,
 } from '../data/accounts/getAccount';
 import {
   NetStatus,
@@ -56,17 +58,73 @@ function AccountView(props: { pubKey: string | undefined }) {
   );
   const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
 
+  // create dummy keypair wallet if none is selected by user
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const wallet = useAnchorWallet() || {
+    signAllTransactions: async (
+      transactions: sol.Transaction[]
+    ): Promise<sol.Transaction[]> => Promise.resolve(transactions),
+    signTransaction: async (
+      transaction: sol.Transaction
+    ): Promise<sol.Transaction> => Promise.resolve(transaction),
+    publicKey: new sol.Keypair().publicKey,
+  };
+
+  const [decodedAccountData, setDecodedAccountData] = useState<string>();
+
+  useEffect(() => {
+    setDecodedAccountData('');
+    const decodeAnchor = async () => {
+      try {
+        if (
+          account?.accountInfo &&
+          !account.accountInfo.owner.equals(sol.SystemProgram.programId) &&
+          wallet
+        ) {
+          // TODO: Why do I have to set this every time
+          setProvider(
+            new AnchorProvider(
+              new sol.Connection(netToURL(net)),
+              wallet,
+              AnchorProvider.defaultOptions()
+            )
+          );
+          const info = account.accountInfo;
+          const program = await Program.at(info.owner);
+
+          program?.idl?.accounts?.forEach((accountType) => {
+            try {
+              const decodedAccount = program.coder.accounts.decode(
+                accountType.name,
+                info.data
+              );
+              setDecodedAccountData(JSON.stringify(decodedAccount, null, 2));
+            } catch (e) {
+              const err = e as Error;
+              // TODO: only log when error != invalid discriminator
+              if (err.message !== 'Invalid account discriminator') {
+                logger.silly(
+                  `Account decode failed err="${e}"  attempted_type=${accountType.name}`
+                );
+              }
+            }
+          });
+        }
+      } catch (e) {
+        logger.error(e);
+        setDecodedAccountData(renderRawData(account));
+      }
+    };
+    decodeAnchor();
+  }, [account, net, wallet]);
+
   useInterval(() => {
     if (status !== NetStatus.Running) {
       return;
     }
     if (pubKey) {
-      getAccount(net, pubKey)
-        .then((a) => setSelectedAccountInfo(a))
-        .catch(logger.info);
-      getTokenAccounts(net, pubKey)
-        .then((b) => setTokenAccounts(b?.value))
-        .catch(logger.info);
+      setSelectedAccountInfo(getAccount(net, pubKey));
+      setTokenAccounts(getTokenAccounts(net, pubKey)?.value)
     } else {
       setSelectedAccountInfo(undefined);
     }
@@ -307,10 +365,15 @@ function AccountView(props: { pubKey: string | undefined }) {
                       );
                     }
                   )}
-                </tbody>
-              </Table>
-            </div>
-          </div>
+      </div>
+      <div className="ms-1">
+        <div>
+          <small className="text-muted">Data</small>
+        </div>
+        <div className="p-2">
+          <code className="whitespace-pre-wrap w-full block">
+            {decodedAccountData}
+          </code>
         </div>
       </div>
     </Container>

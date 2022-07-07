@@ -1,9 +1,14 @@
 const { contextBridge, ipcRenderer } = require('electron');
 const log = require('electron-log');
 const promiseIpc = require('electron-promise-ipc');
-// TODO: make this a setting...
-log.transports.console.level = 'silly';
-log.transports.ipc.level = 'silly';
+
+if (process.env.LOG_LEVEL) {
+  log.transports.console.level = process.env.LOG_LEVEL;
+  log.transports.ipc.level = process.env.LOG_LEVEL;
+} else {
+  log.transports.console.level = 'silly';
+  log.transports.ipc.level = 'silly';
+}
 
 const send = (method, msg) => {
   ipcRenderer.send('main', method, msg);
@@ -12,12 +17,6 @@ const send = (method, msg) => {
 contextBridge.exposeInMainWorld('electron', {
   log: log.functions,
   ipcRenderer: {
-    runValidator() {
-      send('run-validator', {});
-    },
-    stopValidator() {
-      send('stop-validator', {});
-    },
     validatorState(msg) {
       send('validator-state', msg);
     },
