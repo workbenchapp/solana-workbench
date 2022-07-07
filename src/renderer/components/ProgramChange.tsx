@@ -64,7 +64,7 @@ export function ProgramChange(props: {
   return (
     <tr
       onClick={() => dispatch(setSelected(pubKey))}
-      className={`transition duration-50 bg-opacity-20 hover:bg-opacity-30 hover:bg-primary-light ${
+      className={`transition cursor-pointer duration-50 bg-opacity-20 hover:bg-opacity-30 hover:bg-primary-light ${
         selected ? 'bg-primary-light' : ''
       }`}
     >
