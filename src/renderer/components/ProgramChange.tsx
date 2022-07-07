@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { logger } from '@/common/globals';
 import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
@@ -33,27 +32,14 @@ export function ProgramChange(props: {
     if (status !== NetStatus.Running) {
       return;
     }
-    if (pubKey) {
-      getAccount(net, pubKey)
-        .then((res) => {
-          // eslint-disable-next-line promise/always-return
-          if (res) {
-            setChangeInfo(res);
-          }
-        })
-        .catch(logger.info);
-    } else {
+    if (!pubKey) {
       setChangeInfo(undefined);
+      return;
     }
+    setChangeInfo(getAccount(net, pubKey));
   }, [net, status, pubKey]);
-
-  useEffect(() => {
-    updateAccount();
-  }, [net, pubKey, updateAccount]);
-
-  useInterval(() => {
-    updateAccount();
-  }, 666);
+  useEffect(updateAccount, [updateAccount]);
+  useInterval(updateAccount, 666);
 
   const showCount = change?.count || 0;
   const showSOL = change
