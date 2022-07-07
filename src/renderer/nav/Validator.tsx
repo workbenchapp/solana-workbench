@@ -16,6 +16,7 @@ import {
   Net,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { default as AnsiUp } from 'ansi_up';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '@/common/globals';
 
@@ -26,6 +27,8 @@ const ipcDockerToast = (dockerIPCMethod: string) => {
     error: `${dockerIPCMethod} failed 🤯`,
   });
 };
+
+const ansi_up = new AnsiUp();
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -84,7 +87,7 @@ const Validator = () => {
       switch (method) {
         case 'validator-logs':
           // eslint-disable-next-line prettier/prettier
-          setValidatorLogs(res.join("\n"));
+          setValidatorLogs(ansi_up.ansi_to_html(res.join('\n')));
           break;
         default:
       }
@@ -245,9 +248,10 @@ const Validator = () => {
         />
       </InputGroup>
       <div className="overflow-auto">
-        <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
-          {validatorLogs}
-        </pre>
+        <pre
+          className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
+          dangerouslySetInnerHTML={{ __html: validatorLogs }}
+        ></pre>
       </div>
     </div>
   );
