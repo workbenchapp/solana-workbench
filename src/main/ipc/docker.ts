@@ -9,8 +9,8 @@ import { execAsync } from '../const';
 
 import { logger } from '../logger';
 import { log } from '../validator';
-import { netToURL } from '@/common/strings';
-import { Net } from '@/types/types';
+import { netToURL } from '../../common/strings';
+import { Net } from '../../types/types';
 
 declare type IpcEvent = IpcRendererEvent & IpcMainEvent;
 
