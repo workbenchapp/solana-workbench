@@ -12,12 +12,12 @@ import {
   ButtonToolbar,
 } from 'react-bootstrap';
 import { debounce } from 'underscore';
+import AnsiUp from 'ansi_up';
+import DOMPurify from 'dompurify';
 import {
   Net,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { default as AnsiUp } from 'ansi_up';
-import DOMPurify from 'dompurify';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '@/common/globals';
 
@@ -254,7 +254,7 @@ const Validator = () => {
         <pre
           className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
           dangerouslySetInnerHTML={{ __html: validatorLogs }}
-        ></pre>
+        />
       </div>
     </div>
   );
