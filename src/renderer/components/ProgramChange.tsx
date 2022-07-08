@@ -14,7 +14,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
-import PinAccountIcon from './PinIcon';
+import PinAccountIcon from './PinAccountIcon';
 
 export function ProgramChange(props: {
   net: Net;
