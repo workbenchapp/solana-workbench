@@ -32,6 +32,7 @@ import {
 } from '../data/accounts/getAccount';
 import {
   NetStatus,
+  netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import AirDropSolButton from './AirDropSolButton';
