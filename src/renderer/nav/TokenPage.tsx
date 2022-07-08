@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import Split from 'react-split';
+
 import Stack from 'react-bootstrap/Stack';
 import { Row, Col, Form, Accordion } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
@@ -110,60 +112,67 @@ function TokenPage() {
       </Row>
 
       <Row className="flex-fill almost-vh-80">
-        <Col className="col-md-6 almost-vh-100 vscroll">
-          Our Wallet
-          <AccountView pubKey={myWallet?.toString()} />
-        </Col>
-        <Col className="col-md-6 almost-vh-100 vscroll">
-          Token Mint
-          <Form.Select
-            aria-label="Default select example"
-            onChange={(value) => setMintPubKey(value.target.value)}
-          >
-            {mintList.map((key) => {
-              const sel = key === mintKey;
-              return (
-                <option selected={sel} value={key.toString()}>
-                  {key.toString()}
-                </option>
-              );
-            })}
-          </Form.Select>
-          <CreateNewMintButton
-            connection={connection}
-            fromKey={fromKey}
-            myWallet={myWallet}
-            andThen={(newMint: sol.PublicKey) => {
-              setMintPubKey(newMint);
-              ensureAtaFor(connection, fromKey, newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
-              updateMintList([]);
-              return newMint;
-            }}
-          />
-          <MetaplexTokenDataButton mintPubKey={mintKey} />
-          <Button
-            size="sm"
-            disabled={myWallet === undefined || mintKey === undefined}
-            onClick={() => {
-              toast.promise(closeMint(), {
-                pending: `Close mint account submitted`,
-                success: `Close mint account  succeeded 👌`,
-                error: `Close mint account   failed 🤯`,
-              });
-            }}
-          >
-            Set max supply (aka, close mint)
-          </Button>
-          <AccountView pubKey={mintKey?.toString()} />
-          <Accordion>
-            <MintInfoView mintKey={mintKey ? mintKey.toString() : ''} />
-          </Accordion>
-          <Accordion>
-            <MetaplexMintMetaDataView
-              mintKey={mintKey ? mintKey.toString() : ''}
-            />{' '}
-          </Accordion>
-        </Col>
+        <Split
+          sizes={[50, 50]}
+          direction="horizontal"
+          className="flex-1 w-full flex"
+          gutterSize={5}
+        >
+          <Col className="col-md-6 almost-vh-100 vscroll">
+            Our Wallet
+            <AccountView pubKey={myWallet?.toString()} />
+          </Col>
+          <Col className="col-md-6 almost-vh-100 vscroll">
+            Token Mint
+            <Form.Select
+              aria-label="Default select example"
+              onChange={(value) => setMintPubKey(value.target.value)}
+            >
+              {mintList.map((key) => {
+                const sel = key === mintKey;
+                return (
+                  <option selected={sel} value={key.toString()}>
+                    {key.toString()}
+                  </option>
+                );
+              })}
+            </Form.Select>
+            <CreateNewMintButton
+              connection={connection}
+              fromKey={fromKey}
+              myWallet={myWallet}
+              andThen={(newMint: sol.PublicKey) => {
+                setMintPubKey(newMint);
+                ensureAtaFor(connection, fromKey, newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
+                updateMintList([]);
+                return newMint;
+              }}
+            />
+            <MetaplexTokenDataButton mintPubKey={mintKey} />
+            <Button
+              size="sm"
+              disabled={myWallet === undefined || mintKey === undefined}
+              onClick={() => {
+                toast.promise(closeMint(), {
+                  pending: `Close mint account submitted`,
+                  success: `Close mint account  succeeded 👌`,
+                  error: `Close mint account   failed 🤯`,
+                });
+              }}
+            >
+              Set max supply (aka, close mint)
+            </Button>
+            <AccountView pubKey={mintKey?.toString()} />
+            <Accordion>
+              <MintInfoView mintKey={mintKey ? mintKey.toString() : ''} />
+            </Accordion>
+            <Accordion>
+              <MetaplexMintMetaDataView
+                mintKey={mintKey ? mintKey.toString() : ''}
+              />{' '}
+            </Accordion>
+          </Col>
+        </Split>
       </Row>
     </Stack>
   );

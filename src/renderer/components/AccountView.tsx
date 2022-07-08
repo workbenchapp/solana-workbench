@@ -23,7 +23,6 @@ import {
 import {
   truncateSolAmount,
   getHumanName,
-  getAccount,
   getParsedAccount,
   getTokenAccounts,
   TokenAccountArray,

@@ -14,7 +14,6 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { AccountInfo } from '../data/accounts/accountInfo';
 
 const logger = window.electron.log;
 
@@ -43,7 +42,9 @@ export function MintInfoView(props: { mintKey: string }) {
           logger.info('got it', account);
           if (account) {
             updateMintInfo(account);
-            setMintedTokens(account.accountInfo.data?.parsed.info.supply);
+            if (account.accountInfo) {
+              setMintedTokens(account.accountInfo.data?.parsed.info.supply);
+            }
           }
           return account;
         })
