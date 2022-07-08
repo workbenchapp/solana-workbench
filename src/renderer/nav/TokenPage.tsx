@@ -77,7 +77,7 @@ function TokenPage() {
         return mints;
       })
       .catch(logger.error);
-  });
+  }, [fromKey.publicKey, mintKey, mintList.length, net, status]);
 
   const { publicKey } = fromKey;
   if (!publicKey) {

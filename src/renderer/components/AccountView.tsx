@@ -122,6 +122,7 @@ function AccountView(props: { pubKey: string | undefined }) {
   }, [account, net, wallet]);
 
   useInterval(() => {
+    // TODO: really would like to subscribe to a list of accounts - even if its via the getAccounts cache
     if (status !== NetStatus.Running) {
       return;
     }
@@ -140,7 +141,7 @@ function AccountView(props: { pubKey: string | undefined }) {
     } else {
       setSelectedAccountInfo(undefined);
     }
-  }, 666);
+  }, 6666);
 
   useEffect(() => {
     const alias = getHumanName(accountMeta);
