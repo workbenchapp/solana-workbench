@@ -24,6 +24,7 @@ import {
   truncateSolAmount,
   getHumanName,
   getAccount,
+  getParsedAccount,
   getTokenAccounts,
   TokenAccountArray,
   forceRequestAccount,
@@ -126,8 +127,17 @@ function AccountView(props: { pubKey: string | undefined }) {
       return;
     }
     if (pubKey) {
-      setSelectedAccountInfo(getAccount(net, pubKey));
-      setTokenAccounts(getTokenAccounts(net, pubKey)?.value);
+      getParsedAccount(net, pubKey)
+        .then((info) => {
+          if (info) {
+            setSelectedAccountInfo(info);
+          }
+          return info;
+        })
+        .catch(logger.error);
+      getTokenAccounts(net, pubKey)
+        .then((b) => setTokenAccounts(b?.value))
+        .catch(logger.info);
     } else {
       setSelectedAccountInfo(undefined);
     }

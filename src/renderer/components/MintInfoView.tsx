@@ -6,11 +6,15 @@ import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
 
-import { getAccount, truncateSolAmount } from '../data/accounts/getAccount';
+import {
+  getParsedAccount,
+  truncateSolAmount,
+} from '../data/accounts/getAccount';
 import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { AccountInfo } from '../data/accounts/accountInfo';
 
 const logger = window.electron.log;
 
@@ -20,9 +24,10 @@ export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
-  const [mintInto, updateMintInfo] = useState<sol.AccountInfo<
-    Buffer | sol.ParsedAccountData
-  > | null>();
+  // TODO: need to figure out why we're not displaying the parsed data
+  const [mintInto, updateMintInfo] =
+    useState<sol.AccountInfo<sol.ParsedAccountData> | null>();
+  const [mintedTokens, setMintedTokens] = useState<number>(12);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -33,11 +38,12 @@ export function MintInfoView(props: { mintKey: string }) {
       // const key = new sol.PublicKey(mintKey);
       // solConn
       //   .getParsedAccountInfo(key)
-      getAccount(net, mintKey)
+      getParsedAccount(net, mintKey)
         .then((account) => {
           logger.info('got it', account);
           if (account) {
             updateMintInfo(account);
+            setMintedTokens(account.accountInfo.data?.parsed.info.supply);
           }
           return account;
         })
@@ -46,14 +52,29 @@ export function MintInfoView(props: { mintKey: string }) {
         });
     } catch (e) {
       // moreInfo = JSON.stringify(e);
-      logger.error('getAccount what', e);
+      logger.error('getParsedAccount what', e);
     }
   }, [mintKey, net, status]);
+
+  logger.info('mintInto:', JSON.stringify(mintInto));
+
+  if (!mintInto || mintInto?.data) {
+    return (
+      <Accordion.Item eventKey={`${mintKey}_info`}>
+        <Accordion.Header>Loading info</Accordion.Header>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
 
   return (
     <Accordion.Item eventKey={`${mintKey}_info`}>
       <Accordion.Header>
-        Mint holds {mintInto?.accountInfo.data.parsed.info.supply} tokens (
+        Mint holds{' '}
+        {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
+        tokens (
         {truncateSolAmount(
           mintInto?.accountInfo.lamports / sol.LAMPORTS_PER_SOL
         )}{' '}

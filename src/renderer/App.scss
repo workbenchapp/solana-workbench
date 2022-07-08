@@ -13,6 +13,10 @@
 @import "bootstrap/scss/variables";
 @import "bootstrap/scss/mixins";
 
+// Needed for accordions
+@import "bootstrap/scss/transitions";
+
+
 // 4. Include any optional Bootstrap components as you like
 @import "bootstrap/scss/accordion";
 @import "bootstrap/scss/buttons";

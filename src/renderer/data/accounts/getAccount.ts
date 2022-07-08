@@ -33,6 +33,33 @@ export function forceRequestAccount(net: Net, pubKey: string) {
   cache.delete(`${net}_${pubKey}`);
 }
 
+// This gets the JSON parsed version of the data for AccountView
+export async function getParsedAccount(
+  net: Net,
+  pubKey: string
+): Promise<sol.AccountInfo<sol.ParsedAccountData> | undefined> {
+  const solConn = new sol.Connection(netToURL(net));
+  const key = new sol.PublicKey(pubKey);
+
+  // TODO: SVENSVENSVEN - this is the crux of tokens stuff...
+  const solAccount = await solConn.getParsedAccountInfo(key);
+
+  logger.info('SSSS getParsedAccount', pubKey);
+
+  const response: AccountInfo = {
+    accountId: key,
+    accountInfo: solAccount.value,
+    pubKey,
+    net,
+    count: 0,
+    solDelta: 0,
+    maxDelta: 0,
+    // programID: '', // solAccount?.owner?.toString(),
+  };
+  cache.set(`${net}_${pubKey}`, response);
+  return response;
+}
+
 // This will always use, and update the lastUsed time any account in the cache.
 // if you absoluetly need to current latest, don't use this function :)
 // it is written to avoid RPC requests if at all possible, and is used in conjunction with the programChanges subscriptions
@@ -41,8 +68,6 @@ export function getAccount(net: Net, pubKey: string): AccountInfo | undefined {
   if (cachedResponse) {
     return cachedResponse;
   }
-
-  // TODO: SVENSVENSVEN - this is the crux of tokens stuff... const solAccount = await solConn.getParsedAccountInfo(key);
 
   logger.silly('getAccountInfo cache miss', pubKey, pubKey.toString());
 
@@ -180,6 +205,7 @@ export async function refreshAccountInfos(net: Net, keys: string[]) {
   const solConn = new sol.Connection(netToURL(net));
   const pubKeys = keys.map((k) => new sol.PublicKey(k));
   const accountInfos = await solConn.getMultipleAccountsInfo(pubKeys);
+
   accountInfos.forEach((info, i) => {
     const cachedAccount = cache.get(`${net}_${keys[i]}`);
     if (!cachedAccount) {
