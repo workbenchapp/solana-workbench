@@ -77,7 +77,7 @@ export function MintInfoView(props: { mintKey: string }) {
         {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
         tokens (
         {truncateSolAmount(
-          mintInto?.accountInfo.lamports / sol.LAMPORTS_PER_SOL
+          mintInto?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
         )}{' '}
         SOL)
         <Button
