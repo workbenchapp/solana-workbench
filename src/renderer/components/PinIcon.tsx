@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
-function PinIcon(props: {
+function PinAccountIcon(props: {
   pinned: boolean;
   pinAccount: (pk: string, b: boolean) => void;
   pubKey: string;
@@ -38,4 +37,4 @@ function PinIcon(props: {
   );
 }
 
-export default PinIcon;
+export default PinAccountIcon;

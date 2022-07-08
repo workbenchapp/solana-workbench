@@ -14,7 +14,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
-import PinIcon from './PinIcon';
+import PinAccountIcon from './PinIcon';
 
 export function ProgramChange(props: {
   net: Net;
@@ -57,7 +57,11 @@ export function ProgramChange(props: {
     >
       <td align="center">
         <span className="icon icon-interactive">
-          <PinIcon pinned={pinned} pubKey={pubKey} pinAccount={pinAccount} />
+          <PinAccountIcon
+            pinned={pinned}
+            pubKey={pubKey}
+            pinAccount={pinAccount}
+          />
         </span>
       </td>
       <td>
