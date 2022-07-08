@@ -90,16 +90,11 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
                 value={toKey}
                 onChange={(e) => setToKey(e.target.value)}
               />
-              <Form.Text className="text-muted">
-                {/* TODO: add radio selector to choose where the TX cost comes from */}
-                Transaction cost from To account (after transfer takes place)
-              </Form.Text>
-            </Col>
-          </Form.Group>
-
-          <Form.Group as={Row} className="mb-3" controlId="formBasicCheckbox">
-            <Col sm={{ span: 10, offset: 2 }}>
-              <Form.Check type="checkbox" label="Check me out" />
+              {/* TODO: add radio selector to choose where the TX cost comes from                   
+                  <Form.Text className="text-muted">
+                    Transaction cost from To account (after transfer takes place)
+                  </Form.Text> 
+              */}
             </Col>
           </Form.Group>
 
