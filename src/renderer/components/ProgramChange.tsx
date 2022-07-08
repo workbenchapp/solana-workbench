@@ -14,6 +14,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import InlinePK from './InlinePK';
+import PinIcon from './PinIcon';
 
 export function ProgramChange(props: {
   net: Net;
@@ -54,9 +55,9 @@ export function ProgramChange(props: {
         selected ? 'bg-primary-light' : ''
       }`}
     >
-      <td onClick={() => pinAccount(pubKey, pinned)} align="center">
+      <td align="center">
         <span className="icon icon-interactive">
-          {pinned ? <IconMdiStar /> : <IconMdiStarOutline />}
+          <PinIcon pinned={pinned} pubKey={pubKey} pinAccount={pinAccount} />
         </span>
       </td>
       <td>
