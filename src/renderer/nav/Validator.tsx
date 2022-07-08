@@ -12,6 +12,8 @@ import {
   ButtonToolbar,
 } from 'react-bootstrap';
 import { debounce } from 'underscore';
+import AnsiUp from 'ansi_up';
+import DOMPurify from 'dompurify';
 import {
   Net,
   selectValidatorNetworkState,
@@ -26,6 +28,8 @@ const ipcDockerToast = (dockerIPCMethod: string) => {
     error: `${dockerIPCMethod} failed 🤯`,
   });
 };
+
+const ansiUp = new AnsiUp();
 
 const Validator = () => {
   const [validatorLogs, setValidatorLogs] = useState('');
@@ -84,7 +88,9 @@ const Validator = () => {
       switch (method) {
         case 'validator-logs':
           // eslint-disable-next-line prettier/prettier
-          setValidatorLogs(res.join("\n"));
+          setValidatorLogs(
+            DOMPurify.sanitize(ansiUp.ansi_to_html(res.join('\n')))
+          );
           break;
         default:
       }
@@ -245,9 +251,10 @@ const Validator = () => {
         />
       </InputGroup>
       <div className="overflow-auto">
-        <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
-          {validatorLogs}
-        </pre>
+        <pre
+          className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
+          dangerouslySetInnerHTML={{ __html: validatorLogs }}
+        />
       </div>
     </div>
   );
