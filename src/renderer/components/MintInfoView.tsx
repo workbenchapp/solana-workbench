@@ -22,6 +22,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
 import { logger } from '../common/globals';
+import InlinePK from './InlinePK';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 export async function closeMint(
@@ -113,7 +114,9 @@ export function MintInfoView(props: { mintKey: string }) {
   return (
     <Accordion.Item eventKey={`${mintKey}_info`}>
       <Accordion.Header>
-        Mint holds{' '}
+        Mint:
+        <InlinePK pk={mintKey} formatLength={9} />
+        holds{' '}
         {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
         tokens (
         {truncateSolAmount(

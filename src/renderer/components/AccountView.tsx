@@ -213,9 +213,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                       <small className="text-muted">Address</small>
                     </td>
                     <td>
-                      <small>
-                        {pubKey ? <InlinePK pk={pubKey} /> : 'None selected'}
-                      </small>
+                      {pubKey ? <InlinePK pk={pubKey} /> : 'None selected'}
                     </td>
                   </tr>
                   <tr>
@@ -223,15 +221,13 @@ function AccountView(props: { pubKey: string | undefined }) {
                       <small className="text-muted">Assigned Program Id</small>
                     </td>
                     <td>
-                      <div>
-                        {account ? (
-                          <InlinePK
-                            pk={account?.accountInfo?.owner?.toString()}
-                          />
-                        ) : (
-                          'Not on chain'
-                        )}
-                      </div>
+                      {account ? (
+                        <InlinePK
+                          pk={account?.accountInfo?.owner?.toString()}
+                        />
+                      ) : (
+                        'Not on chain'
+                      )}
                     </td>
                   </tr>
 
@@ -313,17 +309,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                       return (
                         <Card>
                           <Card.Body>
-                            <Card.Title>
-                              ATA:{' '}
-                              <InlinePK
-                                pk={tAccount.pubkey.toString()}
-                                formatLength={3}
-                              />
-                              To Mint:{' '}
-                              <InlinePK
-                                pk={tAccount.account.data.parsed.info.mint.toString()}
-                              />
-                            </Card.Title>
+                            <Card.Title />
                             <Card.Text>
                               <Accordion flush>
                                 <Accordion.Item eventKey="1">
@@ -332,6 +318,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       ATA{' '}
                                       <InlinePK
                                         pk={tAccount.pubkey.toString()}
+                                        formatLength={9}
                                       />{' '}
                                     </div>
                                     <div>

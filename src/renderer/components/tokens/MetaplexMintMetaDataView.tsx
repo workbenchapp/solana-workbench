@@ -15,6 +15,7 @@ import {
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import { logger } from '../../common/globals';
+import InlinePK from '../InlinePK';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 
@@ -64,6 +65,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
       <Accordion.Header>
         Metaplex:{'  '}
+        <InlinePK pk={metaInfo.pubkey.toString()} formatLength={9} />
         <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">
           {metaInfo?.data.data.symbol}
         </a>

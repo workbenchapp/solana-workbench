@@ -2,6 +2,7 @@ import classnames from 'classnames';
 import { faExplosion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import React from 'react';
 import { ACCOUNTS_NONE_KEY } from '../data/accounts/accountInfo';
 
 import analytics from '../common/analytics';
@@ -38,25 +39,35 @@ const renderCopyTooltip = (id: string, text: string) =>
     );
   };
 
-const prettifyPubkey = (pk = '', formatLength: number) => {
+const prettifyPubkey = (pk = '', formatLength?: number) => {
   if (pk === null) {
     // cope with bad data in config
     return '';
   }
-  return pk !== ACCOUNTS_NONE_KEY
-    ? `${pk.slice(0, formatLength)}…${pk.slice(
-        pk.length - formatLength,
-        pk.length
-      )}`
-    : '';
+  if (pk === ACCOUNTS_NONE_KEY) {
+    // cope with bad data in config
+    return '';
+  }
+  if (!formatLength || formatLength + 2 > pk.length) {
+    return pk;
+  }
+  const partLen = (formatLength - 1) / 2;
+
+  console.log(
+    `SVENSVEN: ${partLen} - ${pk.slice(0, partLen)}…${pk.slice(
+      pk.length - partLen,
+      pk.length
+    )}`
+  );
+
+  return `${pk.slice(0, partLen)}…${pk.slice(pk.length - partLen, pk.length)}`;
 };
 
 const InlinePK: React.FC<{
   pk: string | undefined;
   className?: string;
-  format?: boolean;
   formatLength?: number;
-}> = ({ pk, className, format, formatLength }) => {
+}> = ({ pk, className, formatLength }) => {
   const { net } = useAppSelector(selectValidatorNetworkState);
 
   if (!pk) {
@@ -69,7 +80,7 @@ const InlinePK: React.FC<{
 
   return (
     <span className={classnames('flex items-center', className)}>
-      <code>{format ? prettifyPubkey(pk, formatLength || 4) : pk}</code>
+      <pre>{prettifyPubkey(pk, formatLength)}</pre>
       <CopyIcon writeValue={pk} />
       <small>
         {pk !== '' ? (
@@ -97,6 +108,11 @@ const InlinePK: React.FC<{
       </small>
     </span>
   );
+};
+
+InlinePK.defaultProps = {
+  className: '',
+  formatLength: 32,
 };
 
 export default InlinePK;
