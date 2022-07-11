@@ -92,10 +92,6 @@ function CreateNewMintButton(props: {
   const { connection, fromKey, myWallet, andThen, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
-  logger.info(
-    `create mint ${disabled} - status: ${status} - wallet: ${myWallet}`
-  );
-
   return (
     <Button
       size="sm"

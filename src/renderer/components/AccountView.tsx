@@ -165,12 +165,6 @@ function AccountView(props: { pubKey: string | undefined }) {
     );
   };
 
-  logger.info(
-    `test: ${fromKey.publicKey?.toString()} !== ${accountPubKey}: ${
-      fromKey.publicKey?.toString() !== accountPubKey?.toString()
-    }`
-  );
-
   // const humanName = getHumanName(accountMeta);
   return (
     <Container>
