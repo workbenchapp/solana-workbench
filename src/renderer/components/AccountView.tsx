@@ -314,7 +314,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                         <Card>
                           <Card.Body>
                             <Card.Title>
-                              ATA: <InlinePK pk={tAccount.pubkey.toString()} />
+                              ATA:{' '}
+                              <InlinePK
+                                pk={tAccount.pubkey.toString()}
+                                formatLength={3}
+                              />
                               To Mint:{' '}
                               <InlinePK
                                 pk={tAccount.account.data.parsed.info.mint.toString()}
@@ -324,34 +328,42 @@ function AccountView(props: { pubKey: string | undefined }) {
                               <Accordion flush>
                                 <Accordion.Item eventKey="1">
                                   <Accordion.Header>
-                                    ATA holds{' '}
-                                    {
-                                      tAccount.account.data.parsed.info
-                                        .tokenAmount.amount
-                                    }{' '}
-                                    tokens (
-                                    {truncateSolAmount(
-                                      tAccount.account.lamports /
-                                        sol.LAMPORTS_PER_SOL
-                                    )}{' '}
-                                    SOL)
-                                    <MintTokenToButton
-                                      connection={connection}
-                                      fromKey={fromKey}
-                                      mintKey={
-                                        new sol.PublicKey(
-                                          tAccount.account.data.parsed.info.mint.toString()
-                                        )
-                                      }
-                                      mintTo={accountPubKey}
-                                      andThen={(): void => {}}
-                                    />
-                                    <TransferTokenButton
-                                      connection={connection}
-                                      fromKey={fromKey}
-                                      mintKey={tAccount.account.data.parsed.info.mint.toString()}
-                                      transferFrom={pubKey}
-                                    />
+                                    <div>
+                                      ATA{' '}
+                                      <InlinePK
+                                        pk={tAccount.pubkey.toString()}
+                                      />{' '}
+                                    </div>
+                                    <div>
+                                      holds{' '}
+                                      {
+                                        tAccount.account.data.parsed.info
+                                          .tokenAmount.amount
+                                      }{' '}
+                                      tokens (
+                                      {truncateSolAmount(
+                                        tAccount.account.lamports /
+                                          sol.LAMPORTS_PER_SOL
+                                      )}{' '}
+                                      SOL)
+                                      <MintTokenToButton
+                                        connection={connection}
+                                        fromKey={fromKey}
+                                        mintKey={
+                                          new sol.PublicKey(
+                                            tAccount.account.data.parsed.info.mint.toString()
+                                          )
+                                        }
+                                        mintTo={accountPubKey}
+                                        andThen={(): void => {}}
+                                      />
+                                      <TransferTokenButton
+                                        connection={connection}
+                                        fromKey={fromKey}
+                                        mintKey={tAccount.account.data.parsed.info.mint.toString()}
+                                        transferFrom={pubKey}
+                                      />
+                                    </div>
                                   </Accordion.Header>
                                   <Accordion.Body>
                                     <pre className="exe-hexdump p-2 rounded">

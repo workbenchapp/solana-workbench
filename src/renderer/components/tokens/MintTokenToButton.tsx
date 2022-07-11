@@ -3,14 +3,15 @@ import * as sol from '@solana/web3.js';
 
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';
+import React from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
-import { logger } from '@/common/globals';
-import { useAppSelector } from '@/hooks';
+import { logger } from '../../common/globals';
+import { useAppSelector } from '../../hooks';
 import {
   NetStatus,
   selectValidatorNetworkState,
-} from '@/data/ValidatorNetwork/validatorNetworkState';
+} from '../../data/ValidatorNetwork/validatorNetworkState';
 import { ensureAtaFor } from './CreateNewMintButton';
 
 async function mintToken(
