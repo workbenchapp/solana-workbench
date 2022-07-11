@@ -165,6 +165,12 @@ function AccountView(props: { pubKey: string | undefined }) {
     );
   };
 
+  logger.info(
+    `test: ${fromKey.publicKey?.toString()} !== ${accountPubKey}: ${
+      fromKey.publicKey?.toString() !== accountPubKey?.toString()
+    }`
+  );
+
   // const humanName = getHumanName(accountMeta);
   return (
     <Container>
@@ -284,8 +290,11 @@ function AccountView(props: { pubKey: string | undefined }) {
               <small className="text-muted">
                 Token Accounts ({tokenAccounts?.length})
               </small>
-              {/* TODO: this button should only be enabled for accounts that you can create a new mint for... */}
+              {/* this button should only be enabled for accounts that you can create a new mint for... */}
               <CreateNewMintButton
+                disabled={
+                  fromKey.publicKey?.toString() !== accountPubKey?.toString()
+                }
                 connection={connection}
                 fromKey={fromKey}
                 myWallet={accountPubKey}

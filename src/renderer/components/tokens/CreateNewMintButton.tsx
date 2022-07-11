@@ -3,6 +3,7 @@ import * as sol from '@solana/web3.js';
 
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';
+import React from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
 import { logger } from '@/common/globals';
@@ -85,16 +86,23 @@ function CreateNewMintButton(props: {
   connection: sol.Connection;
   fromKey: walletAdapter.WalletContextState;
   myWallet: sol.PublicKey | undefined;
+  disabled: boolean;
   andThen: (newMint: sol.PublicKey) => sol.PublicKey;
 }) {
-  const { connection, fromKey, myWallet, andThen } = props;
+  const { connection, fromKey, myWallet, andThen, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
+
+  logger.info(
+    `create mint ${disabled} - status: ${status} - wallet: ${myWallet}`
+  );
 
   return (
     <Button
       size="sm"
       // TODO: this button should be disabled if the selected mint (or account) exists
-      disabled={status !== NetStatus.Running || myWallet === undefined}
+      disabled={
+        disabled || status !== NetStatus.Running || myWallet === undefined
+      }
       onClick={() => {
         if (!myWallet) {
           return;
