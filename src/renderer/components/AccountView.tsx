@@ -321,7 +321,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                               />
                             </Card.Title>
                             <Card.Text>
-                              <Accordion>
+                              <Accordion flush>
                                 <Accordion.Item eventKey="1">
                                   <Accordion.Header>
                                     ATA holds{' '}
