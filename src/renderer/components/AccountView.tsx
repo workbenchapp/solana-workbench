@@ -347,6 +347,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       )}{' '}
                                       SOL)
                                       <MintTokenToButton
+                                        disabled={
+                                          // TODO: ONLY IF the wallet user has mint-auth
+                                          fromKey.publicKey?.toString() !==
+                                          accountPubKey?.toString()
+                                        }
                                         connection={connection}
                                         fromKey={fromKey}
                                         mintKey={

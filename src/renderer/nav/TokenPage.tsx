@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Split from 'react-split';
 
 import Stack from 'react-bootstrap/Stack';
@@ -19,14 +19,13 @@ import {
 import MetaplexTokenDataButton from '../components/tokens/MetaplexTokenData';
 import { getTokenAccounts } from '../data/accounts/getAccount';
 import { useAppSelector } from '../hooks';
-import * as walletWeb3 from '../wallet-adapter/web3';
 import AccountView from '../components/AccountView';
-import { MintInfoView } from '../components/MintInfoView';
+import { closeMint, MintInfoView } from '../components/MintInfoView';
 import CreateNewMintButton, {
   ensureAtaFor,
-} from '@/components/tokens/CreateNewMintButton';
+} from '../components/tokens/CreateNewMintButton';
 
-import { logger } from '@/common/globals';
+import { logger } from '../common/globals';
 
 function TokenPage() {
   const fromKey = useWallet();
@@ -85,26 +84,6 @@ function TokenPage() {
   }
   const myWallet = publicKey;
 
-  async function closeMint() {
-    if (!myWallet) {
-      logger.info('no myWallet', myWallet);
-      return;
-    }
-    if (!mintKey) {
-      logger.info('no mintKey', mintKey);
-      return;
-    }
-
-    await walletWeb3.setAuthority(
-      connection,
-      fromKey, // Payer of the transaction fees
-      mintKey, // Account
-      myWallet, // Current authority
-      'MintTokens', // Authority type: "0" represents Mint Tokens
-      null // Setting the new Authority to null
-    );
-  }
-
   return (
     <Stack className="almost-vh-100">
       <Row>
@@ -138,6 +117,7 @@ function TokenPage() {
               })}
             </Form.Select>
             <CreateNewMintButton
+              disabled={false}
               connection={connection}
               fromKey={fromKey}
               myWallet={myWallet}
@@ -153,11 +133,17 @@ function TokenPage() {
               size="sm"
               disabled={myWallet === undefined || mintKey === undefined}
               onClick={() => {
-                toast.promise(closeMint(), {
-                  pending: `Close mint account submitted`,
-                  success: `Close mint account  succeeded 👌`,
-                  error: `Close mint account   failed 🤯`,
-                });
+                if (!mintKey) {
+                  return;
+                }
+                toast.promise(
+                  closeMint(connection, fromKey, mintKey, myWallet),
+                  {
+                    pending: `Close mint account submitted`,
+                    success: `Close mint account  succeeded 👌`,
+                    error: `Close mint account   failed 🤯`,
+                  }
+                );
               }}
             >
               Set max supply (aka, close mint)

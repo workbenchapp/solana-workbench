@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
+import {
+  useConnection,
+  useWallet,
+  WalletContextState,
+} from '@solana/wallet-adapter-react';
+import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
 import {
@@ -15,18 +21,46 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
-const logger = window.electron.log;
+import { logger } from '../common/globals';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
+export async function closeMint(
+  connection: sol.Connection,
+  fromKey: WalletContextState,
+  mintKey: sol.PublicKey,
+  myWallet: sol.PublicKey
+) {
+  if (!myWallet) {
+    logger.info('no myWallet', myWallet);
+    return;
+  }
+  if (!mintKey) {
+    logger.info('no mintKey', mintKey);
+    return;
+  }
+
+  await walletWeb3.setAuthority(
+    connection,
+    fromKey, // Payer of the transaction fees
+    mintKey, // Account
+    myWallet, // Current authority
+    'MintTokens', // Authority type: "0" represents Mint Tokens
+    null // Setting the new Authority to null
+  );
+}
 
 export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
+  const fromKey = useWallet();
+  const { connection } = useConnection();
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: need to figure out why we're not displaying the parsed data
-  const [mintInto, updateMintInfo] =
+  const [mintInfo, updateMintInfo] =
     useState<sol.AccountInfo<sol.ParsedAccountData> | null>();
-  const [mintedTokens, setMintedTokens] = useState<number>(12);
+  const [mintedTokens, setMintedTokens] = useState<number>(0);
+  const [hasAuthority, setHasAuthority] = useState(false);
+  const [mintAuthorityIsNull, setMintAuthorityIsNull] = useState(false);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -44,6 +78,19 @@ export function MintInfoView(props: { mintKey: string }) {
             updateMintInfo(account);
             if (account.accountInfo) {
               setMintedTokens(account.accountInfo.data?.parsed.info.supply);
+              setHasAuthority(
+                account.accountInfo.data?.parsed.info.mintAuthority ===
+                  fromKey.publicKey?.toString()
+              );
+              logger.info(
+                `MINTAUTH: ${account.accountInfo.data?.parsed.info.mintAuthority}`
+              );
+              if (!account.accountInfo.data?.parsed.info.mintAuthority) {
+                logger.info('SVENSNS NULL');
+                setMintAuthorityIsNull(true);
+              } else {
+                setMintAuthorityIsNull(false);
+              }
             }
           }
           return account;
@@ -55,11 +102,11 @@ export function MintInfoView(props: { mintKey: string }) {
       // moreInfo = JSON.stringify(e);
       logger.error('getParsedAccount what', e);
     }
-  }, [mintKey, net, status]);
+  }, [fromKey.publicKey, mintKey, net, status]);
 
-  logger.info('mintInto:', JSON.stringify(mintInto));
+  logger.info('mintInto:', JSON.stringify(mintInfo));
 
-  if (!mintInto || mintInto?.data) {
+  if (!mintInfo || mintInfo?.data) {
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
@@ -77,26 +124,37 @@ export function MintInfoView(props: { mintKey: string }) {
         {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
         tokens (
         {truncateSolAmount(
-          mintInto?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
+          mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
         )}{' '}
         SOL)
         <Button
           size="sm"
-          disabled={mintKey === undefined}
+          disabled={!hasAuthority || mintKey === undefined}
           onClick={() => {
-            toast.promise(closeMint(), {
-              pending: `Close mint account submitted`,
-              success: `Close mint account  succeeded 👌`,
-              error: `Close mint account   failed 🤯`,
-            });
+            if (!fromKey.publicKey) {
+              return;
+            }
+            toast.promise(
+              closeMint(
+                connection,
+                fromKey,
+                new sol.PublicKey(mintKey),
+                fromKey.publicKey
+              ),
+              {
+                pending: `Close mint account submitted`,
+                success: `Close mint account  succeeded 👌`,
+                error: `Close mint account   failed 🤯`,
+              }
+            );
           }}
         >
-          Close mint
+          {mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
         </Button>
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">
-          <code>Mint info: {JSON.stringify(mintInto, null, 2)}</code>
+          <code>Mint info: {JSON.stringify(mintInfo, null, 2)}</code>
         </pre>
       </Accordion.Body>
     </Accordion.Item>

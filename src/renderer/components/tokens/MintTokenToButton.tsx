@@ -55,16 +55,19 @@ function MintTokenToButton(props: {
   fromKey: walletAdapter.WalletContextState;
   mintKey: sol.PublicKey | undefined;
   mintTo: sol.PublicKey | undefined;
+  disabled: boolean;
   andThen: () => void;
 }) {
-  const { connection, fromKey, mintKey, mintTo, andThen } = props;
+  const { connection, fromKey, mintKey, mintTo, andThen, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <Button
       size="sm"
       // TODO: this button should be disabled if the selected mint (or account) exists
-      disabled={status !== NetStatus.Running || mintTo === undefined}
+      disabled={
+        disabled || status !== NetStatus.Running || mintTo === undefined
+      }
       onClick={(e) => {
         e.stopPropagation();
         if (!mintTo) {
