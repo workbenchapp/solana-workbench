@@ -3,8 +3,6 @@ import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
-import hexdump from 'hexdump-nodejs';
-import { Buffer } from 'buffer';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useAppSelector } from '../../hooks';
 

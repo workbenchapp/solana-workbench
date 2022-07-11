@@ -335,7 +335,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                                       SOL)
                                       <MintTokenToButton
                                         disabled={
-                                          // TODO: ONLY IF the wallet user has mint-auth
+                                          // TODO: ONLY IF the wallet user has mint-auth (and should mint to this user...)
                                           fromKey.publicKey?.toString() !==
                                           accountPubKey?.toString()
                                         }
@@ -350,6 +350,11 @@ function AccountView(props: { pubKey: string | undefined }) {
                                         andThen={(): void => {}}
                                       />
                                       <TransferTokenButton
+                                        disabled={
+                                          // TODO: ONLY IF the wallet user has permission to mutate this ATA's tokens...
+                                          fromKey.publicKey?.toString() !==
+                                          accountPubKey?.toString()
+                                        }
                                         connection={connection}
                                         fromKey={fromKey}
                                         mintKey={tAccount.account.data.parsed.info.mint.toString()}

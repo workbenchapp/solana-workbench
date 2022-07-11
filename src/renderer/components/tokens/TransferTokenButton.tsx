@@ -10,7 +10,7 @@ import {
   Popover,
   Row,
 } from 'react-bootstrap';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
 import { logger } from '@/common/globals';
@@ -221,8 +221,9 @@ function TransferTokenButton(props: {
   fromKey: walletAdapter.WalletContextState;
   mintKey: string | undefined;
   transferFrom: string | undefined;
+  disabled: boolean;
 }) {
-  const { connection, fromKey, mintKey, transferFrom } = props;
+  const { connection, fromKey, mintKey, transferFrom, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
@@ -239,7 +240,9 @@ function TransferTokenButton(props: {
     >
       <Button
         size="sm"
-        disabled={mintKey === undefined || status !== NetStatus.Running}
+        disabled={
+          disabled || mintKey === undefined || status !== NetStatus.Running
+        }
         variant="success"
       >
         Transfer Tokens

@@ -253,6 +253,7 @@ const Validator = () => {
       <div className="overflow-auto">
         <pre
           className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
+          // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: validatorLogs }}
         />
       </div>
