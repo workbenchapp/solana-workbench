@@ -117,7 +117,7 @@ function CreateNewMintButton(props: {
         );
       }}
     >
-      New mint
+      New token mint
     </Button>
   );
 }

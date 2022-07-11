@@ -5,6 +5,7 @@ import * as metaplex from '@metaplex/js';
 import Accordion from 'react-bootstrap/esm/Accordion';
 import hexdump from 'hexdump-nodejs';
 import { Buffer } from 'buffer';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useAppSelector } from '../../hooks';
 
 import { getTokenMetadata } from '../../data/accounts/getAccount';
@@ -21,10 +22,12 @@ import InlinePK from '../InlinePK';
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;
+  const fromKey = useWallet();
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   const [metaInfo, updateMetaInfo] =
     useState<metaplex.programs.metadata.Metadata>();
+  const [canEditMetadata, setCanEditMetadata] = useState(false);
 
   useEffect(() => {
     if (status !== NetStatus.Running) {
@@ -37,6 +40,10 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
         .then((m) => {
           updateMetaInfo(m);
           logger.info('getTokenMetadata', m.data.data.symbol);
+          setCanEditMetadata(
+            m.data.updateAuthority === fromKey.publicKey?.toString() &&
+              m.data.isMutable
+          );
           // moreInfo = JSON.stringify(m.data);
           return m;
         })
@@ -47,7 +54,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
       // moreInfo = JSON.stringify(e);
       logger.error('getTokenMetadata', e);
     }
-  }, [mintKey, net, status]);
+  }, [fromKey.publicKey, mintKey, net, status]);
 
   if (!metaInfo) {
     return (
@@ -55,7 +62,8 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
         <Accordion.Header>
           No Metaplex token info{' '}
           <MetaplexTokenDataButton
-            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : null}
+            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
+            disabled={!canEditMetadata}
           />
         </Accordion.Header>
       </Accordion.Item>
@@ -75,24 +83,29 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
           :{'  '} ({metaInfo?.data.data.name} )
         </div>
         <div className="col ">
-          <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
+          <MetaplexTokenDataButton
+            disabled={!canEditMetadata}
+            mintPubKey={new sol.PublicKey(mintKey)}
+          />
         </div>
       </Accordion.Header>
       <Accordion.Body>
-        <pre className="exe-hexdump p-2 rounded">
-          {JSON.stringify(
-            metaInfo,
-            (k, v) => {
-              if (k === 'data') {
-                if (v.type || v.mint || v.name) {
-                  return v;
+        <pre>
+          <code className="exe-hexdump p-2 rounded">
+            {JSON.stringify(
+              metaInfo,
+              (k, v) => {
+                if (k === 'data') {
+                  if (v.type || v.mint || v.name) {
+                    return v;
+                  }
+                  return `${JSON.stringify(v).substring(0, 32)} ...`;
                 }
-                return `${JSON.stringify(v).substring(0, 32)} ...`;
-              }
-              return v;
-            },
-            2
-          )}
+                return v;
+              },
+              2
+            )}
+          </code>
         </pre>
       </Accordion.Body>
     </Accordion.Item>

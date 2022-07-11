@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import Button from 'react-bootstrap/Button';
@@ -209,8 +209,9 @@ function DataPopover(props: { mintPubKey: sol.PublicKey | undefined }) {
 
 function MetaplexTokenDataButton(props: {
   mintPubKey: sol.PublicKey | undefined;
+  disabled: boolean;
 }) {
-  const { mintPubKey } = props;
+  const { mintPubKey, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
@@ -222,7 +223,9 @@ function MetaplexTokenDataButton(props: {
     >
       <Button
         size="sm"
-        disabled={mintPubKey === undefined || status !== NetStatus.Running}
+        disabled={
+          disabled || mintPubKey === undefined || status !== NetStatus.Running
+        }
         variant="success"
       >
         Edit Metaplex data
