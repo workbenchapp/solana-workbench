@@ -264,7 +264,7 @@ function ProgramChangeView() {
           </span>
         </small>
       </span>
-      <div className="flex-1 block min-h-0 overflow-auto">
+      <div>
         {displayList.length > 0 ? (
           <table className={classes['account-view']}>
             <thead>

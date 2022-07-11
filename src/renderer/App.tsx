@@ -12,7 +12,7 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
 import { FC, useMemo, useState } from 'react';
-import { Button, Form } from 'react-bootstrap';
+import { Button, Col, Form, Row } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
@@ -113,13 +113,18 @@ function Sidebar() {
 
 function Topbar() {
   return (
-    <div className="flex items-center p-1 px-2 bg-surface-400">
-      <span>Solana Workbench</span>
-      <div className="flex-1" />
-      {isElectron() ? null : <NavigationIcons />}
-      <WalletMultiButton className="h-min" />
-      <ValidatorNetwork />
-    </div>
+    <Col>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div className="ml-4">Solana Workbench</div>
+        {isElectron() ? null : <NavigationIcons />}
+        <div className="ml-auto">
+          <WalletMultiButton className="h-min" />
+        </div>
+        <div className="mr-3">
+          <ValidatorNetwork />
+        </div>
+      </div>
+    </Col>
   );
 }
 
@@ -220,23 +225,23 @@ export const GlobalContainer: FC = () => {
     return <>Config Loading ...${accounts.loading}</>;
   }
   return (
-    <div className="w-full h-full">
-      <ConnectionProvider endpoint={netToURL(net)}>
-        <WalletProvider wallets={wallets} autoConnect>
-          <WalletModalProvider>
-            <div className="flex flex-col h-full">
-              <Topbar />
-              <div className="flex flex-1 min-h-0">
-                <Sidebar />
-                <div className="flex-1 flex flex-col">
-                  <Outlet />
-                </div>
-              </div>
-            </div>
-          </WalletModalProvider>
-        </WalletProvider>
-      </ConnectionProvider>
-    </div>
+    <ConnectionProvider endpoint={netToURL(net)}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <Row>
+            <Topbar />
+          </Row>
+          <Row>
+            <Col xs="auto">
+              <Sidebar />
+            </Col>
+            <Col>
+              <Outlet />
+            </Col>
+          </Row>
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   );
 };
 

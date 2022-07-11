@@ -10,6 +10,9 @@ import {
   DropdownButton,
   Dropdown,
   ButtonToolbar,
+  Container,
+  Row,
+  Col,
 } from 'react-bootstrap';
 import { debounce } from 'underscore';
 import AnsiUp from 'ansi_up';
@@ -116,147 +119,155 @@ const Validator = () => {
   }
 
   return (
-    <div className="p-3">
-      <ButtonToolbar aria-label="Toolbar with button groups">
-        <div className="flex gap-2 mb-2">
-          <DropdownButton
-            size="sm"
-            className="mt-2 mb-4"
-            variant="dark"
-            title={
-              validatorImageTag !== '' ? validatorImageTag : 'Docker image'
-            }
-            disabled={containerInspect?.State}
-            onSelect={(image: string) => {
-              logger.info(`selected image: ${image}`);
-              setValidatorImageTag(image);
-            }}
-            align="end"
-          >
-            {validatorImageTags.map((tag: string) => {
-              const image = `${validatorImageName}:${tag}`;
-              return (
-                <Dropdown.Item eventKey={image} href="#">
-                  {image}
-                </Dropdown.Item>
-              );
-            })}
-          </DropdownButton>
-
-          <Button
-            size="sm"
-            disabled={validatorImageTag === ''}
-            onClick={() => {
-              logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
-
-              if (!containerInspect || !containerInspect.State) {
-                toast.promise(
-                  window.promiseIpc
-                    .send('DOCKER-CreateValidatorContainer', validatorImageTag)
-                    .then((info: any) => {
-                      // setValidatorImageTags(tags);
-                      logger.info(`hooray ${JSON.stringify(info)}`);
-                      return info;
-                    })
-                    .then(() => {
-                      // eslint-disable-next-line promise/catch-or-return, promise/no-nesting
-                      ipcDockerToast('StartValidatorContainer').then(() => {
+    <Container>
+      <Row>
+        <Col>
+          <div>Validator</div>
+          <ButtonToolbar aria-label="Toolbar with button groups">
+            <div className="flex gap-2 mb-2">
+              <DropdownButton
+                size="sm"
+                className="mt-2 mb-4"
+                variant="dark"
+                title={
+                  validatorImageTag !== '' ? validatorImageTag : 'Docker image'
+                }
+                disabled={containerInspect?.State}
+                onSelect={(image: string) => {
+                  logger.info(`selected image: ${image}`);
+                  setValidatorImageTag(image);
+                }}
+                align="end"
+              >
+                {validatorImageTags.map((tag: string) => {
+                  const image = `${validatorImageName}:${tag}`;
+                  return (
+                    <Dropdown.Item eventKey={image} href="#">
+                      {image}
+                    </Dropdown.Item>
+                  );
+                })}
+              </DropdownButton>
+              <Button
+                size="sm"
+                disabled={validatorImageTag === ''}
+                onClick={() => {
+                  logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
+                  if (!containerInspect || !containerInspect.State) {
+                    toast.promise(
+                      window.promiseIpc
+                        .send(
+                          'DOCKER-CreateValidatorContainer',
+                          validatorImageTag
+                        )
+                        .then((info: any) => {
+                          // setValidatorImageTags(tags);
+                          logger.info(`hooray ${JSON.stringify(info)}`);
+                          return info;
+                        })
+                        .then(() => {
+                          // eslint-disable-next-line promise/catch-or-return, promise/no-nesting
+                          ipcDockerToast('StartValidatorContainer').then(() => {
+                            logger.info('STARTED CONTAINER');
+                            logger.info('START AMMAN');
+                            // TODO: StartAmmanValidator blocks, no toast for now
+                            window.promiseIpc.send(
+                              `DOCKER-StartAmmanValidator`
+                            );
+                            logger.info('STARTED AMMAN');
+                            return 'ok';
+                          });
+                          return 'ok';
+                        }),
+                      {
+                        pending: `CreateValidatorContainer submitted`,
+                        success: `CreateValidatorContainer succeeded 👌`,
+                        error: `CreateValidatorContainer failed 🤯`,
+                      }
+                    );
+                  } else if (
+                    containerInspect &&
+                    containerInspect.State &&
+                    !containerInspect.State.Running
+                  ) {
+                    ipcDockerToast('StartValidatorContainer')
+                      .then(() => {
                         logger.info('STARTED CONTAINER');
                         logger.info('START AMMAN');
                         // TODO: StartAmmanValidator blocks, no toast for now
                         window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                         logger.info('STARTED AMMAN');
                         return 'ok';
-                      });
-                      return 'ok';
-                    }),
-                  {
-                    pending: `CreateValidatorContainer submitted`,
-                    success: `CreateValidatorContainer succeeded 👌`,
-                    error: `CreateValidatorContainer failed 🤯`,
-                  }
-                );
-              } else if (
-                containerInspect &&
-                containerInspect.State &&
-                !containerInspect.State.Running
-              ) {
-                ipcDockerToast('StartValidatorContainer')
-                  .then(() => {
-                    logger.info('STARTED CONTAINER');
+                      })
+                      .catch(logger.error);
+                  } else {
                     logger.info('START AMMAN');
                     // TODO: StartAmmanValidator blocks, no toast for now
                     window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-                    logger.info('STARTED AMMAN');
-                    return 'ok';
-                  })
-                  .catch(logger.error);
-              } else {
-                logger.info('START AMMAN');
-                // TODO: StartAmmanValidator blocks, no toast for now
-                window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-              }
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Start validator
-          </Button>
-          <Button
-            size="sm"
-            disabled={!containerInspect?.State?.Running}
-            onClick={() => {
-              ipcDockerToast('StopAmmanValidator');
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Stop Amman validator
-          </Button>
-          <Button
-            size="sm"
-            disabled={!containerInspect?.State?.Running}
-            onClick={() => {
-              ipcDockerToast('StopValidatorContainer');
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Stop Container
-          </Button>
-          <Button
-            size="sm"
-            disabled={!containerInspect?.State}
-            onClick={() => {
-              ipcDockerToast('RemoveValidatorContainer');
-            }}
-            className="mt-2 mb-4"
-            variant="dark"
-          >
-            Remove Container
-          </Button>
-        </div>
-      </ButtonToolbar>
-      <InputGroup size="sm">
-        <FormControl
-          ref={filterRef}
-          placeholder="Filter logs"
-          aria-label="Amount"
-          onKeyDown={debounce(() => {
-            window.electron.ipcRenderer.validatorLogs({
-              filter: filterRef.current.value || '',
-              net: validator.net,
-            });
-          }, 300)}
-        />
-      </InputGroup>
-      <div className="overflow-auto">
-        <pre
-          className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
-          dangerouslySetInnerHTML={{ __html: validatorLogs }}
-        />
-      </div>
-    </div>
+                  }
+                }}
+                className="mt-2 mb-4"
+                variant="dark"
+              >
+                Start validator
+              </Button>
+              <Button
+                size="sm"
+                disabled={!containerInspect?.State?.Running}
+                onClick={() => {
+                  ipcDockerToast('StopAmmanValidator');
+                }}
+                className="mt-2 mb-4"
+                variant="dark"
+              >
+                Stop Amman validator
+              </Button>
+              <Button
+                size="sm"
+                disabled={!containerInspect?.State?.Running}
+                onClick={() => {
+                  ipcDockerToast('StopValidatorContainer');
+                }}
+                className="mt-2 mb-4"
+                variant="dark"
+              >
+                Stop Container
+              </Button>
+              <Button
+                size="sm"
+                disabled={!containerInspect?.State}
+                onClick={() => {
+                  ipcDockerToast('RemoveValidatorContainer');
+                }}
+                className="mt-2 mb-4"
+                variant="dark"
+              >
+                Remove Container
+              </Button>
+            </div>
+          </ButtonToolbar>
+          <InputGroup className="hidden" size="sm">
+            <FormControl
+              ref={filterRef}
+              placeholder="Filter logs"
+              aria-label="Amount"
+              onKeyDown={debounce(() => {
+                window.electron.ipcRenderer.validatorLogs({
+                  filter: filterRef.current.value || '',
+                  net: validator.net,
+                });
+              }, 300)}
+            />
+          </InputGroup>
+          <div>
+            <pre
+              className="text-xs bg-surface-600"
+              dangerouslySetInnerHTML={{ __html: validatorLogs }}
+            />
+          </div>
+        </Col>
+      </Row>
+    </Container>
   );
 };
 
