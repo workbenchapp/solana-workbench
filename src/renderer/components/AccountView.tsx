@@ -1,6 +1,6 @@
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
 import Table from 'react-bootstrap/Table';
@@ -12,7 +12,7 @@ import {
 } from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
-import { logger } from '@/common/globals';
+import { logger } from '../common/globals';
 import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
 
 import { AccountInfo } from '../data/accounts/accountInfo';
