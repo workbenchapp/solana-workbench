@@ -82,11 +82,7 @@ export function MintInfoView(props: { mintKey: string }) {
                 account.accountInfo.data?.parsed.info.mintAuthority ===
                   fromKey.publicKey?.toString()
               );
-              logger.info(
-                `MINTAUTH: ${account.accountInfo.data?.parsed.info.mintAuthority}`
-              );
               if (!account.accountInfo.data?.parsed.info.mintAuthority) {
-                logger.info('SVENSNS NULL');
                 setMintAuthorityIsNull(true);
               } else {
                 setMintAuthorityIsNull(false);
