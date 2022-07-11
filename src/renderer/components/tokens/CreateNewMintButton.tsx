@@ -99,7 +99,8 @@ function CreateNewMintButton(props: {
       disabled={
         disabled || status !== NetStatus.Running || myWallet === undefined
       }
-      onClick={() => {
+      onClick={(e) => {
+        e.stopPropagation();
         if (!myWallet) {
           return;
         }

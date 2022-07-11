@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
+import hexdump from 'hexdump-nodejs';
+import { Buffer } from 'buffer';
 import { useAppSelector } from '../../hooks';
 
 import { getTokenMetadata } from '../../data/accounts/getAccount';
@@ -12,7 +14,7 @@ import {
 } from '../../data/ValidatorNetwork/validatorNetworkState';
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
-const logger = window.electron.log;
+import { logger } from '../../common/globals';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 
@@ -70,7 +72,21 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">
-          <code>{JSON.stringify(metaInfo, null, 2)}</code>
+          <code>
+            {JSON.stringify(
+              metaInfo,
+              (k, v) => {
+                if (k === 'data') {
+                  if (v.type || v.mint || v.name) {
+                    return v;
+                  }
+                  return `${JSON.stringify(v).substring(0, 32)} ...`;
+                }
+                return v;
+              },
+              2
+            )}
+          </code>
         </pre>
       </Accordion.Body>
     </Accordion.Item>

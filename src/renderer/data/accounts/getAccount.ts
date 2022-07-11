@@ -3,7 +3,7 @@ import hexdump from 'hexdump-nodejs';
 import * as metaplex from '@metaplex/js';
 
 import { LRUCache } from 'typescript-lru-cache';
-import { logger } from '@/common/globals';
+import { logger } from '../../common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { AccountMetaValues } from './accountState';

@@ -67,10 +67,7 @@ export function MintInfoView(props: { mintKey: string }) {
       return;
     }
     try {
-      // const solConn = new sol.Connection(netToURL(net));
-      // const key = new sol.PublicKey(mintKey);
-      // solConn
-      //   .getParsedAccountInfo(key)
+      // TODO: extract this as its needed for all mint buttons :/
       getParsedAccount(net, mintKey)
         .then((account) => {
           logger.info('got it', account);
