@@ -64,31 +64,35 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   return (
     <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
       <Accordion.Header>
-        Metaplex:{'  '}
-        <InlinePK pk={metaInfo.pubkey.toString()} formatLength={9} />
-        <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">
-          {metaInfo?.data.data.symbol}
-        </a>
-        :{'  '} ({metaInfo?.data.data.name} )
-        <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
+        <div className="col">
+          <b>Metaplex Metadata</b>
+          <InlinePK pk={metaInfo.pubkey.toString()} formatLength={9} />
+        </div>
+        <div className="col ">
+          <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">
+            {metaInfo?.data.data.symbol}
+          </a>
+          :{'  '} ({metaInfo?.data.data.name} )
+        </div>
+        <div className="col ">
+          <MetaplexTokenDataButton mintPubKey={new sol.PublicKey(mintKey)} />
+        </div>
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">
-          <code>
-            {JSON.stringify(
-              metaInfo,
-              (k, v) => {
-                if (k === 'data') {
-                  if (v.type || v.mint || v.name) {
-                    return v;
-                  }
-                  return `${JSON.stringify(v).substring(0, 32)} ...`;
+          {JSON.stringify(
+            metaInfo,
+            (k, v) => {
+              if (k === 'data') {
+                if (v.type || v.mint || v.name) {
+                  return v;
                 }
-                return v;
-              },
-              2
-            )}
-          </code>
+                return `${JSON.stringify(v).substring(0, 32)} ...`;
+              }
+              return v;
+            },
+            2
+          )}
         </pre>
       </Accordion.Body>
     </Accordion.Item>

@@ -53,13 +53,6 @@ const prettifyPubkey = (pk = '', formatLength?: number) => {
   }
   const partLen = (formatLength - 1) / 2;
 
-  console.log(
-    `SVENSVEN: ${partLen} - ${pk.slice(0, partLen)}…${pk.slice(
-      pk.length - partLen,
-      pk.length
-    )}`
-  );
-
   return `${pk.slice(0, partLen)}…${pk.slice(pk.length - partLen, pk.length)}`;
 };
 

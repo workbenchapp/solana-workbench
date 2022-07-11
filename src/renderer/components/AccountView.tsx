@@ -315,7 +315,7 @@ function AccountView(props: { pubKey: string | undefined }) {
                                 <Accordion.Item eventKey="1">
                                   <Accordion.Header>
                                     <div>
-                                      ATA{' '}
+                                      <b>ATA</b>
                                       <InlinePK
                                         pk={tAccount.pubkey.toString()}
                                         formatLength={9}

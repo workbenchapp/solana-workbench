@@ -114,39 +114,45 @@ export function MintInfoView(props: { mintKey: string }) {
   return (
     <Accordion.Item eventKey={`${mintKey}_info`}>
       <Accordion.Header>
-        Mint:
-        <InlinePK pk={mintKey} formatLength={9} />
-        holds{' '}
-        {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
-        tokens (
-        {truncateSolAmount(
-          mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
-        )}{' '}
-        SOL)
-        <Button
-          size="sm"
-          disabled={!hasAuthority || mintKey === undefined}
-          onClick={() => {
-            if (!fromKey.publicKey) {
-              return;
-            }
-            toast.promise(
-              closeMint(
-                connection,
-                fromKey,
-                new sol.PublicKey(mintKey),
-                fromKey.publicKey
-              ),
-              {
-                pending: `Close mint account submitted`,
-                success: `Close mint account  succeeded 👌`,
-                error: `Close mint account   failed 🤯`,
+        <div className="col">
+          <b>Mint</b>
+          <InlinePK pk={mintKey} formatLength={9} />
+        </div>
+        <div>
+          holds{' '}
+          {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
+          tokens (
+          {truncateSolAmount(
+            mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
+          )}{' '}
+          SOL)
+        </div>
+        <div>
+          <Button
+            size="sm"
+            disabled={!hasAuthority || mintKey === undefined}
+            onClick={() => {
+              if (!fromKey.publicKey) {
+                return;
               }
-            );
-          }}
-        >
-          {mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
-        </Button>
+              toast.promise(
+                closeMint(
+                  connection,
+                  fromKey,
+                  new sol.PublicKey(mintKey),
+                  fromKey.publicKey
+                ),
+                {
+                  pending: `Close mint account submitted`,
+                  success: `Close mint account  succeeded 👌`,
+                  error: `Close mint account   failed 🤯`,
+                }
+              );
+            }}
+          >
+            {mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
+          </Button>
+        </div>
       </Accordion.Header>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">
