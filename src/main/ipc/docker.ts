@@ -207,7 +207,7 @@ export function initDockerPromises() {
       // TODO: this would use something like https://github.com/jessestuart/docker-hub-utils
       // start with just ... curl https://hub.docker.com/v2/repositories/cryptoworkbench/solana-amman/tags/ | jq '.results[].name'
 
-      return ['v1.9.29', 'v1.10.27', 'v1.11.1'];
+      return ['v1.9.29', 'v1.10.30', 'v1.11.2'];
     }
   );
 
