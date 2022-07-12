@@ -159,7 +159,7 @@ function ProgramChangeView() {
 
   if (status !== NetStatus.Running) {
     return (
-      <div className="h-full w-full justify-center items-center flex flex-col">
+      <div className="w-full justify-center items-center flex flex-col">
         <div className="relative z-0 flex flex-col items-center">
           <svg
             viewBox="0 0 200 200"
