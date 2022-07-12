@@ -128,9 +128,9 @@ function AnalyticsBanner() {
   const [analyticsEnabled, setAnalyticsEnabled] = useState(true);
 
   return (
-    <Container>
-      <div className="mt-2">
-        <h3>Will you help us out?</h3>
+    <Container className="mt-2 ml-2">
+      <div className="mb-2">
+        <h3 className="text-xl font-bold">Will you help us out?</h3>
         Workbench collects telemetry data to improve your experience. You can
         audit this code on{' '}
         <a
@@ -142,19 +142,23 @@ function AnalyticsBanner() {
         </a>
         . You can opt out below.
       </div>
-      <div className="mt-2 mb-2">
+      <div className="mb-2">
         <h5>What We Collect</h5>
         <ul>
-          <li>Which features are popular</li>
-          <li>System properties like OS version</li>
-          <li>How often people are using Workbench</li>
+          <li className="list-disc list-inside">Which features are popular</li>
+          <li className="list-disc list-inside">
+            System properties like OS version
+          </li>
+          <li className="list-disc list-inside">
+            How often people are using Workbench
+          </li>
         </ul>
-        We do not collect addresses or private keys.
       </div>
+      <div className="mb-2">We do not collect addresses or private keys.</div>
       <Form>
         <Form.Check
           type="switch"
-          className="d-inline-block"
+          className="d-inline-block font-medium"
           id="analytics-ok-switch"
           label="Yes, enable telemetry"
           checked={analyticsEnabled}
@@ -241,6 +245,8 @@ function App() {
   const accounts = useAccountsState();
 
   Object.assign(console, logger?.functions);
+
+  return <AnalyticsBanner />;
 
   if (config.loading) {
     return <>Config Loading ...${accounts.loading}</>;
