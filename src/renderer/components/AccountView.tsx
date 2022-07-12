@@ -257,16 +257,18 @@ function AccountView(props: { pubKey: string | undefined }) {
           </tbody>
         </table>
       </div>
-      <div className="ms-1">
-        <div>
-          <small className="text-muted">Data</small>
+      {!accountMeta?.privatekey && (
+        <div className="ms-1">
+          <div>
+            <small className="text-muted">Data</small>
+          </div>
+          <div className="p-2">
+            <code className="whitespace-pre-wrap w-full block">
+              {decodedAccountData}
+            </code>
+          </div>
         </div>
-        <div className="p-2">
-          <code className="whitespace-pre-wrap w-full block">
-            {decodedAccountData}
-          </code>
-        </div>
-      </div>
+      )}
     </Container>
   );
 }
