@@ -246,8 +246,6 @@ function App() {
 
   Object.assign(console, logger?.functions);
 
-  return <AnalyticsBanner />;
-
   if (config.loading) {
     return <>Config Loading ...${accounts.loading}</>;
   }
