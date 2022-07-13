@@ -7,6 +7,7 @@ import {
   WalletModalProvider,
   WalletMultiButton,
 } from '@solana/wallet-adapter-react-ui';
+
 // Default styles that can be overridden by your app
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
@@ -23,6 +24,15 @@ import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
 import { getElectronStorageWallet } from './data/accounts/account';
 import { useAccountsState } from './data/accounts/accountState';
+import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
+
+import Account from './nav/Account';
+import Anchor from './nav/Anchor';
+import Validator from './nav/Validator';
+import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
+import TokenPage from './nav/TokenPage';
+
+import { useAppDispatch, useAppSelector } from './hooks';
 import {
   ConfigKey,
   setConfigValue,
@@ -33,12 +43,6 @@ import {
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
-import { useAppDispatch, useAppSelector } from './hooks';
-import Account from './nav/Account';
-import Anchor from './nav/Anchor';
-import Validator from './nav/Validator';
-import ValidatorNetworkInfo from './nav/ValidatorNetworkInfo';
-import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
 // So we can electron
 declare global {
@@ -81,6 +85,9 @@ function NavigationIcons() {
     <>
       <TooltipNavItem to="/" tooltipMessage="Changes" eventKey="changes">
         <IconMdiTable className="block" />
+      </TooltipNavItem>
+      <TooltipNavItem to="/tokens" tooltipMessage="Tokens" eventKey="tokens">
+        <IconMdiCoins />
       </TooltipNavItem>
       <TooltipNavItem
         to="/validator"
@@ -258,6 +265,7 @@ function App() {
         <Route path="/" element={<GlobalContainer />}>
           <Route index element={<Account />} />
           <Route path="account" element={<Account />} />
+          <Route path="tokens" element={<TokenPage />} />
           <Route path="validator" element={<Validator />} />
           <Route path="anchor" element={<Anchor />} />
           <Route

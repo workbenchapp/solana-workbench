@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
@@ -65,12 +65,7 @@ export function ProgramChange(props: {
         </span>
       </td>
       <td>
-        <InlinePK
-          className="inline-flex items-center mr-2"
-          format
-          formatLength={12}
-          pk={pubKey}
-        />
+        <InlinePK className="inline-flex items-center mr-2" pk={pubKey} />
         {accountMeta?.privatekey ? <IconMdiKey className="inline-block" /> : ''}
       </td>
       <td>

@@ -5,8 +5,13 @@ import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
+
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
+
 import { airdropSol } from '../data/accounts/account';
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector } from '../hooks';
 
 function AirDropPopover(props: { pubKey: string | undefined }) {
@@ -87,6 +92,7 @@ function AirDropPopover(props: { pubKey: string | undefined }) {
 
 function AirDropSolButton(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
+  const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
@@ -95,7 +101,11 @@ function AirDropSolButton(props: { pubKey: string | undefined }) {
       overlay={AirDropPopover({ pubKey })}
       rootClose
     >
-      <Button variant="success" size="sm">
+      <Button
+        size="sm"
+        disabled={pubKey === undefined || status !== NetStatus.Running}
+        variant="success"
+      >
         Airdrop SOL
       </Button>
     </OverlayTrigger>

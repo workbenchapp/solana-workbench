@@ -190,7 +190,7 @@ function ProgramChangeView() {
   };
 
   return (
-    <div className="w-full p-3 flex flex-col overflow-auto">
+    <div>
       <div className="mb-2">
         <div className="mb-2 flex gap-2 items-center">
           <strong>Program Account Changes</strong>

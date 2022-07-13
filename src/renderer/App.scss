@@ -13,11 +13,20 @@
 @import "bootstrap/scss/variables";
 @import "bootstrap/scss/mixins";
 
+// Needed for accordions
+@import "bootstrap/scss/transitions";
+
+
 // 4. Include any optional Bootstrap components as you like
+@import "bootstrap/scss/accordion";
+.accordion-header {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+@import "bootstrap/scss/buttons";
 @import "bootstrap/scss/dropdown";
 @import "bootstrap/scss/tooltip";
 @import "bootstrap/scss/popover";
 
-//@import 'bootstrap/dist/css/bootstrap.min.css';
-@import "bootstrap/scss/buttons";
-
+// Import all of bootstrap, this isn't an exercise in minimisation
+// @import "bootstrap/scss/bootstrap";

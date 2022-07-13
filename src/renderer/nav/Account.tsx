@@ -26,9 +26,6 @@ function Account() {
         <div className="overflow-auto">
           <div className="flex-1 p-3">
             <AccountView pubKey={selectedAccount} />
-            <div className="border-top flex-fill">
-              transaction or program details
-            </div>
           </div>
         </div>
       </Split>

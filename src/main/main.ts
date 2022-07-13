@@ -3,6 +3,7 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import 'regenerator-runtime/runtime';
+import { Buffer } from 'buffer';
 import fetchAnchorIdl from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
@@ -119,6 +120,10 @@ const createWindow = async () => {
       preload: path.join(__dirname, 'preload.js'),
     },
   });
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  mainWindow.Buffer = Buffer;
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
   mainWindow.on('ready-to-show', () => {
