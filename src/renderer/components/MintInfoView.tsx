@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
@@ -9,13 +9,12 @@ import {
   useWallet,
   WalletContextState,
 } from '@solana/wallet-adapter-react';
-import { useQuery } from 'react-query';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
 import {
-  queryParsedAccount,
   truncateSolAmount,
+  useParsedAccount,
 } from '../data/accounts/getAccount';
 import {
   NetStatus,
@@ -59,15 +58,10 @@ export function MintInfoView(props: { mintKey: string }) {
     selectValidatorNetworkState
   );
 
-  const {
-    status: loadStatus,
-    error,
-    data: mintInfo,
-  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
-    ['parsed-account', { net, pubKey: mintKey }],
-    queryParsedAccount
+  const { loadStatus, account: mintInfo /* , error */ } = useParsedAccount(
+    net,
+    mintKey
   );
-  logger.silly(`useQuery(${mintKey}): ${loadStatus} - error: ${error}`);
 
   // ("idle" or "error" or "loading" or "success").
   if (

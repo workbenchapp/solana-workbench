@@ -3,6 +3,7 @@ import hexdump from 'hexdump-nodejs';
 import * as metaplex from '@metaplex/js';
 
 import { LRUCache } from 'typescript-lru-cache';
+import { useQuery } from 'react-query';
 import { logger } from '../../common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
@@ -81,6 +82,23 @@ export async function queryParsedAccount(params: ParsedAccountParams) {
   }
 
   return accountInfo;
+}
+export function useParsedAccount(net: Net, pubKey: string | undefined) {
+  const {
+    status: loadStatus,
+    error,
+    data: accountData,
+  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
+    ['parsed-account', { net, pubKey }],
+    queryParsedAccount
+  );
+  const account = accountData;
+  logger.silly(
+    `queryParsedAccount(${pubKey}): ${loadStatus} - error: ${error}: ${JSON.stringify(
+      account
+    )}`
+  );
+  return { loadStatus, account, error };
 }
 /// ///////////////////////////////////////////////////////////////////
 

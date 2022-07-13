@@ -11,7 +11,6 @@ import {
 } from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
-import { useQuery } from 'react-query';
 import { logger } from '../common/globals';
 import { useAppDispatch, useAppSelector } from '../hooks';
 
@@ -24,9 +23,10 @@ import {
   forceRequestAccount,
   renderRawData,
   truncateLamportAmount,
-  queryParsedAccount,
+  useParsedAccount,
 } from '../data/accounts/getAccount';
 import {
+  Net,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -51,19 +51,9 @@ function AccountView(props: { pubKey: string | undefined }) {
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
 
-  const {
-    status: loadStatus,
-    error,
-    data: accountData,
-  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
-    ['parsed-account', { net, pubKey }],
-    queryParsedAccount
-  );
-  const account = accountData;
-  logger.silly(
-    `ACCOUNTVIEW: useQuery(${pubKey}): ${loadStatus} - error: ${error}: ${JSON.stringify(
-      account
-    )}`
+  const { /* loadStatus, */ account /* , error */ } = useParsedAccount(
+    net,
+    pubKey
   );
 
   // ("idle" or "error" or "loading" or "success").
