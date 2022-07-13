@@ -71,7 +71,12 @@ export function MintInfoView(props: { mintKey: string }) {
   logger.silly(`useQuery(${mintKey}): ${loadStatus} - error: ${error}`);
 
   // ("idle" or "error" or "loading" or "success").
-  if (loadStatus !== 'success' || !mintInfo || !mintInfo.accountInfo) {
+  if (
+    loadStatus !== 'success' ||
+    !mintInfo ||
+    !mintInfo.accountInfo ||
+    !mintInfo.accountInfo.data?.parsed
+  ) {
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
