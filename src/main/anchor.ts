@@ -1,3 +1,4 @@
+import { BrowserWindow, dialog } from 'electron';
 import { FetchAnchorIDLRequest } from '../types/types';
 import { execAsync, RESOURCES_PATH } from './const';
 import { logger } from './logger';
@@ -22,4 +23,14 @@ const fetchAnchorIdl = async (msg: FetchAnchorIDLRequest) => {
   };
 };
 
-export default fetchAnchorIdl;
+const selectAnchorDir = async (msg: any, mainWindow: BrowserWindow | null) => {
+  if (mainWindow) {
+    const res = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openDirectory'],
+    });
+    return { res };
+  }
+  return { error: 'No Electron window found' };
+};
+
+export { fetchAnchorIdl, selectAnchorDir };
