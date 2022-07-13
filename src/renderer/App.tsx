@@ -56,9 +56,9 @@ declare global {
 }
 
 const TooltipNavItem: React.FC<{
-  to: string;
-  tooltipMessage: string;
-  eventKey: string;
+  to?: string;
+  tooltipMessage?: string;
+  eventKey?: string;
   children?: React.ReactNode;
 }> = ({ to, tooltipMessage, eventKey, children }) => {
   return (
