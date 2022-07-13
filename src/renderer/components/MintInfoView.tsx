@@ -9,6 +9,7 @@ import {
   useWallet,
   WalletContextState,
 } from '@solana/wallet-adapter-react';
+import { useQuery } from 'react-query';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
@@ -50,55 +51,62 @@ export async function closeMint(
   );
 }
 
+type Params = {
+  queryKey: [string, { net: Net; pubKey: string }];
+};
+async function queryParsedAccount(params: Params) {
+  const [, { net, pubKey }] = params.queryKey;
+  // const response = await fetch(`https://swapi.dev/api/people/${id}/`);
+  // if (!response.ok) {
+  //   throw new Error("Problem fetching data");
+  // }
+  // const character = await response.json();
+  // assertIsCharacter(character);
+
+  const accountInfo = await getParsedAccount(net, pubKey);
+  if (!accountInfo) {
+    throw Error(`${pubKey} Not found`);
+  }
+
+  return accountInfo;
+}
+
 export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
   const fromKey = useWallet();
   const { connection } = useConnection();
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net, status: netStatus } = useAppSelector(
+    selectValidatorNetworkState
+  );
 
-  // TODO: need to figure out why we're not displaying the parsed data
-  const [mintInfo, updateMintInfo] =
-    useState<sol.AccountInfo<sol.ParsedAccountData> | null>();
-  const [mintedTokens, setMintedTokens] = useState<number>(0);
-  const [hasAuthority, setHasAuthority] = useState(false);
-  const [mintAuthorityIsNull, setMintAuthorityIsNull] = useState(false);
+  const {
+    status: loadStatus,
+    error,
+    data: mintInfo,
+  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
+    ['parsed-account', { net, pubKey: mintKey }],
+    queryParsedAccount
+  );
+  logger.info(`useQuery: ${loadStatus} - error: ${error}`);
 
-  useEffect(() => {
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    try {
-      // TODO: extract this as its needed for all mint buttons :/
-      getParsedAccount(net, mintKey)
-        .then((account) => {
-          logger.info('got it', account);
-          if (account) {
-            updateMintInfo(account);
-            if (account.accountInfo) {
-              setMintedTokens(account.accountInfo.data?.parsed.info.supply);
-              setHasAuthority(
-                account.accountInfo.data?.parsed.info.mintAuthority ===
-                  fromKey.publicKey?.toString()
-              );
-              if (!account.accountInfo.data?.parsed.info.mintAuthority) {
-                setMintAuthorityIsNull(true);
-              } else {
-                setMintAuthorityIsNull(false);
-              }
-            }
-          }
-          return account;
-        })
-        .catch((err) => {
-          logger.error('WHAT', err);
-        });
-    } catch (e) {
-      // moreInfo = JSON.stringify(e);
-      logger.error('getParsedAccount what', e);
-    }
-  }, [fromKey.publicKey, mintKey, net, status]);
+  // ("idle" or "error" or "loading" or "success").
+  if (loadStatus !== 'success') {
+    return (
+      <Accordion.Item eventKey={`${mintKey}_info`}>
+        <Accordion.Header>Loading info</Accordion.Header>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
 
-  logger.info('mintInto:', JSON.stringify(mintInfo));
+  logger.info('mintInfo:', JSON.stringify(mintInfo));
+  const hasAuthority =
+    mintInfo.accountInfo.data?.parsed.info.mintAuthority ===
+    fromKey.publicKey?.toString();
+  const mintAuthorityIsNull =
+    !mintInfo?.accountInfo.data?.parsed.info.mintAuthority;
 
   if (!mintInfo || mintInfo?.data) {
     return (
@@ -119,9 +127,7 @@ export function MintInfoView(props: { mintKey: string }) {
           <InlinePK pk={mintKey} formatLength={9} />
         </div>
         <div>
-          holds{' '}
-          {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
-          tokens (
+          holds {mintInfo?.accountInfo.data?.parsed.info.supply} tokens (
           {truncateSolAmount(
             mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
           )}{' '}
