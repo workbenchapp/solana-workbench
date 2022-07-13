@@ -12,13 +12,15 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import { FC, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { Bootstrap, BootswatchSelect } from 'react-bootswatch-select';
+
 import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
@@ -126,6 +128,14 @@ function Topbar() {
       {isElectron() ? null : <NavigationIcons />}
       <WalletMultiButton className="h-min" />
       <ValidatorNetwork />
+      <div className="h-min">
+        <Bootstrap version="4.4.1" />
+        <BootswatchSelect
+          version="4.4.1"
+          className="form-control"
+          selectedThemeName="slate"
+        />
+      </div>
     </div>
   );
 }
