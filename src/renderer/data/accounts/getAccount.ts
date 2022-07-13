@@ -189,7 +189,7 @@ export async function getTokenMetadata(
     conn,
     tokenPublicKey
   );
-  logger.info('GETOKENMETA!: ', JSON.stringify(meta));
+  // logger.info('GETOKENMETA!: ', JSON.stringify(meta));
 
   // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
   return meta;
@@ -207,14 +207,14 @@ export async function queryTokenMetadata(
 ): metaplex.programs.metadata.Metadata | undefined {
   const [, { net, pubKey }] = params.queryKey;
 
-  logger.info(`OKENMETA!: ${pubKey}`);
+  // logger.info(`OKENMETA!: ${pubKey}`);
 
   const meta = await getTokenMetadata(net, pubKey);
   // if (!meta) {
   //   throw Error(`tokenmetadata for ${pubKey} Not found`);
   // }
 
-  logger.info('OKENMETA!: ', JSON.stringify(meta));
+  // logger.info('OKENMETA!: ', JSON.stringify(meta));
 
   return meta;
 }

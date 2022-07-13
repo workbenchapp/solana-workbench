@@ -14,7 +14,6 @@ import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
 import {
-  getParsedAccount,
   queryParsedAccount,
   truncateSolAmount,
 } from '../data/accounts/getAccount';

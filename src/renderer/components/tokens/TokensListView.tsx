@@ -46,7 +46,7 @@ export function TokensListView(props: { pubKey: string | undefined }) {
     error,
     data: tokenAccountsData,
   } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
-    ['parsed-account', { net, pubKey }],
+    ['parsed-token-account', { net, pubKey }],
     queryTokenAccounts
   );
   logger.silly(

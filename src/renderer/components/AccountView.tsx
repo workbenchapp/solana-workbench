@@ -11,10 +11,10 @@ import {
 } from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
+import { useQuery } from 'react-query';
 import { logger } from '../common/globals';
 import { useAppDispatch, useAppSelector } from '../hooks';
 
-import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   setAccountValues,
   useAccountMeta,
@@ -24,6 +24,7 @@ import {
   forceRequestAccount,
   renderRawData,
   truncateLamportAmount,
+  queryParsedAccount,
 } from '../data/accounts/getAccount';
 import {
   netToURL,
@@ -50,9 +51,24 @@ function AccountView(props: { pubKey: string | undefined }) {
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
 
-  const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
-    undefined
+  const {
+    status: loadStatus,
+    error,
+    data: accountData,
+  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
+    ['parsed-account', { net, pubKey }],
+    queryParsedAccount
   );
+  const account = accountData;
+  logger.silly(
+    `ACCOUNTVIEW: useQuery(${pubKey}): ${loadStatus} - error: ${error}: ${JSON.stringify(
+      account
+    )}`
+  );
+
+  // ("idle" or "error" or "loading" or "success").
+  // TODO: this can't be here before the query
+  // TODO: there's a better way in query v4 - https://tkdodo.eu/blog/offline-react-query
 
   // create dummy keypair wallet if none is selected by user
   // eslint-disable-next-line react-hooks/exhaustive-deps
