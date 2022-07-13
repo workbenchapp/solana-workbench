@@ -14,14 +14,18 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
-function TransferSolPopover(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+function TransferSolPopover(props: {
+  pubKey: string | undefined;
+  targetInputDisabled: boolean | undefined;
+  targetPlaceholder: string | undefined;
+}) {
+  const { pubKey, targetInputDisabled } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
-    pubKeyVal = 'paste';
+    pubKeyVal = targetPlaceholder || '';
   }
 
   let fromKeyVal = selectedWallet.publicKey?.toString();
@@ -91,6 +95,7 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
             </Form.Label>
             <Col sm={9}>
               <Form.Control
+                readOnly={targetInputDisabled}
                 type="text"
                 placeholder="Select Account to send the SOL to"
                 value={toKey}
@@ -142,15 +147,24 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
   );
 }
 
-function TransferSolButton(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+function TransferSolButton(props: {
+  pubKey: string | undefined;
+  label: string | undefined;
+  targetInputDisabled: boolean | undefined;
+  targetPlaceholder: string | undefined;
+}) {
+  const { pubKey, label, targetInputDisabled, targetPlaceholder } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={TransferSolPopover({ pubKey })}
+      overlay={TransferSolPopover({
+        pubKey,
+        targetInputDisabled,
+        targetPlaceholder,
+      })}
       rootClose
     >
       <Button
@@ -158,7 +172,7 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
         disabled={pubKey === undefined || status !== NetStatus.Running}
         variant="success"
       >
-        Transfer SOL
+        {label || 'Transfer SOL'}
       </Button>
     </OverlayTrigger>
   );
