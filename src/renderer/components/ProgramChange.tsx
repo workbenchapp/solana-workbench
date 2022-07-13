@@ -65,7 +65,11 @@ export function ProgramChange(props: {
         </span>
       </td>
       <td>
-        <InlinePK className="inline-flex items-center mr-2" pk={pubKey} />
+        <InlinePK
+          className="inline-flex items-center mr-2"
+          pk={pubKey}
+          formatLength={9}
+        />
         {accountMeta?.privatekey ? <IconMdiKey className="inline-block" /> : ''}
       </td>
       <td>
