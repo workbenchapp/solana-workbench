@@ -33,6 +33,8 @@ export function forceRequestAccount(net: Net, pubKey: string) {
   cache.delete(`${net}_${pubKey}`);
 }
 
+/// //////////////////////////////////////////////////////////////////////
+// TODO: consider extracting...
 // This gets the JSON parsed version of the data for AccountView
 export async function getParsedAccount(
   net: Net,
@@ -59,6 +61,28 @@ export async function getParsedAccount(
   cache.set(`${net}_${pubKey}`, response);
   return response;
 }
+// react-query support
+// TODO: if i understood right, re-querying will make a non-blocking request, so caould be used to update on action?
+export type ParsedAccountParams = {
+  queryKey: [string, { net: Net; pubKey: string }];
+};
+export async function queryParsedAccount(params: ParsedAccountParams) {
+  const [, { net, pubKey }] = params.queryKey;
+  // const response = await fetch(`https://swapi.dev/api/people/${id}/`);
+  // if (!response.ok) {
+  //   throw new Error("Problem fetching data");
+  // }
+  // const character = await response.json();
+  // assertIsCharacter(character);
+
+  const accountInfo = await getParsedAccount(net, pubKey);
+  if (!accountInfo) {
+    throw Error(`${pubKey} Not found`);
+  }
+
+  return accountInfo;
+}
+/// ///////////////////////////////////////////////////////////////////
 
 // This will always use, and update the lastUsed time any account in the cache.
 // if you absoluetly need to current latest, don't use this function :)

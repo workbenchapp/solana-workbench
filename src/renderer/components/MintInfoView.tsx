@@ -15,6 +15,7 @@ import { useAppSelector } from '../hooks';
 
 import {
   getParsedAccount,
+  queryParsedAccount,
   truncateSolAmount,
 } from '../data/accounts/getAccount';
 import {
@@ -51,26 +52,6 @@ export async function closeMint(
   );
 }
 
-type Params = {
-  queryKey: [string, { net: Net; pubKey: string }];
-};
-async function queryParsedAccount(params: Params) {
-  const [, { net, pubKey }] = params.queryKey;
-  // const response = await fetch(`https://swapi.dev/api/people/${id}/`);
-  // if (!response.ok) {
-  //   throw new Error("Problem fetching data");
-  // }
-  // const character = await response.json();
-  // assertIsCharacter(character);
-
-  const accountInfo = await getParsedAccount(net, pubKey);
-  if (!accountInfo) {
-    throw Error(`${pubKey} Not found`);
-  }
-
-  return accountInfo;
-}
-
 export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
   const fromKey = useWallet();
@@ -87,10 +68,10 @@ export function MintInfoView(props: { mintKey: string }) {
     ['parsed-account', { net, pubKey: mintKey }],
     queryParsedAccount
   );
-  logger.info(`useQuery: ${loadStatus} - error: ${error}`);
+  logger.silly(`useQuery(${mintKey}): ${loadStatus} - error: ${error}`);
 
   // ("idle" or "error" or "loading" or "success").
-  if (loadStatus !== 'success') {
+  if (loadStatus !== 'success' || !mintInfo || !mintInfo.accountInfo) {
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
