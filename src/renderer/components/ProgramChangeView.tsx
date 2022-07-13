@@ -1,6 +1,7 @@
 import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { toast } from 'react-toastify';
@@ -66,6 +67,14 @@ function ProgramChangeView() {
   const { pinnedAccounts } = selectAccounts;
 
   const pinAccount = (pubKey: string, pinned: boolean) => {
+    // validate public key
+    try {
+      PublicKey.isOnCurve(pubKey);
+    } catch (err) {
+      console.log(err);
+      return;
+    }
+
     if (!pinned) {
       dispatch(accountsActions.unshift(pubKey));
     } else {
