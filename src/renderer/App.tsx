@@ -19,7 +19,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
-import { Bootstrap, BootswatchSelect } from 'react-bootswatch-select';
+import { BootswatchSelect } from 'react-bootswatch-select';
 
 import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
@@ -128,8 +128,7 @@ function Topbar() {
       {isElectron() ? null : <NavigationIcons />}
       <WalletMultiButton className="h-min" />
       <ValidatorNetwork />
-      <div className="h-min">
-        <Bootstrap version="4.4.1" />
+      <div className="md-2">
         <BootswatchSelect
           version="4.4.1"
           className="form-control"
