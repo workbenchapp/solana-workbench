@@ -8,8 +8,11 @@ import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
 
-function TransferSolPopover(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+function TransferSolPopover(props: {
+  pubKey: string | undefined;
+  targetInputDisabled: boolean | undefined;
+}) {
+  const { pubKey, targetInputDisabled } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
 
@@ -85,6 +88,7 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
             </Form.Label>
             <Col sm={9}>
               <Form.Control
+                readOnly={targetInputDisabled}
                 type="text"
                 placeholder="Select Account to send the SOL to"
                 value={toKey}
@@ -136,18 +140,22 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
   );
 }
 
-function TransferSolButton(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+function TransferSolButton(props: {
+  pubKey: string | undefined;
+  label: string | undefined;
+  targetInputDisabled: boolean | undefined;
+}) {
+  const { pubKey, label, targetInputDisabled } = props;
 
   return (
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={TransferSolPopover({ pubKey })}
+      overlay={TransferSolPopover({ pubKey, targetInputDisabled })}
       rootClose
     >
       <Button variant="success" size="sm">
-        Transfer SOL
+        {label || 'Transfer SOL'}
       </Button>
     </OverlayTrigger>
   );

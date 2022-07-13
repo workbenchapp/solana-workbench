@@ -153,7 +153,11 @@ function AccountView(props: { pubKey: string | undefined }) {
       <ButtonToolbar aria-label="Toolbar with button groups">
         <div className="flex gap-2 mb-2">
           <AirDropSolButton pubKey={pubKey} />
-          <TransferSolButton pubKey={pubKey} />
+          <TransferSolButton
+            pubKey={pubKey}
+            label="Send SOL"
+            targetInputDisabled
+          />
         </div>
       </ButtonToolbar>
       <div>
