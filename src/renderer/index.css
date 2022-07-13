@@ -1,6 +1,6 @@
-html, body, #root {
+/* html, body, #root {
   @apply bg-surface-500 w-full h-full;
-}
+} */
 
 ::-webkit-scrollbar {
   width: 10px;
@@ -25,7 +25,7 @@ textarea, input {
   }
 }
 
-svg {
+/* svg {
   @apply align-text-bottom;
 }
 
@@ -43,8 +43,9 @@ code {
   &:disabled {
     @apply opacity-50 bg-surface-100 cursor-auto;
   }
-}
+} */
 
+/* for the Split sections */
 .gutter {
   @apply bg-surface-200 transition duration-50 active:bg-surface-100;
 
@@ -58,7 +59,7 @@ code {
 }
 
 /* TODO: move away from bootstrap to have nicer custom buttons and reduce bloat */
-.popover-header {
+/* .popover-header {
   @apply bg-surface-300;
 }
 
@@ -68,4 +69,4 @@ code {
 
 .dropdown-item {
   @apply text-contrast hover:bg-surface-500 hover:text-contrast;
-}
+} */

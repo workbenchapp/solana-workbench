@@ -122,7 +122,6 @@ const Validator = () => {
           <DropdownButton
             size="sm"
             className="mt-2 mb-4"
-            variant="dark"
             title={
               validatorImageTag !== '' ? validatorImageTag : 'Docker image'
             }
@@ -198,7 +197,6 @@ const Validator = () => {
               }
             }}
             className="mt-2 mb-4"
-            variant="dark"
           >
             Start validator
           </Button>
@@ -209,7 +207,6 @@ const Validator = () => {
               ipcDockerToast('StopAmmanValidator');
             }}
             className="mt-2 mb-4"
-            variant="dark"
           >
             Stop Amman validator
           </Button>
@@ -220,7 +217,6 @@ const Validator = () => {
               ipcDockerToast('StopValidatorContainer');
             }}
             className="mt-2 mb-4"
-            variant="dark"
           >
             Stop Container
           </Button>
@@ -231,7 +227,6 @@ const Validator = () => {
               ipcDockerToast('RemoveValidatorContainer');
             }}
             className="mt-2 mb-4"
-            variant="dark"
           >
             Remove Container
           </Button>

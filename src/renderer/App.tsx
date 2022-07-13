@@ -12,13 +12,15 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import { FC, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { BootswatchSelect } from 'react-bootswatch-select';
+
 import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
@@ -55,9 +57,9 @@ declare global {
 }
 
 const TooltipNavItem: React.FC<{
-  to: string;
-  tooltipMessage: string;
-  eventKey: string;
+  to?: string;
+  tooltipMessage?: string;
+  eventKey?: string;
   children?: React.ReactNode;
 }> = ({ to, tooltipMessage, eventKey, children }) => {
   return (
@@ -126,6 +128,13 @@ function Topbar() {
       {isElectron() ? null : <NavigationIcons />}
       <WalletMultiButton className="h-min" />
       <ValidatorNetwork />
+      <div className="md-2">
+        <BootswatchSelect
+          version="4.4.1"
+          className="form-control"
+          selectedThemeName="slate"
+        />
+      </div>
     </div>
   );
 }
@@ -274,7 +283,7 @@ function App() {
           />
         </Route>
       </Routes>
-      <ToastContainer position="bottom-right" theme="dark" />
+      <ToastContainer position="bottom-right" />
     </>
   );
 }
