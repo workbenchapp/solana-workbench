@@ -265,16 +265,18 @@ function AccountView(props: { pubKey: string | undefined }) {
               </table>
             </div>
           </div>
-          <div className="ms-1">
-            <div>
-              <small className="text-muted">Data :</small>
+          {!accountMeta?.privatekey && (
+            <div className="ms-1">
+              <div>
+                <small className="text-muted">Data :</small>
+              </div>
+              <div>
+                <pre className="exe-hexdump p-2 rounded">
+                  <code>{decodedAccountData}</code>
+                </pre>
+              </div>
             </div>
-            <div>
-              <pre className="exe-hexdump p-2 rounded">
-                <code>{decodedAccountData}</code>
-              </pre>
-            </div>
-          </div>
+          )}
 
           <div className="ms-1">
             <div>
