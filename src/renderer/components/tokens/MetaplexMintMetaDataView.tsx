@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useQuery } from 'react-query';
 import { useAppSelector } from '../../hooks';
 
-import { getTokenMetadata } from '../../data/accounts/getAccount';
+import { queryTokenMetadata } from '../../data/accounts/getAccount';
 import {
   NetStatus,
   selectValidatorNetworkState,
@@ -23,56 +24,84 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const fromKey = useWallet();
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
-  const [metaInfo, updateMetaInfo] =
-    useState<metaplex.programs.metadata.Metadata>();
-  const [canEditMetadata, setCanEditMetadata] = useState(false);
+  // TODO: this can't be here before the query
+  // TODO: there's a better way in query v4 - https://tkdodo.eu/blog/offline-react-query
+  // if (status !== NetStatus.Running) {
+  //   return (
+  //     <Accordion.Item eventKey={`${mintKey}_info`}>
+  //       <Accordion.Header>
+  //         Validator Offline{' '}
+  //         <MetaplexTokenDataButton
+  //           mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
+  //           disabled
+  //         />
+  //       </Accordion.Header>
+  //       <Accordion.Body>
+  //         <pre className="exe-hexdump p-2 rounded">Validator Offline</pre>
+  //       </Accordion.Body>
+  //     </Accordion.Item>
+  //   );
+  // }
 
-  useEffect(() => {
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    try {
-      // this assumes metaplex
-      const meta = getTokenMetadata(net, mintKey.toString());
-      meta
-        .then((m) => {
-          updateMetaInfo(m);
-          logger.info('getTokenMetadata', m.data.data.symbol);
-          setCanEditMetadata(
-            m.data.updateAuthority === fromKey.publicKey?.toString() &&
-              m.data.isMutable
-          );
-          // moreInfo = JSON.stringify(m.data);
-          return m;
-        })
-        .catch(logger.error);
-      // moreInfo = JSON.stringify(meta);
-      // moreInfo = 'what';
-    } catch (e) {
-      // moreInfo = JSON.stringify(e);
-      logger.error('getTokenMetadata', e);
-    }
-  }, [fromKey.publicKey, mintKey, net, status]);
+  const pubKey = mintKey.toString();
+  const {
+    status: loadStatus,
+    error,
+    data: metaInfo,
+  } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
+    ['token-mint-meta', { net, pubKey }],
+    // TODO: need to be able to say "we errored, don't keep looking" - there doesn't need to be metadata...
+    queryTokenMetadata
+  );
+  logger.silly(
+    `queryTokenMetadata(${pubKey}): ${loadStatus} - error: ${error}`
+  );
 
-  if (!metaInfo) {
+  // ("idle" or "error" or "loading" or "success").
+  if (loadStatus === 'loading') {
+    return (
+      <Accordion.Item eventKey={`${pubKey}_info`}>
+        <Accordion.Header>
+          Loading Metaplex token info{' '}
+          <MetaplexTokenDataButton
+            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
+            disabled
+          />
+        </Accordion.Header>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
+
+  // logger.info('token metaInfo:', JSON.stringify(metaInfo));
+
+  if (!metaInfo || !metaInfo.data) {
     return (
       <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
         <Accordion.Header>
           No Metaplex token info{' '}
           <MetaplexTokenDataButton
             mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
-            disabled={!canEditMetadata}
+            // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
+            disabled={false}
           />
         </Accordion.Header>
       </Accordion.Item>
     );
   }
+
+  const canEditMetadata =
+    metaInfo.data.updateAuthority === fromKey.publicKey?.toString() &&
+    metaInfo.data.isMutable;
+
   return (
     <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
       <Accordion.Header>
         <div className="col">
           <b>Metaplex Metadata</b>
-          <InlinePK pk={metaInfo.pubkey.toString()} formatLength={9} />
+          <InlinePK pk={metaInfo.pubkey?.toString()} formatLength={9} />
         </div>
         <div className="col ">
           <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">

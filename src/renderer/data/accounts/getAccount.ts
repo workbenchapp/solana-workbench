@@ -177,6 +177,8 @@ export async function queryTokenAccounts(params: ParsedAccountParams) {
 }
 /// ///////////////////////////////////////////////////////////////////
 
+/// ///////////////////////////////////////////////////////////
+// token metadata
 export async function getTokenMetadata(
   net: Net,
   tokenPublicKey: string
@@ -187,12 +189,36 @@ export async function getTokenMetadata(
     conn,
     tokenPublicKey
   );
+  logger.info('GETOKENMETA!: ', JSON.stringify(meta));
+
   // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
   return meta;
   // } catch (e) {
   //  logger.error('metadata load', e);
   // }
 }
+// react-query support
+// TODO: if i understood right, re-querying will make a non-blocking request, so caould be used to update on action?
+export type TokenMetadataParams = {
+  queryKey: [string, { net: Net; pubKey: string }];
+};
+export async function queryTokenMetadata(
+  params: ParsedAccountParams
+): metaplex.programs.metadata.Metadata | undefined {
+  const [, { net, pubKey }] = params.queryKey;
+
+  logger.info(`OKENMETA!: ${pubKey}`);
+
+  const meta = await getTokenMetadata(net, pubKey);
+  // if (!meta) {
+  //   throw Error(`tokenmetadata for ${pubKey} Not found`);
+  // }
+
+  logger.info('OKENMETA!: ', JSON.stringify(meta));
+
+  return meta;
+}
+/// ///////////////////////////////////////////////////////////////////
 
 export const truncateSolAmount = (solAmount: number | undefined) => {
   if (solAmount === undefined) {

@@ -14,7 +14,14 @@ const rootElement = document.getElementById('root');
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const root = createRoot(rootElement!);
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retry: false,
+    },
+  },
+});
 
 root.render(
   <Provider store={store}>

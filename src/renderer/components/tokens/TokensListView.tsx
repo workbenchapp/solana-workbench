@@ -8,7 +8,10 @@ import {
   truncateSolAmount,
   queryTokenAccounts,
 } from '../../data/accounts/getAccount';
-import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../../data/ValidatorNetwork/validatorNetworkState';
 
 import { useAppSelector } from '../../hooks';
 import InlinePK from '../InlinePK';
@@ -19,14 +22,24 @@ import TransferTokenButton from './TransferTokenButton';
 
 export function TokensListView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net } = useAppSelector(selectValidatorNetworkState);
-
-  // const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
-
+  const { net, status } = useAppSelector(selectValidatorNetworkState);
   // TODO: cleanup - do we really need these here?
   const accountPubKey = pubKey ? new sol.PublicKey(pubKey) : undefined;
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
+
+  // TODO: this can't be here before the query
+  // TODO: there's a better way in query v4 - https://tkdodo.eu/blog/offline-react-query
+  // if (status !== NetStatus.Running) {
+  //   return (
+  //     <Accordion.Item eventKey={`${pubKey}_info`}>
+  //       <Accordion.Header>Validator Offline</Accordion.Header>
+  //       <Accordion.Body>
+  //         <pre className="exe-hexdump p-2 rounded">Validator Offline</pre>
+  //       </Accordion.Body>
+  //     </Accordion.Item>
+  //   );
+  // }
 
   const {
     status: loadStatus,
@@ -64,7 +77,7 @@ export function TokensListView(props: { pubKey: string | undefined }) {
           }) => {
             // TODO: extract to its own component
             return (
-              <Card>
+              <Card key={tAccount.pubkey.toString()}>
                 <Card.Body>
                   <Card.Title />
                   <Card.Text>
