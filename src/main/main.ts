@@ -4,7 +4,7 @@ import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import { Buffer } from 'buffer';
-import fetchAnchorIdl from './anchor';
+import { fetchAnchorIdl, selectAnchorDir } from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
 import { initConfigPromises } from './ipc/config';
@@ -41,6 +41,9 @@ ipcMain.on(
     let res = {};
     try {
       switch (method) {
+        case 'select-anchor-dir':
+          res = await selectAnchorDir(msg, mainWindow);
+          break;
         case 'validator-logs':
           res = await validatorLogs(msg);
           break;
