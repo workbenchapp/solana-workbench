@@ -114,6 +114,8 @@ export function getAccount(net: Net, pubKey: string): AccountInfo | undefined {
   return response;
 }
 
+/// ///////////////////////////////////////////////////////////
+// token array
 export type TokenAccountArray = Array<{
   pubkey: sol.PublicKey;
   account: sol.AccountInfo<sol.ParsedAccountData>;
@@ -158,6 +160,22 @@ export async function getTokenAccounts(
   tokenAccountCache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
   return tokenAccounts;
 }
+// react-query support
+// TODO: if i understood right, re-querying will make a non-blocking request, so caould be used to update on action?
+export type TokenAccountsParams = {
+  queryKey: [string, { net: Net; pubKey: string }];
+};
+export async function queryTokenAccounts(params: ParsedAccountParams) {
+  const [, { net, pubKey }] = params.queryKey;
+
+  const tokenAccounts = await getTokenAccounts(net, pubKey);
+  if (!tokenAccounts) {
+    throw Error(`tokenAccounts for ${pubKey} Not found`);
+  }
+
+  return tokenAccounts;
+}
+/// ///////////////////////////////////////////////////////////////////
 
 export async function getTokenMetadata(
   net: Net,

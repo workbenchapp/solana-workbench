@@ -1,24 +1,16 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, Accordion, Table } from 'react-bootstrap';
 import * as sol from '@solana/web3.js';
-import {
-  useConnection,
-  useWallet,
-  useAnchorWallet,
-} from '@solana/wallet-adapter-react';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
-import { NetStatus } from '../../../types/types';
 import { logger } from '../../common/globals';
 import {
-  TokenAccountArray,
-  getParsedAccount,
-  getTokenAccounts,
   truncateSolAmount,
   queryTokenAccounts,
 } from '../../data/accounts/getAccount';
 import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 
-import { useAppSelector, useInterval } from '../../hooks';
+import { useAppSelector } from '../../hooks';
 import InlinePK from '../InlinePK';
 import { MintInfoView } from '../MintInfoView';
 import { MetaplexMintMetaDataView } from './MetaplexMintMetaDataView';
@@ -27,7 +19,7 @@ import TransferTokenButton from './TransferTokenButton';
 
 export function TokensListView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
   // const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
 
@@ -36,22 +28,10 @@ export function TokensListView(props: { pubKey: string | undefined }) {
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
 
-  // useInterval(() => {
-  //   // TODO: really would like to subscribe to a list of accounts - even if its via the getAccounts cache
-  //   if (status !== NetStatus.Running) {
-  //     return;
-  //   }
-  //   if (pubKey) {
-  //     getTokenAccounts(net, pubKey)
-  //       .then((b) => setTokenAccounts(b?.value))
-  //       .catch(logger.info);
-  //   }
-  // }, 6666);
-
   const {
     status: loadStatus,
     error,
-    data: tokenAccounts,
+    data: tokenAccountsData,
   } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
     ['parsed-account', { net, pubKey }],
     queryTokenAccounts
@@ -71,6 +51,8 @@ export function TokensListView(props: { pubKey: string | undefined }) {
       </Accordion.Item>
     );
   }
+
+  const tokenAccounts = tokenAccountsData.value;
 
   return (
     <Table hover size="sm">
