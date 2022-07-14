@@ -56,7 +56,7 @@ export function MintInfoView(props: { mintKey: string }) {
   const {
     loadStatus,
     account: mintInfo,
-    error,
+    // error,
   } = useParsedAccount(net, mintKey, {
     retry: 2, // TODO: this is here because sometimes, we get given an accountInfo with no parsed data.
   });
