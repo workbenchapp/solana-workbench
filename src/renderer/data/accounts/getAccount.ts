@@ -66,12 +66,6 @@ export type ParsedAccountParams = {
 };
 export async function queryParsedAccount(params: ParsedAccountParams) {
   const [, { net, pubKey }] = params.queryKey;
-  // const response = await fetch(`https://swapi.dev/api/people/${id}/`);
-  // if (!response.ok) {
-  //   throw new Error("Problem fetching data");
-  // }
-  // const character = await response.json();
-  // assertIsCharacter(character);
 
   const accountInfo = await getParsedAccount(net, pubKey);
   if (!accountInfo) {
@@ -278,7 +272,7 @@ export async function refreshAccountInfos(net: Net, keys: string[]) {
   accountInfos.forEach((info, i) => {
     const cachedAccount = cache.get(`${net}_${keys[i]}`);
     if (!cachedAccount) {
-      logger.silly('cache miss', `${net}_${keys[i]}`);
+      // logger.silly('cache miss', `${net}_${keys[i]}`);
       return;
     }
     cachedAccount.accountInfo = info;

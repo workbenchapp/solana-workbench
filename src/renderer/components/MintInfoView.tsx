@@ -53,10 +53,17 @@ export function MintInfoView(props: { mintKey: string }) {
   const { connection } = useConnection();
   const { net } = useAppSelector(selectValidatorNetworkState);
 
-  const { loadStatus, account: mintInfo /* , error */ } = useParsedAccount(
-    net,
-    mintKey,
-    {}
+  const {
+    loadStatus,
+    account: mintInfo,
+    error,
+  } = useParsedAccount(net, mintKey, {
+    retry: 2, // TODO: this is here because sometimes, we get given an accountInfo with no parsed data.
+  });
+  logger.silly(
+    `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
+      mintInfo
+    )}`
   );
 
   // ("idle" or "error" or "loading" or "success").
@@ -66,6 +73,8 @@ export function MintInfoView(props: { mintKey: string }) {
     !mintInfo.accountInfo ||
     !mintInfo.accountInfo.data?.parsed
   ) {
+    // logger.error(`something not ready: ${loadStatus}`);
+
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
@@ -84,6 +93,7 @@ export function MintInfoView(props: { mintKey: string }) {
     !mintInfo?.accountInfo.data?.parsed.info.mintAuthority;
 
   if (!mintInfo || mintInfo?.data) {
+    // logger.error(`something undefined`);
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
