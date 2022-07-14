@@ -243,14 +243,15 @@ function AccountView(props: { pubKey: string | undefined }) {
           </div>
           <div className="ms-1">
             <div>
-              <small className="text-muted">Data</small>
+              <small className="text-muted">Data :</small>
             </div>
             <div>
               <pre className="exe-hexdump p-2 rounded">
-                <code>{renderRawData(account)}</code>
+                <code>{decodedAccountData}</code>
               </pre>
             </div>
           </div>
+
           <div className="ms-1">
             <div>
               <small className="text-muted">Token Accounts </small>
@@ -277,18 +278,6 @@ function AccountView(props: { pubKey: string | undefined }) {
           </div>
         </div>
       </div>
-      {!accountMeta?.privatekey && (
-        <div className="ms-1">
-          <div>
-            <small className="text-muted">Data</small>
-          </div>
-          <div className="p-2">
-            <code className="whitespace-pre-wrap w-full block">
-              {decodedAccountData}
-            </code>
-          </div>
-        </div>
-      )}
     </Container>
   );
 }
