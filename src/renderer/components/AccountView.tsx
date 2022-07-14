@@ -11,6 +11,7 @@ import {
 } from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
+import { useQueryClient } from 'react-query';
 import { logger } from '../common/globals';
 import { useAppDispatch, useAppSelector } from '../hooks';
 
@@ -50,6 +51,7 @@ function AccountView(props: { pubKey: string | undefined }) {
   const accountPubKey = pubKey ? new sol.PublicKey(pubKey) : undefined;
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
+  const queryClient = useQueryClient();
 
   const { /* loadStatus, */ account /* , error */ } = useParsedAccount(
     net,
@@ -153,6 +155,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               if (pubKey) {
                 forceRequestAccount(net, pubKey);
                 // force refresh for ATA's, PDA's etc?
+                queryClient.invalidateQueries(); // TODO: this is too broad
               }
             }}
           >

@@ -4,6 +4,7 @@ import * as sol from '@solana/web3.js';
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';
 import React from 'react';
+import { useQueryClient } from 'react-query';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
 import { logger } from '../../common/globals';
@@ -60,6 +61,7 @@ function MintTokenToButton(props: {
 }) {
   const { connection, fromKey, mintKey, mintTo, andThen, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
+  const queryClient = useQueryClient();
 
   return (
     <Button
@@ -79,6 +81,9 @@ function MintTokenToButton(props: {
 
         toast.promise(
           mintToken(connection, fromKey, mintKey, mintTo).then(() => {
+            // TODO: this needs to be delayed - do i add a promise with a delay?
+            queryClient.invalidateQueries(); // TODO: the funder, the mint, the ATA... need updating
+
             return andThen();
           }),
           {
