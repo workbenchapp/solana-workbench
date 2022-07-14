@@ -19,7 +19,7 @@ function TransferSolPopover(props: {
   targetInputDisabled: boolean | undefined;
   targetPlaceholder: string | undefined;
 }) {
-  const { pubKey, targetInputDisabled } = props;
+  const { pubKey, targetInputDisabled, targetPlaceholder } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
 
