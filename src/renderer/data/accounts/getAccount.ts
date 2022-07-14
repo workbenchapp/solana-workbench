@@ -44,10 +44,7 @@ export async function getParsedAccount(
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
 
-  // TODO: SVENSVENSVEN - this is the crux of tokens stuff...
   const solAccount = await solConn.getParsedAccountInfo(key);
-
-  logger.info('SSSS getParsedAccount', pubKey);
 
   const response: AccountInfo = {
     accountId: key,
@@ -83,21 +80,26 @@ export async function queryParsedAccount(params: ParsedAccountParams) {
 
   return accountInfo;
 }
-export function useParsedAccount(net: Net, pubKey: string | undefined) {
+export function useParsedAccount(
+  net: Net,
+  pubKey: string | undefined,
+  queryOption
+) {
   const {
     status: loadStatus,
     error,
     data: accountData,
   } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
     ['parsed-account', { net, pubKey }],
-    queryParsedAccount
+    queryParsedAccount,
+    queryOption || {}
   );
   const account = accountData;
-  logger.silly(
-    `queryParsedAccount(${pubKey}): ${loadStatus} - error: ${error}: ${JSON.stringify(
-      account
-    )}`
-  );
+  // logger.silly(
+  //   `queryParsedAccount(${pubKey}): ${loadStatus} - error: ${error}: ${JSON.stringify(
+  //     account
+  //   )}`
+  // );
   return { loadStatus, account, error };
 }
 /// ///////////////////////////////////////////////////////////////////
@@ -106,12 +108,14 @@ export function useParsedAccount(net: Net, pubKey: string | undefined) {
 // if you absoluetly need to current latest, don't use this function :)
 // it is written to avoid RPC requests if at all possible, and is used in conjunction with the programChanges subscriptions
 export function getAccount(net: Net, pubKey: string): AccountInfo | undefined {
+  // logger.silly('getAccountInfo ', pubKey);
+
   const cachedResponse = cache.get(`${net}_${pubKey}`);
   if (cachedResponse) {
     return cachedResponse;
   }
 
-  logger.silly('getAccountInfo cache miss', pubKey, pubKey.toString());
+  // logger.silly('getAccountInfo cache miss', pubKey, pubKey.toString());
 
   const response: AccountInfo = {
     accountId: new sol.PublicKey(pubKey),
@@ -139,30 +143,10 @@ export type TokenAccountArray = Array<{
   account: sol.AccountInfo<sol.ParsedAccountData>;
 }>;
 
-const tokenAccountCache = new LRUCache<
-  string,
-  sol.RpcResponseAndContext<TokenAccountArray>
->({
-  maxSize: 500,
-  entryExpirationTimeInMS: 60000,
-});
-
-export function forceRequestTokenAccount(net: Net, pubKey: string) {
-  cache.delete(`${net}_${pubKey}_getTokenAccounts`);
-}
-
 export async function getTokenAccounts(
   net: Net,
   pubKey: string
 ): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
-  // logger.silly('getTokenAccounts', { pubKey });
-  const cachedResponse = tokenAccountCache.peek(
-    `${net}_${pubKey}_getTokenAccounts`
-  );
-  if (cachedResponse) {
-    return cachedResponse;
-  }
-
   const solConn = new sol.Connection(netToURL(net));
   const key = new sol.PublicKey(pubKey);
   const filter: sol.TokenAccountsFilter = {
@@ -173,9 +157,6 @@ export async function getTokenAccounts(
     filter
   );
 
-  logger.silly('getTokenAccounts cache miss', pubKey, tokenAccounts);
-
-  tokenAccountCache.set(`${net}_${pubKey}_getTokenAccounts`, tokenAccounts);
   return tokenAccounts;
 }
 // react-query support
@@ -202,18 +183,20 @@ export async function getTokenMetadata(
   tokenPublicKey: string
 ): Promise<metaplex.programs.metadata.Metadata> {
   const conn = new metaplex.Connection(netToURL(net), 'finalized');
-  // try {
-  const meta = await metaplex.programs.metadata.Metadata.findByMint(
-    conn,
-    tokenPublicKey
-  );
-  // logger.info('GETOKENMETA!: ', JSON.stringify(meta));
+  try {
+    // TODO: this console.logs "metadata load Error: Unable to find account: HKCjVqNU35H3zsXAVetgo743qCDMu7ssGnET1yvN4RSJ"
+    const meta = await metaplex.programs.metadata.Metadata.findByMint(
+      conn,
+      tokenPublicKey
+    );
 
-  // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
-  return meta;
-  // } catch (e) {
-  //  logger.error('metadata load', e);
-  // }
+    // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
+    return meta;
+  } catch (e) {
+    logger.error('metadata load', e);
+  }
+  const fake: metaplex.programs.metadata.Metadata = {};
+  return fake;
 }
 // react-query support
 // TODO: if i understood right, re-querying will make a non-blocking request, so caould be used to update on action?
@@ -225,16 +208,16 @@ export async function queryTokenMetadata(
 ): metaplex.programs.metadata.Metadata | undefined {
   const [, { net, pubKey }] = params.queryKey;
 
-  // logger.info(`OKENMETA!: ${pubKey}`);
-
-  const meta = await getTokenMetadata(net, pubKey);
+  try {
+    const meta = await getTokenMetadata(net, pubKey);
+    return meta;
+  } catch (e) {
+    logger.warn(e);
+  }
   // if (!meta) {
   //   throw Error(`tokenmetadata for ${pubKey} Not found`);
   // }
-
-  // logger.info('OKENMETA!: ', JSON.stringify(meta));
-
-  return meta;
+  return undefined;
 }
 /// ///////////////////////////////////////////////////////////////////
 

@@ -51,11 +51,12 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
     ['token-mint-meta', { net, pubKey }],
     // TODO: need to be able to say "we errored, don't keep looking" - there doesn't need to be metadata...
-    queryTokenMetadata
+    queryTokenMetadata,
+    {}
   );
-  logger.silly(
-    `queryTokenMetadata(${pubKey}): ${loadStatus} - error: ${error}`
-  );
+  // logger.silly(
+  //   `queryTokenMetadata(${pubKey}): ${loadStatus} - error: ${error}`
+  // );
 
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {

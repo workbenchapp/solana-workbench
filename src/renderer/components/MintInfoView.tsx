@@ -60,7 +60,8 @@ export function MintInfoView(props: { mintKey: string }) {
 
   const { loadStatus, account: mintInfo /* , error */ } = useParsedAccount(
     net,
-    mintKey
+    mintKey,
+    {}
   );
 
   // ("idle" or "error" or "loading" or "success").
@@ -80,7 +81,7 @@ export function MintInfoView(props: { mintKey: string }) {
     );
   }
 
-  logger.info('mintInfo:', JSON.stringify(mintInfo));
+  // logger.info('mintInfo:', JSON.stringify(mintInfo));
   const hasAuthority =
     mintInfo.accountInfo.data?.parsed.info.mintAuthority ===
     fromKey.publicKey?.toString();

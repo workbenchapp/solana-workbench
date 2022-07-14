@@ -49,9 +49,9 @@ export function TokensListView(props: { pubKey: string | undefined }) {
     ['parsed-token-account', { net, pubKey }],
     queryTokenAccounts
   );
-  logger.silly(
-    `queryTokenAccounts(${pubKey}): ${loadStatus} - error: ${error}`
-  );
+  // logger.silly(
+  //   `queryTokenAccounts(${pubKey}): ${loadStatus} - error: ${error}`
+  // );
 
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus !== 'success') {
