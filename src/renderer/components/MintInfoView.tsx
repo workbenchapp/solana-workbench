@@ -60,11 +60,11 @@ export function MintInfoView(props: { mintKey: string }) {
   } = useParsedAccount(net, mintKey, {
     retry: 2, // TODO: this is here because sometimes, we get given an accountInfo with no parsed data.
   });
-  logger.silly(
-    `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
-      mintInfo
-    )}`
-  );
+  // logger.silly(
+  //   `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
+  //     mintInfo
+  //   )}`
+  // );
 
   // ("idle" or "error" or "loading" or "success").
   if (

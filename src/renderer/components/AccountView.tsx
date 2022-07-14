@@ -124,7 +124,6 @@ function AccountView(props: { pubKey: string | undefined }) {
   useEffect(() => {
     const alias = getHumanName(accountMeta);
     setHumanName(alias);
-    logger.info(`get human name for pubKey ${pubKey} == ${alias}`);
   }, [pubKey, accountMeta]);
 
   const handleHumanNameSave = (val: string) => {
