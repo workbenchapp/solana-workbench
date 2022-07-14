@@ -29,6 +29,17 @@ const ipcDockerToast = (dockerIPCMethod: string) => {
   });
 };
 
+const getDockerErrMsg = (code: string) => {
+  switch (code) {
+    case 'ENOENT':
+      return 'Docker not installed 💀';
+    case 'EACCES':
+      return 'You do not have permission to run docker container 🛑';
+    default:
+      return false;
+  }
+};
+
 const ansiUp = new AnsiUp();
 
 const Validator = () => {
@@ -173,7 +184,14 @@ const Validator = () => {
                   {
                     pending: `CreateValidatorContainer submitted`,
                     success: `CreateValidatorContainer succeeded 👌`,
-                    error: `CreateValidatorContainer failed 🤯`,
+                    error: {
+                      render({ data }) {
+                        return (
+                          getDockerErrMsg(data.code) ||
+                          `CreateValidatorContainer failed 🤯`
+                        );
+                      },
+                    },
                   }
                 );
               } else if (
