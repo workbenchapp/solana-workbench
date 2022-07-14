@@ -32,7 +32,7 @@ const ipcDockerToast = (dockerIPCMethod: string) => {
 const getDockerErrMsg = (code: string) => {
   switch (code) {
     case 'ENOENT':
-      return 'Docker not installed 💀';
+      return 'Docker is not installed 💀';
     case 'EACCES':
       return 'You do not have permission to run docker container 🛑';
     default:
