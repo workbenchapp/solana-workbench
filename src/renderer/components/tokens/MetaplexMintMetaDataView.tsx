@@ -8,13 +8,9 @@ import { useQuery } from 'react-query';
 import { useAppSelector } from '../../hooks';
 
 import { queryTokenMetadata } from '../../data/accounts/getAccount';
-import {
-  NetStatus,
-  selectValidatorNetworkState,
-} from '../../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
-import { logger } from '../../common/globals';
 import InlinePK from '../InlinePK';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
@@ -22,7 +18,7 @@ import InlinePK from '../InlinePK';
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;
   const fromKey = useWallet();
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: this can't be here before the query
   // TODO: there's a better way in query v4 - https://tkdodo.eu/blog/offline-react-query
@@ -46,7 +42,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const pubKey = mintKey.toString();
   const {
     status: loadStatus,
-    error,
+    // error,
     data: metaInfo,
   } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
     ['token-mint-meta', { net, pubKey }],
@@ -54,9 +50,6 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     queryTokenMetadata,
     {}
   );
-  // logger.silly(
-  //   `queryTokenMetadata(${pubKey}): ${loadStatus} - error: ${error}`
-  // );
 
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {

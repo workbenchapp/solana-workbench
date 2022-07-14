@@ -3,15 +3,11 @@ import { Card, Accordion, Table } from 'react-bootstrap';
 import * as sol from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
-import { logger } from '../../common/globals';
 import {
   truncateSolAmount,
   queryTokenAccounts,
 } from '../../data/accounts/getAccount';
-import {
-  NetStatus,
-  selectValidatorNetworkState,
-} from '../../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 
 import { useAppSelector } from '../../hooks';
 import InlinePK from '../InlinePK';
@@ -22,7 +18,7 @@ import TransferTokenButton from './TransferTokenButton';
 
 export function TokensListView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
   // TODO: cleanup - do we really need these here?
   const accountPubKey = pubKey ? new sol.PublicKey(pubKey) : undefined;
   const fromKey = useWallet(); // pay from wallet adapter
@@ -43,15 +39,12 @@ export function TokensListView(props: { pubKey: string | undefined }) {
 
   const {
     status: loadStatus,
-    error,
+    // error,
     data: tokenAccountsData,
   } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
     ['parsed-token-account', { net, pubKey }],
     queryTokenAccounts
   );
-  // logger.silly(
-  //   `queryTokenAccounts(${pubKey}): ${loadStatus} - error: ${error}`
-  // );
 
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus !== 'success') {

@@ -16,10 +16,7 @@ import {
   truncateSolAmount,
   useParsedAccount,
 } from '../data/accounts/getAccount';
-import {
-  NetStatus,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 
 import { logger } from '../common/globals';
 import InlinePK from './InlinePK';
@@ -54,9 +51,7 @@ export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
   const fromKey = useWallet();
   const { connection } = useConnection();
-  const { net, status: netStatus } = useAppSelector(
-    selectValidatorNetworkState
-  );
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
   const { loadStatus, account: mintInfo /* , error */ } = useParsedAccount(
     net,

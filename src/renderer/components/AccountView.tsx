@@ -27,7 +27,6 @@ import {
   useParsedAccount,
 } from '../data/accounts/getAccount';
 import {
-  Net,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';

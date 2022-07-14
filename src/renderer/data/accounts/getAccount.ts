@@ -205,7 +205,7 @@ export type TokenMetadataParams = {
 };
 export async function queryTokenMetadata(
   params: ParsedAccountParams
-): metaplex.programs.metadata.Metadata | undefined {
+): Promise<metaplex.programs.metadata.Metadata | undefined> {
   const [, { net, pubKey }] = params.queryKey;
 
   try {
