@@ -38,6 +38,9 @@ export enum KnownProgramID {
   SystemProgram = '11111111111111111111111111111111',
   SerumDEXV3 = '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
   TokenProgram = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
+  MetaplexTokenMetadata = 'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s',
+  BPFUpgradeableLoader = 'BPFLoaderUpgradeab1e11111111111111111111111',
+  NativeLoader = 'NativeLoader1111111111111111111111111111111',
 }
 
 interface PinnedAccountMap {
@@ -230,7 +233,13 @@ function ProgramChangeView() {
             {Object.entries(KnownProgramID).map(([name, value]) => (
               <Chip
                 key={name}
-                onClick={() => setProgramID(value)}
+                onClick={() => {
+                  setProgramID(value);
+                  // TODO: need to reset the counts use to generate getTopAccounts when the user switches filter
+                  // TODO: or make the count structure contain what its counting, so the user can switch and not lose those aggregations.
+                  // TODO: which thus also supports the idea that count&max aggregations should be like db indexs - sortes separately from the original data.
+                  setDisplayList([]);
+                }}
                 active={programID === value}
               >
                 {name}
