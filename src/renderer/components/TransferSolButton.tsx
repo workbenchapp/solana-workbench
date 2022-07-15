@@ -9,12 +9,15 @@ import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
 
 import CopyIcon from './CopyIcon';
+import prettifyPubkey from '../common/prettifyPubkey';
 
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
 import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+
+const PK_FORMAT_LENGTH = 24;
 
 function TransferSolPopover(props: {
   pubKey: string | undefined;
@@ -81,10 +84,9 @@ function TransferSolPopover(props: {
             </Form.Label>
             <Col sm={9}>
               <div className="d-flex">
-                <code className="mt-4">{`${fromKey.slice(
-                  0,
-                  10
-                )}...${fromKey.slice(-10)}`}</code>
+                <code className="mt-4">
+                  {prettifyPubkey(fromKey, PK_FORMAT_LENGTH)}
+                </code>
                 <CopyIcon writeValue={fromKey} />
               </div>
               <Form.Text className="text-muted" />
@@ -98,10 +100,9 @@ function TransferSolPopover(props: {
             <Col sm={9}>
               {targetInputDisabled ? (
                 <div className="d-flex">
-                  <code className="mt-4">{`${toKey.slice(
-                    0,
-                    10
-                  )}...${toKey.slice(-10)}`}</code>
+                  <code className="mt-4">
+                    {prettifyPubkey(toKey, PK_FORMAT_LENGTH)}
+                  </code>
                   <CopyIcon writeValue={toKey} />
                 </div>
               ) : (
