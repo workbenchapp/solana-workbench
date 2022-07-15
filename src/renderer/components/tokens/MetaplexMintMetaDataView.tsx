@@ -66,11 +66,6 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     );
   }
   const mintPubKey = new sol.PublicKey(mintKey);
-  try {
-    logger.info(mintKey.toString());
-  } catch (e) {
-    logger.error(`WTF ${e}`);
-  }
 
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {
