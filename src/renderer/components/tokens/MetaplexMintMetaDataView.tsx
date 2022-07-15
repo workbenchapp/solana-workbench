@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
+import { AccordionContext, Card, useAccordionButton } from 'react-bootstrap';
 import { useAppSelector } from '../../hooks';
 
 import { queryTokenMetadata } from '../../data/accounts/getAccount';
@@ -12,8 +13,28 @@ import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validat
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import InlinePK from '../InlinePK';
+import { logger } from '../../common/globals';
 
-// TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
+function ContextAwareToggle({ children, eventKey, callback }) {
+  const { activeEventKey } = useContext(AccordionContext);
+
+  const decoratedOnClick = useAccordionButton(
+    eventKey,
+    () => callback && callback(eventKey)
+  );
+
+  const isCurrentEventKey = activeEventKey === eventKey;
+
+  return (
+    <button
+      type="button"
+      style={{ backgroundColor: isCurrentEventKey ? 'pink' : 'lavender' }}
+      onClick={decoratedOnClick}
+    >
+      {children}
+    </button>
+  );
+}
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;
@@ -51,21 +72,40 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     {}
   );
 
+  if (!mintKey) {
+    return (
+      <Accordion.Item eventKey={`${pubKey}_info`}>
+        <Accordion.Header>No Mint selected</Accordion.Header>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">No DATA</pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
+  const mintPubKey = new sol.PublicKey(mintKey);
+  try {
+    logger.info(mintKey.toString());
+  } catch (e) {
+    logger.error(`WTF ${e}`);
+  }
+
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {
     return (
-      <Accordion.Item eventKey={`${pubKey}_info`}>
-        <Accordion.Header>
+      <Card>
+        <Card.Header>
+          <ContextAwareToggle eventKey={`${pubKey}_info`} callback={() => {}}>
+            open
+          </ContextAwareToggle>
           Loading Metaplex token info{' '}
-          <MetaplexTokenDataButton
-            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
-            disabled
-          />
-        </Accordion.Header>
-        <Accordion.Body>
-          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
-        </Accordion.Body>
-      </Accordion.Item>
+          <MetaplexTokenDataButton mintPubKey={mintPubKey} disabled />
+        </Card.Header>
+        <Accordion.Collapse eventKey={`${pubKey}_info`}>
+          <Card.Body>
+            <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+          </Card.Body>
+        </Accordion.Collapse>
+      </Card>
     );
   }
 
@@ -77,7 +117,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
         <Accordion.Header>
           No Metaplex token info{' '}
           <MetaplexTokenDataButton
-            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
+            mintPubKey={mintPubKey}
             // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
             disabled={false}
           />
@@ -106,7 +146,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
         <div className="col ">
           <MetaplexTokenDataButton
             disabled={!canEditMetadata}
-            mintPubKey={new sol.PublicKey(mintKey)}
+            mintPubKey={mintPubKey}
           />
         </div>
       </Accordion.Header>

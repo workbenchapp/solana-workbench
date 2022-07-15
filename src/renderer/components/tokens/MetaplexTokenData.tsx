@@ -26,6 +26,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
   const { connection } = useConnection();
   const { net } = useAppSelector(selectValidatorNetworkState);
 
+  logger.info(`TETETE: ${mintPubKey}`);
   const pubKey = mintPubKey.toString();
   const {
     status: loadStatus,
@@ -211,7 +212,13 @@ function MetaplexTokenDataButton(props: {
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={DataPopover({ mintPubKey })}
+      overlay={
+        mintPubKey
+          ? DataPopover({ mintPubKey })
+          : () => {
+              return <div>none</div>;
+            }
+      }
       rootClose
     >
       <Button

@@ -42,6 +42,8 @@ export async function getParsedAccount(
   pubKey: string
 ): Promise<sol.AccountInfo<sol.ParsedAccountData> | undefined> {
   const solConn = new sol.Connection(netToURL(net));
+  logger.info(`getParsedAccount: ${pubKey}`);
+
   const key = new sol.PublicKey(pubKey);
 
   const solAccount = await solConn.getParsedAccountInfo(key);
@@ -66,6 +68,8 @@ export type ParsedAccountParams = {
 };
 export async function queryParsedAccount(params: ParsedAccountParams) {
   const [, { net, pubKey }] = params.queryKey;
+
+  logger.info(`queryParsedAccount: ${pubKey}`);
 
   const accountInfo = await getParsedAccount(net, pubKey);
   if (!accountInfo) {
