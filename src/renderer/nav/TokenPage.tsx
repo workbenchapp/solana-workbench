@@ -128,7 +128,11 @@ function TokenPage() {
               {mintList.map((key) => {
                 const sel = key === mintKey;
                 return (
-                  <option selected={sel} value={key.toString()}>
+                  <option
+                    key={key.toString()}
+                    selected={sel}
+                    value={key.toString()}
+                  >
                     {key.toString()}
                   </option>
                 );

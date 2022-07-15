@@ -64,7 +64,7 @@ export function TokensListView(props: { pubKey: string | undefined }) {
   const tokenAccounts = tokenAccountsData.value;
 
   return (
-    <Container hover size="sm">
+    <Container size="sm">
       {tokenAccounts?.map(
         (tAccount: {
           pubkey: sol.PublicKey;
