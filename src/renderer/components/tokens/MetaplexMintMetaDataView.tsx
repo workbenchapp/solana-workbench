@@ -1,20 +1,17 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
-import { AccordionContext, Card, useAccordionButton } from 'react-bootstrap';
-import { useAppSelector } from '../../hooks';
 
 import { queryTokenMetadata } from '../../data/accounts/getAccount';
 import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import InlinePK from '../InlinePK';
-import { logger } from '../../common/globals';
-import ActiveAccordionHeader from './ActiveAccordionHeader';
+import { ActiveAccordionHeader } from './ActiveAccordionHeader';
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;

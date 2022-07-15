@@ -20,7 +20,7 @@ import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorN
 
 import { logger } from '../common/globals';
 import InlinePK from './InlinePK';
-import ActiveAccordionHeader from './tokens/ActiveAccordionHeader';
+import { ActiveAccordionHeader } from './tokens/ActiveAccordionHeader';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 export async function closeMint(

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Accordion, Table, Container } from 'react-bootstrap';
+import { Card, Accordion, Container } from 'react-bootstrap';
 import * as sol from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
@@ -15,7 +15,7 @@ import { MintInfoView } from '../MintInfoView';
 import { MetaplexMintMetaDataView } from './MetaplexMintMetaDataView';
 import MintTokenToButton from './MintTokenToButton';
 import TransferTokenButton from './TransferTokenButton';
-import ActiveAccordionHeader from './ActiveAccordionHeader';
+import { ActiveAccordionHeader } from './ActiveAccordionHeader';
 
 export function TokensListView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
