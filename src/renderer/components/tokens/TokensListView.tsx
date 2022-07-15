@@ -46,6 +46,11 @@ export function TokensListView(props: { pubKey: string | undefined }) {
     ['parsed-token-account', { net, pubKey }],
     queryTokenAccounts
   );
+
+  if (!pubKey) {
+    return <></>;
+  }
+
   const ataEventKey = `${pubKey}_info`;
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus !== 'success') {
