@@ -3,33 +3,26 @@ import Split from 'react-split';
 
 import Stack from 'react-bootstrap/Stack';
 import { Row, Col, Form, Accordion } from 'react-bootstrap';
-import Button from 'react-bootstrap/Button';
 
 import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
 
-import { useConnection, useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '@solana/wallet-adapter-react';
 
-import { toast } from 'react-toastify';
 import { MetaplexMintMetaDataView } from '../components/tokens/MetaplexMintMetaDataView';
 import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import MetaplexTokenDataButton from '../components/tokens/MetaplexTokenData';
 import { getTokenAccounts } from '../data/accounts/getAccount';
 import { useAppSelector } from '../hooks';
 import AccountView from '../components/AccountView';
-import { closeMint, MintInfoView } from '../components/MintInfoView';
-import CreateNewMintButton, {
-  ensureAtaFor,
-} from '../components/tokens/CreateNewMintButton';
+import { MintInfoView } from '../components/MintInfoView';
 
 import { logger } from '../common/globals';
 
 function TokenPage() {
   const fromKey = useWallet();
-  const { connection } = useConnection();
   const { net, status } = useAppSelector(selectValidatorNetworkState);
 
   // TODO: this will come from main config...
@@ -116,38 +109,6 @@ function TokenPage() {
                 );
               })}
             </Form.Select>
-            <CreateNewMintButton
-              disabled={false}
-              connection={connection}
-              fromKey={fromKey}
-              myWallet={myWallet}
-              andThen={(newMint: sol.PublicKey) => {
-                setMintPubKey(newMint);
-                ensureAtaFor(connection, fromKey, newMint, myWallet); // needed as we create the Mintlist using the ATA's the user wallet has ATA's for...
-                updateMintList([]);
-                return newMint;
-              }}
-            />
-            <MetaplexTokenDataButton mintPubKey={mintKey} />
-            <Button
-              size="sm"
-              disabled={myWallet === undefined || mintKey === undefined}
-              onClick={() => {
-                if (!mintKey) {
-                  return;
-                }
-                toast.promise(
-                  closeMint(connection, fromKey, mintKey, myWallet),
-                  {
-                    pending: `Close mint account submitted`,
-                    success: `Close mint account  succeeded 👌`,
-                    error: `Close mint account   failed 🤯`,
-                  }
-                );
-              }}
-            >
-              Set max supply (aka, close mint)
-            </Button>
             <AccountView pubKey={mintKey?.toString()} />
             <Accordion>
               <MintInfoView mintKey={mintKey ? mintKey.toString() : ''} />
