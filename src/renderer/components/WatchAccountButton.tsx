@@ -14,7 +14,7 @@ function WatchAcountPopover(props: {
   const pubKeyVal = '';
 
   const [toKey, setToKey] = useState<string>(pubKeyVal);
-  const [validationError, setValidationErr] = useState('');
+  const [validationError, setValidationErr] = useState<string | undefined>();
 
   useEffect(() => {
     if (pubKeyVal) {
@@ -30,7 +30,7 @@ function WatchAcountPopover(props: {
     // validate public key
     try {
       PublicKey.isOnCurve(toKey);
-      setValidationErr('');
+      setValidationErr(undefined);
     } catch (err) {
       setValidationErr('Invalid key');
       console.log(err);
