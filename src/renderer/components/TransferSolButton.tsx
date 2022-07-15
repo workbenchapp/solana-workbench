@@ -8,6 +8,8 @@ import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
 
+import CopyIcon from './CopyIcon';
+
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
 import {
   NetStatus,
@@ -78,13 +80,13 @@ function TransferSolPopover(props: {
               From
             </Form.Label>
             <Col sm={9}>
-              <Form.Control
-                readOnly // Because we use the wallet to do the signing, this can't be changed
-                type="text"
-                placeholder="Select Account to take the SOL from"
-                value={fromKey}
-                onChange={(e) => setFromKey(e.target.value)}
-              />
+              <div className="d-flex">
+                <code className="mt-4">{`${fromKey.slice(
+                  0,
+                  10
+                )}...${fromKey.slice(-10)}`}</code>
+                <CopyIcon writeValue={fromKey} />
+              </div>
               <Form.Text className="text-muted" />
             </Col>
           </Form.Group>
@@ -94,13 +96,22 @@ function TransferSolPopover(props: {
               To
             </Form.Label>
             <Col sm={9}>
-              <Form.Control
-                readOnly={targetInputDisabled}
-                type="text"
-                placeholder="Select Account to send the SOL to"
-                value={toKey}
-                onChange={(e) => setToKey(e.target.value)}
-              />
+              {targetInputDisabled ? (
+                <div className="d-flex">
+                  <code className="mt-4">{`${toKey.slice(
+                    0,
+                    10
+                  )}...${toKey.slice(-10)}`}</code>
+                  <CopyIcon writeValue={toKey} />
+                </div>
+              ) : (
+                <Form.Control
+                  type="text"
+                  placeholder="Select Account to send the SOL to"
+                  value={toKey}
+                  onChange={(e) => setToKey(e.target.value)}
+                />
+              )}
               {/* TODO: add radio selector to choose where the TX cost comes from                   
                   <Form.Text className="text-muted">
                     Transaction cost from To account (after transfer takes place)
