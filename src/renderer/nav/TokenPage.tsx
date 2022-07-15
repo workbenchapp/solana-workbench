@@ -36,9 +36,13 @@ function TokenPage() {
   };
   useEffect(() => {
     if (status !== NetStatus.Running) {
+      updateMintList([]);
+      updateMintKey(undefined);
       return;
     }
     if (!fromKey.publicKey) {
+      updateMintList([]);
+      updateMintKey(undefined);
       return;
     }
     if (mintList.length > 0) {
