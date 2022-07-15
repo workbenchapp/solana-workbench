@@ -73,7 +73,7 @@ const InlinePK: React.FC<{
 
   return (
     <span className={classnames('flex items-center', className)}>
-      <pre>{prettifyPubkey(pk, formatLength)}</pre>
+      <div className="pre">{prettifyPubkey(pk, formatLength)}</div>
       <CopyIcon writeValue={pk} />
       <small>
         {pk !== '' ? (

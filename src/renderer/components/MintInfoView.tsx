@@ -20,6 +20,7 @@ import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorN
 
 import { logger } from '../common/globals';
 import InlinePK from './InlinePK';
+import ActiveAccordionHeader from './tokens/ActiveAccordionHeader';
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 export async function closeMint(
@@ -64,7 +65,7 @@ export function MintInfoView(props: { mintKey: string }) {
   //   `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
   //     mintInfo
   //   )}`
-  // );
+  const mintEventKey = `${mintKey}_mint_info`;
 
   // ("idle" or "error" or "loading" or "success").
   if (
@@ -76,8 +77,10 @@ export function MintInfoView(props: { mintKey: string }) {
     // logger.error(`something not ready: ${loadStatus}`);
 
     return (
-      <Accordion.Item eventKey={`${mintKey}_info`}>
-        <Accordion.Header>Loading info</Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+          Loading info
+        </ActiveAccordionHeader>
         <Accordion.Body>
           <pre className="exe-hexdump p-2 rounded">Loading info </pre>
         </Accordion.Body>
@@ -95,8 +98,10 @@ export function MintInfoView(props: { mintKey: string }) {
   if (!mintInfo || mintInfo?.data) {
     // logger.error(`something undefined`);
     return (
-      <Accordion.Item eventKey={`${mintKey}_info`}>
-        <Accordion.Header>Loading info</Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+          Loading info
+        </ActiveAccordionHeader>
         <Accordion.Body>
           <pre className="exe-hexdump p-2 rounded">Loading info </pre>
         </Accordion.Body>
@@ -105,8 +110,8 @@ export function MintInfoView(props: { mintKey: string }) {
   }
 
   return (
-    <Accordion.Item eventKey={`${mintKey}_info`}>
-      <Accordion.Header>
+    <Accordion.Item eventKey={mintEventKey}>
+      <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
         <div className="col">
           <b>Mint</b>
           <InlinePK pk={mintKey} formatLength={9} />
@@ -144,7 +149,7 @@ export function MintInfoView(props: { mintKey: string }) {
             {mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
           </Button>
         </div>
-      </Accordion.Header>
+      </ActiveAccordionHeader>
       <Accordion.Body>
         <pre className="exe-hexdump p-2 rounded">
           <code>Mint info: {JSON.stringify(mintInfo, null, 2)}</code>

@@ -14,27 +14,7 @@ import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import InlinePK from '../InlinePK';
 import { logger } from '../../common/globals';
-
-function ContextAwareToggle({ children, eventKey, callback }) {
-  const { activeEventKey } = useContext(AccordionContext);
-
-  const decoratedOnClick = useAccordionButton(
-    eventKey,
-    () => callback && callback(eventKey)
-  );
-
-  const isCurrentEventKey = activeEventKey === eventKey;
-
-  return (
-    <button
-      type="button"
-      style={{ backgroundColor: isCurrentEventKey ? 'pink' : 'lavender' }}
-      onClick={decoratedOnClick}
-    >
-      {children}
-    </button>
-  );
-}
+import ActiveAccordionHeader from './ActiveAccordionHeader';
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;
@@ -46,13 +26,13 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   // if (status !== NetStatus.Running) {
   //   return (
   //     <Accordion.Item eventKey={`${mintKey}_info`}>
-  //       <Accordion.Header>
+  //       <ActiveAccordionHeader>
   //         Validator Offline{' '}
   //         <MetaplexTokenDataButton
   //           mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
   //           disabled
   //         />
-  //       </Accordion.Header>
+  //       </ActiveAccordionHeader>
   //       <Accordion.Body>
   //         <pre className="exe-hexdump p-2 rounded">Validator Offline</pre>
   //       </Accordion.Body>
@@ -60,22 +40,25 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   //   );
   // }
 
-  const pubKey = mintKey.toString();
   const {
     status: loadStatus,
     // error,
     data: metaInfo,
   } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
-    ['token-mint-meta', { net, pubKey }],
+    ['token-mint-meta', { net, pubKey: mintKey }],
     // TODO: need to be able to say "we errored, don't keep looking" - there doesn't need to be metadata...
     queryTokenMetadata,
     {}
   );
 
+  const mintEventKey = `${mintKey}_metaplex_info`;
+
   if (!mintKey) {
     return (
-      <Accordion.Item eventKey={`${pubKey}_info`}>
-        <Accordion.Header>No Mint selected</Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+          No Mint selected
+        </ActiveAccordionHeader>
         <Accordion.Body>
           <pre className="exe-hexdump p-2 rounded">No DATA</pre>
         </Accordion.Body>
@@ -92,20 +75,15 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {
     return (
-      <Card>
-        <Card.Header>
-          <ContextAwareToggle eventKey={`${pubKey}_info`} callback={() => {}}>
-            open
-          </ContextAwareToggle>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
           Loading Metaplex token info{' '}
           <MetaplexTokenDataButton mintPubKey={mintPubKey} disabled />
-        </Card.Header>
-        <Accordion.Collapse eventKey={`${pubKey}_info`}>
-          <Card.Body>
-            <pre className="exe-hexdump p-2 rounded">Loading info </pre>
-          </Card.Body>
-        </Accordion.Collapse>
-      </Card>
+        </ActiveAccordionHeader>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">No DATA</pre>
+        </Accordion.Body>
+      </Accordion.Item>
     );
   }
 
@@ -113,15 +91,15 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
 
   if (!metaInfo || !metaInfo.data) {
     return (
-      <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
-        <Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
           No Metaplex token info{' '}
           <MetaplexTokenDataButton
             mintPubKey={mintPubKey}
             // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
             disabled={false}
           />
-        </Accordion.Header>
+        </ActiveAccordionHeader>
       </Accordion.Item>
     );
   }
@@ -131,8 +109,8 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     metaInfo.data.isMutable;
 
   return (
-    <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
-      <Accordion.Header>
+    <Accordion.Item eventKey={mintEventKey}>
+      <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
         <div className="col">
           <b>Metaplex Metadata</b>
           <InlinePK pk={metaInfo.pubkey?.toString()} formatLength={9} />
@@ -149,7 +127,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
             mintPubKey={mintPubKey}
           />
         </div>
-      </Accordion.Header>
+      </ActiveAccordionHeader>
       <Accordion.Body>
         <pre>
           <code className="exe-hexdump p-2 rounded">
