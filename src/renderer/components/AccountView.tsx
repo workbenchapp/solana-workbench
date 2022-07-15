@@ -3,8 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
-import Table from 'react-bootstrap/Table';
-import { Accordion, Button, Card } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import {
   useConnection,
   useWallet,
@@ -12,26 +11,22 @@ import {
 } from '@solana/wallet-adapter-react';
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
+import { useQueryClient } from 'react-query';
 import { logger } from '../common/globals';
-import { useInterval, useAppDispatch, useAppSelector } from '../hooks';
+import { useAppDispatch, useAppSelector } from '../hooks';
 
-import { AccountInfo } from '../data/accounts/accountInfo';
 import {
   setAccountValues,
   useAccountMeta,
 } from '../data/accounts/accountState';
 import {
-  truncateSolAmount,
   getHumanName,
-  getParsedAccount,
-  getTokenAccounts,
-  TokenAccountArray,
   forceRequestAccount,
   renderRawData,
   truncateLamportAmount,
+  useParsedAccount,
 } from '../data/accounts/getAccount';
 import {
-  NetStatus,
   netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
@@ -39,28 +34,32 @@ import AirDropSolButton from './AirDropSolButton';
 import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';
 import TransferSolButton from './TransferSolButton';
-import { MintInfoView } from './MintInfoView';
-import { MetaplexMintMetaDataView } from './tokens/MetaplexMintMetaDataView';
+
 import CreateNewMintButton, {
   ensureAtaFor,
 } from './tokens/CreateNewMintButton';
-import MintTokenToButton from './tokens/MintTokenToButton';
-import TransferTokenButton from './tokens/TransferTokenButton';
+
+import { TokensListView } from './tokens/TokensListView';
 
 function AccountView(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
   const dispatch = useAppDispatch();
   const accountMeta = useAccountMeta(pubKey);
   const [humanName, setHumanName] = useState<string>('');
   const accountPubKey = pubKey ? new sol.PublicKey(pubKey) : undefined;
   const fromKey = useWallet(); // pay from wallet adapter
   const { connection } = useConnection();
+  const queryClient = useQueryClient();
 
-  const [account, setSelectedAccountInfo] = useState<AccountInfo | undefined>(
-    undefined
+  const { /* loadStatus, */ account /* , error */ } = useParsedAccount(
+    net,
+    pubKey
   );
-  const [tokenAccounts, setTokenAccounts] = useState<TokenAccountArray>([]);
+
+  // ("idle" or "error" or "loading" or "success").
+  // TODO: this can't be here before the query
+  // TODO: there's a better way in query v4 - https://tkdodo.eu/blog/offline-react-query
 
   // create dummy keypair wallet if none is selected by user
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,32 +121,9 @@ function AccountView(props: { pubKey: string | undefined }) {
     decodeAnchor();
   }, [account, net, wallet]);
 
-  useInterval(() => {
-    // TODO: really would like to subscribe to a list of accounts - even if its via the getAccounts cache
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    if (pubKey) {
-      getParsedAccount(net, pubKey)
-        .then((info) => {
-          if (info) {
-            setSelectedAccountInfo(info);
-          }
-          return info;
-        })
-        .catch(logger.error);
-      getTokenAccounts(net, pubKey)
-        .then((b) => setTokenAccounts(b?.value))
-        .catch(logger.info);
-    } else {
-      setSelectedAccountInfo(undefined);
-    }
-  }, 6666);
-
   useEffect(() => {
     const alias = getHumanName(accountMeta);
     setHumanName(alias);
-    logger.info(`get human name for pubKey ${pubKey} == ${alias}`);
   }, [pubKey, accountMeta]);
 
   const handleHumanNameSave = (val: string) => {
@@ -177,6 +153,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               if (pubKey) {
                 forceRequestAccount(net, pubKey);
                 // force refresh for ATA's, PDA's etc?
+                queryClient.invalidateQueries(); // TODO: this is too broad
               }
             }}
           >
@@ -278,9 +255,7 @@ function AccountView(props: { pubKey: string | undefined }) {
 
           <div className="ms-1">
             <div>
-              <small className="text-muted">
-                Token Accounts ({tokenAccounts?.length})
-              </small>
+              <small className="text-muted">Token Accounts </small>
               {/* this button should only be enabled for accounts that you can create a new mint for... */}
               <CreateNewMintButton
                 disabled={
@@ -299,101 +274,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               />
             </div>
             <div>
-              <Table hover size="sm">
-                <tbody>
-                  {tokenAccounts?.map(
-                    (tAccount: {
-                      pubkey: sol.PublicKey;
-                      account: sol.AccountInfo<sol.ParsedAccountData>;
-                    }) => {
-                      // TODO: extract to its own component
-                      return (
-                        <Card>
-                          <Card.Body>
-                            <Card.Title />
-                            <Card.Text>
-                              <Accordion flush>
-                                <Accordion.Item eventKey="1">
-                                  <Accordion.Header>
-                                    <div>
-                                      <b>ATA</b>
-                                      <InlinePK
-                                        pk={tAccount.pubkey.toString()}
-                                        formatLength={9}
-                                      />{' '}
-                                    </div>
-                                    <div>
-                                      holds{' '}
-                                      {
-                                        tAccount.account.data.parsed.info
-                                          .tokenAmount.amount
-                                      }{' '}
-                                      tokens (
-                                      {truncateSolAmount(
-                                        tAccount.account.lamports /
-                                          sol.LAMPORTS_PER_SOL
-                                      )}{' '}
-                                      SOL)
-                                      <MintTokenToButton
-                                        disabled={
-                                          // TODO: ONLY IF the wallet user has mint-auth (and should mint to this user...)
-                                          fromKey.publicKey?.toString() !==
-                                          accountPubKey?.toString()
-                                        }
-                                        connection={connection}
-                                        fromKey={fromKey}
-                                        mintKey={
-                                          new sol.PublicKey(
-                                            tAccount.account.data.parsed.info.mint.toString()
-                                          )
-                                        }
-                                        mintTo={accountPubKey}
-                                        andThen={(): void => {}}
-                                      />
-                                      <TransferTokenButton
-                                        disabled={
-                                          // TODO: ONLY IF the wallet user has permission to mutate this ATA's tokens...
-                                          fromKey.publicKey?.toString() !==
-                                          accountPubKey?.toString()
-                                        }
-                                        connection={connection}
-                                        fromKey={fromKey}
-                                        mintKey={tAccount.account.data.parsed.info.mint.toString()}
-                                        transferFrom={pubKey}
-                                      />
-                                    </div>
-                                  </Accordion.Header>
-                                  <Accordion.Body>
-                                    <pre className="exe-hexdump p-2 rounded">
-                                      <code>
-                                        {JSON.stringify(
-                                          tAccount.account,
-                                          null,
-                                          2
-                                        )}
-                                      </code>
-                                    </pre>
-                                  </Accordion.Body>
-                                </Accordion.Item>
-                                <MintInfoView
-                                  mintKey={
-                                    tAccount.account.data.parsed.info.mint
-                                  }
-                                />
-                                <MetaplexMintMetaDataView
-                                  mintKey={
-                                    tAccount.account.data.parsed.info.mint
-                                  }
-                                />
-                              </Accordion>
-                            </Card.Text>
-                          </Card.Body>
-                        </Card>
-                      );
-                    }
-                  )}
-                </tbody>
-              </Table>
+              <TokensListView pubKey={pubKey} />
             </div>
           </div>
         </div>

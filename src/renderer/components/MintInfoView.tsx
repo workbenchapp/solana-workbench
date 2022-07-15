@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
@@ -13,13 +13,10 @@ import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
 import {
-  getParsedAccount,
   truncateSolAmount,
+  useParsedAccount,
 } from '../data/accounts/getAccount';
-import {
-  NetStatus,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 
 import { logger } from '../common/globals';
 import InlinePK from './InlinePK';
@@ -54,53 +51,49 @@ export function MintInfoView(props: { mintKey: string }) {
   const { mintKey } = props;
   const fromKey = useWallet();
   const { connection } = useConnection();
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
-  // TODO: need to figure out why we're not displaying the parsed data
-  const [mintInfo, updateMintInfo] =
-    useState<sol.AccountInfo<sol.ParsedAccountData> | null>();
-  const [mintedTokens, setMintedTokens] = useState<number>(0);
-  const [hasAuthority, setHasAuthority] = useState(false);
-  const [mintAuthorityIsNull, setMintAuthorityIsNull] = useState(false);
+  const {
+    loadStatus,
+    account: mintInfo,
+    // error,
+  } = useParsedAccount(net, mintKey, {
+    retry: 2, // TODO: this is here because sometimes, we get given an accountInfo with no parsed data.
+  });
+  // logger.silly(
+  //   `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
+  //     mintInfo
+  //   )}`
+  // );
 
-  useEffect(() => {
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    try {
-      // TODO: extract this as its needed for all mint buttons :/
-      getParsedAccount(net, mintKey)
-        .then((account) => {
-          logger.info('got it', account);
-          if (account) {
-            updateMintInfo(account);
-            if (account.accountInfo) {
-              setMintedTokens(account.accountInfo.data?.parsed.info.supply);
-              setHasAuthority(
-                account.accountInfo.data?.parsed.info.mintAuthority ===
-                  fromKey.publicKey?.toString()
-              );
-              if (!account.accountInfo.data?.parsed.info.mintAuthority) {
-                setMintAuthorityIsNull(true);
-              } else {
-                setMintAuthorityIsNull(false);
-              }
-            }
-          }
-          return account;
-        })
-        .catch((err) => {
-          logger.error('WHAT', err);
-        });
-    } catch (e) {
-      // moreInfo = JSON.stringify(e);
-      logger.error('getParsedAccount what', e);
-    }
-  }, [fromKey.publicKey, mintKey, net, status]);
+  // ("idle" or "error" or "loading" or "success").
+  if (
+    loadStatus !== 'success' ||
+    !mintInfo ||
+    !mintInfo.accountInfo ||
+    !mintInfo.accountInfo.data?.parsed
+  ) {
+    // logger.error(`something not ready: ${loadStatus}`);
 
-  logger.info('mintInto:', JSON.stringify(mintInfo));
+    return (
+      <Accordion.Item eventKey={`${mintKey}_info`}>
+        <Accordion.Header>Loading info</Accordion.Header>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
+
+  // logger.info('mintInfo:', JSON.stringify(mintInfo));
+  const hasAuthority =
+    mintInfo.accountInfo.data?.parsed.info.mintAuthority ===
+    fromKey.publicKey?.toString();
+  const mintAuthorityIsNull =
+    !mintInfo?.accountInfo.data?.parsed.info.mintAuthority;
 
   if (!mintInfo || mintInfo?.data) {
+    // logger.error(`something undefined`);
     return (
       <Accordion.Item eventKey={`${mintKey}_info`}>
         <Accordion.Header>Loading info</Accordion.Header>
@@ -119,9 +112,7 @@ export function MintInfoView(props: { mintKey: string }) {
           <InlinePK pk={mintKey} formatLength={9} />
         </div>
         <div>
-          holds{' '}
-          {mintedTokens /* mintInto?.accountInfo.data?.parsed.info.supply */}{' '}
-          tokens (
+          holds {mintInfo?.accountInfo.data?.parsed.info.supply} tokens (
           {truncateSolAmount(
             mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
           )}{' '}

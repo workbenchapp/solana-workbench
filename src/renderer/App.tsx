@@ -12,13 +12,14 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import { FC, useMemo, useState } from 'react';
+import React, { FC, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+
 import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
@@ -55,9 +56,9 @@ declare global {
 }
 
 const TooltipNavItem: React.FC<{
-  to: string;
-  tooltipMessage: string;
-  eventKey: string;
+  to?: string;
+  tooltipMessage?: string;
+  eventKey?: string;
   children?: React.ReactNode;
 }> = ({ to, tooltipMessage, eventKey, children }) => {
   return (

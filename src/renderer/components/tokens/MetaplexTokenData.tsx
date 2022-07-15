@@ -9,8 +9,9 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import * as metaplex from '@metaplex/js';
 import * as sol from '@solana/web3.js';
 
-import { getTokenMetadata } from '../../data/accounts/getAccount';
-import { useAppSelector, useInterval } from '../../hooks';
+import { useQuery } from 'react-query';
+import { queryTokenMetadata } from '../../data/accounts/getAccount';
+import { useAppSelector } from '../../hooks';
 
 import {
   NetStatus,
@@ -19,48 +20,40 @@ import {
 
 const logger = window.electron.log;
 
-function DataPopover(props: { mintPubKey: sol.PublicKey | undefined }) {
+function DataPopover(props: { mintPubKey: sol.PublicKey }) {
   const { mintPubKey } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
-  const { net, status } = useAppSelector(selectValidatorNetworkState);
+  const { net } = useAppSelector(selectValidatorNetworkState);
 
-  const [name, setName] = useState<string>('Workbench token');
-  const [symbol, setSymbol] = useState<string>('WORKBENCH');
-  const [uri, setUri] = useState<string>(
-    'https://github.com/workbenchapp/solana-workbench/'
+  const pubKey = mintPubKey.toString();
+  const {
+    status: loadStatus,
+    // error,
+    data: metaData,
+  } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
+    ['token-mint-meta', { net, pubKey }],
+    queryTokenMetadata,
+    {}
   );
-  const [sellerFeeBasisPoints, setSellerFeeBasisPoints] = useState<number>(10);
-  const [metaData, setMetaData] =
-    useState<metaplex.programs.metadata.Metadata>();
 
-  useInterval(() => {
-    // I don't think i can useEffect, as we need to keep polling until the metadata exists
-    if (status !== NetStatus.Running) {
-      return;
-    }
-    if (metaData && metaData.data.mint !== mintPubKey?.toString()) {
-      setMetaData(undefined);
+  const [name, setName] = useState<string>(
+    metaData?.data?.data.name || 'Workbench token'
+  );
+  const [symbol, setSymbol] = useState<string>(
+    metaData?.data?.data.symbol || 'WORKBENCH'
+  );
+  const [uri, setUri] = useState<string>(
+    metaData?.data?.data.uri ||
+      'https://github.com/workbenchapp/solana-workbench/'
+  );
+  const [sellerFeeBasisPoints, setSellerFeeBasisPoints] = useState<number>(
+    metaData?.data?.data.sellerFeeBasisPoints || 10
+  );
 
-      return;
-    }
-    if (metaData) {
-      return;
-    }
-    if (mintPubKey) {
-      getTokenMetadata(net, mintPubKey.toString())
-        .then((md) => {
-          setMetaData(md);
-          // TODO: no, this is wrong, only want this to happen once... (and then refresh onchange)
-          setName(md.data.data.name);
-          setSymbol(md.data.data.symbol);
-          setUri(md.data.data.uri);
-          setSellerFeeBasisPoints(md.data.data.sellerFeeBasisPoints);
-          return md;
-        })
-        .catch(logger.info);
-    }
-  }, 666);
+  if (loadStatus !== 'success' && loadStatus !== 'error') {
+    return <b>loading</b>;
+  }
 
   async function createOurMintMetadata() {
     // Create a new token
