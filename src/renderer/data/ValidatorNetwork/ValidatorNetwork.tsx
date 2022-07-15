@@ -2,7 +2,7 @@ import * as sol from '@solana/web3.js';
 import { useEffect } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-import { logger } from '@/common/globals';
+import { logger } from '../../common/globals';
 import { useAppDispatch, useAppSelector, useInterval } from '../../hooks';
 import {
   Net,

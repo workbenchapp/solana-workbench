@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { setSelected } from '@/data/SelectedAccountsList/selectedAccountsState';
+import { useCallback, useEffect, useState } from 'react';
+import { setSelected } from '../data/SelectedAccountsList/selectedAccountsState';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import { useAccountMeta } from '../data/accounts/accountState';
 import {
