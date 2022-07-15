@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import { VictoryPie } from 'victory';
-import { logger } from '@/common/globals';
+import { logger } from '../common/globals';
 import {
   netToURL,
   selectValidatorNetworkState,

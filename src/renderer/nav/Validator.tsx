@@ -21,7 +21,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
-import { logger } from '@/common/globals';
+import { logger } from '../common/globals';
 
 const ipcDockerToast = (dockerIPCMethod: string) => {
   return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
@@ -38,7 +38,7 @@ const Validator = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const validator = useAppSelector(selectValidatorNetworkState);
   const validatorImageName = 'cryptoworkbench/solana-amman';
-  const [validatorImageTag, setValidatorImageTag] = useState<string>('');
+  const [validatorImageTag, setValidatorImageTag] = useState<string | null>('');
   // const [validatorImageTags, setValidatorImageTags] = useState<string[]>([]);
   const [containerInspect, setContainerInspect] = useState<any>({});
 
@@ -135,7 +135,7 @@ const Validator = () => {
               validatorImageTag !== '' ? validatorImageTag : 'Docker image'
             }
             disabled={containerInspect?.State}
-            onSelect={(image: string) => {
+            onSelect={(image: string | null) => {
               logger.info(`selected image: ${image}`);
               setValidatorImageTag(image);
             }}

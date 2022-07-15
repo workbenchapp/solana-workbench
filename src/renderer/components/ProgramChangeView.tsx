@@ -9,8 +9,8 @@ import {
   accountsActions,
   selectAccountsListState,
   setSelected,
-} from '@/data/SelectedAccountsList/selectedAccountsState';
-import { logger } from '@/common/globals';
+} from '../data/SelectedAccountsList/selectedAccountsState';
+import { logger } from '../common/globals';
 import createNewAccount from '../data/accounts/account';
 import { AccountInfo } from '../data/accounts/accountInfo';
 import {

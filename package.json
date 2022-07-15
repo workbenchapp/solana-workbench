@@ -142,6 +142,7 @@
     "@testing-library/react": "^13.2.0",
     "@types/amplitude-js": "^8.0.2",
     "@types/dockerode": "^3.3.9",
+    "@types/dompurify": "^2.3.3",
     "@types/enzyme": "^3.10.10",
     "@types/history": "^5.0.0",
     "@types/logfmt": "^1.2.2",

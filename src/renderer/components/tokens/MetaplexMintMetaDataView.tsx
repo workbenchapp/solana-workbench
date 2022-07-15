@@ -1,4 +1,3 @@
-import React from 'react';
 import * as sol from '@solana/web3.js';
 import * as metaplex from '@metaplex/js';
 
