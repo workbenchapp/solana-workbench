@@ -8,20 +8,29 @@ import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
 import { useAppSelector } from '../hooks';
 
+import CopyIcon from './CopyIcon';
+import prettifyPubkey from '../common/prettifyPubkey';
+
 import { sendSolFromSelectedWallet } from '../data/accounts/account';
 import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 
-function TransferSolPopover(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+const PK_FORMAT_LENGTH = 24;
+
+function TransferSolPopover(props: {
+  pubKey: string | undefined;
+  targetInputDisabled: boolean | undefined;
+  targetPlaceholder: string | undefined;
+}) {
+  const { pubKey, targetInputDisabled, targetPlaceholder } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
-    pubKeyVal = 'paste';
+    pubKeyVal = targetPlaceholder || '';
   }
 
   let fromKeyVal = selectedWallet.publicKey?.toString();
@@ -74,13 +83,12 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
               From
             </Form.Label>
             <Col sm={9}>
-              <Form.Control
-                readOnly // Because we use the wallet to do the signing, this can't be changed
-                type="text"
-                placeholder="Select Account to take the SOL from"
-                value={fromKey}
-                onChange={(e) => setFromKey(e.target.value)}
-              />
+              <div className="d-flex">
+                <code className="mt-4">
+                  {prettifyPubkey(fromKey, PK_FORMAT_LENGTH)}
+                </code>
+                <CopyIcon writeValue={fromKey} />
+              </div>
               <Form.Text className="text-muted" />
             </Col>
           </Form.Group>
@@ -90,12 +98,21 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
               To
             </Form.Label>
             <Col sm={9}>
-              <Form.Control
-                type="text"
-                placeholder="Select Account to send the SOL to"
-                value={toKey}
-                onChange={(e) => setToKey(e.target.value)}
-              />
+              {targetInputDisabled ? (
+                <div className="d-flex">
+                  <code className="mt-4">
+                    {prettifyPubkey(toKey, PK_FORMAT_LENGTH)}
+                  </code>
+                  <CopyIcon writeValue={toKey} />
+                </div>
+              ) : (
+                <Form.Control
+                  type="text"
+                  placeholder="Select Account to send the SOL to"
+                  value={toKey}
+                  onChange={(e) => setToKey(e.target.value)}
+                />
+              )}
               {/* TODO: add radio selector to choose where the TX cost comes from                   
                   <Form.Text className="text-muted">
                     Transaction cost from To account (after transfer takes place)
@@ -142,15 +159,24 @@ function TransferSolPopover(props: { pubKey: string | undefined }) {
   );
 }
 
-function TransferSolButton(props: { pubKey: string | undefined }) {
-  const { pubKey } = props;
+function TransferSolButton(props: {
+  pubKey: string | undefined;
+  label: string | undefined;
+  targetInputDisabled: boolean | undefined;
+  targetPlaceholder: string | undefined;
+}) {
+  const { pubKey, label, targetInputDisabled, targetPlaceholder } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
   return (
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={TransferSolPopover({ pubKey })}
+      overlay={TransferSolPopover({
+        pubKey,
+        targetInputDisabled,
+        targetPlaceholder,
+      })}
       rootClose
     >
       <Button
@@ -158,7 +184,7 @@ function TransferSolButton(props: { pubKey: string | undefined }) {
         disabled={pubKey === undefined || status !== NetStatus.Running}
         variant="success"
       >
-        Transfer SOL
+        {label || 'Transfer SOL'}
       </Button>
     </OverlayTrigger>
   );

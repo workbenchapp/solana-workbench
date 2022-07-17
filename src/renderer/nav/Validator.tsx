@@ -2,6 +2,8 @@
 import { toast } from 'react-toastify';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQuery } from 'react-query';
+
 import {
   Button,
   FormControl,
@@ -19,7 +21,7 @@ import {
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
-import { logger } from '@/common/globals';
+import { logger } from '../common/globals';
 
 const ipcDockerToast = (dockerIPCMethod: string) => {
   return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
@@ -36,9 +38,25 @@ const Validator = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const validator = useAppSelector(selectValidatorNetworkState);
   const validatorImageName = 'cryptoworkbench/solana-amman';
-  const [validatorImageTag, setValidatorImageTag] = useState<string>('');
-  const [validatorImageTags, setValidatorImageTags] = useState<string[]>([]);
+  const [validatorImageTag, setValidatorImageTag] = useState<string | null>('');
+  // const [validatorImageTags, setValidatorImageTags] = useState<string[]>([]);
   const [containerInspect, setContainerInspect] = useState<any>({});
+
+  const {
+    /* isLoading: validatorImageTagsIsLoading, */
+    /* error: validatorImageTagsError, */
+    data: validatorImageTagsData,
+  } = useQuery('validatorImageTags', () =>
+    window.promiseIpc.send('DOCKER-GetImageTags', validatorImageName)
+  );
+
+  const validatorImageTags = validatorImageTagsData || [
+    'Image list loading....',
+  ];
+
+  // TODO: not sure how to tell the user if we fail to get the list of image tags...
+  //  if (isLoading) return 'Loading...'
+  //  if (error) return 'An error has occurred: ' + error.message
 
   useInterval(() => {
     if (validator.net === Net.Localhost) {
@@ -70,16 +88,6 @@ const Validator = () => {
       net: validator.net,
     });
   }, 222);
-
-  useEffect(() => {
-    window.promiseIpc
-      .send('DOCKER-GetImageTags', validatorImageName)
-      .then((tags: string[]) => {
-        setValidatorImageTags(tags);
-        return tags;
-      })
-      .catch(logger.error);
-  }, [validatorImageName]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,7 +135,7 @@ const Validator = () => {
               validatorImageTag !== '' ? validatorImageTag : 'Docker image'
             }
             disabled={containerInspect?.State}
-            onSelect={(image: string) => {
+            onSelect={(image: string | null) => {
               logger.info(`selected image: ${image}`);
               setValidatorImageTag(image);
             }}
@@ -154,8 +162,7 @@ const Validator = () => {
                   window.promiseIpc
                     .send('DOCKER-CreateValidatorContainer', validatorImageTag)
                     .then((info: any) => {
-                      // setValidatorImageTags(tags);
-                      logger.info(`hooray ${JSON.stringify(info)}`);
+                      logger.info(`create ${JSON.stringify(info)}`);
                       return info;
                     })
                     .then(() => {

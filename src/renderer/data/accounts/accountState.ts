@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import * as sol from '@solana/web3.js';
 import { useEffect } from 'react';
-import { logger } from '@/common/globals';
+import { logger } from '../../common/globals';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 // https://redux.js.org/usage/usage-with-typescript#define-slice-state-and-action-types
 // eslint-disable-next-line import/no-cycle

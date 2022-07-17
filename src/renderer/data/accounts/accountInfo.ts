@@ -17,4 +17,5 @@ export interface AccountInfo {
   count: number; // count tracks how often this account has been seen
   solDelta: number; // difference between last change amount and this one
   maxDelta: number; // maxDelta represents the max change in SOL seen during session
+  programID: string;
 }

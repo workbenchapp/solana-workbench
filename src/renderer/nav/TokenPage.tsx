@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Split from 'react-split';
 
 import Stack from 'react-bootstrap/Stack';

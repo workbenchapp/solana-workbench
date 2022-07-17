@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, Accordion, Container } from 'react-bootstrap';
 import * as sol from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';

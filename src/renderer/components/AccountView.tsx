@@ -1,6 +1,6 @@
 import { faTerminal } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import ButtonToolbar from 'react-bootstrap/ButtonToolbar';
 import Container from 'react-bootstrap/Container';
 import { Button } from 'react-bootstrap';
@@ -148,7 +148,12 @@ function AccountView(props: { pubKey: string | undefined }) {
       <ButtonToolbar aria-label="Toolbar with button groups">
         <div className="flex gap-2 mb-2">
           <AirDropSolButton pubKey={pubKey} />
-          <TransferSolButton pubKey={pubKey} />
+          <TransferSolButton
+            pubKey={pubKey}
+            label="Send SOL"
+            targetPlaceholder="Select an Address"
+            targetInputDisabled
+          />
           <Button
             onClick={() => {
               if (pubKey) {

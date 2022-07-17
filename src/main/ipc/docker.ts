@@ -5,6 +5,7 @@ import Dockerode from 'dockerode';
 import * as shell from 'shelljs';
 
 import * as newStream from 'stream';
+import { get } from 'https';
 import { execAsync } from '../const';
 
 import { logger } from '../logger';
@@ -195,6 +196,40 @@ async function execAmman() {
   log('Exiting execAmman');
   return p;
 }
+type ImageTagsResult = {
+  count: number;
+  results: HubImageTag[];
+};
+type HubImageTag = {
+  name: string;
+};
+
+async function getImageTags(imageName: string): Promise<string[]> {
+  const url = `https://hub.docker.com/v2/repositories/${imageName}/tags/`;
+
+  const promise = new Promise<string>((resolve, reject) => {
+    let data = '';
+    get(url, (res) => {
+      res.on('data', (chunk) => {
+        data += chunk;
+      });
+      res.on('end', () => {
+        resolve(data);
+      });
+      res.on('error', reject);
+    });
+  });
+  const result = await promise; // wait until the promise resolves
+
+  const images: ImageTagsResult = JSON.parse(result);
+
+  const tags = images.results.map((res: HubImageTag) => {
+    return `${res.name}`;
+  });
+
+  log(`Found ${imageName}: image tags: ${JSON.stringify(tags)}`);
+  return tags;
+}
 
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
@@ -204,10 +239,7 @@ export function initDockerPromises() {
       logger.silly(`main: called DOCKER-GetImageTags, ${name}, ${event}`);
       log(`main: called DOCKER-GetImageTags, ${name}, ${event}`);
 
-      // TODO: this would use something like https://github.com/jessestuart/docker-hub-utils
-      // start with just ... curl https://hub.docker.com/v2/repositories/cryptoworkbench/solana-amman/tags/ | jq '.results[].name'
-
-      return ['v1.9.29', 'v1.10.30', 'v1.11.2'];
+      return getImageTags('cryptoworkbench/solana-amman');
     }
   );
 

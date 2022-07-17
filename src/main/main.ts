@@ -37,7 +37,7 @@ ipcMain.on(
   'main',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async (event: Electron.IpcMainEvent, method: string, msg: any) => {
-    logger.info('IPC event', { method, ...msg });
+    // logger.info('IPC event', { method, ...msg });
     let res = {};
     try {
       switch (method) {
@@ -60,7 +60,7 @@ ipcMain.on(
       if (typeof loggedRes === 'string') {
         loggedRes = { res: `${loggedRes.slice(0, MAX_STRING_LOG_LENGTH)}...` };
       }
-      logger.info('OK', { method, ...loggedRes });
+      // logger.info('OK', { method, ...loggedRes });
       event.reply('main', { method, res });
     } catch (e) {
       const error = e as Error;

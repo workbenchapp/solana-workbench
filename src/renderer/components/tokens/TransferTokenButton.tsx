@@ -10,15 +10,15 @@ import {
   Popover,
   Row,
 } from 'react-bootstrap';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
-import { logger } from '@/common/globals';
-import { useAppSelector } from '@/hooks';
+import { logger } from '../../common/globals';
+import { useAppSelector } from '../../hooks';
 import {
   NetStatus,
   selectValidatorNetworkState,
-} from '@/data/ValidatorNetwork/validatorNetworkState';
+} from '../../data/ValidatorNetwork/validatorNetworkState';
 import { ensureAtaFor } from './CreateNewMintButton';
 
 async function transferTokenToReceiver(
@@ -27,7 +27,7 @@ async function transferTokenToReceiver(
   mintKey: sol.PublicKey,
   transferFrom: sol.PublicKey,
   transferTo: sol.PublicKey,
-  tokenCount: int
+  tokenCount: number
 ) {
   if (!transferTo) {
     logger.info('no transferTo', transferTo);
@@ -90,7 +90,7 @@ function TransferTokenPopover(props: {
 }) {
   const { connection, fromKey, mintKey, transferFrom } = props;
 
-  let pubKeyVal;
+  let pubKeyVal = '';
   if (!pubKeyVal) {
     pubKeyVal = 'paste';
   }
@@ -189,7 +189,7 @@ function TransferTokenPopover(props: {
                       new sol.PublicKey(mintKey),
                       new sol.PublicKey(transferFrom),
                       new sol.PublicKey(toKey),
-                      tokenCount
+                      parseInt(tokenCount, 10)
                     ),
                     {
                       pending: 'Transfer submitted',

@@ -3,7 +3,6 @@ import * as sol from '@solana/web3.js';
 
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';
-import React from 'react';
 import { useQueryClient } from 'react-query';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 

@@ -3,9 +3,9 @@ import { faExplosion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import React from 'react';
-import { ACCOUNTS_NONE_KEY } from '../data/accounts/accountInfo';
 
 import analytics from '../common/analytics';
+import prettifyPubkey from '../common/prettifyPubkey';
 import { useAppSelector } from '../hooks';
 import {
   Net,
@@ -38,23 +38,6 @@ const renderCopyTooltip = (id: string, text: string) =>
       </Tooltip>
     );
   };
-
-const prettifyPubkey = (pk = '', formatLength?: number) => {
-  if (pk === null) {
-    // cope with bad data in config
-    return '';
-  }
-  if (pk === ACCOUNTS_NONE_KEY) {
-    // cope with bad data in config
-    return '';
-  }
-  if (!formatLength || formatLength + 2 > pk.length) {
-    return pk;
-  }
-  const partLen = (formatLength - 1) / 2;
-
-  return `${pk.slice(0, partLen)}…${pk.slice(pk.length - partLen, pk.length)}`;
-};
 
 const InlinePK: React.FC<{
   pk: string | undefined;
