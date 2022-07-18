@@ -124,8 +124,8 @@ function Sidebar() {
 
 function Topbar() {
   const wallet = useWallet();
-  const { net } = useAppSelector(selectValidatorNetworkState);
   const validator = useAppSelector(selectValidatorNetworkState);
+  const { net } = validator;
 
   useEffect(() => {
     const airdropIfNeeded = async () => {
