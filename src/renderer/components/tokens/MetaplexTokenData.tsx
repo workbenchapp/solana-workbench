@@ -62,7 +62,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
       return;
     }
     try {
-      const metadata = new metaplex.programs.metadata.MetadataDataData({
+      const metadataToSet = new metaplex.programs.metadata.MetadataDataData({
         name,
         symbol,
         uri,
@@ -70,14 +70,18 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
         creators: null, // TODO:
       });
 
-      if (metaData && metaData.data.mint === mintPubKey.toString()) {
+      if (
+        metaData &&
+        metaData.data &&
+        metaData.data.mint === mintPubKey.toString()
+      ) {
         // https://github.com/metaplex-foundation/js/blob/a4274ec97c6599dbfae8860ae2edc03f49d35d68/src/actions/updateMetadata.ts
         const meta = await metaplex.actions.updateMetadata({
           connection,
           wallet: selectedWallet,
           editionMint: mintPubKey,
           /** An optional new {@link MetadataDataData} object to replace the current data. This will completely overwrite the data so all fields must be set explicitly. * */
-          newMetadataData: metadata,
+          newMetadataData: metadataToSet,
           //   newUpdateAuthority?: PublicKey,
           //   /** This parameter can only be set to true once after which it can't be reverted to false **/
           //   primarySaleHappened?: boolean,
@@ -89,7 +93,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
           connection,
           wallet: selectedWallet,
           editionMint: mintPubKey,
-          metadataData: metadata,
+          metadataData: metadataToSet,
         });
         logger.info('create metadata', meta);
       }
@@ -215,13 +219,7 @@ function MetaplexTokenDataButton(props: {
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={
-        mintPubKey
-          ? DataPopover({ mintPubKey })
-          : () => {
-              return <div>none</div>;
-            }
-      }
+      overlay={DataPopover({ mintPubKey })}
       rootClose
     >
       <Button
