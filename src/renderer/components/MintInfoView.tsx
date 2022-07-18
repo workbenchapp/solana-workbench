@@ -1,13 +1,14 @@
 import * as sol from '@solana/web3.js';
 
 import Accordion from 'react-bootstrap/esm/Accordion';
-import { Button } from 'react-bootstrap';
+import { Button, Modal } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import {
   useConnection,
   useWallet,
   WalletContextState,
 } from '@solana/wallet-adapter-react';
+import React, { useState } from 'react';
 import * as walletWeb3 from '../wallet-adapter/web3';
 import { useAppSelector } from '../hooks';
 
@@ -20,6 +21,42 @@ import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorN
 import { logger } from '../common/globals';
 import InlinePK from './InlinePK';
 import { ActiveAccordionHeader } from './tokens/ActiveAccordionHeader';
+
+function ButtonWithConfirmation({ disabled, children, onClick, title }) {
+  const [show, setShow] = useState(false);
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
+
+  return (
+    <>
+      <Button variant="primary" onClick={handleShow} disabled={disabled}>
+        {title}
+      </Button>
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>{title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{children}</Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="primary"
+            onClick={() => {
+              onClick();
+              handleClose();
+            }}
+          >
+            OK
+          </Button>
+          <Button variant="secondary" onClick={handleClose}>
+            Cancel
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </>
+  );
+}
 
 // TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
 export async function closeMint(
@@ -123,9 +160,9 @@ export function MintInfoView(props: { mintKey: string }) {
           SOL)
         </div>
         <div className="shrink">
-          <Button
-            size="sm"
+          <ButtonWithConfirmation
             disabled={!hasAuthority || mintKey === undefined}
+            title={mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
             onClick={() => {
               if (!fromKey.publicKey) {
                 return;
@@ -145,8 +182,14 @@ export function MintInfoView(props: { mintKey: string }) {
               );
             }}
           >
-            {mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
-          </Button>
+            <div>
+              Are you sure you want to close the token mint. This will set the
+              update Authority for the Mint to null, and is not reverseable.
+            </div>
+            <div>
+              Mint: <InlinePK pk={mintKey} formatLength={9} />
+            </div>
+          </ButtonWithConfirmation>
         </div>
       </ActiveAccordionHeader>
       <Accordion.Body>
