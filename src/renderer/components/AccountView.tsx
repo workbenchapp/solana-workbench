@@ -159,7 +159,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               if (pubKey) {
                 forceRequestAccount(net, pubKey);
                 // force refresh for ATA's, PDA's etc?
-                queryClient.invalidateQueries(); // TODO: this is too broad
+                queryClient.invalidateQueries(); // TODO: mutate() anyone?
               }
             }}
           >

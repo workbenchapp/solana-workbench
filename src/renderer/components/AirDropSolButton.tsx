@@ -3,8 +3,11 @@ import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import { useQueryClient } from 'react-query';
+
 import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
+import { logger } from '../common/globals';
 
 import {
   NetStatus,
@@ -17,6 +20,7 @@ import { useAppSelector } from '../hooks';
 function AirDropPopover(props: { pubKey: string | undefined }) {
   const { pubKey } = props;
   const { net } = useAppSelector(selectValidatorNetworkState);
+  const queryClient = useQueryClient();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
@@ -73,11 +77,17 @@ function AirDropPopover(props: { pubKey: string | undefined }) {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(airdropSol(net, toKey, sol), {
-                    pending: 'Airdrop submitted',
-                    success: 'Airdrop succeeded 👌',
-                    error: 'Airdrop failed 🤯',
-                  });
+                  toast
+                    .promise(airdropSol(net, toKey, sol), {
+                      pending: 'Airdrop submitted',
+                      success: 'Airdrop succeeded 👌',
+                      error: 'Airdrop failed 🤯',
+                    })
+                    .then(() => {
+                      queryClient.invalidateQueries(); // TODO: mutate() anyone?
+                      return true;
+                    })
+                    .catch(logger.error);
                 }}
               >
                 Submit Airdrop
