@@ -21,7 +21,11 @@ export function ActiveAccordionHeader({ children, eventKey, callback }) {
         className={
           isCurrentEventKey ? 'accordion-button' : 'accordion-button collapsed'
         }
-        onClick={decoratedOnClick}
+        onClick={(e) => {
+          // Stop buttons on header from also toggling the accordion
+          if (e.currentTarget !== e.target) return;
+          decoratedOnClick(e);
+        }}
       >
         {children}
       </div>
