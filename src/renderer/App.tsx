@@ -130,7 +130,7 @@ function Topbar() {
   useEffect(() => {
     const airdropIfNeeded = async () => {
       if (validator.status !== NetStatus.Running) return;
-      let lamportAmount = 0;
+      let amount = 0;
 
       // arbitrary -- want to let people top up
       // on devnet SOL when they can
@@ -138,18 +138,18 @@ function Topbar() {
       switch (net) {
         case Net.Dev:
           // limit per devnet aidrop request
-          lamportAmount = 2;
+          amount = 2;
           break;
         case Net.Test:
           // limit per testnet airdrop request
-          lamportAmount = 1;
+          amount = 1;
           // arbitrary
           airdropThreshold = 5;
           break;
         case Net.MainnetBeta:
           return;
         default:
-          lamportAmount = 1000;
+          amount = 1000;
       }
       const solConn = new sol.Connection(netToURL(net));
       if (wallet.publicKey) {
@@ -158,7 +158,7 @@ function Topbar() {
           if (balance < airdropThreshold) {
             solConn.requestAirdrop(
               wallet.publicKey,
-              sol.LAMPORTS_PER_SOL * lamportAmount
+              sol.LAMPORTS_PER_SOL * amount
             );
           }
         } catch (e) {
