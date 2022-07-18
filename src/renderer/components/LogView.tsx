@@ -74,9 +74,7 @@ function LogView() {
 
   return (
     <pre className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto">
-      {logs.length > 0
-        ? logs.join('\n')
-        : 'Logs will appear here once transactions are processed.'}
+      {logs.length > 0 ? logs.join('\n') : ''}
     </pre>
   );
 }

@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
+import { NavLink } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { css } from 'vite-plugin-inline-css-modules';
 import {
@@ -26,6 +27,7 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { Net } from '../../types/types';
 import { useAppDispatch, useAppSelector, useInterval } from '../hooks';
 import Chip from './base/Chip';
 import EditableText from './base/EditableText';
@@ -171,8 +173,24 @@ function ProgramChangeView() {
               transform="translate(100 100)"
             />
           </svg>
-          <IconMdiWarning className="text-6xl z-1" />
-          <span className="z-2">Network Not Available</span>
+          {status === NetStatus.Unknown ? (
+            <p>Loading...</p>
+          ) : (
+            <IconMdiBroadcastOff className="text-6xl z-1" />
+          )}{' '}
+          {net === Net.Localhost && (
+            <div>
+              <span className="z-2 italic">Validator Not Available</span>
+              <div className="text-center">
+                Run one using the
+                <br />{' '}
+                <NavLink className="underline" to="/validator">
+                  Validator page
+                </NavLink>
+                .
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );

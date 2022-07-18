@@ -3,6 +3,7 @@ export {}
 declare global {
   const IconMdiAnchor: typeof import('~icons/mdi/anchor.jsx')['default']
   const IconMdiBookOpenOutline: typeof import('~icons/mdi/book-open-outline.jsx')['default']
+  const IconMdiBroadcastOff: typeof import('~icons/mdi/broadcast-off.jsx')['default']
   const IconMdiCheck: typeof import('~icons/mdi/check.jsx')['default']
   const IconMdiChevronDown: typeof import('~icons/mdi/chevron-down.jsx')['default']
   const IconMdiCircle: typeof import('~icons/mdi/circle.jsx')['default']
