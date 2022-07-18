@@ -38,7 +38,9 @@ const Validator = () => {
   const filterRef = useRef<HTMLInputElement>({} as HTMLInputElement);
   const validator = useAppSelector(selectValidatorNetworkState);
   const validatorImageName = 'cryptoworkbench/solana-amman';
-  const [validatorImageTag, setValidatorImageTag] = useState<string | null>('');
+  const [validatorImageTag, setValidatorImageTag] = useState<string | null>(
+    `${validatorImageName}:v1.10.31`
+  );
   // const [validatorImageTags, setValidatorImageTags] = useState<string[]>([]);
   const [containerInspect, setContainerInspect] = useState<any>({});
 
@@ -127,30 +129,6 @@ const Validator = () => {
     <div className="p-3">
       <ButtonToolbar aria-label="Toolbar with button groups">
         <div className="flex gap-2 mb-2">
-          <DropdownButton
-            size="sm"
-            className="mt-2 mb-4"
-            variant="dark"
-            title={
-              validatorImageTag !== '' ? validatorImageTag : 'Docker image'
-            }
-            disabled={containerInspect?.State}
-            onSelect={(image: string | null) => {
-              logger.info(`selected image: ${image}`);
-              setValidatorImageTag(image);
-            }}
-            align="end"
-          >
-            {validatorImageTags.map((tag: string) => {
-              const image = `${validatorImageName}:${tag}`;
-              return (
-                <Dropdown.Item eventKey={image} href="#">
-                  {image}
-                </Dropdown.Item>
-              );
-            })}
-          </DropdownButton>
-
           <Button
             size="sm"
             disabled={validatorImageTag === ''}
@@ -218,7 +196,7 @@ const Validator = () => {
             className="mt-2 mb-4"
             variant="dark"
           >
-            Stop Amman validator
+            Stop Validator
           </Button>
           <Button
             size="sm"
@@ -242,21 +220,31 @@ const Validator = () => {
           >
             Remove Container
           </Button>
+          <DropdownButton
+            size="sm"
+            className="mt-2 mb-4"
+            variant="dark"
+            title={
+              validatorImageTag !== '' ? validatorImageTag : 'Docker Image'
+            }
+            disabled={containerInspect?.State}
+            onSelect={(image: string | null) => {
+              logger.info(`selected image: ${image}`);
+              setValidatorImageTag(image);
+            }}
+            align="end"
+          >
+            {validatorImageTags.map((tag: string) => {
+              const image = `${validatorImageName}:${tag}`;
+              return (
+                <Dropdown.Item eventKey={image} href="#">
+                  {image}
+                </Dropdown.Item>
+              );
+            })}
+          </DropdownButton>
         </div>
       </ButtonToolbar>
-      <InputGroup size="sm">
-        <FormControl
-          ref={filterRef}
-          placeholder="Filter logs"
-          aria-label="Amount"
-          onKeyDown={debounce(() => {
-            window.electron.ipcRenderer.validatorLogs({
-              filter: filterRef.current.value || '',
-              net: validator.net,
-            });
-          }, 300)}
-        />
-      </InputGroup>
       <div className="overflow-auto">
         <pre
           className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
