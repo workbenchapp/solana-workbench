@@ -167,7 +167,7 @@ function Topbar() {
       }
     };
     airdropIfNeeded();
-  }, [net, wallet, validator]);
+  }, [net, wallet.publicKey, validator]);
 
   return (
     <div className="flex items-center p-1 px-2 bg-surface-400">
