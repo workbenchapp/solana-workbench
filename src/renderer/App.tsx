@@ -1,5 +1,6 @@
 import {
   ConnectionProvider,
+  useWallet,
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 // import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -12,7 +13,7 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import React, { FC, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -41,9 +42,11 @@ import {
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
+  Net,
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
+import { NetStatus } from '../types/types';
 
 // So we can electron
 declare global {
@@ -120,6 +123,52 @@ function Sidebar() {
 }
 
 function Topbar() {
+  const wallet = useWallet();
+  const { net } = useAppSelector(selectValidatorNetworkState);
+  const validator = useAppSelector(selectValidatorNetworkState);
+
+  useEffect(() => {
+    const airdropIfNeeded = async () => {
+      if (validator.status !== NetStatus.Running) return;
+      let lamportAmount = 0;
+      let airdropThreshold = 0;
+      switch (net) {
+        case Net.Dev:
+          // limit per devnet aidrop request
+          lamportAmount = 2;
+          // arbitrary -- want to let people top up
+          // on devnet SOL when they can
+          airdropThreshold = 50;
+          break;
+        case Net.Test:
+          // limit per testnet airdrop request
+          lamportAmount = 1;
+          // arbitrary
+          airdropThreshold = 5;
+          break;
+        case Net.MainnetBeta:
+          return;
+        default:
+          lamportAmount = 1000;
+      }
+      const solConn = new sol.Connection(netToURL(net));
+      if (wallet.publicKey) {
+        try {
+          const balance = await solConn.getBalance(wallet.publicKey);
+          if (balance < airdropThreshold) {
+            solConn.requestAirdrop(
+              wallet.publicKey,
+              sol.LAMPORTS_PER_SOL * lamportAmount
+            );
+          }
+        } catch (e) {
+          logger.error(e);
+        }
+      }
+    };
+    airdropIfNeeded();
+  }, [net, wallet, validator]);
+
   return (
     <div className="flex items-center p-1 px-2 bg-surface-400">
       <span>Solana Workbench</span>
@@ -197,6 +246,7 @@ export const GlobalContainer: FC = () => {
   const config = useConfigState();
   const accounts = useAccountsState();
   const { net } = useAppSelector(selectValidatorNetworkState);
+  const validator = useAppSelector(selectValidatorNetworkState);
 
   const wallets = useMemo(() => {
     const electronStorageWallet = new ElectronAppStorageWalletAdapter({
@@ -206,10 +256,10 @@ export const GlobalContainer: FC = () => {
             "Config not loaded, can't get ElectronWallet keypair yet"
           );
         }
-
         return getElectronStorageWallet(dispatch, config, accounts);
       },
     });
+
     return [
       // Sadly, electron apps don't run browser plugins, so these won't work without lots of pain
       // new PhantomWalletAdapter(),
