@@ -131,14 +131,14 @@ function Topbar() {
     const airdropIfNeeded = async () => {
       if (validator.status !== NetStatus.Running) return;
       let lamportAmount = 0;
-      let airdropThreshold = 0;
+
+      // arbitrary -- want to let people top up
+      // on devnet SOL when they can
+      let airdropThreshold = 50;
       switch (net) {
         case Net.Dev:
           // limit per devnet aidrop request
           lamportAmount = 2;
-          // arbitrary -- want to let people top up
-          // on devnet SOL when they can
-          airdropThreshold = 50;
           break;
         case Net.Test:
           // limit per testnet airdrop request
