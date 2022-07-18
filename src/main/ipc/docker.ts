@@ -233,6 +233,20 @@ async function getImageTags(imageName: string): Promise<string[]> {
 
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
+  promiseIpc.on('DOCKER-CheckDocker', () => {
+    logger.silly(`main: called DOCKER-CheckDocker`);
+
+    if (!shell.which(DOCKER_PATH)) {
+      logger.info(`Docker executable not found. ${DOCKER_PATH}`);
+
+      throw Error(`Docker executable not found.`);
+    }
+
+    // TODO: and now check if there's a Docker daemon up
+
+    return true;
+  });
+
   promiseIpc.on(
     'DOCKER-GetImageTags',
     (name: unknown, event?: IpcEvent | undefined) => {

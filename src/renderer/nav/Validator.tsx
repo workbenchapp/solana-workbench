@@ -90,6 +90,15 @@ const Validator = () => {
   }, 222);
 
   useEffect(() => {
+    if (validator.net === Net.Localhost) {
+      window?.promiseIpc.send('DOCKER-CheckDocker').catch((err) => {
+        logger.error(err);
+        toast.error(err.message);
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener = (resp: any) => {
       const { method, res } = resp;
