@@ -246,7 +246,6 @@ export const GlobalContainer: FC = () => {
   const config = useConfigState();
   const accounts = useAccountsState();
   const { net } = useAppSelector(selectValidatorNetworkState);
-  const validator = useAppSelector(selectValidatorNetworkState);
 
   const wallets = useMemo(() => {
     const electronStorageWallet = new ElectronAppStorageWalletAdapter({
@@ -256,10 +255,10 @@ export const GlobalContainer: FC = () => {
             "Config not loaded, can't get ElectronWallet keypair yet"
           );
         }
+
         return getElectronStorageWallet(dispatch, config, accounts);
       },
     });
-
     return [
       // Sadly, electron apps don't run browser plugins, so these won't work without lots of pain
       // new PhantomWalletAdapter(),
