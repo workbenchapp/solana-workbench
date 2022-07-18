@@ -19,7 +19,7 @@ function Account() {
       <Split
         sizes={[60, 40]}
         direction="horizontal"
-        className="flex-1 w-full flex"
+        className="flex-1 w-full flex overflow-scroll"
         gutterSize={5}
       >
         <ProgramChangeView />
