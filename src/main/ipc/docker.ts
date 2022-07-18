@@ -233,6 +233,37 @@ async function getImageTags(imageName: string): Promise<string[]> {
 
 // Need to import the file and call a function (from the main process) to get the IPC promise to exist.
 export function initDockerPromises() {
+  promiseIpc.on('DOCKER-CheckDocker', async () => {
+    logger.silly(`main: called DOCKER-CheckDocker`);
+
+    if (!shell.which(DOCKER_PATH)) {
+      logger.info(`Docker executable not found. ${DOCKER_PATH}`);
+
+      throw Error(`Docker executable not found.`);
+    }
+
+    try {
+      await execAsync('docker ps', {});
+    } catch (err: any) {
+      const errorMsg = err.stderr;
+      // TODO: following are hacky ways. Figure out if there are better alternatives.
+      if (errorMsg.includes('Is the docker daemon running?')) {
+        logger.info(`Docker deamon is not running. ${errorMsg}`);
+        throw Error(`Docker deamon is not running.`);
+      } else if (errorMsg.includes('permission denied')) {
+        logger.info(`Docker executable not found. ${errorMsg}`);
+        throw Error(
+          `Permission denied while trying to connect to the docker deamon.`
+        );
+      } else {
+        logger.info(`Something is wrong with docker. ${errorMsg}`);
+        throw Error(`Something is wrong with your docker installation.`);
+      }
+    }
+
+    return true;
+  });
+
   promiseIpc.on(
     'DOCKER-GetImageTags',
     (name: unknown, event?: IpcEvent | undefined) => {
