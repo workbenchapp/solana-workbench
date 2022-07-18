@@ -17,7 +17,7 @@ function Account() {
       gutterSize={5}
     >
       <Split
-        sizes={[75, 25]}
+        sizes={[60, 40]}
         direction="horizontal"
         className="flex-1 w-full flex"
         gutterSize={5}

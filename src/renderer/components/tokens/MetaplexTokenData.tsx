@@ -215,7 +215,13 @@ function MetaplexTokenDataButton(props: {
     <OverlayTrigger
       trigger="click"
       placement="bottom"
-      overlay={DataPopover({ mintPubKey })}
+      overlay={
+        mintPubKey
+          ? DataPopover({ mintPubKey })
+          : () => {
+              return <div>none</div>;
+            }
+      }
       rootClose
     >
       <Button

@@ -54,7 +54,8 @@ function AccountView(props: { pubKey: string | undefined }) {
 
   const { /* loadStatus, */ account /* , error */ } = useParsedAccount(
     net,
-    pubKey
+    pubKey,
+    {}
   );
 
   // ("idle" or "error" or "loading" or "success").
@@ -158,7 +159,7 @@ function AccountView(props: { pubKey: string | undefined }) {
               if (pubKey) {
                 forceRequestAccount(net, pubKey);
                 // force refresh for ATA's, PDA's etc?
-                queryClient.invalidateQueries(); // TODO: this is too broad
+                queryClient.invalidateQueries(); // TODO: mutate() anyone?
               }
             }}
           >
@@ -260,10 +261,11 @@ function AccountView(props: { pubKey: string | undefined }) {
 
           <div className="ms-1">
             <div>
-              <small className="text-muted">Token Accounts </small>
+              <small className="text-muted">Token Accounts</small>
               {/* this button should only be enabled for accounts that you can create a new mint for... */}
               <CreateNewMintButton
                 disabled={
+                  !account?.accountInfo ||
                   fromKey.publicKey?.toString() !== accountPubKey?.toString()
                 }
                 connection={connection}

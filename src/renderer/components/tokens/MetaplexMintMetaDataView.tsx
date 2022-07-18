@@ -4,15 +4,14 @@ import * as metaplex from '@metaplex/js';
 import Accordion from 'react-bootstrap/esm/Accordion';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
-import { useAppSelector } from '../../hooks';
 
 import { queryTokenMetadata } from '../../data/accounts/getAccount';
 import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import InlinePK from '../InlinePK';
-
-// TODO: need to trigger an update of a component like this automatically when the cetAccount cache notices a change...
+import { ActiveAccordionHeader } from './ActiveAccordionHeader';
+import { useAppSelector } from '../../hooks';
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;
@@ -24,13 +23,13 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   // if (status !== NetStatus.Running) {
   //   return (
   //     <Accordion.Item eventKey={`${mintKey}_info`}>
-  //       <Accordion.Header>
+  //       <ActiveAccordionHeader>
   //         Validator Offline{' '}
   //         <MetaplexTokenDataButton
   //           mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
   //           disabled
   //         />
-  //       </Accordion.Header>
+  //       </ActiveAccordionHeader>
   //       <Accordion.Body>
   //         <pre className="exe-hexdump p-2 rounded">Validator Offline</pre>
   //       </Accordion.Body>
@@ -38,31 +37,43 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   //   );
   // }
 
-  const pubKey = mintKey.toString();
   const {
     status: loadStatus,
     // error,
     data: metaInfo,
   } = useQuery<metaplex.programs.metadata.Metadata | undefined, Error>(
-    ['token-mint-meta', { net, pubKey }],
+    ['token-mint-meta', { net, pubKey: mintKey }],
     // TODO: need to be able to say "we errored, don't keep looking" - there doesn't need to be metadata...
     queryTokenMetadata,
     {}
   );
 
+  const mintEventKey = `${mintKey}_metaplex_info`;
+
+  if (!mintKey) {
+    return (
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+          No Mint selected
+        </ActiveAccordionHeader>
+        <Accordion.Body>
+          <pre className="exe-hexdump p-2 rounded">No DATA</pre>
+        </Accordion.Body>
+      </Accordion.Item>
+    );
+  }
+  const mintPubKey = new sol.PublicKey(mintKey);
+
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {
     return (
-      <Accordion.Item eventKey={`${pubKey}_info`}>
-        <Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
           Loading Metaplex token info{' '}
-          <MetaplexTokenDataButton
-            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
-            disabled
-          />
-        </Accordion.Header>
+          <MetaplexTokenDataButton mintPubKey={mintPubKey} disabled />
+        </ActiveAccordionHeader>
         <Accordion.Body>
-          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+          <pre className="exe-hexdump p-2 rounded">No DATA</pre>
         </Accordion.Body>
       </Accordion.Item>
     );
@@ -72,15 +83,17 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
 
   if (!metaInfo || !metaInfo.data) {
     return (
-      <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
-        <Accordion.Header>
-          No Metaplex token info{' '}
-          <MetaplexTokenDataButton
-            mintPubKey={mintKey ? new sol.PublicKey(mintKey) : undefined}
-            // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
-            disabled={false}
-          />
-        </Accordion.Header>
+      <Accordion.Item eventKey={mintEventKey}>
+        <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+          <div className="col flex-1">No Metaplex token info </div>
+          <div className="col shrink">
+            <MetaplexTokenDataButton
+              mintPubKey={mintPubKey}
+              // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
+              disabled={false}
+            />
+          </div>
+        </ActiveAccordionHeader>
       </Accordion.Item>
     );
   }
@@ -90,25 +103,25 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     metaInfo.data.isMutable;
 
   return (
-    <Accordion.Item eventKey={`${mintKey}_metaplex_info`}>
-      <Accordion.Header>
-        <div className="col">
+    <Accordion.Item eventKey={mintEventKey}>
+      <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
+        <div className="col basis-48">
           <b>Metaplex Metadata</b>
           <InlinePK pk={metaInfo.pubkey?.toString()} formatLength={9} />
         </div>
-        <div className="col ">
+        <div className="col flex-1">
           <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">
             {metaInfo?.data.data.symbol}
           </a>
           :{'  '} ({metaInfo?.data.data.name} )
         </div>
-        <div className="col ">
+        <div className="col shrink">
           <MetaplexTokenDataButton
             disabled={!canEditMetadata}
-            mintPubKey={new sol.PublicKey(mintKey)}
+            mintPubKey={mintPubKey}
           />
         </div>
-      </Accordion.Header>
+      </ActiveAccordionHeader>
       <Accordion.Body>
         <pre>
           <code className="exe-hexdump p-2 rounded">

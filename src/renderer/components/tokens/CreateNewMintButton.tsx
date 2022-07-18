@@ -3,6 +3,8 @@ import * as sol from '@solana/web3.js';
 
 import * as walletAdapter from '@solana/wallet-adapter-react';
 import { Button } from 'react-bootstrap';
+import { useQueryClient } from 'react-query';
+
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
 import { logger } from '../../common/globals';
@@ -90,6 +92,7 @@ function CreateNewMintButton(props: {
 }) {
   const { connection, fromKey, myWallet, andThen, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
+  const queryClient = useQueryClient();
 
   return (
     <Button
@@ -104,16 +107,23 @@ function CreateNewMintButton(props: {
           return;
         }
 
-        toast.promise(
-          createNewMint(connection, fromKey, myWallet).then((newMint) => {
-            return andThen(newMint);
-          }),
-          {
-            pending: `Create mint account submitted`,
-            success: `Create mint account succeeded 👌`,
-            error: `Create mint account failed 🤯`,
-          }
-        );
+        toast
+          .promise(
+            createNewMint(connection, fromKey, myWallet).then((newMint) => {
+              return andThen(newMint);
+            }),
+            {
+              pending: `Create mint account submitted`,
+              success: `Create mint account succeeded 👌`,
+              error: `Create mint account failed 🤯`,
+            }
+          )
+          .then(() => {
+            // TODO: SVEN - this one doesn't help.
+            queryClient.invalidateQueries(); // TODO: mutate() anyone?
+            return true;
+          })
+          .catch(logger.error);
       }}
     >
       New token mint

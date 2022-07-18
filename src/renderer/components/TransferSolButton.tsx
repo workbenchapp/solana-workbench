@@ -6,6 +6,7 @@ import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import { toast } from 'react-toastify';
+import { useQueryClient } from 'react-query';
 import { useAppSelector } from '../hooks';
 
 import CopyIcon from './CopyIcon';
@@ -16,6 +17,7 @@ import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { logger } from '../common/globals';
 
 const PK_FORMAT_LENGTH = 24;
 
@@ -27,6 +29,7 @@ function TransferSolPopover(props: {
   const { pubKey, targetInputDisabled, targetPlaceholder } = props;
   const selectedWallet = useWallet();
   const { connection } = useConnection();
+  const queryClient = useQueryClient();
 
   let pubKeyVal = pubKey;
   if (!pubKeyVal) {
@@ -127,26 +130,32 @@ function TransferSolPopover(props: {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(
-                    sendSolFromSelectedWallet(
-                      connection,
-                      selectedWallet,
-                      toKey,
-                      sol
-                    ),
-                    {
-                      pending: 'Transfer submitted',
-                      success: 'Transfer succeeded 👌',
-                      error: {
-                        render({ data }) {
-                          // eslint-disable-next-line no-console
-                          console.log('eror', data);
-                          // When the promise reject, data will contains the error
-                          return 'error';
+                  toast
+                    .promise(
+                      sendSolFromSelectedWallet(
+                        connection,
+                        selectedWallet,
+                        toKey,
+                        sol
+                      ),
+                      {
+                        pending: 'Transfer submitted',
+                        success: 'Transfer succeeded 👌',
+                        error: {
+                          render({ data }) {
+                            // eslint-disable-next-line no-console
+                            console.log('eror', data);
+                            // When the promise reject, data will contains the error
+                            return 'error';
+                          },
                         },
-                      },
-                    }
-                  );
+                      }
+                    )
+                    .then(() => {
+                      queryClient.invalidateQueries(); // TODO: mutate() anyone?
+                      return true;
+                    })
+                    .catch(logger.error);
                 }}
               >
                 Submit Transfer
