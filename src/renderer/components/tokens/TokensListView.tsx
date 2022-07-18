@@ -86,14 +86,14 @@ export function TokensListView(props: { pubKey: string | undefined }) {
                         eventKey={ataEventKey}
                         callback={() => {}}
                       >
-                        <div>
+                        <div className=" basis-48">
                           <b>ATA</b>
                           <InlinePK
                             pk={tAccount.pubkey.toString()}
                             formatLength={9}
                           />{' '}
                         </div>
-                        <div>
+                        <div className="flex-1">
                           holds{' '}
                           {tAccount.account.data.parsed.info.tokenAmount.amount}{' '}
                           tokens (
@@ -101,6 +101,8 @@ export function TokensListView(props: { pubKey: string | undefined }) {
                             tAccount.account.lamports / sol.LAMPORTS_PER_SOL
                           )}{' '}
                           SOL)
+                        </div>
+                        <div className="shrink">
                           <MintTokenToButton
                             disabled={
                               // TODO: ONLY IF the wallet user has mint-auth (and should mint to this user...)

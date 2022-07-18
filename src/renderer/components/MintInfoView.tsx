@@ -111,18 +111,18 @@ export function MintInfoView(props: { mintKey: string }) {
   return (
     <Accordion.Item eventKey={mintEventKey}>
       <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-        <div className="col">
+        <div className=" basis-48">
           <b>Mint</b>
           <InlinePK pk={mintKey} formatLength={9} />
         </div>
-        <div>
+        <div className="flex-1">
           holds {mintInfo?.accountInfo.data?.parsed.info.supply} tokens (
           {truncateSolAmount(
             mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
           )}{' '}
           SOL)
         </div>
-        <div>
+        <div className="shrink">
           <Button
             size="sm"
             disabled={!hasAuthority || mintKey === undefined}

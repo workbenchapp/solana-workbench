@@ -85,12 +85,14 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     return (
       <Accordion.Item eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-          No Metaplex token info{' '}
-          <MetaplexTokenDataButton
-            mintPubKey={mintPubKey}
-            // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
-            disabled={false}
-          />
+          <div className="col flex-1">No Metaplex token info </div>
+          <div className="col shrink">
+            <MetaplexTokenDataButton
+              mintPubKey={mintPubKey}
+              // TODO: restrict to what the mint allows (i think that means it needs to be passed into the component?)
+              disabled={false}
+            />
+          </div>
         </ActiveAccordionHeader>
       </Accordion.Item>
     );
@@ -103,17 +105,17 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   return (
     <Accordion.Item eventKey={mintEventKey}>
       <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-        <div className="col">
+        <div className="col basis-48">
           <b>Metaplex Metadata</b>
           <InlinePK pk={metaInfo.pubkey?.toString()} formatLength={9} />
         </div>
-        <div className="col ">
+        <div className="col flex-1">
           <a target="_blank" href={metaInfo?.data.data.uri} rel="noreferrer">
             {metaInfo?.data.data.symbol}
           </a>
           :{'  '} ({metaInfo?.data.data.name} )
         </div>
-        <div className="col ">
+        <div className="col shrink">
           <MetaplexTokenDataButton
             disabled={!canEditMetadata}
             mintPubKey={mintPubKey}
