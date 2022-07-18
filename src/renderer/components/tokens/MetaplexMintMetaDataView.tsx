@@ -11,6 +11,7 @@ import MetaplexTokenDataButton from './MetaplexTokenData';
 
 import InlinePK from '../InlinePK';
 import { ActiveAccordionHeader } from './ActiveAccordionHeader';
+import { useAppSelector } from '../../hooks';
 
 export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   const { mintKey } = props;

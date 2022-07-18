@@ -150,15 +150,11 @@ function TokenPage() {
               hidden={mintList.length <= 0}
               aria-label="Default select example"
               onChange={(value) => setMintPubKey(value.target.value)}
+              defaultValue={mintKey?.toString()}
             >
               {mintList.map((key) => {
-                const sel = key === mintKey;
                 return (
-                  <option
-                    key={key.toString()}
-                    selected={sel}
-                    value={key.toString()}
-                  >
+                  <option key={key.toString()} value={key.toString()}>
                     {key.toString()}
                   </option>
                 );
