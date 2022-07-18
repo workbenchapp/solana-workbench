@@ -207,6 +207,10 @@ function MetaplexTokenDataButton(props: {
   const { mintPubKey, disabled } = props;
   const { status } = useAppSelector(selectValidatorNetworkState);
 
+  if (!mintPubKey) {
+    return <></>;
+  }
+
   return (
     <OverlayTrigger
       trigger="click"
