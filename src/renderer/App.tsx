@@ -1,5 +1,6 @@
 import {
   ConnectionProvider,
+  useWallet,
   WalletProvider,
 } from '@solana/wallet-adapter-react';
 // import { LedgerWalletAdapter } from '@solana/wallet-adapter-wallets';
@@ -12,7 +13,7 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import React, { FC, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -41,9 +42,11 @@ import {
 } from './data/Config/configState';
 import ValidatorNetwork from './data/ValidatorNetwork/ValidatorNetwork';
 import {
+  Net,
   netToURL,
   selectValidatorNetworkState,
 } from './data/ValidatorNetwork/validatorNetworkState';
+import { NetStatus } from '../types/types';
 
 // So we can electron
 declare global {
@@ -120,6 +123,52 @@ function Sidebar() {
 }
 
 function Topbar() {
+  const wallet = useWallet();
+  const validator = useAppSelector(selectValidatorNetworkState);
+  const { net } = validator;
+
+  useEffect(() => {
+    const airdropIfNeeded = async () => {
+      if (validator.status !== NetStatus.Running) return;
+      let amount = 0;
+
+      // arbitrary -- want to let people top up
+      // on devnet SOL when they can
+      let airdropThreshold = 50;
+      switch (net) {
+        case Net.Dev:
+          // limit per devnet aidrop request
+          amount = 2;
+          break;
+        case Net.Test:
+          // limit per testnet airdrop request
+          amount = 1;
+          // arbitrary
+          airdropThreshold = 5;
+          break;
+        case Net.MainnetBeta:
+          return;
+        default:
+          amount = 1000;
+      }
+      const solConn = new sol.Connection(netToURL(net));
+      if (wallet.publicKey) {
+        try {
+          const balance = await solConn.getBalance(wallet.publicKey);
+          if (balance < airdropThreshold) {
+            solConn.requestAirdrop(
+              wallet.publicKey,
+              sol.LAMPORTS_PER_SOL * amount
+            );
+          }
+        } catch (e) {
+          logger.error(e);
+        }
+      }
+    };
+    airdropIfNeeded();
+  }, [net, wallet.publicKey, validator]);
+
   return (
     <div className="flex items-center p-1 px-2 bg-surface-400">
       <span>Solana Workbench</span>
