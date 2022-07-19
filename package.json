@@ -211,7 +211,6 @@
     "vite-plugin-checker": "^0.4.6",
     "vite-plugin-environment": "^1.1.1",
     "vite-plugin-fonts": "^0.4.0",
-    "vite-plugin-inline-css-modules": "^0.0.4",
     "vite-plugin-windicss": "^1.8.4",
     "vitest": "^0.14.2",
     "windicss": "^3.5.4"
