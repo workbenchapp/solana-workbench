@@ -238,27 +238,17 @@ export function initDockerPromises() {
 
     if (!shell.which(DOCKER_PATH)) {
       logger.info(`Docker executable not found. ${DOCKER_PATH}`);
-
       throw Error(`Docker executable not found.`);
     }
 
+    const dockerClient = new Dockerode();
+
     try {
-      await execAsync('docker ps', {});
+      await dockerClient.listContainers();
     } catch (err: any) {
-      const errorMsg = err.stderr;
-      // TODO: following are hacky ways. Figure out if there are better alternatives.
-      if (errorMsg.includes('Is the docker daemon running?')) {
-        logger.info(`Docker deamon is not running. ${errorMsg}`);
-        throw Error(`Docker deamon is not running.`);
-      } else if (errorMsg.includes('permission denied')) {
-        logger.info(`Docker executable not found. ${errorMsg}`);
-        throw Error(
-          `Permission denied while trying to connect to the docker deamon.`
-        );
-      } else {
-        logger.info(`Something is wrong with docker. ${errorMsg}`);
-        throw Error(`Something is wrong with your docker installation.`);
-      }
+      throw Error(
+        'Could not connect to Docker. Please start Docker to run validators.'
+      );
     }
 
     return true;
