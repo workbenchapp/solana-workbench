@@ -9,18 +9,18 @@ import {
   WalletContextState,
 } from '@solana/wallet-adapter-react';
 import React, { useState } from 'react';
-import * as walletWeb3 from '../wallet-adapter/web3';
-import { useAppSelector } from '../hooks';
+import * as walletWeb3 from '../../wallet-adapter/web3';
+import { useAppSelector } from '../../hooks';
 
 import {
   truncateSolAmount,
   useParsedAccount,
-} from '../data/accounts/getAccount';
-import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
+} from '../../data/accounts/getAccount';
+import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 
-import { logger } from '../common/globals';
-import InlinePK from './InlinePK';
-import { ActiveAccordionHeader } from './tokens/ActiveAccordionHeader';
+import { logger } from '../../common/globals';
+import InlinePK from '../InlinePK';
+import { ActiveAccordionHeader } from './ActiveAccordionHeader';
 
 function ButtonWithConfirmation({ disabled, children, onClick, title }) {
   const [show, setShow] = useState(false);
@@ -183,8 +183,8 @@ export function MintInfoView(props: { mintKey: string }) {
             }}
           >
             <div>
-              Are you sure you want to close the token mint. This will set the
-              update Authority for the Mint to null, and is not reverseable.
+              Are you sure you want to close the token mint? This will set the
+              update authority for the mint to null, and is not reversable.
             </div>
             <div>
               Mint: <InlinePK pk={mintKey} formatLength={9} />

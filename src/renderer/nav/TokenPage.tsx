@@ -17,7 +17,7 @@ import {
 import { getTokenAccounts } from '../data/accounts/getAccount';
 import { useAppSelector } from '../hooks';
 import AccountView from '../components/AccountView';
-import { MintInfoView } from '../components/MintInfoView';
+import { MintInfoView } from '../components/tokens/MintInfoView';
 
 import { logger } from '../common/globals';
 

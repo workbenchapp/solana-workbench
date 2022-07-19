@@ -10,7 +10,7 @@ import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validat
 
 import { useAppSelector } from '../../hooks';
 import InlinePK from '../InlinePK';
-import { MintInfoView } from '../MintInfoView';
+import { MintInfoView } from './MintInfoView';
 import { MetaplexMintMetaDataView } from './MetaplexMintMetaDataView';
 import MintTokenToButton from './MintTokenToButton';
 import TransferTokenButton from './TransferTokenButton';
