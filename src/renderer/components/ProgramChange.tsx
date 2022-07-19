@@ -34,16 +34,20 @@ export function ProgramChange(props: {
       return;
     }
     if (!pubKey) {
-      setChangeInfo(undefined);
+      // setChangeInfo(undefined);
       return;
     }
-    setChangeInfo(getAccount(net, pubKey));
+    const update = getAccount(net, pubKey);
+    if (!update) {
+      return;
+    }
+    setChangeInfo(update);
   }, [net, status, pubKey]);
   useEffect(updateAccount, [updateAccount]);
   useInterval(updateAccount, 666);
 
   if (!change) {
-    return;
+    return null;
   }
 
   const showCount = change?.count || 0;

@@ -18,7 +18,7 @@ const HEXDUMP_BYTES = 512;
 //       Also use that to decide if we need to do a validator is available check or not - if we're watching changes, then we already know...
 
 const cache = new LRUCache<string, AccountInfo>({
-  maxSize: 500,
+  maxSize: 2000,
   entryExpirationTimeInMS: 60000,
 });
 
@@ -109,7 +109,6 @@ export function getAccount(net: Net, pubKey: string): AccountInfo | undefined {
   if (cachedResponse) {
     return cachedResponse;
   }
-
   // logger.silly('getAccountInfo cache miss', pubKey, pubKey.toString());
 
   const response: AccountInfo = {
