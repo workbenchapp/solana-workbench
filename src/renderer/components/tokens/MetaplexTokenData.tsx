@@ -229,7 +229,7 @@ function MetaplexTokenDataButton(props: {
         }
         variant="success"
       >
-        Edit Metaplex data
+        Edit Metaplex Data
       </Button>
     </OverlayTrigger>
   );
