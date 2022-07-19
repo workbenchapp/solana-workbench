@@ -71,7 +71,7 @@ function WatchAcountPopover(props: {
             <Col sm={{ span: 10, offset: 2 }}>
               <Button
                 type="button"
-                disabled={!!validationError || !toKey}
+                disabled={validationError || !toKey}
                 onClick={() => {
                   pinAccount(toKey, false);
                 }}
