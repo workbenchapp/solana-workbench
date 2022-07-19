@@ -42,6 +42,10 @@ export function ProgramChange(props: {
   useEffect(updateAccount, [updateAccount]);
   useInterval(updateAccount, 666);
 
+  if (!change) {
+    return;
+  }
+
   const showCount = change?.count || 0;
   const showSOL = change
     ? truncateLamportAmount(change)
