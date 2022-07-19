@@ -6,14 +6,11 @@ import { useQuery } from 'react-query';
 
 import {
   Button,
-  FormControl,
-  InputGroup,
   Alert,
   DropdownButton,
   Dropdown,
   ButtonToolbar,
 } from 'react-bootstrap';
-import { debounce } from 'underscore';
 import AnsiUp from 'ansi_up';
 import DOMPurify from 'dompurify';
 import {

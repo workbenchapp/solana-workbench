@@ -5,6 +5,7 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
+import { logger } from '../common/globals';
 
 function WatchAcountPopover(props: {
   pinAccount: (pk: string, b: boolean) => void;
@@ -33,7 +34,7 @@ function WatchAcountPopover(props: {
       setValidationErr(undefined);
     } catch (err) {
       setValidationErr('Invalid key');
-      console.log(err);
+      logger.errror(err);
     }
   }, [toKey]);
 

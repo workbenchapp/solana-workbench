@@ -14,17 +14,19 @@ import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
 import { FC, useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from 'react-query';
+
 import { Button, Form } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
-import { ToastContainer } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
 
 import { logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
-import { getElectronStorageWallet } from './data/accounts/account';
+import { airdropSol, getElectronStorageWallet } from './data/accounts/account';
 import { useAccountsState } from './data/accounts/accountState';
 import { ElectronAppStorageWalletAdapter } from './wallet-adapter/electronAppStorage';
 
@@ -126,6 +128,7 @@ function Topbar() {
   const wallet = useWallet();
   const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const airdropIfNeeded = async () => {
@@ -156,10 +159,18 @@ function Topbar() {
         try {
           const balance = await solConn.getBalance(wallet.publicKey);
           if (balance < airdropThreshold) {
-            solConn.requestAirdrop(
-              wallet.publicKey,
-              sol.LAMPORTS_PER_SOL * amount
-            );
+            const publicKeyString = wallet.publicKey.toString();
+            toast
+              .promise(airdropSol(net, publicKeyString, amount), {
+                pending: `Auto-Topup ${publicKeyString} Airdrop submitted`,
+                success: `Auto-Topup ${publicKeyString} Airdrop succeeded 👌`,
+                error: `Auto-Topup ${publicKeyString} Airdrop failed 🤯`,
+              })
+              .then(() => {
+                queryClient.invalidateQueries(); // TODO: mutate() anyone?
+                return true;
+              })
+              .catch(logger.error);
           }
         } catch (e) {
           logger.error(e);
@@ -167,7 +178,7 @@ function Topbar() {
       }
     };
     airdropIfNeeded();
-  }, [net, wallet.publicKey, validator]);
+  }, [net, wallet.publicKey, validator, queryClient]);
 
   return (
     <div className="flex items-center p-1 px-2 bg-surface-400">

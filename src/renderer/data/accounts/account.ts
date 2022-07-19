@@ -12,9 +12,14 @@ import {
 } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountsState, reloadFromMain } from './accountState';
 
-export async function airdropSol(net: Net, toKey: string, solAmount: string) {
+export async function airdropSol(
+  net: Net,
+  toKey: string,
+  solAmount: number | string
+) {
   const to = new sol.PublicKey(toKey);
-  const sols = parseFloat(solAmount);
+  const sols =
+    typeof solAmount === 'number' ? solAmount : parseFloat(solAmount);
 
   const connection = new sol.Connection(netToURL(net));
 

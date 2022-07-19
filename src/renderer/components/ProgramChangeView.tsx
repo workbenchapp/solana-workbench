@@ -73,7 +73,7 @@ function ProgramChangeView() {
     try {
       PublicKey.isOnCurve(pubKey);
     } catch (err) {
-      console.log(err);
+      logger.error(err);
       return;
     }
 
