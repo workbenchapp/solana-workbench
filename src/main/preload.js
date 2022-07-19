@@ -6,8 +6,8 @@ if (process.env.LOG_LEVEL) {
   log.transports.console.level = process.env.LOG_LEVEL;
   log.transports.ipc.level = process.env.LOG_LEVEL;
 } else {
-  log.transports.console.level = 'silly';
-  log.transports.ipc.level = 'silly';
+  log.transports.console.level = 'info';
+  log.transports.ipc.level = 'info';
 }
 
 const send = (method, msg) => {

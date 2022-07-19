@@ -45,20 +45,24 @@ export async function getParsedAccount(
 
   const key = new sol.PublicKey(pubKey);
 
-  const solAccount = await solConn.getParsedAccountInfo(key);
-
-  const response: AccountInfo = {
-    accountId: key,
-    accountInfo: solAccount.value,
-    pubKey,
-    net,
-    count: 0,
-    solDelta: 0,
-    maxDelta: 0,
-    // programID: '', // solAccount?.owner?.toString(),
-  };
-  cache.set(`${net}_${pubKey}`, response);
-  return response;
+  try {
+    const solAccount = await solConn.getParsedAccountInfo(key);
+    const response: AccountInfo = {
+      accountId: key,
+      accountInfo: solAccount.value,
+      pubKey,
+      net,
+      count: 0,
+      solDelta: 0,
+      maxDelta: 0,
+      // programID: '', // solAccount?.owner?.toString(),
+    };
+    cache.set(`${net}_${pubKey}`, response);
+    return response;
+  } catch (e) {
+    logger.debug(`getParsedAccountInfo(${key}): ${e}`);
+    return undefined;
+  }
 }
 // react-query support
 // TODO: if i understood right, re-querying will make a non-blocking request, so caould be used to update on action?
@@ -187,7 +191,7 @@ export async function getTokenMetadata(
     // const meta = metaplex.programs.metadata.Metadata.load(conn, tokenPublicKey);
     return meta;
   } catch (e) {
-    logger.error('metadata load', e);
+    logger.silly('metadata load', e);
   }
   const fake: metaplex.programs.metadata.Metadata = {};
   return fake;
@@ -206,7 +210,7 @@ export async function queryTokenMetadata(
     const meta = await getTokenMetadata(net, pubKey);
     return meta;
   } catch (e) {
-    logger.warn(e);
+    logger.silly(e);
   }
   // if (!meta) {
   //   throw Error(`tokenmetadata for ${pubKey} Not found`);
