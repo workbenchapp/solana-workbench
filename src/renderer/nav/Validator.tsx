@@ -93,7 +93,7 @@ const Validator = () => {
     if (validator.net === Net.Localhost) {
       window?.promiseIpc.send('DOCKER-CheckDocker').catch((err) => {
         logger.error(err);
-        toast.error(err.message);
+        toast.warning(err.message);
       });
     }
   }, []);
