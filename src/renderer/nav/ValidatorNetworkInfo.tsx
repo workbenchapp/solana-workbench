@@ -2,6 +2,7 @@ import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
+import { isWhiteSpaceLike } from 'typescript';
 import { VictoryPie } from 'victory';
 import { logger } from '../common/globals';
 import {
@@ -99,7 +100,7 @@ function ValidatorNetworkInfo() {
           colorScale="heatmap"
           height={200}
           labelRadius={55}
-          style={{ labels: { fontSize: 4 } }}
+          style={{ labels: { fontSize: 8, stroke: 'grey' } }}
           // labels={({ datum }) => datum.version}
           x={(d) => (d as VCount).version}
           y={(d) => (d as VCount).count}
