@@ -96,7 +96,7 @@ const Validator = () => {
         toast.warning(err.message);
       });
     }
-  }, []);
+  }, [validator.net]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
