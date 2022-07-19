@@ -159,8 +159,14 @@ function ProgramChangeView() {
     });
     setPinnedAccount(pinMap);
     setDisplayList(showKeys);
-    refreshAccountInfos(net, showKeys);
-  }, 666);
+  }, 333);
+
+  useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
+    refreshAccountInfos(net, displayList);
+  }, 2222);
 
   const uniqueAccounts = displayList.length;
 
