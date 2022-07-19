@@ -8,7 +8,7 @@ import {
   useWallet,
   WalletContextState,
 } from '@solana/wallet-adapter-react';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 import { useAppSelector } from '../../hooks';
 
