@@ -2,7 +2,6 @@ import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
-import { isWhiteSpaceLike } from 'typescript';
 import { VictoryPie } from 'victory';
 import { logger } from '../common/globals';
 import {
