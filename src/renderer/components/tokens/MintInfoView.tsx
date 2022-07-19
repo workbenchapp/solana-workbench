@@ -162,7 +162,7 @@ export function MintInfoView(props: { mintKey: string }) {
         <div className="shrink">
           <ButtonWithConfirmation
             disabled={!hasAuthority || mintKey === undefined}
-            title={mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
+            title={mintAuthorityIsNull ? 'Mint Closed' : 'Close Mint'}
             onClick={() => {
               if (!fromKey.publicKey) {
                 return;
