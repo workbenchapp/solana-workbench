@@ -104,6 +104,7 @@ const Validator = () => {
     }
   };
   useInterval(checkForDocker, 1000);
+  checkForDocker();
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
