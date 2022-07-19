@@ -5,7 +5,9 @@ import util from 'util';
 import { exec } from 'child_process';
 import { app } from 'electron';
 
-const WORKBENCH_VERSION = '0.3.0';
+import packageJson from '../../package.json';
+
+const WORKBENCH_VERSION = packageJson.version;
 const RESOURCES_PATH = app.isPackaged
   ? path.join(process.resourcesPath, 'assets')
   : path.join(__dirname, '..', '..', 'assets');

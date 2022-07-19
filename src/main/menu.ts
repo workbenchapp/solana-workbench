@@ -6,6 +6,8 @@ import {
   MenuItemConstructorOptions,
 } from 'electron';
 
+import packageJson from '../../package.json';
+
 interface DarwinMenuItemConstructorOptions extends MenuItemConstructorOptions {
   selector?: string;
   submenu?: DarwinMenuItemConstructorOptions[] | Menu;
@@ -54,10 +56,10 @@ export default class MenuBuilder {
 
   buildDarwinTemplate(): MenuItemConstructorOptions[] {
     const subMenuAbout: DarwinMenuItemConstructorOptions = {
-      label: 'Solana Workbench',
+      label: `${packageJson.build.productName} ${packageJson.version}`,
       submenu: [
         {
-          label: 'About Solana Workbench',
+          label: `About ${packageJson.build.productName}`,
           selector: 'orderFrontStandardAboutPanel:',
         },
         { type: 'separator' },
@@ -157,11 +159,10 @@ export default class MenuBuilder {
         {
           label: 'Github',
           click() {
-            shell.openExternal(
-              'https://github.com/workbenchapp/solana-workbench-releases'
-            );
+            shell.openExternal(packageJson.homepage);
           },
         },
+        { label: `v${packageJson.version}` },
       ],
     };
 
@@ -240,11 +241,10 @@ export default class MenuBuilder {
           {
             label: 'Github',
             click() {
-              shell.openExternal(
-                'https://github.com/workbenchapp/solana-workbench-releases'
-              );
+              shell.openExternal(packageJson.homepage);
             },
           },
+          { label: `v${packageJson.version}` },
         ],
       },
     ];
