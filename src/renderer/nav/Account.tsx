@@ -1,4 +1,8 @@
 import Split from 'react-split';
+import {
+  NetStatus,
+  selectValidatorNetworkState,
+} from '../data/ValidatorNetwork/validatorNetworkState';
 import AccountView from '../components/AccountView';
 import LogView from '../components/LogView';
 import ProgramChangeView from '../components/ProgramChangeView';
@@ -7,6 +11,7 @@ import { useAppSelector } from '../hooks';
 
 function Account() {
   const accounts = useAppSelector(selectAccountsListState);
+  const validator = useAppSelector(selectValidatorNetworkState);
   const { selectedAccount } = accounts;
 
   return (
@@ -25,7 +30,9 @@ function Account() {
         <ProgramChangeView />
         <div className="overflow-auto">
           <div className="flex-1 p-3">
-            <AccountView pubKey={selectedAccount} />
+            {validator.status === NetStatus.Running && (
+              <AccountView pubKey={selectedAccount} />
+            )}
           </div>
         </div>
       </Split>
