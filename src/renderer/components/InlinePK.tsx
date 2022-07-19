@@ -1,4 +1,3 @@
-import classnames from 'classnames';
 import { faExplosion } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
@@ -48,15 +47,15 @@ const InlinePK: React.FC<{
 
   if (!pk) {
     return (
-      <span className={classnames('flex items-center', className)}>
+      <span>
         <small>No onchain account</small>
       </span>
     );
   }
 
   return (
-    <span className={classnames('flex items-center', className)}>
-      <div className="pre">{prettifyPubkey(pk, formatLength)}</div>
+    <span className={`${className}`}>
+      <span className="pre">{prettifyPubkey(pk, formatLength)}</span>
       <CopyIcon writeValue={pk} />
       <small>
         {pk !== '' ? (

@@ -52,7 +52,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
 
   if (!mintKey) {
     return (
-      <Accordion.Item eventKey={mintEventKey}>
+      <Accordion.Item className="pl-4" eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
           No Mint selected
         </ActiveAccordionHeader>
@@ -67,7 +67,7 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
   // ("idle" or "error" or "loading" or "success").
   if (loadStatus === 'loading') {
     return (
-      <Accordion.Item eventKey={mintEventKey}>
+      <Accordion.Item className="pl-4" eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
           Loading Metaplex token info{' '}
           <MetaplexTokenDataButton mintPubKey={mintPubKey} disabled />
@@ -83,9 +83,12 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
 
   if (!metaInfo || !metaInfo.data) {
     return (
-      <Accordion.Item eventKey={mintEventKey}>
+      <Accordion.Item className="pl-4" eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-          <div className="col flex-1">No Metaplex token info </div>
+          <div className="col flex-1">
+            <b>Metaplex Info</b>
+            <span className="ml-2 text-slate-400">None</span>
+          </div>
           <div className="col shrink">
             <MetaplexTokenDataButton
               mintPubKey={mintPubKey}
@@ -103,10 +106,10 @@ export function MetaplexMintMetaDataView(props: { mintKey: string }) {
     metaInfo.data.isMutable;
 
   return (
-    <Accordion.Item eventKey={mintEventKey}>
+    <Accordion.Item className="pl-4" eventKey={mintEventKey}>
       <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-        <div className="col basis-48">
-          <b>Metaplex Metadata</b>
+        <div className="col">
+          <b className="mr-2">Metadata</b>
           <InlinePK pk={metaInfo.pubkey?.toString()} formatLength={9} />
         </div>
         <div className="col flex-1">

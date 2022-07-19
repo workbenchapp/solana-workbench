@@ -145,22 +145,26 @@ function TokenPage() {
             <AccountView pubKey={myWallet?.toString()} />
           </Col>
           <Col className="col-md-6 almost-vh-100 vscroll">
-            Token Mint :{' '}
-            <Form.Select
-              hidden={mintList.length <= 0}
-              aria-label="Default select example"
-              onChange={(value) => setMintPubKey(value.target.value)}
-              defaultValue={mintKey?.toString()}
-            >
-              {mintList.map((key) => {
-                return (
-                  <option key={key.toString()} value={key.toString()}>
-                    {key.toString()}
-                  </option>
-                );
-              })}
-            </Form.Select>
-            <MintAccordians mintKey={mintKey} />
+            {mintList.length > 0 && (
+              <div>
+                Token Mint :{' '}
+                <Form.Select
+                  hidden={mintList.length <= 0}
+                  aria-label="Default select example"
+                  onChange={(value) => setMintPubKey(value.target.value)}
+                  defaultValue={mintKey?.toString()}
+                >
+                  {mintList.map((key) => {
+                    return (
+                      <option key={key.toString()} value={key.toString()}>
+                        {key.toString()}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+                <MintAccordians mintKey={mintKey} />
+              </div>
+            )}
           </Col>
         </Split>
       </Row>

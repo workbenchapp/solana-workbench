@@ -2,10 +2,7 @@ import { Card, Accordion, Container } from 'react-bootstrap';
 import * as sol from '@solana/web3.js';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { useQuery } from 'react-query';
-import {
-  truncateSolAmount,
-  queryTokenAccounts,
-} from '../../data/accounts/getAccount';
+import { queryTokenAccounts } from '../../data/accounts/getAccount';
 import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 
 import { useAppSelector } from '../../hooks';
@@ -74,6 +71,8 @@ export function TokensListView(props: { pubKey: string | undefined }) {
           pubkey: sol.PublicKey;
           account: sol.AccountInfo<sol.ParsedAccountData>;
         }) => {
+          const { amount } = tAccount.account.data.parsed.info.tokenAmount;
+
           // TODO: extract to its own component
           return (
             <Card key={tAccount.pubkey.toString()}>
@@ -86,21 +85,15 @@ export function TokensListView(props: { pubKey: string | undefined }) {
                         eventKey={ataEventKey}
                         callback={() => {}}
                       >
-                        <div className=" basis-48">
-                          <b>ATA</b>
+                        <div>
+                          <b className="mr-2">ATA</b>
                           <InlinePK
                             pk={tAccount.pubkey.toString()}
                             formatLength={9}
                           />{' '}
                         </div>
                         <div className="flex-1">
-                          holds{' '}
-                          {tAccount.account.data.parsed.info.tokenAmount.amount}{' '}
-                          tokens (
-                          {truncateSolAmount(
-                            tAccount.account.lamports / sol.LAMPORTS_PER_SOL
-                          )}{' '}
-                          SOL)
+                          {amount} token{amount > 1 && 's'}
                         </div>
                         <div className="shrink">
                           <MintTokenToButton
