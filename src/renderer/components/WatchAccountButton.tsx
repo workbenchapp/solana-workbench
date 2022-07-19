@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { PublicKey } from '@solana/web3.js';
 import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
@@ -13,12 +14,28 @@ function WatchAcountPopover(props: {
   const pubKeyVal = '';
 
   const [toKey, setToKey] = useState<string>(pubKeyVal);
+  const [validationError, setValidationErr] = useState<string | undefined>();
 
   useEffect(() => {
     if (pubKeyVal) {
       setToKey(pubKeyVal);
     }
   }, [pubKeyVal]);
+
+  useEffect(() => {
+    if (!toKey) {
+      setValidationErr('');
+      return;
+    }
+    // validate public key
+    try {
+      PublicKey.isOnCurve(toKey);
+      setValidationErr(undefined);
+    } catch (err) {
+      setValidationErr('Invalid key');
+      console.log(err);
+    }
+  }, [toKey]);
 
   return (
     <Popover id="popover-basic">
@@ -31,12 +48,21 @@ function WatchAcountPopover(props: {
             </Form.Label>
             <Col sm={9}>
               <Form.Control
-                className="mb-6"
                 type="text"
                 placeholder="enter key"
                 value={toKey}
                 onChange={(e) => setToKey(e.target.value)}
               />
+              {validationError ? (
+                <Form.Control.Feedback
+                  type="invalid"
+                  className="text-red-400 text-xs"
+                >
+                  {validationError}
+                </Form.Control.Feedback>
+              ) : (
+                <></>
+              )}
               <Form.Text className="text-muted" />
             </Col>
           </Form.Group>
@@ -45,6 +71,7 @@ function WatchAcountPopover(props: {
             <Col sm={{ span: 10, offset: 2 }}>
               <Button
                 type="button"
+                disabled={validationError || !toKey}
                 onClick={() => {
                   pinAccount(toKey, false);
                 }}
