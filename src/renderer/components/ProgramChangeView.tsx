@@ -6,7 +6,6 @@ import { useEffect, useState } from 'react';
 import { Button } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { css } from 'vite-plugin-inline-css-modules';
 import {
   accountsActions,
   selectAccountsListState,
@@ -46,19 +45,6 @@ export enum KnownProgramID {
 interface PinnedAccountMap {
   [pubKey: string]: boolean;
 }
-
-const classes = css`
-  .account-view {
-    @apply w-full h-full border-collapse overflow-auto text-xs;
-    & th:not(:global(.text-center)) {
-      @apply text-left;
-    }
-
-    & th svg {
-      @apply inline-block;
-    }
-  }
-`;
 
 function ProgramChangeView() {
   const dispatch = useAppDispatch();
@@ -313,7 +299,7 @@ function ProgramChangeView() {
       </span>
       <div className="flex-1 block min-h-0 overflow-auto">
         {displayList.length > 0 ? (
-          <table className={classes['account-view']}>
+          <table className="account-view">
             <thead>
               <tr className="bg-surface-400">
                 <th className="text-center">
