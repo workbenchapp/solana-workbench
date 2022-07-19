@@ -194,7 +194,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
                   });
                 }}
               >
-                Submit Transfer
+                Submit
               </Button>
             </Col>
           </Form.Group>
