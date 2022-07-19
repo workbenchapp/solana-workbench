@@ -28,5 +28,10 @@
 @import "bootstrap/scss/tooltip";
 @import "bootstrap/scss/popover";
 
+@import "bootstrap/scss/modal";
+.modal-content {
+    color: black;
+}
+
 // Import all of bootstrap, this isn't an exercise in minimisation
 // @import "bootstrap/scss/bootstrap";
