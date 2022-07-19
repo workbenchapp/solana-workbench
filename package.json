@@ -107,17 +107,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/electron-react-boilerplate/electron-react-boilerplate.git"
+    "url": "git+https://github.com/workbenchapp/solana-workbench"
   },
   "author": {
-    "name": "Nathan LeClaire",
+    "name": "CryptoWorkbench inc",
     "email": "nathan@cryptoworkbench.io",
-    "url": "https://github.com/workbenchapp/solana-workbench-releases"
+    "url": "https://cryptoworkbench.io"
   },
   "contributors": [],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/workbenchapp/solana-workbench-releases"
+    "url": "https://github.com/workbenchapp/solana-workbench/issues"
   },
   "keywords": [
     "electron",
@@ -130,7 +130,7 @@
     "reload",
     "vite"
   ],
-  "homepage": "https://github.com/workbenchapp/solana-workbench-releases",
+  "homepage": "https://github.com/workbenchapp/solana-workbench",
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
     "@iconify-json/mdi": "^1.1.20",
