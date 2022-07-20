@@ -1,7 +1,7 @@
 import { AnyAction, Dispatch, ThunkDispatch } from '@reduxjs/toolkit';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import * as sol from '@solana/web3.js';
-import { logger } from '../../common/globals';
+import { logger, commitmentLevel } from '../../common/globals';
 import { NewKeyPairInfo } from '../../../types/types';
 import { ConfigState, setConfigValue } from '../Config/configState';
 import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
@@ -57,7 +57,7 @@ export async function sendSolFromSelectedWallet(
 
   signature = await sendTransaction(transaction, connection);
 
-  await connection.confirmTransaction(signature, 'finalized');
+  await connection.confirmTransaction(signature, commitmentLevel);
 }
 
 async function createNewAccount(

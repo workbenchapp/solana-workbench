@@ -1,6 +1,6 @@
 import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { logger } from '../common/globals';
+import { logger, commitmentLevel } from '../common/globals';
 import {
   NetStatus,
   netToURL,
@@ -14,12 +14,6 @@ export interface LogSubscriptionMap {
     solConn: sol.Connection;
   };
 }
-
-// TODO: make this selectable - Return information at the selected commitment level
-//      [possible values: processed, confirmed, finalized]
-//      cli default seems to be finalized
-
-const commitmentLevel = 'processed';
 
 const logSubscriptions: LogSubscriptionMap = {};
 

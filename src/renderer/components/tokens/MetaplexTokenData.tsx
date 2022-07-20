@@ -9,7 +9,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import * as metaplex from '@metaplex/js';
 import * as sol from '@solana/web3.js';
 
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import { queryTokenMetadata } from '../../data/accounts/getAccount';
 import { useAppSelector } from '../../hooks';
 
@@ -25,6 +25,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
   const selectedWallet = useWallet();
   const { connection } = useConnection();
   const { net } = useAppSelector(selectValidatorNetworkState);
+  const queryClient = useQueryClient();
 
   const pubKey = mintPubKey.toString();
   const {
@@ -180,18 +181,31 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
                 type="button"
                 onClick={() => {
                   document.body.click();
-                  toast.promise(createOurMintMetadata(), {
-                    pending: 'Add mint metadata submitted',
-                    success: 'Add mint metadata succeeded 👌',
-                    error: {
-                      render({ data }) {
-                        // eslint-disable-next-line no-console
-                        console.log('error', data);
-                        // When the promise reject, data will contains the error
-                        return 'Error modifying mint metadata';
+                  toast
+                    .promise(createOurMintMetadata(), {
+                      pending: 'Add mint metadata submitted',
+                      success: 'Add mint metadata succeeded 👌',
+                      error: {
+                        render({ data }) {
+                          // eslint-disable-next-line no-console
+                          console.log('error', data);
+                          // When the promise reject, data will contains the error
+                          return 'Error modifying mint metadata';
+                        },
                       },
-                    },
-                  });
+                    })
+                    .then(async () => {
+                      function delay(milliseconds: number) {
+                        return new Promise((resolve) =>
+                          setTimeout(resolve, milliseconds)
+                        );
+                      }
+                      await delay(1000);
+                      // TODO: SVEN - this one doesn't help.
+                      queryClient.invalidateQueries(); // TODO: mutate() anyone?
+                      return true;
+                    })
+                    .catch(logger.error);
                 }}
               >
                 Submit

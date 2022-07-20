@@ -11,6 +11,7 @@ import {
   Row,
 } from 'react-bootstrap';
 import { useEffect, useState } from 'react';
+import { useQueryClient } from 'react-query';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 
 import { logger } from '../../common/globals';
@@ -89,6 +90,7 @@ function TransferTokenPopover(props: {
   transferFrom: string | undefined;
 }) {
   const { connection, fromKey, mintKey, transferFrom } = props;
+  const queryClient = useQueryClient();
 
   let pubKeyVal = '';
   if (!pubKeyVal) {
@@ -190,7 +192,19 @@ function TransferTokenPopover(props: {
                       new sol.PublicKey(transferFrom),
                       new sol.PublicKey(toKey),
                       parseInt(tokenCount, 10)
-                    ),
+                    )
+                      .then(async () => {
+                        function delay(milliseconds: number) {
+                          return new Promise((resolve) =>
+                            setTimeout(resolve, milliseconds)
+                          );
+                        }
+                        await delay(1000);
+                        // TODO: SVEN - this one doesn't help without the delay
+                        queryClient.invalidateQueries(); // TODO: mutate() anyone?
+                        return true;
+                      })
+                      .catch(logger.error),
                     {
                       pending: 'Transfer submitted',
                       success: 'Transfer succeeded 👌',
