@@ -126,7 +126,7 @@ function CreateNewMintButton(props: {
               );
             }
             await delay(1000);
-            // TODO: SVEN - this one doesn't help.
+            // TODO: SVEN - this one doesn't help without the delay
             queryClient.invalidateQueries(); // TODO: mutate() anyone?
             return true;
           })
