@@ -19,14 +19,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '../common/globals';
-
-const ipcDockerToast = (dockerIPCMethod: string) => {
-  return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
-    pending: `${dockerIPCMethod} submitted`,
-    success: `${dockerIPCMethod} succeeded 👌`,
-    error: `${dockerIPCMethod} failed 🤯`,
-  });
-};
+import { NetStatus } from '../../types/types';
 
 const ansiUp = new AnsiUp();
 
@@ -57,8 +50,7 @@ const Validator = () => {
   // TODO: not sure how to tell the user if we fail to get the list of image tags...
   //  if (isLoading) return 'Loading...'
   //  if (error) return 'An error has occurred: ' + error.message
-
-  useInterval(() => {
+  const inspectContainer = () => {
     if (validator.net === Net.Localhost) {
       window.promiseIpc
         .send('DOCKER-GetContainerStatus', 'solana-test-validator')
@@ -80,7 +72,20 @@ const Validator = () => {
           logger.silly(inspectError);
         });
     }
-  }, 5000);
+  };
+
+  const ipcDockerToast = (dockerIPCMethod: string) => {
+    return toast
+      .promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
+        pending: `${dockerIPCMethod} submitted`,
+        success: `${dockerIPCMethod} succeeded 👌`,
+        error: `${dockerIPCMethod} failed 🤯`,
+      })
+      .then(inspectContainer);
+  };
+
+  useInterval(inspectContainer, 5000);
+  useEffect(inspectContainer, [validator.net]);
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorLogs({
@@ -168,36 +173,42 @@ const Validator = () => {
         <div className="flex gap-2 mb-2">
           <Button
             size="sm"
-            disabled={validatorImageTag === ''}
+            disabled={
+              validatorImageTag === '' || validator.status === NetStatus.Running
+            }
             onClick={() => {
               logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
 
               if (!containerInspect || !containerInspect.State) {
-                toast.promise(
-                  window.promiseIpc
-                    .send('DOCKER-CreateValidatorContainer', validatorImageTag)
-                    .then((info: any) => {
-                      logger.info(`create ${JSON.stringify(info)}`);
-                      return info;
-                    })
-                    .then(() => {
-                      // eslint-disable-next-line promise/catch-or-return, promise/no-nesting
-                      ipcDockerToast('StartValidatorContainer').then(() => {
+                toast
+                  .promise(
+                    window.promiseIpc
+                      .send(
+                        'DOCKER-CreateValidatorContainer',
+                        validatorImageTag
+                      )
+                      .then((info: any) => {
+                        logger.info(`create ${JSON.stringify(info)}`);
+                        return Promise.all([
+                          info,
+                          ipcDockerToast('StartValidatorContainer'),
+                        ]);
+                      })
+                      .then(() => {
                         logger.info('STARTED CONTAINER');
                         logger.info('START AMMAN');
                         // TODO: StartAmmanValidator blocks, no toast for now
                         window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-                        logger.info('STARTED AMMAN');
                         return 'ok';
-                      });
-                      return 'ok';
-                    }),
-                  {
-                    pending: `CreateValidatorContainer submitted`,
-                    success: `CreateValidatorContainer succeeded 👌`,
-                    error: `CreateValidatorContainer failed 🤯`,
-                  }
-                );
+                      }),
+                    {
+                      pending: `CreateValidatorContainer submitted`,
+                      success: `CreateValidatorContainer succeeded 👌`,
+                      error: `CreateValidatorContainer failed 🤯`,
+                    }
+                  )
+                  .then(inspectContainer)
+                  .catch(logger.error);
               } else if (
                 containerInspect &&
                 containerInspect.State &&
@@ -209,24 +220,29 @@ const Validator = () => {
                     logger.info('START AMMAN');
                     // TODO: StartAmmanValidator blocks, no toast for now
                     window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-                    logger.info('STARTED AMMAN');
                     return 'ok';
                   })
                   .catch(logger.error);
               } else {
                 logger.info('START AMMAN');
+
                 // TODO: StartAmmanValidator blocks, no toast for now
-                window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
+                window.promiseIpc
+                  .send(`DOCKER-StartAmmanValidator`)
+                  .catch(logger.error);
               }
             }}
             className="mt-2 mb-4"
             variant="dark"
           >
-            Start validator
+            Start
           </Button>
           <Button
             size="sm"
-            disabled={!containerInspect?.State?.Running}
+            disabled={
+              !containerInspect?.State?.Running ||
+              validator.status !== NetStatus.Running
+            }
             onClick={() => {
               ipcDockerToast('StopAmmanValidator');
             }}
