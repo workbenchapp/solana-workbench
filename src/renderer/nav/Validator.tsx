@@ -75,16 +75,13 @@ const Validator = () => {
   };
 
   const ipcDockerToast = (dockerIPCMethod: string) => {
-    return toast.promise(
-      window.promiseIpc
-        .send(`DOCKER-${dockerIPCMethod}`)
-        .then(inspectContainer),
-      {
+    return toast
+      .promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
         pending: `${dockerIPCMethod} submitted`,
         success: `${dockerIPCMethod} succeeded 👌`,
         error: `${dockerIPCMethod} failed 🤯`,
-      }
-    );
+      })
+      .then(inspectContainer);
   };
 
   useInterval(inspectContainer, 5000);
@@ -235,12 +232,12 @@ const Validator = () => {
             className="mt-2 mb-4"
             variant="dark"
           >
-            Start Validator
+            Start
           </Button>
           <Button
             size="sm"
             disabled={
-              containerInspect?.State?.Running &&
+              !containerInspect?.State?.Running ||
               validator.status !== NetStatus.Running
             }
             onClick={() => {
