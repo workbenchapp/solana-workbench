@@ -194,7 +194,7 @@ function DataPopover(props: { mintPubKey: sol.PublicKey }) {
                   });
                 }}
               >
-                Submit Transfer
+                Submit
               </Button>
             </Col>
           </Form.Group>
@@ -229,7 +229,7 @@ function MetaplexTokenDataButton(props: {
         }
         variant="success"
       >
-        Edit Metaplex data
+        Edit
       </Button>
     </OverlayTrigger>
   );

@@ -83,6 +83,7 @@ export default defineConfig({
     },
     host: true,
     port: process.env.PORT ? +process.env.PORT : 1212,
+    strictPort: true,
   },
   build: {
     sourcemap: true,

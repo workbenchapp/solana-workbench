@@ -126,7 +126,7 @@ function CreateNewMintButton(props: {
           .catch(logger.error);
       }}
     >
-      New token mint
+      New Mint
     </Button>
   );
 }

@@ -33,5 +33,13 @@
     color: black;
 }
 
+.pre {
+    font-family: "Space Mono", monospace;
+}
+
+.accordion-flush .accordion-item .accordion-button {
+    padding: 2px 15px;
+}
+
 // Import all of bootstrap, this isn't an exercise in minimisation
 // @import "bootstrap/scss/bootstrap";

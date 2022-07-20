@@ -98,18 +98,32 @@ function ProgramChangeView() {
   const WalletAdapterState = useWallet();
 
   function sortFunction(a: AccountInfo, b: AccountInfo) {
+    let order = 0;
     switch (sortColumn) {
       case SortColumn.Count:
-        return b.count - a.count;
+        order = b.count - a.count;
+        break;
       case SortColumn.Sol:
         if (!b.accountInfo || !a.accountInfo) {
-          return 0;
+          order = 0;
+        } else {
+          order = b.accountInfo.lamports - a.accountInfo.lamports;
         }
-        return b.accountInfo.lamports - a.accountInfo.lamports;
+        break;
       case SortColumn.MaxDelta:
       default:
-        return Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
+        order = Math.abs(b.maxDelta) - Math.abs(a.maxDelta);
     }
+
+    if (order === 0) {
+      // tie breaker based on public key
+      if (a.pubKey > b.pubKey) {
+        return 1;
+      }
+
+      return -1;
+    }
+    return order;
   }
 
   useInterval(() => {
@@ -145,8 +159,14 @@ function ProgramChangeView() {
     });
     setPinnedAccount(pinMap);
     setDisplayList(showKeys);
-    refreshAccountInfos(net, showKeys);
-  }, 666);
+  }, 333);
+
+  useInterval(() => {
+    if (status !== NetStatus.Running) {
+      return;
+    }
+    refreshAccountInfos(net, displayList);
+  }, 2222);
 
   const uniqueAccounts = displayList.length;
 

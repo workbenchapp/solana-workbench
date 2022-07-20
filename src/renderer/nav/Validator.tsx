@@ -40,6 +40,7 @@ const Validator = () => {
   );
   // const [validatorImageTags, setValidatorImageTags] = useState<string[]>([]);
   const [containerInspect, setContainerInspect] = useState<any>({});
+  const [dockerErr, setDockerErr] = useState<string | undefined>('Loading...');
 
   const {
     /* isLoading: validatorImageTagsIsLoading, */
@@ -88,6 +89,23 @@ const Validator = () => {
     });
   }, 222);
 
+  const checkForDocker = () => {
+    if (validator.net === Net.Localhost) {
+      window?.promiseIpc
+        .send('DOCKER-CheckDocker')
+        .then(() => {
+          setDockerErr(undefined);
+          return true;
+        })
+        .catch((err) => {
+          logger.warn(err);
+          setDockerErr(err.message);
+        });
+    }
+  };
+  useInterval(checkForDocker, 1000);
+  checkForDocker();
+
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const listener = (resp: any) => {
@@ -118,6 +136,28 @@ const Validator = () => {
         <Alert variant="warning">
           Cannot show validator container output from {validator.net}
         </Alert>
+      </div>
+    );
+  }
+
+  if (dockerErr) {
+    return (
+      <div className="p-3">
+        {dockerErr}
+        {dockerErr.includes('executable not found') && (
+          <div>
+            Please{' '}
+            <a
+              href="https://docs.docker.com/engine/install/"
+              target="_blank"
+              className="underline"
+              rel="noreferrer"
+            >
+              install Docker
+            </a>{' '}
+            to run validators.
+          </div>
+        )}
       </div>
     );
   }

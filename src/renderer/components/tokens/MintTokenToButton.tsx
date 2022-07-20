@@ -64,6 +64,7 @@ function MintTokenToButton(props: {
 
   return (
     <Button
+      className="mr-1"
       size="sm"
       // TODO: this button should be disabled if the selected mint (or account) exists
       disabled={
@@ -93,7 +94,7 @@ function MintTokenToButton(props: {
         );
       }}
     >
-      mint token
+      Mint Token
     </Button>
   );
 }

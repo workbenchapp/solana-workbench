@@ -30,9 +30,10 @@ function Account() {
         <ProgramChangeView />
         <div className="overflow-auto">
           <div className="flex-1 p-3">
-            {validator.status === NetStatus.Running && (
-              <AccountView pubKey={selectedAccount} />
-            )}
+            {validator.status === NetStatus.Running &&
+              selectedAccount !== '' && (
+                <AccountView pubKey={selectedAccount} />
+              )}
           </div>
         </div>
       </Split>

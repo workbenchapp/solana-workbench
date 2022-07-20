@@ -12,10 +12,7 @@ import { useState } from 'react';
 import * as walletWeb3 from '../../wallet-adapter/web3';
 import { useAppSelector } from '../../hooks';
 
-import {
-  truncateSolAmount,
-  useParsedAccount,
-} from '../../data/accounts/getAccount';
+import { useParsedAccount } from '../../data/accounts/getAccount';
 import { selectValidatorNetworkState } from '../../data/ValidatorNetwork/validatorNetworkState';
 
 import { logger } from '../../common/globals';
@@ -145,24 +142,22 @@ export function MintInfoView(props: { mintKey: string }) {
     );
   }
 
+  const supply = mintInfo?.accountInfo.data?.parsed.info.supply;
+
   return (
-    <Accordion.Item eventKey={mintEventKey}>
+    <Accordion.Item className="pl-2" eventKey={mintEventKey}>
       <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
         <div className=" basis-48">
-          <b>Mint</b>
+          <b className="mr-2">Mint</b>
           <InlinePK pk={mintKey} formatLength={9} />
         </div>
         <div className="flex-1">
-          holds {mintInfo?.accountInfo.data?.parsed.info.supply} tokens (
-          {truncateSolAmount(
-            mintInfo?.accountInfo?.lamports / sol.LAMPORTS_PER_SOL
-          )}{' '}
-          SOL)
+          {supply} token{supply > 1 && 's'}
         </div>
         <div className="shrink">
           <ButtonWithConfirmation
             disabled={!hasAuthority || mintKey === undefined}
-            title={mintAuthorityIsNull ? 'Mint closed' : 'Close Mint'}
+            title={mintAuthorityIsNull ? 'Mint Closed' : 'Close Mint'}
             onClick={() => {
               if (!fromKey.publicKey) {
                 return;
