@@ -83,7 +83,7 @@ export function useAccountsState() {
       window.promiseIpc
         .send('ACCOUNT-GetAll')
         .then((ret: AccountMeta) => {
-          logger.info('LOADING accounts from main');
+          logger.verbose('LOADING accounts from main');
           dispatch(
             setAccount({
               accounts: ret,
