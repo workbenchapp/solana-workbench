@@ -19,6 +19,7 @@ import {
 import * as sol from '@solana/web3.js';
 import * as bip39 from 'bip39';
 import { saveState, loadState } from '../data/localstorage';
+import { commitmentLevel } from '../common/globals';
 
 interface LocalStorageWallet {
   isLocalStorage?: boolean;
@@ -252,7 +253,7 @@ export class LocalStorageWalletAdapter extends BaseMessageSignerWalletAdapter {
           transaction.feePayer || this.publicKey || undefined;
         transaction.recentBlockhash =
           transaction.recentBlockhash ||
-          (await connection.getRecentBlockhash('finalized')).blockhash;
+          (await connection.getRecentBlockhash(commitmentLevel)).blockhash;
 
         const { signature } = await wallet.signAndSendTransaction(
           transaction,

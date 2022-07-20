@@ -4,7 +4,7 @@ import * as metaplex from '@metaplex/js';
 
 import { LRUCache } from 'typescript-lru-cache';
 import { useQuery } from 'react-query';
-import { logger } from '../../common/globals';
+import { logger, commitmentLevel } from '../../common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { AccountMetaValues } from './accountState';
@@ -41,7 +41,7 @@ export async function getParsedAccount(
   net: Net,
   pubKey: string
 ): Promise<sol.AccountInfo<sol.ParsedAccountData> | undefined> {
-  const solConn = new sol.Connection(netToURL(net));
+  const solConn = new sol.Connection(netToURL(net), commitmentLevel);
 
   const key = new sol.PublicKey(pubKey);
 
@@ -141,7 +141,7 @@ export async function getTokenAccounts(
   net: Net,
   pubKey: string
 ): Promise<sol.RpcResponseAndContext<TokenAccountArray>> {
-  const solConn = new sol.Connection(netToURL(net));
+  const solConn = new sol.Connection(netToURL(net), commitmentLevel);
   const key = new sol.PublicKey(pubKey);
   const filter: sol.TokenAccountsFilter = {
     programId: new sol.PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
@@ -176,7 +176,7 @@ export async function getTokenMetadata(
   net: Net,
   tokenPublicKey: string
 ): Promise<metaplex.programs.metadata.Metadata> {
-  const conn = new metaplex.Connection(netToURL(net), 'finalized');
+  const conn = new metaplex.Connection(netToURL(net), commitmentLevel);
   try {
     // TODO: this console.logs "metadata load Error: Unable to find account: HKCjVqNU35H3zsXAVetgo743qCDMu7ssGnET1yvN4RSJ"
     const meta = await metaplex.programs.metadata.Metadata.findByMint(
@@ -265,7 +265,7 @@ export const getHumanName = (meta: AccountMetaValues | undefined) => {
 };
 
 export async function refreshAccountInfos(net: Net, keys: string[]) {
-  const solConn = new sol.Connection(netToURL(net));
+  const solConn = new sol.Connection(netToURL(net), commitmentLevel);
   const pubKeys = keys.map((k) => new sol.PublicKey(k));
   const accountInfos = await solConn.getMultipleAccountsInfo(pubKeys);
 

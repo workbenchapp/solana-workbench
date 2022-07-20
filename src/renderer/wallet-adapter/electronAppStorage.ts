@@ -22,6 +22,7 @@ import {
   netToURL,
   globalNetworkSet,
 } from '../data/ValidatorNetwork/validatorNetworkState';
+import { commitmentLevel } from '../common/globals';
 
 interface ElectronAppStorageWallet {
   isElectronAppStorage?: boolean;
@@ -242,7 +243,7 @@ export class ElectronAppStorageWalletAdapter extends BaseMessageSignerWalletAdap
           transaction.feePayer || this.publicKey || undefined;
         transaction.recentBlockhash =
           transaction.recentBlockhash ||
-          (await connection.getRecentBlockhash('finalized')).blockhash;
+          (await connection.getRecentBlockhash(commitmentLevel)).blockhash;
 
         const { signature } = await wallet.signAndSendTransaction(
           transaction,

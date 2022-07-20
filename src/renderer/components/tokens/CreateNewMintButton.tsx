@@ -31,6 +31,7 @@ async function createNewMint(
   //   0 // Location of the decimal place
   // );
   const confirmOptions: sol.ConfirmOptions = {
+    // using the global commitmentLevel = 'processed' causes this to error out
     commitment: 'finalized',
   };
   // eslint-disable-next-line promise/no-nesting
@@ -118,7 +119,13 @@ function CreateNewMintButton(props: {
               error: `Create mint account failed 🤯`,
             }
           )
-          .then(() => {
+          .then(async () => {
+            function delay(milliseconds: number) {
+              return new Promise((resolve) =>
+                setTimeout(resolve, milliseconds)
+              );
+            }
+            await delay(1000);
             // TODO: SVEN - this one doesn't help.
             queryClient.invalidateQueries(); // TODO: mutate() anyone?
             return true;
