@@ -188,20 +188,20 @@ const Validator = () => {
                     .send('DOCKER-CreateValidatorContainer', validatorImageTag)
                     .then((info: any) => {
                       logger.info(`create ${JSON.stringify(info)}`);
-                      return info;
+                      return Promise.all([
+                        info,
+                        ipcDockerToast('StartValidatorContainer'),
+                      ]);
                     })
                     .then(() => {
-                      // eslint-disable-next-line promise/catch-or-return, promise/no-nesting
-                      ipcDockerToast('StartValidatorContainer').then(() => {
-                        logger.info('STARTED CONTAINER');
-                        logger.info('START AMMAN');
-                        // TODO: StartAmmanValidator blocks, no toast for now
-                        window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-                        logger.info('STARTED AMMAN');
-                        return 'ok';
-                      });
-                      return 'ok';
-                    }),
+                      logger.info('STARTED CONTAINER');
+                      logger.info('START AMMAN');
+                      // TODO: StartAmmanValidator blocks, no toast for now
+                      return window.promiseIpc.send(
+                        `DOCKER-StartAmmanValidator`
+                      );
+                    })
+                    .then(inspectContainer),
                   {
                     pending: `CreateValidatorContainer submitted`,
                     success: `CreateValidatorContainer succeeded 👌`,
@@ -218,15 +218,18 @@ const Validator = () => {
                     logger.info('STARTED CONTAINER');
                     logger.info('START AMMAN');
                     // TODO: StartAmmanValidator blocks, no toast for now
-                    window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
-                    logger.info('STARTED AMMAN');
-                    return 'ok';
+                    return window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
                   })
+                  .then(inspectContainer)
                   .catch(logger.error);
               } else {
                 logger.info('START AMMAN');
+
                 // TODO: StartAmmanValidator blocks, no toast for now
-                window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
+                window.promiseIpc
+                  .send(`DOCKER-StartAmmanValidator`)
+                  .then(inspectContainer)
+                  .catch(logger.error);
               }
             }}
             className="mt-2 mb-4"
