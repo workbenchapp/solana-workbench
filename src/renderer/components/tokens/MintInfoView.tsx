@@ -90,14 +90,15 @@ export function MintInfoView(props: { mintKey: string }) {
   const {
     loadStatus,
     account: mintInfo,
-    // error,
+    error,
   } = useParsedAccount(net, mintKey, {
     retry: 2, // TODO: this is here because sometimes, we get given an accountInfo with no parsed data.
   });
-  // logger.silly(
-  //   `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
-  //     mintInfo
-  //   )}`
+  logger.debug(
+    `MintInfoView(${mintKey}): ${loadStatus} - ${error}: ${JSON.stringify(
+      mintInfo
+    )}`
+  );
   const mintEventKey = `${mintKey}_mint_info`;
 
   // ("idle" or "error" or "loading" or "success").
@@ -107,15 +108,17 @@ export function MintInfoView(props: { mintKey: string }) {
     !mintInfo.accountInfo ||
     !mintInfo.accountInfo.data?.parsed
   ) {
-    // logger.error(`something not ready: ${loadStatus}`);
+    logger.verbose(
+      `something not ready for ${JSON.stringify(mintInfo)}: ${loadStatus}`
+    );
 
     return (
       <Accordion.Item eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-          Loading info
+          Loading Mint info
         </ActiveAccordionHeader>
         <Accordion.Body>
-          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+          <pre className="exe-hexdump p-2 rounded">Loading Mint info</pre>
         </Accordion.Body>
       </Accordion.Item>
     );
@@ -133,10 +136,10 @@ export function MintInfoView(props: { mintKey: string }) {
     return (
       <Accordion.Item eventKey={mintEventKey}>
         <ActiveAccordionHeader eventKey={mintEventKey} callback={() => {}}>
-          Loading info
+          Loading Mint data
         </ActiveAccordionHeader>
         <Accordion.Body>
-          <pre className="exe-hexdump p-2 rounded">Loading info </pre>
+          <pre className="exe-hexdump p-2 rounded">Loading Mint data </pre>
         </Accordion.Body>
       </Accordion.Item>
     );
