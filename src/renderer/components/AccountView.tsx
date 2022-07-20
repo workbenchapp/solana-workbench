@@ -26,10 +26,7 @@ import {
   truncateLamportAmount,
   useParsedAccount,
 } from '../data/accounts/getAccount';
-import {
-  netToURL,
-  selectValidatorNetworkState,
-} from '../data/ValidatorNetwork/validatorNetworkState';
+import { selectValidatorNetworkState } from '../data/ValidatorNetwork/validatorNetworkState';
 import AirDropSolButton from './AirDropSolButton';
 import EditableText from './base/EditableText';
 import InlinePK from './InlinePK';

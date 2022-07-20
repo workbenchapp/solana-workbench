@@ -1,6 +1,6 @@
 import * as sol from '@solana/web3.js';
 import { GetValidatorConnection, logger } from '../../common/globals';
-import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
+import { Net } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { peekAccount, updateCache } from './getAccount';
 

@@ -7,7 +7,6 @@ import {
 } from '../common/globals';
 import {
   NetStatus,
-  netToURL,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector } from '../hooks';

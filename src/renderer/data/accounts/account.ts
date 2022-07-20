@@ -9,11 +9,7 @@ import {
 import { NewKeyPairInfo } from '../../../types/types';
 import { ConfigState, setConfigValue } from '../Config/configState';
 import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
-import {
-  Net,
-  netToURL,
-  ValidatorState,
-} from '../ValidatorNetwork/validatorNetworkState';
+import { Net, ValidatorState } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountsState, reloadFromMain } from './accountState';
 
 export async function airdropSol(

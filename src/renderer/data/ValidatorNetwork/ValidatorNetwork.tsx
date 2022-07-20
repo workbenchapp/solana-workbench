@@ -50,7 +50,7 @@ function ValidatorNetwork() {
       .catch((err) => {
         logger.debug(err);
       });
-  }, 5000);
+  }, 11111);
 
   const netDropdownSelect = (eventKey: string | null) => {
     // TODO: analytics('selectNet', { prevNet: net, newNet: eventKey });
