@@ -12,7 +12,7 @@ import {
 import { Program, AnchorProvider, setProvider } from '@project-serum/anchor';
 import * as sol from '@solana/web3.js';
 import { useQueryClient } from 'react-query';
-import { logger } from '../common/globals';
+import { GetValidatorConnection, logger } from '../common/globals';
 import { useAppDispatch, useAppSelector } from '../hooks';
 
 import {
@@ -88,7 +88,7 @@ function AccountView(props: { pubKey: string | undefined }) {
           // TODO: Why do I have to set this every time
           setProvider(
             new AnchorProvider(
-              new sol.Connection(netToURL(net)),
+              GetValidatorConnection(net),
               wallet,
               AnchorProvider.defaultOptions()
             )

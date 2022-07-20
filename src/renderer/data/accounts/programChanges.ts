@@ -1,5 +1,5 @@
 import * as sol from '@solana/web3.js';
-import { logger } from '../../common/globals';
+import { GetValidatorConnection, logger } from '../../common/globals';
 import { Net, netToURL } from '../ValidatorNetwork/validatorNetworkState';
 import { AccountInfo } from './accountInfo';
 import { peekAccount, updateCache } from './getAccount';
@@ -40,7 +40,7 @@ export const subscribeProgramChanges = async (
   ) {
     logger.silly('subscribeProgramChanges', programID);
 
-    const solConn = new sol.Connection(netToURL(net));
+    const solConn = GetValidatorConnection(net);
     const subscriptionID = solConn.onProgramAccountChange(
       programIDPubkey,
       (info: sol.KeyedAccountInfo, ctx: sol.Context) => {

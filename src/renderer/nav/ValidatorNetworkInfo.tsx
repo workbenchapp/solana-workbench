@@ -24,7 +24,7 @@ export type ValidatorNetworkInfoResponse = {
 };
 // https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
 const fetchValidatorNetworkInfo = async (url: string) => {
-  const solConn = new sol.Connection(url);
+  const solConn = new sol.Connection(url); // TODO
   const contactInfo = await solConn.getClusterNodes();
   // TODO: on success / failure update the ValidatorNetworkState..
   const nodeVersion = await solConn.getVersion();

@@ -1,7 +1,11 @@
 import { AnyAction, Dispatch, ThunkDispatch } from '@reduxjs/toolkit';
 import { WalletContextState } from '@solana/wallet-adapter-react';
 import * as sol from '@solana/web3.js';
-import { logger, commitmentLevel } from '../../common/globals';
+import {
+  logger,
+  commitmentLevel,
+  GetValidatorConnection,
+} from '../../common/globals';
 import { NewKeyPairInfo } from '../../../types/types';
 import { ConfigState, setConfigValue } from '../Config/configState';
 import { SelectedAccountsList } from '../SelectedAccountsList/selectedAccountsState';
@@ -21,7 +25,7 @@ export async function airdropSol(
   const sols =
     typeof solAmount === 'number' ? solAmount : parseFloat(solAmount);
 
-  const connection = new sol.Connection(netToURL(net));
+  const connection = GetValidatorConnection(net);
 
   const airdropSignature = await connection.requestAirdrop(
     to,

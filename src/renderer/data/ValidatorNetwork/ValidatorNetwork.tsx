@@ -3,12 +3,11 @@ import { useEffect } from 'react';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import { NavLink } from 'react-router-dom';
-import { logger } from '../../common/globals';
+import { GetValidatorConnection, logger } from '../../common/globals';
 import { useAppDispatch, useAppSelector, useInterval } from '../../hooks';
 import {
   Net,
   NetStatus,
-  netToURL,
   selectValidatorNetworkState,
   setNet,
   setState,
@@ -19,7 +18,7 @@ const validatorState = async (net: Net): Promise<NetStatus> => {
 
   // Connect to cluster
   try {
-    solConn = new sol.Connection(netToURL(net));
+    solConn = GetValidatorConnection(net);
     await solConn.getEpochInfo();
   } catch (error) {
     return NetStatus.Unavailable;

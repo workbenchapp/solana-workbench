@@ -1,6 +1,10 @@
 import * as sol from '@solana/web3.js';
 import { useEffect, useState } from 'react';
-import { logger, commitmentLevel } from '../common/globals';
+import {
+  logger,
+  commitmentLevel,
+  GetValidatorConnection,
+} from '../common/globals';
 import {
   NetStatus,
   netToURL,
@@ -28,7 +32,7 @@ function LogView() {
       return () => {};
     }
 
-    const solConn = new sol.Connection(netToURL(net));
+    const solConn = GetValidatorConnection(net);
     const subscriptionID = solConn.onLogs(
       'all',
       (logsInfo) => {
