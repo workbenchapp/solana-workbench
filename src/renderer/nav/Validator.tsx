@@ -13,6 +13,7 @@ import {
 } from 'react-bootstrap';
 import AnsiUp from 'ansi_up';
 import DOMPurify from 'dompurify';
+
 import {
   Net,
   selectValidatorNetworkState,
@@ -284,6 +285,7 @@ const Validator = () => {
       </ButtonToolbar>
       <div className="overflow-auto">
         <pre
+          style={{ opacity: containerInspect?.State?.Running ? '100%' : '40%' }}
           className="text-xs bg-surface-600 h-full p-2 whitespace-pre-wrap break-all overflow-auto"
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: validatorLogs }}
