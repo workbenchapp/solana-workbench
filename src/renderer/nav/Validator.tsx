@@ -180,31 +180,35 @@ const Validator = () => {
               logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
 
               if (!containerInspect || !containerInspect.State) {
-                toast.promise(
-                  window.promiseIpc
-                    .send('DOCKER-CreateValidatorContainer', validatorImageTag)
-                    .then((info: any) => {
-                      logger.info(`create ${JSON.stringify(info)}`);
-                      return Promise.all([
-                        info,
-                        ipcDockerToast('StartValidatorContainer'),
-                      ]);
-                    })
-                    .then(() => {
-                      logger.info('STARTED CONTAINER');
-                      logger.info('START AMMAN');
-                      // TODO: StartAmmanValidator blocks, no toast for now
-                      return window.promiseIpc.send(
-                        `DOCKER-StartAmmanValidator`
-                      );
-                    })
-                    .then(inspectContainer),
-                  {
-                    pending: `CreateValidatorContainer submitted`,
-                    success: `CreateValidatorContainer succeeded 👌`,
-                    error: `CreateValidatorContainer failed 🤯`,
-                  }
-                );
+                toast
+                  .promise(
+                    window.promiseIpc
+                      .send(
+                        'DOCKER-CreateValidatorContainer',
+                        validatorImageTag
+                      )
+                      .then((info: any) => {
+                        logger.info(`create ${JSON.stringify(info)}`);
+                        return Promise.all([
+                          info,
+                          ipcDockerToast('StartValidatorContainer'),
+                        ]);
+                      })
+                      .then(() => {
+                        logger.info('STARTED CONTAINER');
+                        logger.info('START AMMAN');
+                        // TODO: StartAmmanValidator blocks, no toast for now
+                        window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
+                        return 'ok';
+                      }),
+                    {
+                      pending: `CreateValidatorContainer submitted`,
+                      success: `CreateValidatorContainer succeeded 👌`,
+                      error: `CreateValidatorContainer failed 🤯`,
+                    }
+                  )
+                  .then(inspectContainer)
+                  .catch(logger.error);
               } else if (
                 containerInspect &&
                 containerInspect.State &&
@@ -215,9 +219,9 @@ const Validator = () => {
                     logger.info('STARTED CONTAINER');
                     logger.info('START AMMAN');
                     // TODO: StartAmmanValidator blocks, no toast for now
-                    return window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
+                    window.promiseIpc.send(`DOCKER-StartAmmanValidator`);
+                    return 'ok';
                   })
-                  .then(inspectContainer)
                   .catch(logger.error);
               } else {
                 logger.info('START AMMAN');
@@ -225,7 +229,6 @@ const Validator = () => {
                 // TODO: StartAmmanValidator blocks, no toast for now
                 window.promiseIpc
                   .send(`DOCKER-StartAmmanValidator`)
-                  .then(inspectContainer)
                   .catch(logger.error);
               }
             }}
