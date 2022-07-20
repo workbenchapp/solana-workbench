@@ -171,7 +171,9 @@ const Validator = () => {
         <div className="flex gap-2 mb-2">
           <Button
             size="sm"
-            disabled={validatorImageTag === ''}
+            disabled={
+              validatorImageTag === '' || validator.status === NetStatus.Running
+            }
             onClick={() => {
               logger.info(`GOGOGO ${JSON.stringify(validatorImageTag)}`);
 
