@@ -3,9 +3,9 @@ import { useEffect, useState } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import Container from 'react-bootstrap/Container';
 import { VictoryPie } from 'victory';
-import { logger } from '../common/globals';
+import { GetValidatorConnection, logger } from '../common/globals';
 import {
-  netToURL,
+  Net,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector } from '../hooks';
@@ -23,8 +23,8 @@ export type ValidatorNetworkInfoResponse = {
   versionCount: VCount[];
 };
 // https://docs.solana.com/developing/clients/jsonrpc-api#getclusternodes
-const fetchValidatorNetworkInfo = async (url: string) => {
-  const solConn = new sol.Connection(url);
+const fetchValidatorNetworkInfo = async (net: Net) => {
+  const solConn = GetValidatorConnection(net);
   const contactInfo = await solConn.getClusterNodes();
   // TODO: on success / failure update the ValidatorNetworkState..
   const nodeVersion = await solConn.getVersion();
@@ -64,7 +64,6 @@ const fetchValidatorNetworkInfo = async (url: string) => {
 function ValidatorNetworkInfo() {
   const validator = useAppSelector(selectValidatorNetworkState);
   const { net } = validator;
-  const url = netToURL(net);
 
   const [data, setData] = useState<ValidatorNetworkInfoResponse>({
     version: 'unknown',
@@ -73,10 +72,10 @@ function ValidatorNetworkInfo() {
   });
   useEffect(() => {
     // TODO: set a spinner while waiting for response
-    fetchValidatorNetworkInfo(url)
+    fetchValidatorNetworkInfo(net)
       .then((d) => setData(d))
       .catch(logger.info);
-  }, [validator, url]);
+  }, [validator, net]);
 
   // TODO: maybe show te version spread as a histogram and feature info ala
   // solana --url mainnet-beta feature status

@@ -23,7 +23,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 
-import { logger } from './common/globals';
+import { GetValidatorConnection, logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
 import { airdropSol, getElectronStorageWallet } from './data/accounts/account';
@@ -154,7 +154,7 @@ function Topbar() {
         default:
           amount = 1000;
       }
-      const solConn = new sol.Connection(netToURL(net));
+      const solConn = GetValidatorConnection(net);
       if (wallet.publicKey) {
         try {
           const balance = await solConn.getBalance(wallet.publicKey);

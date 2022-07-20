@@ -79,6 +79,7 @@ class ElectronAppStorageWalletProvider implements ElectronAppStorageWallet {
     transaction: sol.Transaction,
     options?: sol.SendOptions
   ): Promise<{ signature: sol.TransactionSignature }> => {
+    // TODO: test carefully to see if GetValidatorConnection(net) will work
     const connection = new sol.Connection(netToURL(globalNetworkSet.net));
 
     transaction.recentBlockhash = (
