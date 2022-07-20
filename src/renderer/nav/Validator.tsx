@@ -19,6 +19,7 @@ import {
 } from '../data/ValidatorNetwork/validatorNetworkState';
 import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '../common/globals';
+import { NetStatus } from '../../types/types';
 
 const ipcDockerToast = (dockerIPCMethod: string) => {
   return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
@@ -57,8 +58,7 @@ const Validator = () => {
   // TODO: not sure how to tell the user if we fail to get the list of image tags...
   //  if (isLoading) return 'Loading...'
   //  if (error) return 'An error has occurred: ' + error.message
-
-  useInterval(() => {
+  const inspectContainer = () => {
     if (validator.net === Net.Localhost) {
       window.promiseIpc
         .send('DOCKER-GetContainerStatus', 'solana-test-validator')
@@ -80,7 +80,10 @@ const Validator = () => {
           logger.silly(inspectError);
         });
     }
-  }, 5000);
+  };
+
+  useInterval(inspectContainer, 5000);
+  useEffect(inspectContainer, [validator.net]);
 
   useInterval(() => {
     window.electron.ipcRenderer.validatorLogs({
@@ -222,11 +225,14 @@ const Validator = () => {
             className="mt-2 mb-4"
             variant="dark"
           >
-            Start validator
+            Start Validator
           </Button>
           <Button
             size="sm"
-            disabled={!containerInspect?.State?.Running}
+            disabled={
+              containerInspect?.State?.Running &&
+              validator.status !== NetStatus.Running
+            }
             onClick={() => {
               ipcDockerToast('StopAmmanValidator');
             }}
