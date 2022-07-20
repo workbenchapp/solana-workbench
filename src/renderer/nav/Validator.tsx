@@ -21,14 +21,6 @@ import { useAppSelector, useInterval } from '../hooks';
 import { logger } from '../common/globals';
 import { NetStatus } from '../../types/types';
 
-const ipcDockerToast = (dockerIPCMethod: string) => {
-  return toast.promise(window.promiseIpc.send(`DOCKER-${dockerIPCMethod}`), {
-    pending: `${dockerIPCMethod} submitted`,
-    success: `${dockerIPCMethod} succeeded 👌`,
-    error: `${dockerIPCMethod} failed 🤯`,
-  });
-};
-
 const ansiUp = new AnsiUp();
 
 const Validator = () => {
@@ -80,6 +72,19 @@ const Validator = () => {
           logger.silly(inspectError);
         });
     }
+  };
+
+  const ipcDockerToast = (dockerIPCMethod: string) => {
+    return toast.promise(
+      window.promiseIpc
+        .send(`DOCKER-${dockerIPCMethod}`)
+        .then(inspectContainer),
+      {
+        pending: `${dockerIPCMethod} submitted`,
+        success: `${dockerIPCMethod} succeeded 👌`,
+        error: `${dockerIPCMethod} failed 🤯`,
+      }
+    );
   };
 
   useInterval(inspectContainer, 5000);
