@@ -3,7 +3,6 @@ import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import 'regenerator-runtime/runtime';
-import { Buffer } from 'buffer';
 import fetchAnchorIdl from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
@@ -118,12 +117,11 @@ const createWindow = async () => {
     icon: getAssetPath('icon.png'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      devTools: true,
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  mainWindow.Buffer = Buffer;
+  mainWindow.webContents.openDevTools();
 
   mainWindow.loadURL(resolveHtmlPath('index.html'));
   mainWindow.on('ready-to-show', () => {
@@ -133,7 +131,7 @@ const createWindow = async () => {
     if (process.env.START_MINIMIZED) {
       mainWindow.minimize();
     } else {
-      mainWindow.show();
+      mainWindow.showInactive();
     }
   });
 

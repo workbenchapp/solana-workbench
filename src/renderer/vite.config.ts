@@ -10,6 +10,8 @@ import WindiCSS from 'vite-plugin-windicss';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import checker from 'vite-plugin-checker';
 import EnvironmentPlugin from 'vite-plugin-environment';
+import nodePolyfills from 'rollup-plugin-polyfill-node';
+import { NodeModulesPolyfillPlugin } from '@esbuild-plugins/node-modules-polyfill';
 
 const PACKAGE_ROOT = __dirname;
 /**
@@ -26,7 +28,6 @@ export default defineConfig({
   },
   optimizeDeps: {
     esbuildOptions: {
-      // Node.js global to browser globalThis
       define: {
         global: 'globalThis',
       },
@@ -35,6 +36,7 @@ export default defineConfig({
         NodeGlobalsPolyfillPlugin({
           buffer: true,
         }),
+        NodeModulesPolyfillPlugin(),
       ],
     },
   },
@@ -86,10 +88,21 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
+    target: 'esnext',
     sourcemap: true,
     outDir: '../../release/dist/renderer',
     assetsDir: '.',
     emptyOutDir: true,
     brotliSize: false,
+    rollupOptions: {
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+          buffer: true,
+        }),
+        NodeModulesPolyfillPlugin(),
+        nodePolyfills(),
+      ],
+    },
   },
 });
