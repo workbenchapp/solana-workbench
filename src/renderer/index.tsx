@@ -5,9 +5,12 @@ import 'virtual:fonts.css';
 import 'virtual:windi.css';
 import { QueryClient, QueryClientProvider } from 'react-query';
 
+import { Buffer } from 'buffer';
 import App from './App';
 import './index.css';
 import store from './store';
+
+window.Buffer = Buffer;
 
 const rootElement = document.getElementById('root');
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
