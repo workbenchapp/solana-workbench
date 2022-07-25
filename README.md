@@ -93,7 +93,7 @@ Now you're working with Workbench!
 The project is currently in a migratory phase from Bootstrap to Tailwind. Do not write new code using Bootstrap layouting. Instead, opt for using Tailwind's
 atomic CSS system instead. The goal is to eventually be able to fully remove bootstrap from the codebase.
 
-## building a release
+## Building A Release
 
 On each platform (OSX, Windows, Linux), run:
 
@@ -104,10 +104,15 @@ npm install
 npm run package
 ```
 
->> TODO: add the signing steps for each platform.
+To sign and notarize the OSX artifacts:
 
-then copy the appimage/dmg/exe to a staging dir, and run
+1. You must have the correct certificates from developer.apple.com installed on the build computer.
+2. Signing will occur automatically during `npm run package`.
+3. Notarization requires three environment variables to be set:
+    1. `APPLE_NOTARIZATION=1` -- Indicate that the builds should be notarized
+    2. `APPLE_ID` -- The email address associated with the developer Apple account
+    3. `APPLE_ID_PASS` -- The [app specific password](https://support.apple.com/en-us/HT204397) for the app. This is different from the Apple ID's main password and set in the developer portal.
 
-```
+>> TODO: Add the signing steps for Windows.
 
-```
+Then upload binaries and `latest*.yml` files to the Github release.
