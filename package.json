@@ -2,7 +2,7 @@
   "name": "solana-workbench",
   "productName": "SolanaWorkbench",
   "description": "Solana workbench app for making development on Solana better",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "main": "./release/dist/main/main.js",
   "scripts": {
     "start": "npm run dev",
@@ -99,11 +99,13 @@
     "extraResources": [
       "assets/**/*"
     ],
-    "publish": {
-      "provider": "github",
-      "owner": "electron-react-boilerplate",
-      "repo": "electron-react-boilerplate"
-    }
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "workbenchapp",
+        "repo": "solana-workbench"
+      }
+    ]
   },
   "repository": {
     "type": "git",

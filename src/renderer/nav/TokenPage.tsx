@@ -6,20 +6,18 @@ import { Row, Col, Form, Accordion } from 'react-bootstrap';
 
 import * as sol from '@solana/web3.js';
 import * as spltoken from '@solana/spl-token';
-
+import { useQuery } from 'react-query';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { queryTokenAccounts } from '../data/accounts/getAccount';
 
 import { MetaplexMintMetaDataView } from '../components/tokens/MetaplexMintMetaDataView';
 import {
   NetStatus,
   selectValidatorNetworkState,
 } from '../data/ValidatorNetwork/validatorNetworkState';
-import { getTokenAccounts } from '../data/accounts/getAccount';
 import { useAppSelector } from '../hooks';
 import AccountView from '../components/AccountView';
 import { MintInfoView } from '../components/tokens/MintInfoView';
-
-import { logger } from '../common/globals';
 
 function NotAbleToShowBanner({ children }) {
   return (
@@ -66,52 +64,73 @@ function TokenPage() {
   // TODO: this will come from main config...
   const [mintList, updateMintList] = useState<sol.PublicKey[]>([]);
   const [mintKey, updateMintKey] = useState<sol.PublicKey>();
+  const {
+    status: loadStatus,
+    // error,
+    data: tokenAccountsData,
+  } = useQuery<sol.AccountInfo<sol.ParsedAccountData>, Error>(
+    ['parsed-token-account', { net, pubKey: fromKey.publicKey?.toString() }],
+    queryTokenAccounts
+  );
+
+  useEffect(() => {
+    updateMintKey(undefined);
+  }, [net, status]);
 
   const setMintPubKey = (pubKey: string | sol.PublicKey) => {
-    const key = new sol.PublicKey(pubKey);
+    if (typeof pubKey === 'string') {
+      const key = new sol.PublicKey(pubKey);
 
-    updateMintKey(key);
+      updateMintKey(key);
+    } else {
+      updateMintKey(pubKey);
+    }
   };
+
   useEffect(() => {
-    if (status !== NetStatus.Running) {
-      updateMintList([]);
-      updateMintKey(undefined);
+    if (!tokenAccountsData) {
       return;
     }
-    if (!fromKey.publicKey) {
-      updateMintList([]);
-      updateMintKey(undefined);
-      return;
-    }
-    if (mintList.length > 0) {
-      // TODO: need to work out when to refresh
-      return;
-    }
-    getTokenAccounts(net, fromKey.publicKey.toString())
-      .then((ATAs) => {
-        const mints: sol.PublicKey[] = [];
-        let addMintKey = true;
-        ATAs.value.map((ATA) => {
-          const accountState = ATA.account.data.parsed.info as spltoken.Account;
+    const tokenAccounts = tokenAccountsData.value;
 
-          mints.push(accountState.mint);
-          if (accountState.mint === mintKey) {
-            addMintKey = false;
-          }
-          return mints;
-        });
-        if (addMintKey && mintKey) {
-          mints.push(mintKey);
-        }
+    const mints: sol.PublicKey[] = [];
+    let foundMintKey = false;
 
-        updateMintList(mints);
-        if (mints.length > 0) {
-          setMintPubKey(mints[0].toString());
+    tokenAccounts?.map(
+      (tAccount: {
+        pubkey: sol.PublicKey;
+        account: sol.AccountInfo<sol.ParsedAccountData>;
+      }) => {
+        const accountState = tAccount.account.data.parsed
+          .info as spltoken.Account;
+
+        mints.push(accountState.mint);
+        if (accountState.mint.toString() === mintKey?.toString()) {
+          foundMintKey = true;
         }
         return mints;
-      })
-      .catch(logger.error);
-  }, [fromKey.publicKey, mintKey, mintList.length, net, status]);
+      }
+    );
+    if (!foundMintKey && mintKey) {
+      updateMintKey(undefined);
+    }
+
+    updateMintList(mints);
+  }, [mintKey, tokenAccountsData]);
+
+  useEffect(() => {
+    if (!mintKey && mintList.length > 0) {
+      updateMintKey(mintList[0]);
+    }
+  }, [mintKey, mintList]);
+
+  if (loadStatus !== 'success') {
+    return <div>Loading token mints</div>; // TODO: need some "loading... ()"
+  }
+
+  if (!tokenAccountsData) {
+    return <div>Loading token mints (still)</div>;
+  }
 
   const { publicKey } = fromKey;
   if (!publicKey) {

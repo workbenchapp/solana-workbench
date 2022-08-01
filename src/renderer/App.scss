@@ -33,7 +33,20 @@
     color: black;
 }
 
+
+// TODO: Pretty hacky. I think <pre><code> stuff got mixed up
+// with the whole Tailwind-Bootstrap situation. For now, we
+// always use <span className="pre"> when we need an inline monospace,
+// and <pre><code> for a block display.
 .pre {
+    font-family: "Space Mono", monospace;
+}
+pre {
+    background-color: rgb(24, 29, 37);
+    font-family: "Space Mono", monospace;
+}
+code {
+    border-width: 0px !important;
     font-family: "Space Mono", monospace;
 }
 

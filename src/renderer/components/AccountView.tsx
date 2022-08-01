@@ -250,9 +250,13 @@ function AccountView(props: { pubKey: string | undefined }) {
               <small className="text-muted">Data :</small>
             </div>
             <div>
-              <pre className="exe-hexdump p-2 rounded">
-                <code>{decodedAccountData}</code>
-              </pre>
+              {decodedAccountData !== '' ? (
+                <pre className="exe-hexdump p-2 rounded">
+                  <code>{decodedAccountData}</code>
+                </pre>
+              ) : (
+                <small className="italic">No Data</small>
+              )}
             </div>
           </div>
 
