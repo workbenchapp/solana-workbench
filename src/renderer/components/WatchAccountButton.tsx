@@ -6,11 +6,13 @@ import Form from 'react-bootstrap/Form';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Popover from 'react-bootstrap/Popover';
 import { logger } from '../common/globals';
+import { setSelected } from '../data/SelectedAccountsList/selectedAccountsState';
+import { useAppDispatch } from '../hooks';
 
 function WatchAcountPopover(props: {
-  pinAccount: (pk: string, b: boolean) => void;
+  onWatch: (pk: string, b: boolean) => void;
 }) {
-  const { pinAccount } = props;
+  const { onWatch } = props;
 
   const pubKeyVal = '';
 
@@ -74,7 +76,7 @@ function WatchAcountPopover(props: {
                 type="button"
                 disabled={validationError || !toKey}
                 onClick={() => {
-                  pinAccount(toKey, false);
+                  onWatch(toKey, false);
                 }}
               >
                 Watch
@@ -91,15 +93,29 @@ function WatchAccountButton(props: {
   pinAccount: (pk: string, b: boolean) => void;
 }) {
   const { pinAccount } = props;
+  const [show, setShow] = useState(false);
+  const dispatch = useAppDispatch();
+
+  const handleWatch = (toKey, isPinned) => {
+    pinAccount(toKey, isPinned);
+    dispatch(setSelected(toKey));
+    setShow(false);
+  };
 
   return (
     <OverlayTrigger
-      trigger="click"
       placement="bottom"
-      overlay={WatchAcountPopover({ pinAccount })}
+      overlay={WatchAcountPopover({ onWatch: handleWatch })}
       rootClose
+      show={show}
     >
-      <Button variant="success" size="sm">
+      <Button
+        variant="success"
+        size="sm"
+        onClick={() => {
+          setShow((prev) => !prev);
+        }}
+      >
         Watch
       </Button>
     </OverlayTrigger>
