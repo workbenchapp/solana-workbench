@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, dialog } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
 import path from 'path';
@@ -7,7 +7,7 @@ import fetchAnchorIdl from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
 import { initConfigPromises } from './ipc/config';
-import { initDockerPromises } from './ipc/docker';
+import { initDockerPromises, inspectValidatorContainer, stopValidatorContainer, removeValidatorContainer } from './ipc/docker';
 import { initLogging, logger } from './logger';
 import MenuBuilder from './menu';
 import {
@@ -135,6 +135,49 @@ const createWindow = async () => {
       mainWindow.show();
     }
   });
+
+  mainWindow.on("close", async function (e: Event) {
+    e.preventDefault();
+
+    try {
+      const containerInspect = await inspectValidatorContainer();
+      if (!containerInspect?.State?.Running) return app.exit(0);
+    } catch (err) {
+      logger.error(err);
+      app.exit(); // not doing show will make the window "un-closable" if an error occurs while inspecting
+    }
+
+    const choice = dialog.showMessageBoxSync(mainWindow as BrowserWindow,
+      {
+        type: 'question',
+        buttons: ['Stop', 'Stop & Remove', 'Leave Running', 'Cancel'],
+        title: 'Just before you leave',
+        message: 'What would you like to do to the Solana Validator container before exiting?',
+        icon: getAssetPath('icon.png')
+      });
+    switch (choice) {
+      // Stop
+      case 0:
+        await stopValidatorContainer();
+        app.exit(0);
+        break;
+      // Stop & Delete
+      case 1:
+        await stopValidatorContainer();
+        await removeValidatorContainer();
+        app.exit(0);
+        break;
+      // Leave Running
+      case 2:
+        // TODO might close multiple window at once.
+        app.exit(0);
+        break;
+      // Cancel
+      case 3:
+        break;
+      default:
+    }
+  })
 
   mainWindow.on('closed', () => {
     mainWindow = null;
