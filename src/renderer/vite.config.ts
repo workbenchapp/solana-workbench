@@ -91,5 +91,6 @@ export default defineConfig({
     assetsDir: '.',
     emptyOutDir: true,
     brotliSize: false,
+    target: ['es2020'],
   },
 });
