@@ -25,6 +25,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
+    disabled: false,
     esbuildOptions: {
       // Node.js global to browser globalThis
       define: {
@@ -36,6 +37,7 @@ export default defineConfig({
           buffer: true,
         }),
       ],
+      target: 'es2020',
     },
   },
   plugins: [
@@ -86,11 +88,15 @@ export default defineConfig({
     strictPort: true,
   },
   build: {
+    minify: 'terser',
     sourcemap: true,
     outDir: '../../release/dist/renderer',
     assetsDir: '.',
     emptyOutDir: true,
-    brotliSize: false,
+    reportCompressedSize: true,
     target: ['es2020'],
+    commonjsOptions: {
+      include: [],
+    },
   },
 });
