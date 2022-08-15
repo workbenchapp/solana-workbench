@@ -5,7 +5,6 @@ import IconsResolver from 'unplugin-icons/resolver';
 import Icons from 'unplugin-icons/vite';
 import { defineConfig } from 'vite';
 import ViteFonts from 'vite-plugin-fonts';
-import InlineCSSModules from 'vite-plugin-inline-css-modules';
 import WindiCSS from 'vite-plugin-windicss';
 import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import checker from 'vite-plugin-checker';
@@ -48,7 +47,6 @@ export default defineConfig({
         families: ['Roboto:wght@400;500;700', 'Space Mono:wght@400'],
       },
     }),
-    InlineCSSModules(),
     Icons({
       compiler: 'jsx',
       jsx: 'react',

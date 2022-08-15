@@ -54,5 +54,28 @@ code {
     padding: 2px 15px;
 }
 
+.wb-icon-btn {
+  @apply p-3 hover:bg-contrast/20 active:bg-contrast/30 rounded-full transition duration-100;
+}
+
+.account-view {
+  @apply w-full h-full border-collapse overflow-auto text-xs;
+
+  & th:not(:global(.text-center)) {
+    @apply text-left;
+  }
+
+  & th svg {
+    @apply inline-block;
+  }
+}
+.chip {
+  @apply bg-surface-100 border-2 border-surface-300/50 w-min p-1 px-2 rounded-full select-none cursor-pointer bg-opacity-10 transition duration-100 hover:bg-surface-300 whitespace-nowrap;
+
+  &-active {
+    @apply bg-primary-base;
+  }
+}
+
 // Import all of bootstrap, this isn't an exercise in minimisation
 // @import "bootstrap/scss/bootstrap";
