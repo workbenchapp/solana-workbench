@@ -7,7 +7,12 @@ import fetchAnchorIdl from './anchor';
 import { RESOURCES_PATH } from './const';
 import { initAccountPromises } from './ipc/accounts';
 import { initConfigPromises } from './ipc/config';
-import { initDockerPromises, inspectValidatorContainer, stopValidatorContainer, removeValidatorContainer } from './ipc/docker';
+import {
+  initDockerPromises,
+  inspectValidatorContainer,
+  stopValidatorContainer,
+  removeValidatorContainer,
+} from './ipc/docker';
 import { initLogging, logger } from './logger';
 import MenuBuilder from './menu';
 import {
@@ -136,7 +141,8 @@ const createWindow = async () => {
     }
   });
 
-  mainWindow.on("close", async function (e: Event) {
+  // eslint-disable-next-line consistent-return
+  mainWindow.on('close', async function (e: Event) {
     e.preventDefault();
 
     try {
@@ -147,14 +153,14 @@ const createWindow = async () => {
       app.exit(); // not doing show will make the window "un-closable" if an error occurs while inspecting
     }
 
-    const choice = dialog.showMessageBoxSync(mainWindow as BrowserWindow,
-      {
-        type: 'question',
-        buttons: ['Stop', 'Stop & Remove', 'Leave Running', 'Cancel'],
-        title: 'Just before you leave',
-        message: 'What would you like to do to the Solana Validator container before exiting?',
-        icon: getAssetPath('icon.png')
-      });
+    const choice = dialog.showMessageBoxSync(mainWindow as BrowserWindow, {
+      type: 'question',
+      buttons: ['Stop', 'Stop & Remove', 'Leave Running', 'Cancel'],
+      title: 'Just before you leave',
+      message:
+        'What would you like to do to the Solana Validator container before exiting?',
+      icon: getAssetPath('icon.png'),
+    });
     switch (choice) {
       // Stop
       case 0:
@@ -177,7 +183,7 @@ const createWindow = async () => {
         break;
       default:
     }
-  })
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;

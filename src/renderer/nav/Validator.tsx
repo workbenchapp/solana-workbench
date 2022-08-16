@@ -226,7 +226,6 @@ const Validator = () => {
                   .catch(logger.error);
               } else {
                 logger.info('START AMMAN');
-
                 // TODO: StartAmmanValidator blocks, no toast for now
                 window.promiseIpc
                   .send(`DOCKER-StartAmmanValidator`)

@@ -160,6 +160,49 @@ async function createContainer(image: string) {
     .catch(logger.error);
 }
 
+export const stopValidatorContainer = () => {
+  const dockerClient = new Dockerode();
+  const container = dockerClient.getContainer('solana-test-validator');
+  logger.error(`request stop amman exec: solana-test-validator`);
+  log(`request stop amman exec: solana-test-validator`);
+
+  return container
+    .exec({
+      Cmd: ['/bin/bash', '-c', 'source /root/.bashrc && amman stop'],
+      AttachStdin: false,
+      AttachStdout: false,
+    })
+    .then((e: Dockerode.Exec) => {
+      log('exec stop amman created');
+
+      return e.start({
+        hijack: true,
+        stdin: false,
+        Detach: true,
+        Tty: true,
+      });
+    })
+    .then(() => {
+      logger.info('exec stop amman started ');
+      log('exec stop amman started ');
+      // TODO: wait til the validator has stopped..
+      return 'OK';
+    });
+};
+
+export const removeValidatorContainer = () => {
+  const dockerClient = new Dockerode();
+  const container = dockerClient.getContainer('solana-test-validator');
+  logger.error(`remove requested: solana-test-validator`);
+  log(`remove requested: solana-test-validator`);
+
+  return container.remove({ force: true }).then(() => {
+    logger.info('container removed ');
+    log('container removed ');
+    return 'OK';
+  });
+};
+
 async function execAmman() {
   // TODO: this presupposes that this workbench session starts the validator
   //       should change this so the `amman start` tee's to a file, and then use `docker exec tail -n 20` or something
@@ -363,53 +406,9 @@ export function initDockerPromises() {
   );
 }
 
-// TODO: feel like these function are kinda akwardly sitting in this file. Need to find a better place for them.
-export const stopValidatorContainer = () => {
-  const dockerClient = new Dockerode();
-  const container = dockerClient.getContainer('solana-test-validator');
-  logger.error(`request stop amman exec: solana-test-validator`);
-  log(`request stop amman exec: solana-test-validator`);
-
-  return container
-    .exec({
-      Cmd: ['/bin/bash', '-c', 'source /root/.bashrc && amman stop'],
-      AttachStdin: false,
-      AttachStdout: false,
-    })
-    .then((e: Dockerode.Exec) => {
-      log('exec stop amman created');
-
-      return e.start({
-        hijack: true,
-        stdin: false,
-        Detach: true,
-        Tty: true,
-      });
-    })
-    .then(() => {
-      logger.info('exec stop amman started ');
-      log('exec stop amman started ');
-      // TODO: wait til the validator has stopped..
-      return 'OK';
-    });
-}
-
-export const removeValidatorContainer = () => {
-  const dockerClient = new Dockerode();
-  const container = dockerClient.getContainer('solana-test-validator');
-  logger.error(`remove requested: solana-test-validator`);
-  log(`remove requested: solana-test-validator`);
-
-  return container.remove({ force: true }).then(() => {
-    logger.info('container removed ');
-    log('container removed ');
-    return 'OK';
-  });
-}
-
 export const inspectValidatorContainer = () => {
   const dockerClient = new Dockerode();
-  return dockerClient.getContainer("solana-test-validator").inspect();
-}
+  return dockerClient.getContainer('solana-test-validator').inspect();
+};
 
 export default {};

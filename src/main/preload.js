@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld('electron', {
     fetchAnchorIDL(msg) {
       send('fetch-anchor-idl', msg);
     },
+    closeWindowAction(option) {
+      send('close-window-actions', option);
+    },
     on(method, func) {
       ipcRenderer.on(method, (event, ...args) => func(...args));
     },
