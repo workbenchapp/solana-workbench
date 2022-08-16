@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { Col, Row } from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
@@ -36,7 +36,7 @@ function WatchAcountPopover(props: {
       setValidationErr(undefined);
     } catch (err) {
       setValidationErr('Invalid key');
-      logger.errror(err);
+      logger.error(err);
     }
   }, [toKey]);
 

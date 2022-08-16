@@ -13,7 +13,7 @@ import {
 import '@solana/wallet-adapter-react-ui/styles.css';
 import * as sol from '@solana/web3.js';
 import isElectron from 'is-electron';
-import { FC, useEffect, useMemo, useState } from 'react';
+import React, { FC, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from 'react-query';
 
 import { Button, Form } from 'react-bootstrap';
@@ -23,6 +23,8 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import { NavLink, Outlet, Route, Routes } from 'react-router-dom';
 import { toast, ToastContainer } from 'react-toastify';
 
+import { ElectronLog } from 'electron-log';
+import { App as ElectronApp } from 'electron';
 import { GetValidatorConnection, logger } from './common/globals';
 import 'react-toastify/dist/ReactToastify.css';
 import './App.scss';
@@ -54,7 +56,9 @@ import { NetStatus } from '../types/types';
 declare global {
   interface Window {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    electron?: any;
+    electron?: ElectronApp & {
+      log: ElectronLog;
+    };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     promiseIpc?: any;
   }
