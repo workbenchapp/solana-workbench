@@ -36,6 +36,7 @@ export default defineConfig({
           buffer: true,
         }),
       ],
+      target: 'es2021',
     },
   },
   plugins: [
@@ -91,5 +92,6 @@ export default defineConfig({
     assetsDir: '.',
     emptyOutDir: true,
     brotliSize: false,
+    target: 'es2021',
   },
 });
